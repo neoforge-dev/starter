@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.venv
+env/
+venv/
+ENV/
+.uv/
+dist/
+build/
+*.egg-info/
+.coverage
+coverage.xml
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node/Frontend
+node_modules/
+dist/
+.npm
+*.log
+.eslintcache
+.env.local
+.env.*.local
+coverage/
+.vite/
+types/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Infrastructure
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!example.tfvars
+.terraformrc
+terraform.rc
+.terraform.lock.hcl
+
+# Nomad
+*.hcl
+!*.nomad
+
+# Project specific
+logs/
+tmp/
+.env*
+!.env.example 
