@@ -5,7 +5,7 @@
 
 [![Built with FastAPI](https://img.shields.io/badge/Built%20with-FastAPI-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
 [![Built with Lit](https://img.shields.io/badge/Built%20with-Lit-324FFF?style=flat&logo=lit)](https://lit.dev)
-[![Monthly Cost](https://img.shields.io/badge/Monthly%20Cost-%3C%2415-success)](https://neoforge.dev/costs)
+[![Monthly Cost](https://img.shields.io/badge/Monthly%20Cost-%3C%2415-success)](docs/costs.md)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## 🎯 Why NeoForge?
@@ -191,16 +191,20 @@ neoforge/
    make db-shell  # Inspect database directly
    ```
 
-## License
-
-MIT
-
 ## 📚 Documentation
 
-- [Getting Started](https://neoforge.dev/docs/getting-started)
-- [Architecture Guide](https://neoforge.dev/docs/architecture)
-- [Deployment Guide](https://neoforge.dev/docs/deployment)
-- [Security Guide](https://neoforge.dev/docs/security)
+- [Getting Started](docs/getting-started.md)
+- [Architecture Guide](docs/architecture.md)
+- [Deployment Guide](docs/deployment.md)
+- [Security Guide](docs/security.md)
+- [API Documentation](docs/api/README.md)
+- [Frontend Guide](docs/frontend/README.md)
+- [Database Schema](docs/database/README.md)
+- [Infrastructure](docs/infrastructure/README.md)
+- [Monitoring](docs/monitoring/README.md)
+- [Best Practices](docs/best-practices.md)
+- [ADRs](docs/adr/README.md)
+- [Changelog](CHANGELOG.md)
 
 ## 🤝 Contributing
 
@@ -213,5 +217,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Built with ❤️ for Bootstrapped Founders**
+[Website](https://neoforge.dev) · [Documentation](https://neoforge.dev/docs) ·
+[Discord](https://discord.gg/neoforge)
 
-[Website](https://neoforge.dev) · [Documentation](https://neoforge.dev/docs) · [Discord](https://discord.gg/neoforge)
+[Getting Started](docs/getting-started.md) · [Architecture](docs/architecture.md) · [Best Practices](docs/best-practices.md) · [Deployment](docs/deployment.md) · [Security](docs/security.md) · [Monitoring](docs/monitoring.md) · [Backend API](docs/backend/README.md) · [Frontend](docs/frontend/README.md)  · [Infrastructure](docs/infrastructure/README.md)
