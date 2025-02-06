@@ -1,0 +1,44 @@
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    groups:
+      dependencies:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    groups:
+      docker:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "docker"

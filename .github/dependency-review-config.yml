@@ -1,0 +1,31 @@
+rules:
+  - name: high-severity-vulnerabilities
+    description: Block high severity vulnerabilities
+    paths:
+      - backend/**
+      - frontend/**
+    if:
+      - vulnerability.severity == 'high'
+      - vulnerability.severity == 'critical'
+    then:
+      decision: block
+
+  - name: banned-licenses
+    description: Block banned licenses
+    paths:
+      - backend/**
+      - frontend/**
+    if:
+      - license.id in ['GPL-1.0-or-later', 'LGPL-2.0-or-later']
+    then:
+      decision: block
+
+  - name: outdated-dependencies
+    description: Warn about outdated dependencies
+    paths:
+      - backend/**
+      - frontend/**
+    if:
+      - dependency.age > 365 # days
+    then:
+      decision: warn
