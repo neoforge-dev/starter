@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoForge</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "lit": "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js",
+            "@lit/task": "https://cdn.jsdelivr.net/npm/@lit/task@1.0.0/+esm",
+            "components/": "/js/components/"
+        }
+    }
+    </script>
+    <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+    <app-shell>
+        <nav slot="navigation">
+            <a href="/">Home</a>
+            <a href="/dashboard">Dashboard</a>
+        </nav>
+        <main>
+            Loading...
+        </main>
+    </app-shell>
+</body>
+</html> 
