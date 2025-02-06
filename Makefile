@@ -28,6 +28,17 @@ test-watch: ## Run tests in watch mode
 	@echo "Running tests in watch mode..."
 	docker compose -f backend/docker-compose.dev.yml run --rm test pytest -v --cov=app --watch
 
+test-cov:
+	pytest --cov=app --cov-report=term-missing
+
+test-cov-html:
+	pytest --cov=app --cov-report=html
+	@echo "Coverage report is available at coverage_html/index.html"
+
+test-clean:
+	rm -rf .coverage coverage_html .pytest_cache .testmondata
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+
 lint: ## Run linters
 	@echo "Running linters..."
 	docker compose -f backend/docker-compose.dev.yml run --rm api ruff check .

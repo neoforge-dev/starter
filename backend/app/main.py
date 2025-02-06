@@ -14,10 +14,12 @@ from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.db.session import get_db
 from app.core.redis import get_redis
+from app.api.v1.api import api_router
 
 logger = structlog.get_logger()
 
@@ -64,6 +66,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include API router
+app.include_router(api_router, prefix="/api")
+
 @app.get(
     "/health",
     response_model=HealthCheck,
@@ -83,7 +88,7 @@ async def health_check(
         # Check database connection
         db_status = "healthy"
         try:
-            await db.execute("SELECT 1")
+            await db.execute(text("SELECT 1"))
         except Exception as e:
             db_status = f"unhealthy: {str(e)}"
             raise HTTPException(
@@ -136,7 +141,7 @@ async def detailed_health_check(
     db_latency = 0.0
     try:
         start = time.time()
-        await db.execute("SELECT 1")
+        await db.execute(text("SELECT 1"))
         db_latency = (time.time() - start) * 1000
     except Exception as e:
         db_status = f"unhealthy: {str(e)}"
