@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Union
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import get_password_hash, verify_password
+from app.core.auth import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
@@ -26,8 +26,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         Returns:
             User if found, None otherwise
         """
-        query = select(User).where(User.email == email)
-        result = await db.execute(query)
+        result = await db.execute(
+            select(User).where(User.email == email)
+        )
         return result.scalar_one_or_none()
 
     async def create(
@@ -38,7 +39,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         
         Args:
             db: Database session
-            obj_in: User creation data
+            obj_in: User data
             
         Returns:
             Created user
@@ -47,7 +48,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             email=obj_in.email,
             hashed_password=get_password_hash(obj_in.password),
             full_name=obj_in.full_name,
-            is_superuser=obj_in.is_superuser,
         )
         db.add(db_obj)
         await db.commit()

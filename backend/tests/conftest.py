@@ -2,7 +2,9 @@
 import asyncio
 import os
 from typing import AsyncGenerator, Generator
+from uuid import uuid4
 
+from app.models.user import User
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
@@ -17,6 +19,8 @@ from app.db.session import get_db
 from app.main import app
 from app.core.redis import get_redis
 from app.db.base import Base
+from app.core.security import get_password_hash, create_access_token
+from tests.factories import UserFactory
 
 # Set test settings
 settings.testing = True
@@ -144,31 +148,20 @@ async def setup_test_db() -> AsyncGenerator[None, None]:
 @pytest_asyncio.fixture(scope="function")
 async def db() -> AsyncGenerator[AsyncSession, None]:
     """Get database session."""
-    # Create a new connection
-    connection = await engine.connect()
-    # Begin a transaction
-    transaction = await connection.begin()
-    # Begin a nested transaction (savepoint)
-    nested = await connection.begin_nested()
-    
-    # Create session
-    session = AsyncSession(
-        bind=connection,
-        expire_on_commit=False,
-        autocommit=False,
-        autoflush=False,
-    )
+    async with engine.begin() as connection:
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            autocommit=False,
+            autoflush=False,
+        )
 
-    try:
-        yield session
-    finally:
-        await session.close()
-        # Roll back the nested transaction
-        await nested.rollback()
-        # Roll back the transaction
-        await transaction.rollback()
-        # Close the connection
-        await connection.close()
+        try:
+            yield session
+        finally:
+            # Roll back all changes after test
+            await session.rollback()
+            await session.close()
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -196,10 +189,43 @@ async def client(db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 @pytest_asyncio.fixture(scope="function")
 async def redis() -> AsyncGenerator[Redis, None]:
     """Get Redis connection."""
-    async for redis_client in get_redis():
+    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    for attempt in range(5):
         try:
+            redis_client = Redis.from_url(redis_url)
+            await redis_client.ping()  # Test the connection
             await redis_client.flushdb()
             yield redis_client
+            break
+        except Exception as e:
+            logger.error(f"Error connecting to Redis (attempt {attempt + 1}/5): {e}")
+            if attempt < 4:
+                await asyncio.sleep(1)
+            else:
+                raise
         finally:
-            await redis_client.flushdb()
-            await redis_client.aclose() 
+            if 'redis_client' in locals():
+                await redis_client.flushdb()
+                await redis_client.aclose()
+
+@pytest_asyncio.fixture
+async def regular_user_token(db: AsyncSession) -> str:
+    """Create a regular user and return their token."""
+    user = await UserFactory.create(session=db)
+    return create_access_token(user.id)
+
+@pytest_asyncio.fixture
+async def regular_user_headers(regular_user_token: str) -> dict:
+    """Return headers for regular user authentication."""
+    return {"Authorization": f"Bearer {regular_user_token}"}
+
+@pytest_asyncio.fixture
+async def superuser_token(db: AsyncSession) -> str:
+    """Create a superuser and return their token."""
+    user = await UserFactory.create(session=db, is_superuser=True)
+    return create_access_token(user.id)
+
+@pytest_asyncio.fixture
+async def superuser_headers(superuser_token: str) -> dict:
+    """Return headers for superuser authentication."""
+    return {"Authorization": f"Bearer {superuser_token}"} 

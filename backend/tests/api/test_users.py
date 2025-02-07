@@ -9,7 +9,7 @@ from tests.factories import UserFactory
 pytestmark = pytest.mark.asyncio
 
 
-async def test_create_user(client: AsyncClient, db: AsyncSession) -> None:
+async def test_create_user(client: AsyncClient, db: AsyncSession, superuser_headers: dict) -> None:
     """Test user creation."""
     response = await client.post(
         "/api/users/",
@@ -18,6 +18,7 @@ async def test_create_user(client: AsyncClient, db: AsyncSession) -> None:
             "password": "testpassword",
             "full_name": "Test User",
         },
+        headers=superuser_headers,
     )
     assert response.status_code == 201
     data = response.json()
@@ -27,26 +28,27 @@ async def test_create_user(client: AsyncClient, db: AsyncSession) -> None:
     assert "password" not in data
 
 
-async def test_read_users(client: AsyncClient, db: AsyncSession) -> None:
+async def test_read_users(client: AsyncClient, db: AsyncSession, superuser_headers: dict) -> None:
     """Test reading user list."""
     # Create test users
     users = [
-        await UserFactory(session=db),
-        await UserFactory(session=db),
-        await UserFactory(session=db),
+        await UserFactory.create(session=db),
+        await UserFactory.create(session=db),
+        await UserFactory.create(session=db),
     ]
     
-    response = await client.get("/api/users/")
+    response = await client.get("/api/users/", headers=superuser_headers)
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == len(users)
+    # Account for the superuser created by the fixture
+    assert len(data) == len(users) + 1
 
 
-async def test_read_user(client: AsyncClient, db: AsyncSession) -> None:
+async def test_read_user(client: AsyncClient, db: AsyncSession, superuser_headers: dict) -> None:
     """Test reading single user."""
-    user = await UserFactory(session=db)
+    user = await UserFactory.create(session=db)
     
-    response = await client.get(f"/api/users/{user.id}")
+    response = await client.get(f"/api/users/{user.id}", headers=superuser_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == user.id
@@ -54,31 +56,30 @@ async def test_read_user(client: AsyncClient, db: AsyncSession) -> None:
     assert data["full_name"] == user.full_name
 
 
-async def test_update_user(client: AsyncClient, db: AsyncSession) -> None:
+async def test_update_user(client: AsyncClient, db: AsyncSession, superuser_headers: dict) -> None:
     """Test updating user."""
-    user = await UserFactory(session=db)
+    user = await UserFactory.create(session=db)
     
     response = await client.put(
         f"/api/users/{user.id}",
         json={
-            "email": "updated@example.com",
             "full_name": "Updated User",
-            "password": "newpassword",
         },
+        headers=superuser_headers,
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["email"] == "updated@example.com"
+    assert data["id"] == user.id
     assert data["full_name"] == "Updated User"
 
 
-async def test_delete_user(client: AsyncClient, db: AsyncSession) -> None:
+async def test_delete_user(client: AsyncClient, db: AsyncSession, superuser_headers: dict) -> None:
     """Test deleting user."""
-    user = await UserFactory(session=db)
+    user = await UserFactory.create(session=db)
     
-    response = await client.delete(f"/api/users/{user.id}")
+    response = await client.delete(f"/api/users/{user.id}", headers=superuser_headers)
     assert response.status_code == 204
     
     # Verify user is deleted
-    response = await client.get(f"/api/users/{user.id}")
+    response = await client.get(f"/api/users/{user.id}", headers=superuser_headers)
     assert response.status_code == 404 

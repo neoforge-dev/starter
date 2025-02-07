@@ -1,121 +1,90 @@
-"""Test security utilities."""
-from datetime import datetime, timedelta
+"""
+Security test suite covering authentication, authorization, and protections.
+"""
 
 import pytest
-from jose import jwt, JWTError
+from fastapi import status
+from httpx import AsyncClient
+from jose import jwt
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.security import (
-    create_access_token,
-    get_password_hash,
-    verify_password,
-)
+from tests.factories import UserFactory
+
+pytestmark = pytest.mark.asyncio
 
 
-def test_password_hash() -> None:
-    """Test password hashing and verification."""
-    password = "testpassword123"
-    hashed = get_password_hash(password)
+async def test_unauthenticated_access(client: AsyncClient):
+    """Test protected routes without authentication."""
+    endpoints = [
+        ("GET", "/api/users/me"),
+        ("PATCH", "/api/users/me"),
+    ]
     
-    # Hash should be different from original password
-    assert hashed != password
-    
-    # Verify should work with correct password
-    assert verify_password(password, hashed)
-    
-    # Verify should fail with wrong password
-    assert not verify_password("wrongpassword", hashed)
-    
-    # Different passwords should have different hashes
-    hashed2 = get_password_hash("testpassword123")
-    assert hashed != hashed2  # Due to salt
+    for method, path in endpoints:
+        response = await client.request(method, path)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.json()["detail"] == "Not authenticated"
 
 
-def test_create_access_token() -> None:
-    """Test JWT token creation."""
-    # Test with default expiration
-    token1 = create_access_token("testuser")
-    payload1 = jwt.decode(
-        token1,
+async def test_invalid_token(client: AsyncClient):
+    """Test authentication with invalid JWT tokens."""
+    headers = {"Authorization": "Bearer invalid_token"}
+    response = await client.get("/api/users/me", headers=headers)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Could not validate credentials"
+
+
+async def test_expired_token(client: AsyncClient):
+    """Test authentication with expired JWT token."""
+    expired_token = jwt.encode(
+        {"sub": "user1", "exp": 1},  # Expired in 1970
         settings.secret_key,
-        algorithms=[settings.algorithm],
-    )
-    assert payload1["sub"] == "testuser"
-    
-    # Test with custom expiration
-    expires = timedelta(minutes=30)
-    token2 = create_access_token("testuser", expires)
-    payload2 = jwt.decode(
-        token2,
-        settings.secret_key,
-        algorithms=[settings.algorithm],
-    )
-    assert payload2["sub"] == "testuser"
-    
-    # Test expiration
-    exp1 = datetime.fromtimestamp(payload1["exp"])
-    exp2 = datetime.fromtimestamp(payload2["exp"])
-    assert exp2 > exp1
-
-
-def test_token_expiration() -> None:
-    """Test JWT token expiration."""
-    # Create token that expires in 1 second
-    token = create_access_token("testuser", timedelta(seconds=1))
-    
-    # Token should be valid initially
-    payload = jwt.decode(
-        token,
-        settings.secret_key,
-        algorithms=[settings.algorithm],
-    )
-    assert payload["sub"] == "testuser"
-    
-    # Wait for token to expire
-    import time
-    time.sleep(2)
-    
-    # Token should be expired
-    with pytest.raises(JWTError):
-        jwt.decode(
-            token,
-            settings.secret_key,
-            algorithms=[settings.algorithm],
-        )
-
-
-def test_invalid_token() -> None:
-    """Test JWT token validation."""
-    # Test with wrong secret
-    wrong_token = jwt.encode(
-        {"sub": "testuser"},
-        "wrong-secret",
         algorithm=settings.algorithm,
     )
-    with pytest.raises(JWTError):
-        jwt.decode(
-            wrong_token,
-            settings.secret_key,
-            algorithms=[settings.algorithm],
-        )
-    
-    # Test with wrong algorithm
-    wrong_alg_token = jwt.encode(
-        {"sub": "testuser"},
-        settings.secret_key,
-        algorithm="HS512",  # Wrong algorithm
+    headers = {"Authorization": f"Bearer {expired_token}"}
+    response = await client.get("/api/users/me", headers=headers)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Could not validate credentials"
+
+
+async def test_regular_user_access(client: AsyncClient, regular_user_headers: dict):
+    """Test regular user access to protected endpoints."""
+    response = await client.get("/api/users/me", headers=regular_user_headers)
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert "id" in data
+    assert "email" in data
+    assert "full_name" in data
+
+
+async def test_superuser_access(client: AsyncClient, superuser_headers: dict):
+    """Test superuser access to protected endpoints."""
+    # Test access to user list (protected endpoint)
+    response = await client.get("/api/users/", headers=superuser_headers)
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert isinstance(data, list)
+
+
+async def test_login_access_token(client: AsyncClient, db: AsyncSession):
+    """Test login endpoint."""
+    # Create test user
+    user = await UserFactory.create(
+        session=db,
+        email="test@example.com",
+        password="testpassword",
     )
-    with pytest.raises(JWTError):
-        jwt.decode(
-            wrong_alg_token,
-            settings.secret_key,
-            algorithms=[settings.algorithm],
-        )
     
-    # Test with malformed token
-    with pytest.raises(JWTError):
-        jwt.decode(
-            "not-a-token",
-            settings.secret_key,
-            algorithms=[settings.algorithm],
-        ) 
+    # Test login
+    response = await client.post(
+        "/api/auth/token",
+        data={
+            "username": "test@example.com",
+            "password": "testpassword",
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer" 

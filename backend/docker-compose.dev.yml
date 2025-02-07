@@ -59,21 +59,21 @@ services:
   test:
     build:
       context: .
-      target: test
+      target: development
     volumes:
       - .:/app
     environment:
       - PYTHONPATH=/app
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/test
-      - REDIS_URL=redis://redis:6379/1
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/app
+      - REDIS_URL=redis://redis:6379/0
       - ENVIRONMENT=test
-      - TESTING=1
+      - DEBUG=1
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: python -m pytest -v --cov=app
+    command: python -m pytest
 
 volumes:
   postgres_data:

@@ -1,87 +1,161 @@
-"""Test factories for generating test data."""
-from datetime import datetime
-from typing import Any, Dict, Optional
+"""
+Test data factories for generating model instances.
 
-import factory
-from sqlalchemy.ext.asyncio import AsyncSession
+Uses FactoryBoy with SQLModel integration for type-safe test data creation.
+"""
 
-from app.models.user import User
 from app.models.item import Item
+import factory
+from factory import fuzzy
+from datetime import datetime, timezone
+from app.models.user import User
+from app.schemas.user import UserCreate
+from sqlmodel import SQLModel
+from typing import Any, Type, Coroutine
+from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import uuid4
 from app.core.security import get_password_hash
 
-
-class UserFactory(factory.Factory):
-    """Factory for creating test users."""
+class AsyncModelFactory(factory.Factory):
+    """
+    Base factory for async SQLModel instances with session support.
     
-    class Meta:
-        model = User
-        
-    email = factory.Faker("email")
-    full_name = factory.Faker("name")
-    hashed_password = factory.LazyFunction(lambda: get_password_hash("testpassword"))
-    is_active = True
-    is_superuser = False
+    Features:
+    - Async session management
+    - Automatic transaction handling
+    - Type-safe async creation
+    """
     
     @classmethod
-    async def _create(cls, model_class: User, *args: Any, **kwargs: Dict[str, Any]) -> User:
-        """Override _create to handle async session."""
-        session: AsyncSession = kwargs.pop("session", None)
-        if not session:
-            raise ValueError("Session is required")
+    async def _create(
+        cls,
+        model_class: type[SQLModel],
+        session: AsyncSession,
+        *args: Any,
+        **kwargs: Any
+    ) -> Coroutine[Any, Any, SQLModel]:
+        """
+        Async creation handler for SQLModel instances.
         
-        obj = model_class(*args, **kwargs)
-        session.add(obj)
-        await session.commit()
-        await session.refresh(obj)
-        return obj
+        Args:
+            model_class: SQLModel class to instantiate
+            session: Async SQLAlchemy session
+            *args: Positional arguments
+            **kwargs: Keyword arguments
+            
+        Returns:
+            Persisted SQLModel instance
+        """
+        obj = model_class(**kwargs)
+        try:
+            session.add(obj)
+            await session.commit()
+            await session.refresh(obj)
+            return obj
+        except Exception as e:
+            await session.rollback()
+            raise factory.FactoryError("Couldn't create instance") from e
 
-
-class ItemFactory(factory.Factory):
-    """Factory for creating test items."""
-    
-    class Meta:
-        model = Item
-        
-    title = factory.Faker("sentence", nb_words=4)
-    description = factory.Faker("paragraph")
-    owner_id = None  # This will be set in _create if not provided
-    
     @classmethod
-    async def create_with_owner(
+    async def create(
         cls,
         session: AsyncSession,
-        owner: Optional[User] = None,
-        **kwargs: Any,
-    ) -> Item:
-        """Create item with owner."""
-        if owner is None:
-            owner = await UserFactory(session=session)
-        
-        return await cls(
-            session=session,
-            owner_id=owner.id,
-            **kwargs,
-        )
+        **kwargs: Any
+    ) -> SQLModel:
+        """Public async create method."""
+        return await cls._create(model_class=cls._meta.model, session=session, **kwargs)
+
+class ModelFactory(factory.Factory):
+    """
+    Base factory for all SQLModel models.
+    
+    Provides common functionality for all model factories.
+    """
     
     @classmethod
-    async def _create(cls, model_class: Item, *args: Any, **kwargs: Dict[str, Any]) -> Item:
-        """Override _create to handle async session."""
-        session: AsyncSession = kwargs.pop("session", None)
-        if not session:
-            raise ValueError("Session is required")
+    def _create(
+        cls, 
+        model_class: Type[SQLModel],
+        *args: Any,
+        **kwargs: Any
+    ) -> SQLModel:
+        """
+        Custom creation handler to work with SQLModel instances.
         
-        # Handle owner relationship
-        owner = kwargs.pop("owner", None)
-        if owner and not kwargs.get("owner_id"):
-            if not getattr(owner, "id", None):
-                await session.refresh(owner)
-            kwargs["owner_id"] = owner.id
-        elif not owner and not kwargs.get("owner_id"):
-            owner = await UserFactory(session=session)
-            kwargs["owner_id"] = owner.id
+        Args:
+            model_class: SQLModel class to instantiate
+            *args: Positional arguments
+            **kwargs: Keyword arguments
+            
+        Returns:
+            Instance of the SQLModel class
+        """
+        return model_class(**kwargs)
+
+class UserFactory:
+    """Factory for creating User test instances."""
+    
+    @classmethod
+    async def create(
+        cls,
+        session: AsyncSession,
+        *,
+        email: str | None = None,
+        full_name: str | None = None,
+        password: str | None = None,
+        **kwargs
+    ) -> User:
+        """Create and persist a User with required fields."""
+        email = email or f"user-{uuid4().hex}@example.com"
+        full_name = full_name or "Test User"
+        password = password or "securepassword123"
         
-        obj = model_class(*args, **kwargs)
-        session.add(obj)
+        user = User(
+            email=email,
+            full_name=full_name,
+            hashed_password=get_password_hash(password),
+            **kwargs
+        )
+        session.add(user)
         await session.commit()
-        await session.refresh(obj)
-        return obj 
+        return user
+
+class UserCreateFactory(ModelFactory):
+    """
+    Factory for creating UserCreate schema instances.
+    
+    Useful for testing registration and user creation endpoints.
+    """
+    
+    class Meta:
+        model = UserCreate
+        
+    email = factory.Sequence(lambda n: f"newuser{n}@neoforge.test")
+    full_name = factory.Faker("name")
+    password = factory.Faker("password", length=12, special_chars=True, digits=True)
+    password_confirm = factory.SelfAttribute("password")
+
+class ItemFactory:
+    """Factory for creating Item instances."""
+
+    @classmethod
+    async def create(
+        cls,
+        session: AsyncSession,
+        user: User | None = None,
+        **kwargs: Any
+    ) -> Item:
+        """Create an Item instance."""
+        if user:
+            kwargs["owner_id"] = user.id
+        
+        if "title" not in kwargs:
+            kwargs["title"] = fuzzy.FuzzyText(length=10).fuzz()
+        if "description" not in kwargs:
+            kwargs["description"] = fuzzy.FuzzyText(length=30).fuzz()
+        
+        item = Item(**kwargs)
+        session.add(item)
+        await session.commit()
+        await session.refresh(item)
+        return item 

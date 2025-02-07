@@ -44,8 +44,10 @@ COPY tests ./tests
 
 # Copy installed packages from builder
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/uvicorn
-COPY --from=builder /app/requirements.txt ./requirements.txt
+COPY --from=builder /usr/local/bin/* /usr/local/bin/
+
+# Install dev dependencies
+RUN pip install -e ".[dev]"
 
 # Set development environment variables
 ENV PYTHONPATH=/app \

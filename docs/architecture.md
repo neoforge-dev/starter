@@ -343,3 +343,62 @@ This architecture is designed to provide a solid foundation for bootstrapped fou
 5. **Performance Focused**: Optimized for conversion
 
 Remember: This architecture can be implemented incrementally. Start with the basics and add complexity only when needed.
+
+### Development Environment Updates
+```mermaid
+graph TD
+    A[Local Machine] -->|Mounts Code| B(Docker Container)
+    B --> C{Backend Services}
+    C --> D[FastAPI]
+    C --> E[PostgreSQL]
+    C --> F[Redis]
+    B --> G{Tests}
+    G --> H[pytest]
+    G --> I[FactoryBoy]
+```
+
+```yaml:backend/docker-compose.dev.yml
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:15-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+```

@@ -23,6 +23,9 @@ dev-build: ## Rebuild and start development environment
 test: ## Run tests
 	@echo "Running tests..."
 	docker compose -f backend/docker-compose.dev.yml run --rm test
+	
+test-lf:
+	docker compose -f backend/docker-compose.dev.yml run --rm test pytest -v --cov=app --lf -x
 
 test-watch: ## Run tests in watch mode
 	@echo "Running tests in watch mode..."
