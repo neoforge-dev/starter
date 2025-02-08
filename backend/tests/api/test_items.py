@@ -1,5 +1,6 @@
 """Test item CRUD operations."""
 from app.models.item import Item
+from app.core.config import settings
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +17,7 @@ async def test_create_item(client: AsyncClient, db: AsyncSession, regular_user_h
     user = await UserFactory.create(session=db)
     
     response = await client.post(
-        "/api/items/",
+        f"{settings.api_v1_str}/items/",
         json={
             "title": "Test Item",
             "description": "Test Description",
@@ -41,7 +42,7 @@ async def test_read_items(client: AsyncClient, db: AsyncSession, regular_user_he
         await ItemFactory.create(session=db, user=user),
     ]
     
-    response = await client.get("/api/items/", headers=regular_user_headers)
+    response = await client.get(f"{settings.api_v1_str}/items/", headers=regular_user_headers)
     assert response.status_code == 200
     data = response.json()
     assert len(data) == len(items)
@@ -52,7 +53,7 @@ async def test_read_item(client: AsyncClient, db: AsyncSession, regular_user_hea
     user = await UserFactory.create(session=db)
     item = await ItemFactory.create(session=db, user=user)
     
-    response = await client.get(f"/api/items/{item.id}", headers=regular_user_headers)
+    response = await client.get(f"{settings.api_v1_str}/items/{item.id}", headers=regular_user_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == item.id
@@ -67,7 +68,7 @@ async def test_update_item(client: AsyncClient, db: AsyncSession, regular_user_h
     item = await ItemFactory.create(session=db, user=user)
     
     response = await client.put(
-        f"/api/items/{item.id}",
+        f"{settings.api_v1_str}/items/{item.id}",
         json={
             "title": "Updated Item",
             "description": "Updated Description",
@@ -86,11 +87,11 @@ async def test_delete_item(client: AsyncClient, db: AsyncSession, regular_user_h
     user = await UserFactory.create(session=db)
     item = await ItemFactory.create(session=db, user=user)
     
-    response = await client.delete(f"/api/items/{item.id}", headers=regular_user_headers)
+    response = await client.delete(f"{settings.api_v1_str}/items/{item.id}", headers=regular_user_headers)
     assert response.status_code == 204
     
     # Verify item is deleted
-    response = await client.get(f"/api/items/{item.id}", headers=regular_user_headers)
+    response = await client.get(f"{settings.api_v1_str}/items/{item.id}", headers=regular_user_headers)
     assert response.status_code == 404
 
 
@@ -106,7 +107,7 @@ async def test_read_user_items(client: AsyncClient, db: AsyncSession, regular_us
     ]
     await ItemFactory.create(session=db, user=other_user)  # Other user's item
     
-    response = await client.get(f"/api/users/{user.id}/items", headers=regular_user_headers)
+    response = await client.get(f"{settings.api_v1_str}/users/{user.id}/items", headers=regular_user_headers)
     assert response.status_code == 200
     data = response.json()
     assert len(data) == len(user_items)

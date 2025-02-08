@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 import asyncpg
+from asyncio import AbstractEventLoop
 
 from app.core.config import settings
 from app.db.session import get_db
@@ -120,11 +121,10 @@ async def drop_test_database() -> None:
         await default_conn.close()
 
 
-@pytest.fixture(scope="session")
-def event_loop() -> Generator:
+@pytest_asyncio.fixture(scope="session")
+def event_loop() -> Generator[AbstractEventLoop, None, None]:
     """Create an instance of the default event loop for each test case."""
-    policy = asyncio.get_event_loop_policy()
-    loop = policy.new_event_loop()
+    loop = asyncio.new_event_loop()
     yield loop
     loop.close()
 

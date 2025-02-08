@@ -13,6 +13,10 @@ from app.schemas.user import UserCreate, UserUpdate
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     """User CRUD operations."""
 
+    def __init__(self):
+        """Initialize with User model."""
+        super().__init__(User)
+
     async def get_by_email(
         self, db: AsyncSession, *, email: str
     ) -> Optional[User]:
@@ -128,4 +132,4 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user.is_superuser
 
 
-user = CRUDUser(User) 
+user = CRUDUser() 

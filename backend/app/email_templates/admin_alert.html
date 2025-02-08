@@ -1,0 +1,41 @@
+{% extends "base.html" %} {% block content %}
+<p>ADMIN ALERT - {{ project_name }}</p>
+
+<h2>Action: {{ action }}</h2>
+
+<div
+  style="
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 15px 0;
+  "
+>
+  <h3>Details:</h3>
+  <ul>
+    {% for key, value in details.items() %}
+    <li><strong>{{ key }}:</strong> {{ value }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<p>Please click the button below to access the admin panel:</p>
+
+<table class="btn btn-primary" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td align="center">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td>
+            <a href="{{ admin_url }}" target="_blank">Go to Admin Panel</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<p>This is an automated alert. Please do not reply to this email.</p>
+
+<p>Best regards,<br />{{ project_name }} System</p>
+{% endblock %}

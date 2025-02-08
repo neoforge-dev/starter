@@ -64,16 +64,18 @@ services:
       - .:/app
     environment:
       - PYTHONPATH=/app
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/app
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/test
+      - REDIS_URL=redis://redis:6379/1
       - ENVIRONMENT=test
       - DEBUG=1
+      - TESTING=1
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: python -m pytest
+    command: >
+      bash -c "pip install -r requirements.txt && pip install -r requirements.test.txt && python -m pytest"
 
 volumes:
   postgres_data:

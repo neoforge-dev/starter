@@ -1,9 +1,9 @@
 """Application configuration."""
 import os
-from typing import List
+from typing import Any, Dict, List, Optional, Union
 
-from pydantic import PostgresDsn
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import AnyHttpUrl, EmailStr, HttpUrl, PostgresDsn, validator, field_validator, ConfigDict
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -11,15 +11,20 @@ class Settings(BaseSettings):
     
     # Application
     app_name: str = "NeoForge"
+    project_name: str = "NeoForge"  # Used in email templates
     version: str = "0.1.0"
     debug: bool = False
     environment: str = "development"
     testing: bool = False
     
+    # API
+    api_v1_str: str = "/api/v1"
+    server_host: str = "http://localhost:8000"  # Frontend URL for email links
+    
     # Security
     secret_key: str = "your-secret-key-for-jwt"  # Change in production
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    access_token_expire_minutes: int = 60 * 24 * 8  # 8 days
     cors_origins: List[str] = ["http://localhost:3000"]
     
     # Database
@@ -28,7 +33,28 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://redis:6379/0"
     
-    model_config = SettingsConfigDict(
+    # Email settings
+    smtp_tls: bool = True
+    smtp_port: Optional[int] = 587
+    smtp_host: Optional[str] = "smtp.gmail.com"
+    smtp_user: Optional[str] = ""
+    smtp_password: Optional[str] = ""
+    emails_from_email: Optional[EmailStr] = "info@neoforge.com"
+    emails_from_name: Optional[str] = "NeoForge"
+    email_reset_token_expire_hours: int = 48
+    email_templates_dir: str = "app/email_templates"
+    
+    # List of email addresses to notify for admin alerts
+    admin_notification_emails: List[EmailStr] = []
+
+    @field_validator("admin_notification_emails", mode="before")
+    def assemble_admin_emails(cls, v: str | List[str]) -> List[str]:
+        """Convert comma-separated string to list."""
+        if isinstance(v, str):
+            return [email.strip() for email in v.split(",")]
+        return v
+
+    model_config = ConfigDict(
         env_file=".env",
         case_sensitive=True,
         extra="ignore",

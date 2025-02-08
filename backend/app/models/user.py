@@ -1,6 +1,6 @@
 """User model."""
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -8,6 +8,7 @@ from app.db.base_class import Base
 
 if TYPE_CHECKING:
     from .item import Item
+    from .admin import Admin
 
 
 class User(Base):
@@ -26,5 +27,11 @@ class User(Base):
         "Item",
         back_populates="owner",
         cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    admin: Mapped[Optional["Admin"]] = relationship(
+        "Admin",
+        back_populates="user",
+        uselist=False,
         lazy="selectin",
     ) 

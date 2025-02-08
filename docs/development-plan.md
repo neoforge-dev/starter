@@ -164,7 +164,7 @@
 
 ### Technical Metrics
 
-- [ ] 100% test coverage
+- [ ] 80% test coverage
 - [ ] < 50KB initial JS payload
 - [ ] < 100ms API response time
 - [ ] < 1s page load time
@@ -213,3 +213,4 @@ Remember:
 3. Maintain bootstrap-founder perspective
 4. Document as we build
 5. Test continuously
+

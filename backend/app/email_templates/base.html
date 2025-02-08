@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>{{ subject }}</title>
+    <style>
+      /* Base */
+      body {
+        background-color: #f6f6f6;
+        font-family: sans-serif;
+        -webkit-font-smoothing: antialiased;
+        font-size: 14px;
+        line-height: 1.4;
+        margin: 0;
+        padding: 0;
+        -ms-text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      /* Container */
+      .container {
+        display: block;
+        margin: 0 auto !important;
+        max-width: 580px;
+        padding: 10px;
+        width: 580px;
+      }
+
+      /* Content */
+      .content {
+        box-sizing: border-box;
+        display: block;
+        margin: 0 auto;
+        max-width: 580px;
+        padding: 10px;
+      }
+
+      /* Header */
+      .header {
+        padding: 20px 0;
+        text-align: center;
+        background-color: #ffffff;
+      }
+
+      .header h1 {
+        color: #000000;
+        font-size: 22px;
+        font-weight: bold;
+        text-align: center;
+        text-transform: capitalize;
+      }
+
+      /* Main */
+      .main {
+        background: #ffffff;
+        border-radius: 3px;
+        width: 100%;
+      }
+
+      .wrapper {
+        box-sizing: border-box;
+        padding: 20px;
+      }
+
+      /* Footer */
+      .footer {
+        clear: both;
+        margin-top: 10px;
+        text-align: center;
+        width: 100%;
+      }
+
+      .footer td,
+      .footer p,
+      .footer span,
+      .footer a {
+        color: #999999;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      /* Buttons */
+      .btn {
+        box-sizing: border-box;
+        width: 100%;
+      }
+
+      .btn > tbody > tr > td {
+        padding-bottom: 15px;
+      }
+
+      .btn table {
+        width: auto;
+      }
+
+      .btn table td {
+        background-color: #ffffff;
+        border-radius: 5px;
+        text-align: center;
+      }
+
+      .btn a {
+        background-color: #ffffff;
+        border: solid 1px #3498db;
+        border-radius: 5px;
+        box-sizing: border-box;
+        color: #3498db;
+        cursor: pointer;
+        display: inline-block;
+        font-size: 14px;
+        font-weight: bold;
+        margin: 0;
+        padding: 12px 25px;
+        text-decoration: none;
+        text-transform: capitalize;
+      }
+
+      .btn-primary table td {
+        background-color: #3498db;
+      }
+
+      .btn-primary a {
+        background-color: #3498db;
+        border-color: #3498db;
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="content">
+        <div class="header">
+          <h1>{{ project_name }}</h1>
+        </div>
+        <div class="main">
+          <div class="wrapper">{% block content %}{% endblock %}</div>
+        </div>
+        <div class="footer">
+          <p>© {{ project_name }}. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

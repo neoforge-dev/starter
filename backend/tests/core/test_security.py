@@ -17,8 +17,8 @@ pytestmark = pytest.mark.asyncio
 async def test_unauthenticated_access(client: AsyncClient):
     """Test protected routes without authentication."""
     endpoints = [
-        ("GET", "/api/users/me"),
-        ("PATCH", "/api/users/me"),
+        ("GET", f"{settings.api_v1_str}/users/me"),
+        ("PATCH", f"{settings.api_v1_str}/users/me"),
     ]
     
     for method, path in endpoints:
@@ -30,7 +30,7 @@ async def test_unauthenticated_access(client: AsyncClient):
 async def test_invalid_token(client: AsyncClient):
     """Test authentication with invalid JWT tokens."""
     headers = {"Authorization": "Bearer invalid_token"}
-    response = await client.get("/api/users/me", headers=headers)
+    response = await client.get(f"{settings.api_v1_str}/users/me", headers=headers)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.json()["detail"] == "Could not validate credentials"
 
@@ -43,14 +43,14 @@ async def test_expired_token(client: AsyncClient):
         algorithm=settings.algorithm,
     )
     headers = {"Authorization": f"Bearer {expired_token}"}
-    response = await client.get("/api/users/me", headers=headers)
+    response = await client.get(f"{settings.api_v1_str}/users/me", headers=headers)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.json()["detail"] == "Could not validate credentials"
 
 
 async def test_regular_user_access(client: AsyncClient, regular_user_headers: dict):
     """Test regular user access to protected endpoints."""
-    response = await client.get("/api/users/me", headers=regular_user_headers)
+    response = await client.get(f"{settings.api_v1_str}/users/me", headers=regular_user_headers)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert "id" in data
@@ -61,7 +61,7 @@ async def test_regular_user_access(client: AsyncClient, regular_user_headers: di
 async def test_superuser_access(client: AsyncClient, superuser_headers: dict):
     """Test superuser access to protected endpoints."""
     # Test access to user list (protected endpoint)
-    response = await client.get("/api/users/", headers=superuser_headers)
+    response = await client.get(f"{settings.api_v1_str}/users/", headers=superuser_headers)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert isinstance(data, list)
@@ -78,7 +78,7 @@ async def test_login_access_token(client: AsyncClient, db: AsyncSession):
     
     # Test login
     response = await client.post(
-        "/api/auth/token",
+        f"{settings.api_v1_str}/auth/token",
         data={
             "username": "test@example.com",
             "password": "testpassword",

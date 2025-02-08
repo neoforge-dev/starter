@@ -1,0 +1,9 @@
+{% extends "base.html" %} {% block content %}
+<p>Hi,</p>
+<p>This is a test email from {{ project_name }}.</p>
+<p>
+  If you received this email, it means your email system is working correctly.
+</p>
+<p>Email sent to: {{ email }}</p>
+<p>Best regards,<br />{{ project_name }} Team</p>
+{% endblock %}

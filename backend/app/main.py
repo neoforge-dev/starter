@@ -20,6 +20,7 @@ from app.core.config import settings
 from app.db.session import get_db
 from app.core.redis import get_redis
 from app.api.v1.api import api_router
+from app.worker.email_worker import email_worker
 
 logger = structlog.get_logger()
 
@@ -39,35 +40,35 @@ class DetailedHealthCheck(HealthCheck):
     environment: str
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """
-    Handle application lifespan events.
+async def lifespan(app: FastAPI):
+    """Lifespan events for FastAPI app."""
+    # Startup
+    await init_db()
+    await init_redis()
     
-    Args:
-        app: FastAPI application instance
-    """
-    logger.info("Starting up application")
     yield
-    logger.info("Shutting down application")
+    
+    # Shutdown
+    await close_redis()
 
 app = FastAPI(
-    title="NeoForge API",
-    description="Modern starter kit for bootstrapped founders",
-    version=settings.version,
+    title=settings.project_name,
+    openapi_url=f"{settings.api_v1_str}/openapi.json",
     lifespan=lifespan,
 )
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Set up CORS
+if settings.cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[str(origin) for origin in settings.cors_origins],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-# Include API router
-app.include_router(api_router, prefix="/api")
+# Add API router
+app.include_router(api_router, prefix=settings.api_v1_str)
 
 @app.get(
     "/health",
