@@ -1,5 +1,5 @@
 """Health check endpoints."""
-from typing import Annotated
+from typing import Annotated, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.db.session import get_db
 from app.core.redis import get_redis
+from app.db.metrics import get_pool_stats, log_pool_stats
 
 router = APIRouter()
 
@@ -19,11 +20,19 @@ class HealthCheck(BaseModel):
     database_status: str
     redis_status: str
 
+class DatabasePoolStats(BaseModel):
+    """Database connection pool statistics."""
+    size: int
+    checked_in: int
+    checked_out: int
+    overflow: int
+
 class DetailedHealthCheck(HealthCheck):
     """Detailed health check response with component information."""
     database_latency_ms: float
     redis_latency_ms: float
     environment: str
+    database_pool: DatabasePoolStats
 
 @router.get(
     "/health",
@@ -86,9 +95,13 @@ async def detailed_health_check(
     redis: Annotated[Redis, Depends(get_redis)],
 ) -> DetailedHealthCheck:
     """
-    Detailed health check with latency information.
+    Detailed health check with latency and pool information.
     
-    Performs comprehensive health check with latency measurements.
+    Performs comprehensive health check with:
+    - Latency measurements for database and Redis
+    - Database connection pool statistics
+    - Environment information
+    
     Requires authentication in production.
     """
     import time
@@ -121,6 +134,12 @@ async def detailed_health_check(
             detail=f"Redis unhealthy: {str(e)}",
         )
 
+    # Get database pool statistics
+    pool_stats = get_pool_stats()
+    
+    # Log pool statistics for monitoring
+    await log_pool_stats()
+
     return DetailedHealthCheck(
         status="healthy",
         version=settings.version,
@@ -129,4 +148,10 @@ async def detailed_health_check(
         database_latency_ms=round(db_latency, 2),
         redis_latency_ms=round(redis_latency, 2),
         environment=settings.environment,
+        database_pool=DatabasePoolStats(
+            size=pool_stats["size"],
+            checked_in=pool_stats["checked_in"],
+            checked_out=pool_stats["checked_out"],
+            overflow=pool_stats["overflow"],
+        ),
     ) 
