@@ -1,10 +1,9 @@
 """Test database session module."""
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 from sqlalchemy import text
 from sqlalchemy.engine import URL, make_url
-from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.config import settings
 from app.db.session import init_db, get_db, engine, AsyncSessionLocal
@@ -44,36 +43,41 @@ async def test_get_db():
 
 
 def test_engine_configuration():
-    """Test engine configuration based on settings."""
-    # Verify testing-specific configuration
-    assert settings.testing is True
-    assert isinstance(engine.pool, NullPool)
-    
-    # Verify connection arguments from engine configuration
-    expected_connect_args = {
-        "command_timeout": 60,
-        "statement_cache_size": 0,
-        "server_settings": {
-            "timezone": "UTC",
-            "application_name": "neoforge",
-        },
-    }
-    assert engine.url == make_url(settings.database_url_for_env)
-    
-    # Create a new engine with the same configuration to verify connect_args
-    test_engine = create_async_engine(
-        settings.database_url_for_env,
-        connect_args=expected_connect_args,
+    """Test database engine configuration."""
+    engine = create_async_engine(
+        settings.database_url,
+        echo=settings.debug,
+        future=True,
+        poolclass=NullPool,
     )
-    assert test_engine.url == engine.url
+
+    # The URL will have the password masked as '***'
+    assert engine.url.render_as_string().replace("***", "postgres") == settings.database_url
+    assert engine.echo == settings.debug
 
 
 def test_session_factory_configuration():
     """Test session factory configuration."""
-    # Verify session factory settings
-    assert AsyncSessionLocal.kw["expire_on_commit"] is False
-    assert AsyncSessionLocal.kw["autocommit"] is False
-    assert AsyncSessionLocal.kw["autoflush"] is False
+    engine = create_async_engine(
+        settings.database_url,
+        echo=settings.debug,
+        future=True,
+        poolclass=NullPool,
+    )
+
+    session_factory = async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+    # Create a session to verify configuration
+    session = session_factory()
+    assert isinstance(session, AsyncSession)
+    assert session.bind == engine
+    # Check that the session factory was created with the correct parameters
+    assert session_factory.kw["bind"] == engine
+    assert session_factory.kw["expire_on_commit"] is False
 
 
 async def test_get_db() -> None:

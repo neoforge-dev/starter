@@ -1,44 +1,53 @@
 """Test CRUD base class."""
 import pytest
+import pytest_asyncio
+from typing import AsyncGenerator
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
 
 from app.crud.base import CRUDBase
 from app.models.item import Item
 from tests.factories import ItemFactory, UserFactory
+from app.db.base_class import Base
 
-pytestmark = pytest.mark.asyncio
+# Mark these classes to be ignored by pytest collection
+pytestmark = pytest.mark.usefixtures("db")
 
-
-class TestItemCreate(BaseModel):
+class _TestItemCreate(BaseModel):
     """Test item creation schema."""
     title: str
     description: str | None = None
     owner_id: int
 
-
-class TestItemUpdate(BaseModel):
+class _TestItemUpdate(BaseModel):
     """Test item update schema."""
     title: str | None = None
     description: str | None = None
     owner_id: int | None = None
 
+class _Item(Base):
+    """Test item model."""
+    __tablename__ = "test_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(String)
 
-class TestCRUD(CRUDBase[Item, TestItemCreate, TestItemUpdate]):
-    """Test CRUD class."""
+class _TestCRUD(CRUDBase[Item, _TestItemCreate, _TestItemUpdate]):
+    """Test CRUD operations."""
     pass
 
-
-@pytest.fixture
-def crud() -> TestCRUD:
+@pytest_asyncio.fixture
+async def crud() -> AsyncGenerator[_TestCRUD, None]:
     """Get test CRUD instance."""
-    return TestCRUD(Item)
+    yield _TestCRUD(Item)
 
-
-async def test_crud_create(db: AsyncSession, crud: TestCRUD):
+async def test_crud_create(db: AsyncSession, crud: _TestCRUD) -> None:
     """Test CRUD create operation."""
     user = await UserFactory.create(session=db)
-    item_in = TestItemCreate(
+    item_in = _TestItemCreate(
         title="Test Item",
         description="Test Description",
         owner_id=user.id,
@@ -50,13 +59,13 @@ async def test_crud_create(db: AsyncSession, crud: TestCRUD):
     assert item.owner_id == user.id
 
 
-async def test_crud_update(db: AsyncSession, crud: TestCRUD):
+async def test_crud_update(db: AsyncSession, crud: _TestCRUD) -> None:
     """Test CRUD update operation."""
     user = await UserFactory.create(session=db)
     item = await ItemFactory.create(session=db, user=user)
     
     # Test update with model
-    update_data = TestItemUpdate(title="Updated Title")
+    update_data = _TestItemUpdate(title="Updated Title")
     updated_item = await crud.update(db, db_obj=item, obj_in=update_data)
     assert updated_item.title == "Updated Title"
     assert updated_item.owner_id == user.id
@@ -68,7 +77,7 @@ async def test_crud_update(db: AsyncSession, crud: TestCRUD):
     assert updated_item.title == "Updated Title"
 
 
-async def test_crud_get_multi(db: AsyncSession, crud: TestCRUD):
+async def test_crud_get_multi(db: AsyncSession, crud: _TestCRUD):
     """Test CRUD get_multi operation."""
     user = await UserFactory.create(session=db)
     items = [
@@ -87,7 +96,7 @@ async def test_crud_get_multi(db: AsyncSession, crud: TestCRUD):
     assert result[0].id == items[1].id
 
 
-async def test_crud_remove(db: AsyncSession, crud: TestCRUD):
+async def test_crud_remove(db: AsyncSession, crud: _TestCRUD):
     """Test CRUD remove operation."""
     user = await UserFactory.create(session=db)
     item = await ItemFactory.create(session=db, user=user)

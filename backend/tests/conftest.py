@@ -124,7 +124,9 @@ async def drop_test_database() -> None:
 @pytest_asyncio.fixture(scope="session")
 def event_loop() -> Generator[AbstractEventLoop, None, None]:
     """Create an instance of the default event loop for each test case."""
-    loop = asyncio.new_event_loop()
+    policy = asyncio.get_event_loop_policy()
+    loop = policy.new_event_loop()
+    asyncio.set_event_loop(loop)
     yield loop
     loop.close()
 
@@ -147,43 +149,17 @@ async def setup_test_db() -> AsyncGenerator[None, None]:
 
 @pytest_asyncio.fixture(scope="function")
 async def db() -> AsyncGenerator[AsyncSession, None]:
-    """Get database session."""
-    async with engine.begin() as connection:
-        session = AsyncSession(
-            bind=connection,
-            expire_on_commit=False,
-            autocommit=False,
-            autoflush=False,
-        )
-
-        try:
-            yield session
-        finally:
-            # Roll back all changes after test
-            await session.rollback()
-            await session.close()
+    """Create a fresh database session for a test."""
+    async with AsyncSessionLocal() as session:
+        yield session
 
 
 @pytest_asyncio.fixture(scope="function")
-async def client(db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
-    """Get test client."""
-    async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
-        try:
-            yield db
-        finally:
-            pass  # Session is handled by the db fixture
-
-    app.dependency_overrides[get_db] = override_get_db
-
+async def client() -> AsyncGenerator[AsyncClient, None]:
+    """Create a test client."""
     transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport,
-        base_url="http://test",
-    ) as client:
-        try:
-            yield client
-        finally:
-            app.dependency_overrides = {}
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
 
 
 @pytest_asyncio.fixture(scope="function")

@@ -70,8 +70,8 @@ async def test_redis_connection_pool() -> None:
             await redis1.set("pool_test", "value")
             assert await redis2.get("pool_test") == "value"
             
-            await redis1.close()
-            await redis2.close()
+            await redis1.aclose()
+            await redis2.aclose()
 
 
 async def test_redis_error_handling(redis: Redis) -> None:

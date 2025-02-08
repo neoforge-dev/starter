@@ -4,7 +4,7 @@ from app.core.config import settings
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from tests.factories import UserFactory, ItemFactory
 
@@ -35,6 +35,10 @@ async def test_create_item(client: AsyncClient, db: AsyncSession, regular_user_h
 
 async def test_read_items(client: AsyncClient, db: AsyncSession, regular_user_headers: dict) -> None:
     """Test reading item list."""
+    # Clean up items table first
+    await db.execute(text("TRUNCATE TABLE items CASCADE"))
+    await db.commit()
+
     user = await UserFactory.create(session=db)
     items = [
         await ItemFactory.create(session=db, user=user),
