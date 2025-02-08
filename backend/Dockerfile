@@ -4,7 +4,7 @@
 FROM python:3.12-slim AS base
 
 # Install UV package manager
-COPY --from=ghcr.io/astral-sh/uv:0.5.11 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.7.4 /uv /usr/local/bin/uv
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \

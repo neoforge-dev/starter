@@ -11,10 +11,11 @@ services:
       - "8000:8000"
     environment:
       - PYTHONPATH=/app
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/app
-      - REDIS_URL=redis://redis:6379/0
-      - ENVIRONMENT=development
-      - DEBUG=1
+      - environment=development
+      - debug=1
+      - secret_key=dev_secret_key_replace_in_production_7e1a34bd93b148f0
+      - database_url=postgresql+asyncpg://postgres:postgres@db:5432/app
+      - redis_url=redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
@@ -27,6 +28,24 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
+
+  migrate:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+      - environment=development
+      - debug=1
+      - secret_key=dev_secret_key_replace_in_production_7e1a34bd93b148f0
+      - database_url=postgresql+asyncpg://postgres:postgres@db:5432/app
+      - redis_url=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+    command: alembic upgrade head
 
   db:
     image: postgres:15-alpine
@@ -64,11 +83,12 @@ services:
       - .:/app
     environment:
       - PYTHONPATH=/app
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/test
-      - REDIS_URL=redis://redis:6379/1
-      - ENVIRONMENT=test
-      - DEBUG=1
-      - TESTING=1
+      - environment=test
+      - debug=1
+      - testing=1
+      - secret_key=test_secret_key_replace_in_production_7e1a34bd93b148f0
+      - database_url=postgresql+asyncpg://postgres:postgres@db:5432/test
+      - redis_url=redis://redis:6379/1
     depends_on:
       db:
         condition: service_healthy
