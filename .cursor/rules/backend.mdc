@@ -1,0 +1,61 @@
+---
+description: Core development standards and rules for NeoForge
+globs: **/*
+---
+
+# Development Standards
+- Use Docker for all services
+- Follow FastAPI async patterns
+- Keep web components simple
+- Optimize for production costs
+
+# Frontend Rules
+- Vanilla JS only (no TypeScript)
+- Lit web components
+- Browser-native features
+- PWA-ready code
+
+# Backend Rules
+- Async FastAPI endpoints
+- SQLModel for database
+- UV package management
+- Ruff for linting
+
+# Infrastructure
+- Single DO droplet ($10)
+- Nomad for containers
+- GitHub Actions CI/CD
+- Cloudflare CDN (free tier)
+
+# Testing
+- Isolated test containers
+- Factory Boy for test data
+- Async test support
+- Full coverage reporting
+
+# Documentation
+- Clear setup instructions
+- Infrastructure diagrams
+- API documentation
+- Deployment guides
+
+## Services
+- API (FastAPI)
+- Database (PostgreSQL 15)
+- Redis (Caching)
+- Tests (Isolated)
+
+## Common Commands
+```bash
+make setup  # Initial setup
+make dev    # Start development
+make test   # Run tests
+make clean  # Cleanup
+```
+
+# Code Philosophy
+1. Start with minimal viable features
+2. Focus on developer experience
+3. Maintain bootstrap-founder perspective
+4. Document as we build
+5. Test continuously
