@@ -12,7 +12,9 @@ from httpx import AsyncClient, ASGITransport
 from redis.asyncio import Redis
 
 from app.core.config import settings
-from app.api.middleware import RateLimitMiddleware, ErrorHandlerMiddleware
+from app.api.middleware.security import SecurityHeadersMiddleware
+from app.api.middleware.validation import RequestValidationMiddleware
+from app.api.middleware.rate_limit import RateLimitMiddleware
 from tests.factories import UserFactory
 from app.main import app
 
@@ -102,7 +104,7 @@ async def test_rate_limit_middleware_authenticated(
     user = await UserFactory.create(session=db)
     token = jwt.encode(
         {"sub": str(user.id)},
-        settings.secret_key,
+        settings.secret_key.get_secret_value(),  # Get actual string value
         algorithm=settings.algorithm,
     )
     headers = {"Authorization": f"Bearer {token}"}

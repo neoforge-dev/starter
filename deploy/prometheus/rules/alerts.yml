@@ -1,0 +1,69 @@
+groups:
+  - name: neoforge
+    rules:
+      # High error rate alert
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{status=~"5.."}[5m]) /
+          rate(http_requests_total[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High error rate detected
+          description: Error rate is above 1% for the last 5 minutes
+
+      # Slow response times alert
+      - alert: SlowResponses
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Slow response times detected
+          description: 95th percentile of response times is above 500ms
+
+      # Database connection pool saturation
+      - alert: DatabasePoolSaturation
+        expr: db_pool_size > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Database connection pool near capacity
+          description: Database connection pool is above 80% capacity
+
+      # Redis connection lost
+      - alert: RedisConnectionLost
+        expr: redis_connected == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Redis connection lost
+          description: Application has lost connection to Redis
+
+      # High email failure rate
+      - alert: HighEmailFailureRate
+        expr: |
+          rate(emails_failed_total[5m]) /
+          rate(emails_sent_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High email failure rate
+          description: Email failure rate is above 5% for the last 5 minutes
+
+      # API endpoint errors
+      - alert: EndpointErrors
+        expr: |
+          sum by (endpoint) (
+            rate(http_requests_total{status=~"5.."}[5m])
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.endpoint }} has high error rate"
+          description: "Endpoint {{ $labels.endpoint }} is experiencing errors"

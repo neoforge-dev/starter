@@ -19,13 +19,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.core.config import settings
+from app.core.logging import setup_logging
 from app.db.session import get_db, engine
 from app.db.base import Base
 from app.core.redis import get_redis, redis_client
 from app.api.v1.api import api_router
+from app.api.endpoints import metrics
 from app.worker.email_worker import email_worker
 from app.api.middleware import setup_security_middleware, setup_validation_middleware
 
+# Set up structured logging
+setup_logging(settings.model_dump())
 logger = structlog.get_logger()
 
 class HealthCheck(BaseModel):
@@ -148,6 +152,9 @@ if settings.cors_origins:
 
 # Add API router
 app.include_router(api_router, prefix=settings.api_v1_str)
+
+# Add metrics endpoint
+app.include_router(metrics.router, tags=["monitoring"])
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():

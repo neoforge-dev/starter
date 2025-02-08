@@ -1,0 +1,91 @@
+version: "3.8"
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.50.0
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    volumes:
+      - ./grafana/dashboards:/etc/grafana/dashboards
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Change in production
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=10s
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.58.0
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+    ports:
+      - "9121:9121"
+    restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      - redis
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    volumes:
+      - ./alertmanager:/etc/alertmanager
+      - alertmanager_data:/alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    ports:
+      - "9093:9093"
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:
+
+networks:
+  monitoring:
+    driver: bridge

@@ -1,52 +1,38 @@
 [project]
 name = "neoforge"
 version = "0.1.0"
-description = "NeoForge Backend"
+description = "A modern, cost-efficient starter kit for bootstrapped founders"
 authors = [
-    { name = "Bogdan Veliscu", email = "bogdan.veliscu@outlook.com" }
+    { name = "NeoForge Team", email = "team@neoforge.dev" }
 ]
 dependencies = [
-    "fastapi>=0.110.0",
-    "uvicorn>=0.27.1",
-    "sqlalchemy>=2.0.27",
-    "alembic>=1.13.1",
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "sqlmodel>=0.0.14",
     "asyncpg>=0.29.0",
-    "python-jose>=3.3.0",
-    "passlib>=1.7.4",
-    "python-multipart>=0.0.9",
-    "email-validator>=2.1.0.post1",
-    "pydantic>=2.6.1",
-    "pydantic-settings>=2.1.0",
-    "mlflow>=2.11.3",
-    "httpx>=0.27.0",
     "redis>=5.0.1",
     "structlog>=24.1.0",
-    "sqlmodel>=0.0.14",
-    "fastapi-mail>=1.4.1",
-    "jinja2>=3.1.3",
-    "aiosmtplib>=2.0.2",
-    "blinker>=1.9.0",
-    "celery>=5.3.6",
-    "psycopg2-binary>=2.9.9",
-    "pydantic-extra-types>=2.4.1",
-    "PyJWT>=2.8.0",
-    "setuptools>=69.2.0",
+    "prometheus-client>=0.19.0",
+    "mlflow>=2.10.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "emails>=0.6",
+    "jinja2>=3.1.0",
+    "python-multipart>=0.0.9",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.1.0",
+    "factory-boy>=3.3.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.5",
+    "pytest-asyncio>=0.23.0",
     "pytest-cov>=4.1.0",
-    "pytest-testmon>=2.1.0",
-    "pytest-env>=1.1.3",
-    "factory-boy>=3.3.0",
-    "faker>=22.6.0",
-    "coverage>=7.4.1",
-    "black>=24.1.1",
-    "isort>=5.13.2",
+    "black>=24.1.0",
+    "ruff>=0.2.0",
     "mypy>=1.8.0",
-    "ruff>=0.2.1",
+    "httpx>=0.26.0",
 ]
 
 [build-system]
@@ -57,69 +43,42 @@ build-backend = "hatchling.build"
 packages = ["app"]
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --cov=app --cov-report=term-missing"
-env = [
-    "TESTING=True",
-    "DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/test",
-    "REDIS_URL=redis://redis:6379/0",
-]
+addopts = "--cov=app --cov-report=term-missing"
 
 [tool.coverage.run]
 source = ["app"]
 omit = ["tests/*"]
-branch = true
 
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
-    "if self.debug:",
-    "raise NotImplementedError",
     "if __name__ == .__main__.:",
-    "pass",
-    "raise ImportError",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
 ]
-fail_under = 80
 
 [tool.black]
 line-length = 88
 target-version = ["py312"]
-include = '\.pyi?$'
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-line_length = 88
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+select = ["E", "F", "B", "I", "N", "UP", "PL", "RUF"]
+ignore = []
 
 [tool.mypy]
 python_version = "3.12"
+strict = true
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 check_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["tests.*"]
-disallow_untyped_defs = false
-check_untyped_defs = false
-
-[tool.ruff]
-select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "C",  # flake8-comprehensions
-    "B",  # flake8-bugbear
-]
-ignore = [
-    "E501",  # line too long, handled by black
-    "B008",  # do not perform function calls in argument defaults
-    "C901",  # too complex
-] 
+module = ["mlflow.*"]
+ignore_missing_imports = true 

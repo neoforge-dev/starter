@@ -1,319 +1,253 @@
-# Monitoring Guide
-
-A practical guide to monitoring your NeoForge application with a focus on essential metrics for bootstrapped founders.
+# NeoForge Monitoring Guide
 
 ## Overview
 
-This guide covers:
+NeoForge comes with a comprehensive monitoring setup that includes:
+- Structured logging with JSON output
+- Prometheus metrics for system and application monitoring
+- Health check endpoints for service status
+- Performance monitoring with MLflow
+- Email delivery tracking
 
-- Essential metrics to track
-- Cost-effective monitoring setup
-- Scaling considerations
-- Alert configuration
+## Monitoring Components
 
-## Core Metrics
+### 1. Structured Logging
 
-### 1. System Health
+All logs are JSON-formatted and include:
+- Timestamp
+- Log level
+- Environment
+- Application version
+- Request details (for HTTP requests)
+- Error details (when applicable)
 
-```mermaid
-graph TD
-    A[System Health] --> B[CPU Usage]
-    A --> C[Memory Usage]
-    A --> D[Disk Space]
-    A --> E[Network I/O]
-```
-
-#### Key Metrics
-
-- CPU Usage: Alert at 70%
-- Memory Usage: Alert at 80%
-- Disk Space: Alert at 85%
-- Network I/O: Track bandwidth usage
-
-### 2. Application Performance
-
-```python
-# Example FastAPI middleware for performance monitoring
-from fastapi import Request
-import time
-
-@app.middleware("http")
-async def add_performance_metrics(request: Request, call_next):
-    start_time = time.time()
-    response = await call_next(request)
-    duration = time.time() - start_time
-    
-    # Log if request takes more than 500ms
-    if duration > 0.5:
-        logger.warning(f"Slow request: {request.url} took {duration:.2f}s")
-    
-    response.headers["X-Response-Time"] = str(duration)
-    return response
-```
-
-#### Key Metrics
-
-- Response Time: < 200ms
-- Error Rate: < 0.1%
-- Request Rate: Track for scaling
-- Database Query Time: < 100ms
-
-### 3. Business Metrics
-
-```typescript
-// Frontend tracking example
-@customElement('user-activity')
-export class UserActivity extends LitElement {
-    @property({ type: Number }) activeUsers = 0;
-
-    private track() {
-        this.dispatchEvent(new CustomEvent('user-action', {
-            detail: { action: 'feature_used' }
-        }));
-    }
+Example log output:
+```json
+{
+    "timestamp": "2024-02-20T10:30:45Z",
+    "level": "info",
+    "event": "request_processed",
+    "method": "POST",
+    "url": "/api/v1/users",
+    "status_code": 201,
+    "duration_ms": 45.2,
+    "environment": "production",
+    "app_version": "0.1.0"
 }
 ```
 
-#### Key Metrics
+### 2. Prometheus Metrics
 
-- Daily Active Users
-- Feature Usage
-- Error Rates
-- Conversion Rates
+Available at `/metrics`, the following metrics are tracked:
 
-## Monitoring Setup
+#### HTTP Metrics
+- `http_request_duration_seconds` (Histogram)
+  - Labels: method, endpoint
+  - Tracks request duration
+- `http_requests_total` (Counter)
+  - Labels: method, endpoint, status
+  - Counts total requests
 
-### 1. Basic Setup (Bootstrap Phase)
+#### Database Metrics
+- `db_pool_size` (Gauge)
+  - Current database connection pool size
 
-```hcl
-# nomad/jobs/monitoring.hcl
-job "monitoring" {
-  datacenters = ["nyc3"]
-  type = "service"
+#### Redis Metrics
+- `redis_connected` (Gauge)
+  - 1 if connected, 0 if disconnected
 
-  group "monitoring" {
-    count = 1
+#### Email Metrics
+- `emails_sent_total` (Counter)
+- `emails_delivered_total` (Counter)
+- `emails_failed_total` (Counter)
 
-    task "prometheus" {
-      driver = "docker"
-      
-      config {
-        image = "prom/prometheus:latest"
-        ports = ["prometheus"]
-      }
+### 3. Health Check Endpoints
 
-      resources {
-        cpu    = 100  # 0.1 CPU
-        memory = 256  # 256MB RAM
-      }
-    }
-  }
+#### Basic Health Check
+`GET /health`
+```json
+{
+    "status": "healthy",
+    "version": "0.1.0",
+    "database_status": "healthy",
+    "redis_status": "healthy"
 }
 ```
 
-### 2. Prometheus Configuration
+#### Detailed Health Check
+`GET /health/detailed`
+```json
+{
+    "status": "healthy",
+    "version": "0.1.0",
+    "database_status": "healthy",
+    "redis_status": "healthy",
+    "database_latency_ms": 1.23,
+    "redis_latency_ms": 0.45,
+    "environment": "production"
+}
+```
+
+### 4. MLflow Integration
+
+MLflow is used for tracking:
+- Model training metrics
+- Model parameters
+- Model artifacts
+- Experiment tracking
+
+## Monitoring Best Practices
+
+### 1. Log Levels
+
+- ERROR: Use for unrecoverable errors that need immediate attention
+- WARNING: Use for recoverable errors or unexpected conditions
+- INFO: Use for important business events and state changes
+- DEBUG: Use for detailed debugging information (development only)
+
+### 2. Performance Monitoring
+
+Monitor these key metrics:
+- Request duration (alert if p95 > 500ms)
+- Database query time (alert if p95 > 100ms)
+- Redis operation time (alert if p95 > 50ms)
+- Error rate (alert if > 1% in 5 minutes)
+
+### 3. Resource Monitoring
+
+Watch for:
+- Database connection pool saturation
+- Redis connection status
+- Memory usage
+- CPU usage
+
+### 4. Business Metrics
+
+Track:
+- Active users
+- API usage by endpoint
+- Error rates by endpoint
+- Email delivery success rate
+
+## Prometheus Configuration
+
+Example Prometheus configuration:
 
 ```yaml
-# prometheus.yml
 global:
-  scrape_interval: 30s  # Reduced frequency for cost saving
+  scrape_interval: 15s
+  evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'api'
+  - job_name: 'neoforge'
     static_configs:
       - targets: ['localhost:8000']
     metrics_path: '/metrics'
 ```
 
-### 3. Logging Setup
+## Grafana Dashboards
 
-```python
-# logging_config.py
-import structlog
+Recommended dashboard panels:
+1. System Overview
+   - Request rate
+   - Error rate
+   - Response time percentiles
+   - Active connections
 
-def setup_logging():
-    structlog.configure(
-        processors=[
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.JSONRenderer()
-        ],
-        wrapper_class=structlog.BoundLogger,
-        context_class=dict,
-        logger_factory=structlog.PrintLoggerFactory(),
-    )
-```
+2. Database Performance
+   - Connection pool usage
+   - Query latency
+   - Active transactions
 
-## Cost-Effective Alert Strategy
+3. Email Metrics
+   - Delivery rate
+   - Bounce rate
+   - Processing time
 
-### 1. Essential Alerts
+4. Business Metrics
+   - Active users
+   - API usage
+   - Feature adoption
+
+## Alert Rules
+
+Example Prometheus alert rules:
 
 ```yaml
-# alerts.yml
 groups:
-- name: essential
+- name: neoforge
   rules:
-  - alert: HighCPUUsage
-    expr: cpu_usage_percent > 70
+  - alert: HighErrorRate
+    expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.01
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: High error rate detected
+
+  - alert: SlowResponses
+    expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
     for: 5m
     labels:
       severity: warning
     annotations:
-      summary: High CPU usage detected
-
-  - alert: LowDiskSpace
-    expr: disk_free_percent < 15
-    for: 5m
-    labels:
-      severity: warning
+      summary: Slow response times detected
 ```
 
-### 2. Business Alerts
+## Cost Optimization
 
-```python
-# business_metrics.py
-async def monitor_business_metrics():
-    daily_users = await get_daily_active_users()
-    if daily_users > settings.SCALE_THRESHOLD:
-        notify_admin("Scale threshold reached")
-```
+To optimize monitoring costs:
+1. Adjust scrape intervals based on traffic
+2. Use appropriate retention periods
+3. Aggregate metrics where possible
+4. Monitor storage usage
 
-## Dashboard Setup
+## Scaling Considerations
 
-### 1. Basic Grafana Setup
+As your application grows:
+1. Increase metric retention for longer trends
+2. Add more detailed metrics
+3. Set up metric aggregation
+4. Implement metric federation
 
-```hcl
-job "grafana" {
-  group "monitoring" {
-    task "grafana" {
-      driver = "docker"
-      
-      config {
-        image = "grafana/grafana:latest"
-      }
+## Troubleshooting
 
-      resources {
-        cpu    = 100
-        memory = 128
-      }
-    }
-  }
-}
-```
+Common issues and solutions:
 
-### 2. Essential Dashboards
+1. High Error Rate
+   - Check logs for error patterns
+   - Review recent deployments
+   - Check external dependencies
 
-- System Overview
-  - CPU, Memory, Disk Usage
-  - Network I/O
-- Application Performance
-  - Response Times
-  - Error Rates
-  - Request Rates
-- Business Metrics
-  - User Activity
-  - Feature Usage
-  - Conversion Rates
+2. Slow Responses
+   - Check database query performance
+   - Review resource usage
+   - Check external service latency
 
-## Scaling Monitoring
+3. Memory Issues
+   - Review memory metrics
+   - Check for memory leaks
+   - Adjust resource limits
 
-### 1. When to Scale Monitoring
+## Security Considerations
 
-- More than 1000 daily active users
-- Response times consistently > 200ms
-- Error rates > 0.1%
-- CPU usage consistently > 70%
+1. Metrics Endpoint
+   - Restrict access in production
+   - Use authentication
+   - Rate limit requests
 
-### 2. Enhanced Monitoring Setup
-
-```yaml
-# Advanced Prometheus config
-global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
-
-rule_files:
-  - "alerts/*.yml"
-
-scrape_configs:
-  - job_name: 'api'
-    static_configs:
-      - targets: ['api:8000']
-  - job_name: 'node'
-    static_configs:
-      - targets: ['node-exporter:9100']
-```
-
-## Best Practices
-
-1. **Start Small**
-   - Begin with essential metrics
-   - Use lightweight monitoring
-   - Focus on actionable alerts
-
-2. **Cost Control**
-   - Reduce scrape frequency
-   - Limit retention period
-   - Use aggregation
-
-3. **Alert Strategy**
-   - Alert on actionable items
-   - Reduce alert noise
-   - Define clear escalation paths
-
-4. **Data Retention**
-   - Keep raw data for 7 days
-   - Aggregate older data
-   - Archive important metrics
-
-## Troubleshooting Guide
-
-### Common Issues
-
-1. **High CPU Usage**
-
-   ```bash
-   # Check top processes
-   nomad alloc exec <alloc-id> top
-   ```
-
-2. **Memory Leaks**
-
-   ```bash
-   # Check memory usage
-   nomad alloc exec <alloc-id> free -m
-   ```
-
-3. **Disk Space**
-
-   ```bash
-   # Check disk usage
-   nomad alloc exec <alloc-id> df -h
-   ```
+2. Logging
+   - Never log sensitive data
+   - Mask PII in logs
+   - Use appropriate log levels
 
 ## Next Steps
 
-1. **Basic Setup**
-   - Install Prometheus
-   - Configure basic metrics
-   - Set up essential alerts
-
-2. **Enhanced Monitoring**
-   - Add business metrics
-   - Configure dashboards
-   - Set up alert notifications
-
-3. **Scale Monitoring**
-   - Add more metrics
-   - Increase retention
-   - Add redundancy
-
-Remember:
-
-1. Start with essentials
-2. Monitor costs
-3. Alert only on actionable items
-4. Scale gradually
-5. Keep it simple
+1. Set up Prometheus
+2. Configure Grafana dashboards
+3. Set up alerts
+4. Monitor costs
+5. Review and adjust thresholds
 
 # 📊 Monitoring Stack
 
