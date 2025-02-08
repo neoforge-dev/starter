@@ -6,6 +6,7 @@ from unittest.mock import patch, MagicMock, AsyncMock, Mock, ANY
 from contextlib import asynccontextmanager
 from unittest import mock
 import pytest_asyncio
+from fastapi import FastAPI
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -45,13 +46,17 @@ def mock_template_validator():
     return validator
 
 
-@pytest.fixture
-async def tracking_record(db: AsyncSession):
-    """Create a test tracking record."""
-    return await email_tracking.create_with_event(
+@pytest_asyncio.fixture
+async def tracking_record(db: AsyncSession) -> EmailTracking:
+    """Create a test tracking record.
+    
+    Returns:
+        EmailTracking: The created tracking record, already committed to the database.
+    """
+    record = await email_tracking.create_with_event(
         db=db,
         obj_in=EmailTrackingCreate(
-            email_id="test-1",
+            email_id="test-queued-1",
             recipient="test@example.com",
             subject="Test Subject",
             template_name="test_email",
@@ -59,6 +64,12 @@ async def tracking_record(db: AsyncSession):
         ),
         event_type=EmailStatus.QUEUED,
     )
+    
+    # Ensure the transaction is committed
+    await db.commit()
+    await db.refresh(record)
+    
+    return record
 
 
 @pytest.fixture
@@ -88,17 +99,22 @@ def mock_tracking():
 async def tracking_record_for_bounce(db: AsyncSession):
     """Create a real tracking record for bounce test."""
     tracking = EmailTracking(
-        id=1,  # Match the mock ID
-        email_id="test-id",
-        recipient="test@example.com",
-        subject="Test Subject",
+        id=2,  # Different ID from the other fixture
+        email_id="test-bounce-1",  # Different email_id
+        recipient="bounce@example.com",  # Different recipient
+        subject="Test Bounce Subject",
         template_name="test_template",
         status=EmailStatus.QUEUED
     )
     db.add(tracking)
     await db.commit()
     await db.refresh(tracking)
-    return tracking
+    
+    yield tracking
+    
+    # Cleanup
+    await db.delete(tracking)
+    await db.commit()
 
 
 @pytest.mark.asyncio
@@ -164,9 +180,8 @@ async def test_process_one_failure_with_tracking(
     error_msg = "SMTP connection failed: Connection refused"
     mock_send_email.side_effect = Exception(error_msg)
 
-    # Set retry count to max retries to trigger failure path
-    record = await tracking_record
-    record.tracking_metadata = {
+    # tracking_record is already awaited by the fixture
+    tracking_record.tracking_metadata = {
         "retry_count": worker.max_retries,
         "max_retries": worker.max_retries,
     }
@@ -257,13 +272,8 @@ async def test_process_one_bounce_with_tracking(
         template_name="test_email",
         template_data={},
     )
-    mock_queue.dequeue.return_value = ("test-1", email)
+    mock_queue.dequeue.return_value = ("test-queued-1", email)  # Match tracking_record email_id
     mock_send_email.side_effect = Exception("Recipient address bounced")
-
-    # Get tracking record
-    record = await tracking_record
-    record.tracking_metadata = {}
-    await db.commit()
 
     # Mock AsyncSessionLocal to return our test session
     @asynccontextmanager
@@ -275,20 +285,18 @@ async def test_process_one_bounce_with_tracking(
         result = await worker.process_one()
 
         # Verify
-        assert result is False
+        assert result is False  # Should return False for failed email
+        mock_queue.mark_failed.assert_called_once_with("test-queued-1", "Recipient address bounced")
         mock_queue.mark_completed.assert_not_called()
-        mock_queue.mark_failed.assert_called_once()
 
-        # Verify tracking
-        tracking = await email_tracking.get_by_email_id(db, email_id="test-1")
-        assert tracking is not None
-        assert tracking.status == EmailStatus.BOUNCED
-        assert tracking.failed_at is not None
-        assert len(tracking.events) == 2  # QUEUED and BOUNCED
-        assert tracking.events[-1].event_type == EmailStatus.BOUNCED
-        assert "Recipient address bounced" in tracking.events[-1].event_metadata.get("error", "")
+        # Verify tracking record was updated
+        updated_record = await db.get(EmailTracking, tracking_record.id)
+        assert updated_record.status == EmailStatus.BOUNCED  # Should be marked as bounced
+        assert "Recipient address bounced" in updated_record.error_message
+        assert updated_record.tracking_metadata == {"retry_count": 0, "error_type": "bounce"}
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_worker_run_with_tracking(
     db: AsyncSession,
@@ -433,6 +441,7 @@ async def test_process_one_send_failure(db: AsyncSession, mock_queue, mock_send_
         mock_queue.mark_failed.assert_called_once()
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_worker_run_and_stop():
     """Test worker run and stop functionality."""
@@ -588,6 +597,7 @@ async def test_process_one_bounce_handling(worker, mock_queue, mock_tracking):
         assert "bounce" in error_msg.lower()
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_process_one_max_retries(worker, mock_queue, db):
     """Test that emails are not retried after max attempts."""

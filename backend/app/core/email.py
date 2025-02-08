@@ -29,7 +29,7 @@ template_validator = TemplateValidator()
 # Configure FastAPI-Mail
 email_conf = ConnectionConfig(
     MAIL_USERNAME=settings.smtp_user,
-    MAIL_PASSWORD=settings.smtp_password,
+    MAIL_PASSWORD=settings.smtp_password.get_secret_value() if settings.smtp_password else "",
     MAIL_FROM=settings.emails_from_email,
     MAIL_PORT=settings.smtp_port,
     MAIL_SERVER=settings.smtp_host,
@@ -41,7 +41,8 @@ email_conf = ConnectionConfig(
     TEMPLATE_FOLDER=Path(__file__).parent.parent / "email_templates",
 )
 
-fastmail = FastMail(email_conf)
+# Initialize FastMail only if SMTP is configured
+fastmail = FastMail(email_conf) if settings.smtp_user else None
 
 
 async def send_email(

@@ -38,9 +38,18 @@ async def update_user_me(
 async def create_user(
     *,
     db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
     user_in: UserCreate,
 ) -> User:
     """Create new user."""
+    # Check if current user is superuser
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superusers can create new users",
+        )
+    
+    # Check if email already exists
     user = await user_crud.get_by_email(db, email=user_in.email)
     if user:
         raise HTTPException(

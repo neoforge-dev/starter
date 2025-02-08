@@ -1,14 +1,15 @@
 """Test API middleware functionality."""
-import pytest
-import pytest_asyncio
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from httpx import AsyncClient, ASGITransport
+import asyncio
 import jwt
 import time
-import asyncio
-from redis.asyncio import Redis
 from typing import AsyncGenerator
+
+import pytest
+import pytest_asyncio
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+from httpx import AsyncClient, ASGITransport
+from redis.asyncio import Redis
 
 from app.core.config import settings
 from app.api.middleware import RateLimitMiddleware, ErrorHandlerMiddleware
@@ -16,6 +17,16 @@ from tests.factories import UserFactory
 from app.main import app
 
 pytestmark = pytest.mark.asyncio
+
+
+@pytest.fixture
+async def redis() -> AsyncGenerator[Redis, None]:
+    """Create Redis client for testing."""
+    client = Redis.from_url(settings.redis_url)
+    try:
+        yield client
+    finally:
+        await client.aclose()
 
 
 @pytest.fixture
@@ -50,6 +61,7 @@ async def test_error_handler_middleware(client: AsyncClient):
     assert data["redis_status"] == "healthy"
 
 
+@pytest.mark.slow
 async def test_rate_limit_middleware_unauthenticated(
     app_with_middleware: FastAPI,
     redis: Redis,
@@ -76,6 +88,7 @@ async def test_rate_limit_middleware_unauthenticated(
         assert response.json()["detail"] == "Too Many Requests"
 
 
+@pytest.mark.slow
 async def test_rate_limit_middleware_authenticated(
     app_with_middleware: FastAPI,
     redis: Redis,
@@ -131,6 +144,7 @@ async def test_rate_limit_middleware_ip_based(
     await client.aclose()
 
 
+@pytest.mark.slow
 async def test_rate_limit_window_reset(app_with_middleware: FastAPI, redis: Redis):
     """Test rate limit window reset."""
     app_with_middleware.add_middleware(RateLimitMiddleware)
@@ -162,6 +176,7 @@ async def test_rate_limit_window_reset(app_with_middleware: FastAPI, redis: Redi
     await client.aclose()
 
 
+@pytest.mark.slow
 async def test_rate_limit_bypass_health_check(
     app_with_middleware: FastAPI,
     client: AsyncClient,
@@ -224,13 +239,15 @@ async def test_rate_limit_middleware_redis_error(
         assert response.status_code == 200
 
 
-async def test_error_handler_middleware_validation_error(client: AsyncClient):
+async def test_error_handler_middleware_validation_error(client: AsyncClient, superuser_headers: dict):
     """Test handling of validation errors."""
     # Send request to an endpoint that requires validation
-    response = await client.post("/api/v1/users/", json={})  # Missing required fields
+    response = await client.post("/api/v1/users/", json={}, headers=superuser_headers)  # Missing required fields
     assert response.status_code == 422  # Validation error
     data = response.json()
     assert "detail" in data
+    assert isinstance(data["detail"], list)  # Validation errors are returned as a list
+    assert len(data["detail"]) > 0  # Should have at least one validation error
 
 
 async def test_error_handler_middleware_database_error(client: AsyncClient, regular_user_headers: dict):

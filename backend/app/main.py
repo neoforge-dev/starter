@@ -24,7 +24,7 @@ from app.db.base import Base
 from app.core.redis import get_redis, redis_client
 from app.api.v1.api import api_router
 from app.worker.email_worker import email_worker
-from app.api.middleware import setup_middleware
+from app.api.middleware import setup_security_middleware, setup_validation_middleware
 
 logger = structlog.get_logger()
 
@@ -73,76 +73,68 @@ async def close_redis():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan events for FastAPI app."""
-    # Startup
+    """Application lifespan context manager."""
+    # Initialize services
     await init_db()
     await init_redis()
     
+    # Start background workers
+    email_worker.start()
+    
+    # Configure middleware
+    setup_security_middleware(app)
+    setup_validation_middleware(app)
+    
+    logger.info(
+        "application_startup",
+        environment=settings.environment,
+        debug=settings.debug,
+    )
+    
     yield
     
-    # Shutdown
+    # Cleanup
     await close_redis()
+    email_worker.stop()
+    
+    logger.info("application_shutdown")
 
 def custom_openapi():
     """Generate custom OpenAPI schema."""
     if app.openapi_schema:
         return app.openapi_schema
-
+    
     openapi_schema = get_openapi(
-        title=settings.project_name,
+        title=settings.app_name,
         version=settings.version,
-        description="""
-        NeoForge Backend API Documentation.
-        
-        ## Authentication
-        Most endpoints require authentication using JWT Bearer tokens.
-        Get your token from the /api/auth/token endpoint.
-        
-        ## Rate Limiting
-        Public endpoints are rate-limited to prevent abuse.
-        Authenticated endpoints have higher limits.
-        
-        ## Error Handling
-        The API uses standard HTTP status codes and returns detailed error messages.
-        """,
+        description=__doc__,
         routes=app.routes,
-        tags=[
-            {"name": "auth", "description": "Authentication operations"},
-            {"name": "users", "description": "User management operations"},
-            {"name": "items", "description": "Item CRUD operations"},
-            {"name": "admin", "description": "Admin-only operations"},
-            {"name": "system", "description": "System health and monitoring"},
-            {"name": "email", "description": "Email operations and tracking"},
-        ]
     )
     
-    # Add security scheme
-    openapi_schema["components"]["securitySchemes"] = {
-        "bearerAuth": {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT",
-        }
+    # Custom OpenAPI modifications
+    openapi_schema["info"]["x-logo"] = {
+        "url": "https://neoforge.dev/logo.png"
     }
     
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
 app = FastAPI(
-    title=settings.project_name,
+    title=settings.app_name,
     version=settings.version,
-    openapi_url=f"{settings.api_v1_str}/openapi.json",
-    docs_url=f"{settings.api_v1_str}/docs",
-    redoc_url=f"{settings.api_v1_str}/redoc",
-    lifespan=lifespan,
     description=__doc__,
+    lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
+    openapi_url="/api/openapi.json" if settings.environment != "production" else None,
 )
 
 # Override the default OpenAPI schema
 app.openapi = custom_openapi
 
 # Set up middleware
-setup_middleware(app)
+setup_security_middleware(app)
+setup_validation_middleware(app)
 
 # Set up CORS
 if settings.cors_origins:
@@ -156,6 +148,17 @@ if settings.cors_origins:
 
 # Add API router
 app.include_router(api_router, prefix=settings.api_v1_str)
+
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    """Custom Swagger UI."""
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=f"{settings.app_name} - API Documentation",
+        oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
+        swagger_js_url="/static/swagger-ui-bundle.js",
+        swagger_css_url="/static/swagger-ui.css",
+    )
 
 @app.get(
     "/health",

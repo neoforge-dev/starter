@@ -1,12 +1,31 @@
 """Test configuration and fixtures."""
-import asyncio
 import os
-from typing import AsyncGenerator, Generator
+from urllib.parse import urlparse
+
+# Set test environment variables before imports
+os.environ.update({
+    "TESTING": "true",
+    "ENVIRONMENT": "test",
+    "SECRET_KEY": "x" * 32,  # 32-char test key
+    "DATABASE_URL": "postgresql+asyncpg://postgres:postgres@db:5432/test",
+    "REDIS_URL": "redis://redis:6379/0",
+    # Email settings for testing
+    "SMTP_TLS": "true",
+    "SMTP_PORT": "587",
+    "SMTP_HOST": "smtp.gmail.com",
+    "SMTP_USER": "test@example.com",
+    "SMTP_PASSWORD": "test-password",
+    "EMAILS_FROM_EMAIL": "test@example.com",
+    "EMAILS_FROM_NAME": "Test",
+})
+
+import asyncio
+from typing import AsyncGenerator, Dict, Generator
 from uuid import uuid4
 
-from app.models.user import User
 import pytest
 import pytest_asyncio
+from fastapi import FastAPI
 from httpx import AsyncClient, ASGITransport
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -14,52 +33,41 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 import asyncpg
 from asyncio import AbstractEventLoop
-from fastapi import FastAPI
 
 from app.core.config import settings
-from app.db.session import get_db
-from app.main import app
-from app.core.redis import get_redis
 from app.db.base import Base
+from app.main import app
+from app.models.user import User
 from app.core.security import get_password_hash, create_access_token
+from app.db.session import get_db
+from app.core.redis import get_redis
 from tests.factories import UserFactory
-from app.api.middleware import ErrorHandlerMiddleware, RateLimitMiddleware
 
-# Set test settings
+# Override settings for testing
 settings.testing = True
 settings.environment = "test"
+settings.debug = True
 
-# Database configuration
-DB_USER = "postgres"
-DB_PASSWORD = "postgres"
-DB_HOST = "db"
-DB_NAME = "test"
-DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:5432/{DB_NAME}"
+# Parse database URL for test database setup
+db_url = urlparse(str(settings.database_url))
+DB_USER = db_url.username
+DB_PASSWORD = db_url.password
+DB_HOST = db_url.hostname
+DB_NAME = db_url.path.lstrip("/")
 
-# Create async engine for tests
+# Create async engine for testing
 engine = create_async_engine(
-    DATABASE_URL,
-    echo=settings.debug,
+    settings.database_url_for_env,
+    echo=False,
     future=True,
-    pool_pre_ping=True,
-    poolclass=NullPool,  # Disable connection pooling in tests
-    connect_args={
-        "command_timeout": 60,
-        "statement_cache_size": 0,  # Disable statement cache in tests
-        "server_settings": {
-            "timezone": "UTC",
-            "application_name": "neoforge-test",
-        },
-    },
+    poolclass=NullPool,
 )
 
 # Create async session factory
-AsyncSessionLocal = sessionmaker(
+async_session = sessionmaker(
     engine,
     class_=AsyncSession,
     expire_on_commit=False,
-    autocommit=False,
-    autoflush=False,
 )
 
 async def create_test_database() -> None:
@@ -76,23 +84,21 @@ async def create_test_database() -> None:
         },
     }
     
-    default_conn = await asyncpg.connect(**conn_params)
-    
     try:
-        await default_conn.execute(f"""
-            SELECT pg_terminate_backend(pg_stat_activity.pid)
-            FROM pg_stat_activity
-            WHERE pg_stat_activity.datname = '{DB_NAME}'
-            AND pid <> pg_backend_pid()
-        """)
-        await default_conn.execute(f'DROP DATABASE IF EXISTS "{DB_NAME}"')
-        await default_conn.execute(f'CREATE DATABASE "{DB_NAME}" TEMPLATE template0 LC_COLLATE "C" LC_CTYPE "C"')
-        # Set timezone for test database
-        await default_conn.execute(f"""
-            ALTER DATABASE "{DB_NAME}" SET timezone TO 'UTC'
-        """)
-    finally:
-        await default_conn.close()
+        # Connect to default database
+        conn = await asyncpg.connect(**conn_params)
+        
+        # Drop test database if it exists
+        await conn.execute(f'DROP DATABASE IF EXISTS "{DB_NAME}"')
+        
+        # Create test database
+        await conn.execute(f'CREATE DATABASE "{DB_NAME}"')
+        
+        await conn.close()
+        
+    except Exception as e:
+        logger.error(f"Error creating test database: {e}")
+        raise
 
 
 async def drop_test_database() -> None:
@@ -152,7 +158,7 @@ async def setup_test_db() -> AsyncGenerator[None, None]:
 @pytest_asyncio.fixture(scope="function")
 async def db() -> AsyncGenerator[AsyncSession, None]:
     """Create a fresh database session for a test."""
-    async with AsyncSessionLocal() as session:
+    async with async_session() as session:
         yield session
 
 
@@ -224,4 +230,14 @@ async def superuser_token(db: AsyncSession) -> str:
 @pytest_asyncio.fixture
 async def superuser_headers(superuser_token: str) -> dict:
     """Return headers for superuser authentication."""
-    return {"Authorization": f"Bearer {superuser_token}"} 
+    return {"Authorization": f"Bearer {superuser_token}"}
+
+@pytest.fixture
+def superuser_headers(superuser_token: str) -> dict:
+    """Create headers with superuser token."""
+    return {"Authorization": f"Bearer {superuser_token}"}
+
+@pytest.fixture
+def regular_user_headers(user_token: str) -> dict:
+    """Create headers with regular user token."""
+    return {"Authorization": f"Bearer {user_token}"} 
