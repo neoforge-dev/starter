@@ -9,10 +9,11 @@ from jinja2 import Environment, select_autoescape, FileSystemLoader
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.queue import email_queue, QueuedEmail
+from app.core.queue import email_queue, EmailQueueItem
 from app.crud.email_tracking import email_tracking
 from app.models.email_tracking import EmailStatus
 from app.schemas.email_tracking import EmailTrackingCreate, EmailEventCreate
+from app.core.email_templates import TemplateValidator
 
 
 class EmailContent(BaseModel):
@@ -22,11 +23,8 @@ class EmailContent(BaseModel):
     template_data: Dict[str, Any]
 
 
-# Configure Jinja2 for email templates
-email_templates = Environment(
-    loader=FileSystemLoader(Path(__file__).parent.parent / "email_templates"),
-    autoescape=select_autoescape(['html', 'xml'])
-)
+# Configure email template validator
+template_validator = TemplateValidator()
 
 # Configure FastAPI-Mail
 email_conf = ConnectionConfig(
@@ -57,78 +55,99 @@ async def send_email(
     immediate: bool = False,
 ) -> Optional[str]:
     """Send an email."""
-    if immediate:
-        # Send immediately
-        template = email_templates.get_template(f"{email_content.template_name}.html")
-        html = template.render(**email_content.template_data)
-        
-        message = MessageSchema(
-            subject=email_content.subject,
-            recipients=[email_to] if isinstance(email_to, str) else email_to,
-            body=html,
-            cc=cc or [],
-            bcc=bcc or [],
-            reply_to=reply_to or [],
-            subtype=MessageType.html,
+    try:
+        # Validate and render template
+        html = template_validator.render_template(
+            email_content.template_name,
+            email_content.template_data
         )
         
-        try:
-            await fastmail.send_message(message)
+        if immediate:
+            # Send immediately
+            message = MessageSchema(
+                subject=email_content.subject,
+                recipients=[email_to] if isinstance(email_to, str) else email_to,
+                body=html,
+                cc=cc or [],
+                bcc=bcc or [],
+                reply_to=reply_to or [],
+                subtype=MessageType.html,
+            )
+            
+            try:
+                await fastmail.send_message(message)
+                # Create tracking record
+                tracking = await email_tracking.create_with_event(
+                    db=db,
+                    obj_in=EmailTrackingCreate(
+                        email_id="immediate",
+                        recipient=email_to if isinstance(email_to, str) else ",".join(email_to),
+                        subject=email_content.subject,
+                        template_name=email_content.template_name,
+                        status=EmailStatus.SENT,
+                    ),
+                    event_type=EmailStatus.SENT,
+                )
+                return None
+            except Exception as e:
+                # Create failed tracking record
+                tracking = await email_tracking.create_with_event(
+                    db=db,
+                    obj_in=EmailTrackingCreate(
+                        email_id="immediate",
+                        recipient=email_to if isinstance(email_to, str) else ",".join(email_to),
+                        subject=email_content.subject,
+                        template_name=email_content.template_name,
+                        status=EmailStatus.FAILED,
+                        error_message=str(e),
+                    ),
+                    event_type=EmailStatus.FAILED,
+                )
+                raise
+        else:
+            # Queue email for later sending
+            email_id = await email_queue.enqueue(
+                EmailQueueItem(
+                    email_to=email_to if isinstance(email_to, str) else ",".join(email_to),
+                    subject=email_content.subject,
+                    template_name=email_content.template_name,
+                    template_data=email_content.template_data,
+                    cc=cc,
+                    bcc=bcc,
+                    reply_to=reply_to,
+                )
+            )
+            
             # Create tracking record
             tracking = await email_tracking.create_with_event(
                 db=db,
                 obj_in=EmailTrackingCreate(
-                    email_id="immediate",
+                    email_id=email_id,
                     recipient=email_to if isinstance(email_to, str) else ",".join(email_to),
                     subject=email_content.subject,
                     template_name=email_content.template_name,
-                    status=EmailStatus.SENT,
+                    status=EmailStatus.QUEUED,
                 ),
-                event_type=EmailStatus.SENT,
+                event_type=EmailStatus.QUEUED,
             )
-            return None
-        except Exception as e:
-            # Create failed tracking record
-            tracking = await email_tracking.create_with_event(
-                db=db,
-                obj_in=EmailTrackingCreate(
-                    email_id="immediate",
-                    recipient=email_to if isinstance(email_to, str) else ",".join(email_to),
-                    subject=email_content.subject,
-                    template_name=email_content.template_name,
-                    status=EmailStatus.FAILED,
-                ),
-                event_type=EmailStatus.FAILED,
-                event_metadata={"error": str(e)},
-            )
-            raise
-    else:
-        # Queue email
-        queued_email = QueuedEmail(
-            email_to=email_to,
-            subject=email_content.subject,
-            template_name=email_content.template_name,
-            template_data=email_content.template_data,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            priority=priority,
-        )
-        email_id = await email_queue.enqueue(queued_email)
-        
-        # Create tracking record
+            
+            return email_id
+            
+    except ValueError as e:
+        # Template validation error
         tracking = await email_tracking.create_with_event(
             db=db,
             obj_in=EmailTrackingCreate(
-                email_id=email_id,
+                email_id="validation_error",
                 recipient=email_to if isinstance(email_to, str) else ",".join(email_to),
                 subject=email_content.subject,
                 template_name=email_content.template_name,
-                status=EmailStatus.QUEUED,
+                status=EmailStatus.FAILED,
+                error_message=str(e),
             ),
-            event_type=EmailStatus.QUEUED,
+            event_type=EmailStatus.FAILED,
         )
-        return email_id
+        raise
 
 
 async def send_test_email(db: AsyncSession, email_to: EmailStr) -> Optional[str]:
@@ -157,7 +176,6 @@ async def send_reset_password_email(
         template_data={
             "project_name": settings.project_name,
             "username": email_to,
-            "email": email_to,
             "valid_hours": settings.email_reset_token_expire_hours,
             "reset_url": f"{settings.server_host}/reset-password?token={token}",
         },

@@ -119,11 +119,16 @@ class CRUDEmailTracking(CRUDBase[EmailTracking, EmailTrackingCreate, None]):
             if error_message:
                 db_obj.error_message = error_message
 
+        # Create event metadata
+        event_metadata = tracking_metadata or {}
+        if error_message and status in [EmailStatus.FAILED, EmailStatus.BOUNCED, EmailStatus.SPAM]:
+            event_metadata = {**event_metadata, "error": error_message}
+
         # Add event
         event = EmailEvent(
             email_id=db_obj.id,
             event_type=status,
-            event_metadata=tracking_metadata,
+            event_metadata=event_metadata,
             occurred_at=timestamp,
         )
         db.add(event)

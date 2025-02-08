@@ -19,6 +19,7 @@ async def test_health_check(
     assert data["status"] == "healthy"
     assert data["database_status"] == "healthy"
     assert data["redis_status"] == "healthy"
+    assert "version" in data
 
 
 async def test_detailed_health_check(
@@ -35,4 +36,5 @@ async def test_detailed_health_check(
     assert data["redis_status"] == "healthy"
     assert isinstance(data["database_latency_ms"], float)
     assert isinstance(data["redis_latency_ms"], float)
-    assert data["environment"] == "test" 
+    assert data["environment"] == "test"
+    assert "version" in data 

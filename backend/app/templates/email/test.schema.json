@@ -1,0 +1,14 @@
+{
+  "name": "test",
+  "description": "Test email template",
+  "required_params": ["subject", "title", "message", "sender_name"],
+  "optional_params": ["action_url", "action_text"],
+  "example_data": {
+    "subject": "Test Email",
+    "title": "Welcome to NeoForge",
+    "message": "This is a test email message.",
+    "sender_name": "NeoForge Team",
+    "action_url": "https://example.com",
+    "action_text": "Visit our website"
+  }
+}

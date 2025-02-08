@@ -1,9 +1,10 @@
 """Application configuration."""
 import os
 from typing import Any, Dict, List, Optional, Union
+from pathlib import Path
 
 from pydantic import AnyHttpUrl, EmailStr, HttpUrl, PostgresDsn, validator, field_validator, ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -50,7 +51,7 @@ class Settings(BaseSettings):
     emails_from_email: Optional[EmailStr] = "info@neoforge.com"
     emails_from_name: Optional[str] = "NeoForge"
     email_reset_token_expire_hours: int = 48
-    email_templates_dir: str = "app/email_templates"
+    email_templates_dir: Path = Path(__file__).parent.parent / "templates" / "email"
     
     # List of email addresses to notify for admin alerts
     admin_notification_emails: List[EmailStr] = []

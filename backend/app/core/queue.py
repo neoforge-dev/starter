@@ -1,33 +1,54 @@
 """Email queue module for asynchronous email processing."""
 import json
-from typing import Any, Dict, Optional
+import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional, Tuple, Union, List
+from uuid import UUID
 from redis.asyncio import Redis
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 from app.core.config import settings
+from app.core.redis import redis_client
 
 
-class QueuedEmail(BaseModel):
-    """Model for queued email."""
-    email_to: str | list[str]
+logger = logging.getLogger(__name__)
+
+
+class EmailQueueItem(BaseModel):
+    """Email queue item."""
+    email_to: Union[str, List[str]]
     subject: str
     template_name: str
-    template_data: Dict[str, Any]
-    cc: Optional[list[str]] = None
-    bcc: Optional[list[str]] = None
-    reply_to: Optional[list[str]] = None
-    priority: int = 0  # Higher number = higher priority
+    template_data: Optional[Dict[str, Any]] = None
+    cc: Optional[List[str]] = None
+    bcc: Optional[List[str]] = None
+    reply_to: Optional[List[str]] = None
+
+
+class QueuedEmail(EmailQueueItem):
+    """Queued email model."""
+    model_config = ConfigDict(json_encoders={datetime: lambda dt: dt.isoformat()})
+    
+    id: str
+    status: str = "queued"
+    created_at: datetime = datetime.now()
+    scheduled_for: Optional[datetime] = None
+    error: Optional[str] = None
 
 
 class EmailQueue:
-    """Redis-based email queue."""
+    """Redis-based email queue with efficient lookups."""
     
-    def __init__(self):
+    def __init__(self, redis=None):
         """Initialize queue."""
-        self.redis: Optional[Redis] = None
-        self.queue_key = "email_queue"
-        self.processing_key = "email_processing"
-        self.failed_key = "email_failed"
+        self.redis = redis or redis_client
+        # Sorted sets for queue ordering (stores only IDs)
+        self.queue_key = "email:queue"
+        self.processing_key = "email:processing"
+        self.completed_key = "email:completed"
+        self.failed_key = "email:failed"
+        # Hash set for O(1) email data lookups
+        self.email_data_key = "email:data"
     
     async def connect(self) -> None:
         """Connect to Redis."""
@@ -40,107 +61,214 @@ class EmailQueue:
             await self.redis.close()
             self.redis = None
     
-    async def enqueue(self, email: QueuedEmail) -> str:
+    async def enqueue(
+        self,
+        email: EmailQueueItem,
+        delay: Optional[timedelta] = None,
+    ) -> str:
         """Add email to queue."""
-        await self.connect()
-        # Generate unique ID for the email
-        email_id = await self.redis.incr("email_id_counter")
-        
-        # Store email data
-        email_data = email.model_dump_json()
-        await self.redis.hset(self.queue_key, str(email_id), email_data)
-        
-        # Add to sorted set for priority queue
-        await self.redis.zadd(
-            f"{self.queue_key}:priority",
-            {str(email_id): email.priority}
-        )
-        
-        return str(email_id)
+        try:
+            # Generate unique ID
+            email_id = str(UUID(int=int(datetime.now().timestamp() * 1000000)))
+
+            # Create queued email
+            queued_email = QueuedEmail(
+                id=email_id,
+                email_to=email.email_to,
+                subject=email.subject,
+                template_name=email.template_name,
+                template_data=email.template_data,
+                cc=email.cc,
+                bcc=email.bcc,
+                reply_to=email.reply_to,
+                created_at=datetime.now(),
+                scheduled_for=datetime.now() + delay if delay else None,
+            )
+
+            # Store email data in hash set
+            await self.redis.hset(
+                self.email_data_key,
+                email_id,
+                queued_email.model_dump_json()
+            )
+
+            # Add ID to queue sorted set
+            scheduled_time = (
+                queued_email.scheduled_for.timestamp()
+                if queued_email.scheduled_for
+                else datetime.now().timestamp()
+            )
+            await self.redis.zadd(self.queue_key, {email_id: scheduled_time})
+
+            return email_id
+
+        except Exception as e:
+            logger.error(f"Error enqueueing email: {e}")
+            raise
     
-    async def dequeue(self) -> Optional[tuple[str, QueuedEmail]]:
+    async def dequeue(self) -> Optional[Tuple[str, EmailQueueItem]]:
         """Get next email from queue."""
-        await self.connect()
-        
-        # Get highest priority email ID
-        email_ids = await self.redis.zrevrange(
-            f"{self.queue_key}:priority",
-            0, 0
-        )
-        if not email_ids:
+        try:
+            # Get next email ID ready to be processed
+            now = datetime.now().timestamp()
+            result = await self.redis.zrangebyscore(
+                self.queue_key,
+                min="-inf",
+                max=now,
+                start=0,
+                num=1,
+            )
+
+            if not result:
+                return None
+
+            email_id = result[0]
+
+            # Get email data from hash set
+            email_data = await self.redis.hget(self.email_data_key, email_id)
+            if not email_data:
+                logger.error(f"Email data not found for ID {email_id}")
+                await self.redis.zrem(self.queue_key, email_id)
+                return None
+
+            email_dict = json.loads(email_data)
+
+            # Move ID to processing set
+            await self.redis.zrem(self.queue_key, email_id)
+            await self.redis.zadd(self.processing_key, {email_id: now})
+
+            # Create queue item
+            queue_item = EmailQueueItem(
+                email_to=email_dict["email_to"],
+                subject=email_dict["subject"],
+                template_name=email_dict["template_name"],
+                template_data=email_dict.get("template_data"),
+                cc=email_dict.get("cc"),
+                bcc=email_dict.get("bcc"),
+                reply_to=email_dict.get("reply_to"),
+            )
+
+            return email_id, queue_item
+
+        except Exception as e:
+            logger.error(f"Error dequeuing email: {e}")
             return None
-        
-        email_id = email_ids[0].decode()
-        
-        # Get email data
-        email_data = await self.redis.hget(self.queue_key, email_id)
-        if not email_data:
-            return None
-        
-        # Move to processing
-        await self.redis.hdel(self.queue_key, email_id)
-        await self.redis.zrem(f"{self.queue_key}:priority", email_id)
-        await self.redis.hset(self.processing_key, email_id, email_data)
-        
-        return email_id, QueuedEmail.model_validate_json(email_data.decode())
     
     async def mark_completed(self, email_id: str) -> None:
-        """Mark email as completed and remove from processing."""
-        await self.connect()
-        await self.redis.hdel(self.processing_key, email_id)
+        """Mark email as completed."""
+        try:
+            # Get email data
+            email_data = await self.redis.hget(self.email_data_key, email_id)
+            if not email_data:
+                logger.error(f"Email data not found for ID {email_id}")
+                return
+
+            # Update status
+            email_dict = json.loads(email_data)
+            email_dict["status"] = "completed"
+            await self.redis.hset(
+                self.email_data_key,
+                email_id,
+                json.dumps(email_dict)
+            )
+
+            # Move ID to completed set
+            await self.redis.zrem(self.processing_key, email_id)
+            await self.redis.zadd(
+                self.completed_key,
+                {email_id: datetime.now().timestamp()}
+            )
+
+        except Exception as e:
+            logger.error(f"Error marking email as completed: {e}")
+            raise
     
     async def mark_failed(self, email_id: str, error: str) -> None:
-        """Mark email as failed and store error."""
-        await self.connect()
-        email_data = await self.redis.hget(self.processing_key, email_id)
-        if email_data:
-            # Add error info
-            email_dict = json.loads(email_data.decode())
+        """Mark email as failed."""
+        try:
+            # Get email data
+            email_data = await self.redis.hget(self.email_data_key, email_id)
+            if not email_data:
+                logger.error(f"Email data not found for ID {email_id}")
+                return
+
+            # Update status and error
+            email_dict = json.loads(email_data)
+            email_dict["status"] = "failed"
             email_dict["error"] = error
-            email_dict["failed_at"] = "now()"  # You might want to use a proper timestamp
-            
-            # Move to failed queue
-            await self.redis.hdel(self.processing_key, email_id)
-            await self.redis.hset(self.failed_key, email_id, json.dumps(email_dict))
+            await self.redis.hset(
+                self.email_data_key,
+                email_id,
+                json.dumps(email_dict)
+            )
+
+            # Move ID to failed set
+            await self.redis.zrem(self.processing_key, email_id)
+            await self.redis.zadd(
+                self.failed_key,
+                {email_id: datetime.now().timestamp()}
+            )
+
+        except Exception as e:
+            logger.error(f"Error marking email as failed: {e}")
+            raise
     
-    async def retry_failed(self, email_id: str) -> bool:
-        """Move failed email back to queue."""
-        await self.connect()
-        email_data = await self.redis.hget(self.failed_key, email_id)
-        if not email_data:
-            return False
-        
-        # Remove error info
-        email_dict = json.loads(email_data.decode())
-        email_dict.pop("error", None)
-        email_dict.pop("failed_at", None)
-        
-        # Add back to queue
-        await self.redis.hdel(self.failed_key, email_id)
-        await self.redis.hset(self.queue_key, email_id, json.dumps(email_dict))
-        
-        # Add to priority queue
-        await self.redis.zadd(
-            f"{self.queue_key}:priority",
-            {email_id: email_dict.get("priority", 0)}
-        )
-        
-        return True
+    async def requeue(
+        self,
+        email_id: str,
+        delay: Optional[timedelta] = None,
+    ) -> None:
+        """Requeue a failed or processing email."""
+        try:
+            # Get email data
+            email_data = await self.redis.hget(self.email_data_key, email_id)
+            if not email_data:
+                logger.error(f"Email data not found for ID {email_id}")
+                return
+
+            # Update status
+            email_dict = json.loads(email_data)
+            email_dict["status"] = "queued"
+            email_dict["error"] = None
+            await self.redis.hset(
+                self.email_data_key,
+                email_id,
+                json.dumps(email_dict)
+            )
+
+            # Remove from processing/failed sets
+            await self.redis.zrem(self.processing_key, email_id)
+            await self.redis.zrem(self.failed_key, email_id)
+
+            # Add back to queue with delay
+            scheduled_time = (
+                datetime.now() + delay if delay else datetime.now()
+            ).timestamp()
+            await self.redis.zadd(self.queue_key, {email_id: scheduled_time})
+
+        except Exception as e:
+            logger.error(f"Error requeuing email: {e}")
+            raise
     
     async def get_queue_size(self) -> int:
         """Get number of emails in queue."""
         await self.connect()
-        return await self.redis.hlen(self.queue_key)
+        return await self.redis.zcard(self.queue_key)
     
     async def get_processing_size(self) -> int:
         """Get number of emails being processed."""
         await self.connect()
-        return await self.redis.hlen(self.processing_key)
+        return await self.redis.zcard(self.processing_key)
+    
+    async def get_completed_size(self) -> int:
+        """Get number of completed emails."""
+        await self.connect()
+        return await self.redis.zcard(self.completed_key)
     
     async def get_failed_size(self) -> int:
         """Get number of failed emails."""
         await self.connect()
-        return await self.redis.hlen(self.failed_key)
+        return await self.redis.zcard(self.failed_key)
 
 
 # Create global queue instance

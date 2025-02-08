@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ subject }}</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>{{ title }}</h1>
+      <p>{{ message }}</p>
+      {% if action_url %}
+      <p>
+        <a href="{{ action_url }}" class="button"
+          >{{ action_text|default('Click here') }}</a
+        >
+      </p>
+      {% endif %}
+      <p>Best regards,<br />{{ sender_name }}</p>
+    </div>
+  </body>
+</html>

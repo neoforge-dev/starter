@@ -156,39 +156,10 @@ async def db() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
-@pytest.fixture
-def app_with_middleware() -> FastAPI:
-    """Create test FastAPI application with middleware."""
-    app = FastAPI()
-    
-    # Include API router
-    from app.api.v1.api import api_router
-    app.include_router(api_router, prefix=settings.api_v1_str)
-    
-    # Add test endpoints
-    @app.get("/test")
-    async def test_endpoint():
-        return {"message": "success"}
-    
-    @app.get("/error")
-    async def error_endpoint():
-        raise ValueError("Test error")
-        
-    @app.get("/health")
-    async def health_endpoint():
-        return {"status": "ok"}
-    
-    # Add middleware
-    app.add_middleware(ErrorHandlerMiddleware)
-    if settings.enable_rate_limiting:
-        app.add_middleware(RateLimitMiddleware)
-    
-    return app
-
 @pytest_asyncio.fixture(scope="function")
-async def client(app_with_middleware: FastAPI) -> AsyncGenerator[AsyncClient, None]:
+async def client(db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create a test client."""
-    transport = ASGITransport(app=app_with_middleware)  # Use the test app
+    transport = ASGITransport(app=app)  # Use the main app
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
@@ -199,21 +170,38 @@ async def redis() -> AsyncGenerator[Redis, None]:
     import redis.asyncio as redis
     from app.core.config import settings
     
-    # Create Redis client
-    client = redis.Redis.from_url(
-        settings.redis_url,
-        encoding="utf-8",
-        decode_responses=True
-    )
+    # Use Docker service name for Redis in test environment
+    redis_url = "redis://redis:6379/0"
     
-    # Clear all keys before test
-    await client.flushall()
-    
-    yield client
-    
-    # Clear all keys after test
-    await client.flushall()
-    await client.aclose()  # Use aclose() for async Redis
+    try:
+        # Create Redis client with retry logic
+        for _ in range(3):  # Try 3 times
+            try:
+                client = redis.Redis.from_url(
+                    redis_url,
+                    encoding="utf-8",
+                    decode_responses=True,
+                    socket_timeout=5.0,  # 5 second timeout
+                    socket_connect_timeout=5.0,
+                )
+                # Test connection
+                await client.ping()
+                break
+            except (redis.ConnectionError, redis.TimeoutError):
+                await asyncio.sleep(1)  # Wait 1 second before retry
+        else:
+            raise redis.ConnectionError(f"Could not connect to Redis at {redis_url}")
+        
+        # Clear all keys before test
+        await client.flushall()
+        
+        yield client
+        
+        # Clear all keys after test
+        await client.flushall()
+        await client.aclose()
+    except Exception as e:
+        pytest.skip(f"Redis not available: {str(e)}")
 
 
 @pytest_asyncio.fixture

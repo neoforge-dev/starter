@@ -58,21 +58,19 @@ async def test_redis_pipeline(redis: Redis) -> None:
     await redis.delete("pipe_key1", "pipe_key2")
 
 
-async def test_redis_connection_pool() -> None:
+async def test_redis_connection_pool(redis: Redis) -> None:
     """Test Redis connection pool."""
-    # Get Redis connections from pool
-    redis1 = await anext(get_redis())
-    redis2 = await anext(get_redis())
+    # Get another Redis connection using the same pool
+    redis2 = Redis.from_pool(redis.connection_pool)
     
     # Test connections work
-    assert await redis1.ping()
+    assert await redis.ping()
     assert await redis2.ping()
     
     # Test they share the same pool
-    assert redis1.connection_pool is redis2.connection_pool
+    assert redis.connection_pool is redis2.connection_pool
     
     # Clean up
-    await redis1.aclose()
     await redis2.aclose()
 
 

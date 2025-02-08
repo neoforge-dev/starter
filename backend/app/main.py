@@ -31,7 +31,7 @@ logger = structlog.get_logger()
 class HealthCheck(BaseModel):
     """Health check response model."""
     
-    status: str
+    status: str = "healthy"
     version: str
     database_status: str
     redis_status: str
@@ -195,12 +195,14 @@ async def health_check(
                 detail=f"Redis unhealthy: {str(e)}",
             )
 
-        return HealthCheck(
+        response = HealthCheck(
             status="healthy",
             version=settings.version,
             database_status=db_status,
             redis_status=redis_status,
         )
+        logger.info("Health check response", response=response.model_dump())
+        return response
 
     except Exception as e:
         logger.exception("Health check failed", error=str(e))
