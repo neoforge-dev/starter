@@ -27,6 +27,14 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60 * 24 * 8  # 8 days
     cors_origins: List[str] = ["http://localhost:3000"]
     
+    # Rate Limiting
+    enable_rate_limiting: bool = True
+    rate_limit_requests: int = 100  # requests per window
+    rate_limit_window: int = 60  # window in seconds
+    rate_limit_auth_requests: int = 500  # authenticated requests per window
+    rate_limit_by_ip: bool = True  # limit by IP address
+    rate_limit_by_key: bool = True  # limit by API key
+    
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgres@db:5432/app"
     

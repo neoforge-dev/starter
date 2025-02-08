@@ -10,6 +10,8 @@ import time
 import structlog
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
+from fastapi.openapi.docs import get_swagger_ui_html
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 from redis.asyncio import Redis
@@ -17,10 +19,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.core.config import settings
-from app.db.session import get_db
-from app.core.redis import get_redis
+from app.db.session import get_db, engine
+from app.db.base import Base
+from app.core.redis import get_redis, redis_client
 from app.api.v1.api import api_router
 from app.worker.email_worker import email_worker
+from app.api.middleware import setup_middleware
 
 logger = structlog.get_logger()
 
@@ -39,6 +43,34 @@ class DetailedHealthCheck(HealthCheck):
     redis_latency_ms: float
     environment: str
 
+async def init_db():
+    """Initialize database."""
+    try:
+        # Create tables
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error("Failed to initialize database", error=str(e))
+        raise
+
+async def init_redis():
+    """Initialize Redis connection."""
+    try:
+        await redis_client.ping()
+        logger.info("Redis connection established")
+    except Exception as e:
+        logger.error("Failed to connect to Redis", error=str(e))
+        raise
+
+async def close_redis():
+    """Close Redis connection."""
+    try:
+        await redis_client.close()
+        logger.info("Redis connection closed")
+    except Exception as e:
+        logger.error("Failed to close Redis connection", error=str(e))
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan events for FastAPI app."""
@@ -51,11 +83,66 @@ async def lifespan(app: FastAPI):
     # Shutdown
     await close_redis()
 
+def custom_openapi():
+    """Generate custom OpenAPI schema."""
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=settings.project_name,
+        version=settings.version,
+        description="""
+        NeoForge Backend API Documentation.
+        
+        ## Authentication
+        Most endpoints require authentication using JWT Bearer tokens.
+        Get your token from the /api/auth/token endpoint.
+        
+        ## Rate Limiting
+        Public endpoints are rate-limited to prevent abuse.
+        Authenticated endpoints have higher limits.
+        
+        ## Error Handling
+        The API uses standard HTTP status codes and returns detailed error messages.
+        """,
+        routes=app.routes,
+        tags=[
+            {"name": "auth", "description": "Authentication operations"},
+            {"name": "users", "description": "User management operations"},
+            {"name": "items", "description": "Item CRUD operations"},
+            {"name": "admin", "description": "Admin-only operations"},
+            {"name": "system", "description": "System health and monitoring"},
+            {"name": "email", "description": "Email operations and tracking"},
+        ]
+    )
+    
+    # Add security scheme
+    openapi_schema["components"]["securitySchemes"] = {
+        "bearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    }
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
 app = FastAPI(
     title=settings.project_name,
+    version=settings.version,
     openapi_url=f"{settings.api_v1_str}/openapi.json",
+    docs_url=f"{settings.api_v1_str}/docs",
+    redoc_url=f"{settings.api_v1_str}/redoc",
     lifespan=lifespan,
+    description=__doc__,
 )
+
+# Override the default OpenAPI schema
+app.openapi = custom_openapi
+
+# Set up middleware
+setup_middleware(app)
 
 # Set up CORS
 if settings.cors_origins:

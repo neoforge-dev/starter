@@ -3,7 +3,7 @@ name = "neoforge"
 version = "0.1.0"
 description = "NeoForge Backend"
 authors = [
-    { name = "Bogdan Ponomarenko", email = "ponomarenkobogdan@gmail.com" }
+    { name = "Bogdan Veliscu", email = "bogdan.veliscu@outlook.com" }
 ]
 dependencies = [
     "fastapi>=0.110.0",
@@ -29,6 +29,8 @@ dependencies = [
     "celery>=5.3.6",
     "psycopg2-binary>=2.9.9",
     "pydantic-extra-types>=2.4.1",
+    "PyJWT>=2.8.0",
+    "setuptools>=69.2.0",
 ]
 
 [project.optional-dependencies]

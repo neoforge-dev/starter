@@ -1,6 +1,14 @@
 """ML module."""
-import mlflow
+from importlib.metadata import version
+from typing import Optional
 from pydantic import BaseModel, Field
+
+# Import MLflow
+try:
+    import mlflow
+except ImportError:
+    print("Warning: MLflow not available. Metrics logging will be disabled.")
+    mlflow = None
 
 
 class ModelMetrics(BaseModel):
@@ -18,6 +26,10 @@ def log_training_run(metrics: ModelMetrics) -> None:
     Args:
         metrics: Model metrics to log
     """
+    if mlflow is None:
+        print("Warning: MLflow not available. Skipping metrics logging.")
+        return
+
     with mlflow.start_run():
         mlflow.log_param("model_type", "sklearn.ensemble.RandomForestClassifier")
         mlflow.log_metric("accuracy", metrics.accuracy)

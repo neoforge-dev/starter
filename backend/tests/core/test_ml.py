@@ -1,6 +1,6 @@
 """Test ML module."""
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from datetime import datetime, UTC
 
 from app.core.ml import ModelMetrics, log_training_run
@@ -89,8 +89,8 @@ def test_model_metrics_validation():
         )
 
 
-@patch("app.core.ml.mlflow.start_run")
-def test_log_training_run(mock_start_run):
+@patch("app.core.ml.mlflow")
+def test_log_training_run(mock_mlflow):
     """Test logging training run."""
     metrics = ModelMetrics(
         accuracy=0.95,
@@ -99,28 +99,32 @@ def test_log_training_run(mock_start_run):
         training_cost=123.45,
     )
     
-    with patch("app.core.ml.mlflow.log_param") as mock_log_param, \
-         patch("app.core.ml.mlflow.log_metric") as mock_log_metric:
-        log_training_run(metrics)
-        
-        # Verify mlflow.start_run was called
-        mock_start_run.assert_called_once()
-        
-        # Verify log_param was called with correct arguments
-        mock_log_param.assert_called_once_with(
-            "model_type", "sklearn.ensemble.RandomForestClassifier"
-        )
-        
-        # Verify log_metric was called with correct arguments
-        assert mock_log_metric.call_count == 4
-        mock_log_metric.assert_any_call("accuracy", 0.95)
-        mock_log_metric.assert_any_call("precision", 0.92)
-        mock_log_metric.assert_any_call("recall", 0.89)
-        mock_log_metric.assert_any_call("training_cost_usd", 123.45)
+    # Create a context manager mock
+    mock_context = MagicMock()
+    mock_mlflow.start_run.return_value = mock_context
+    mock_context.__enter__.return_value = None
+    mock_context.__exit__.return_value = None
+    
+    log_training_run(metrics)
+    
+    # Verify mlflow.start_run was called
+    mock_mlflow.start_run.assert_called_once()
+    
+    # Verify log_param was called with correct arguments
+    mock_mlflow.log_param.assert_called_once_with(
+        "model_type", "sklearn.ensemble.RandomForestClassifier"
+    )
+    
+    # Verify log_metric was called with correct arguments
+    assert mock_mlflow.log_metric.call_count == 4
+    mock_mlflow.log_metric.assert_any_call("accuracy", 0.95)
+    mock_mlflow.log_metric.assert_any_call("precision", 0.92)
+    mock_mlflow.log_metric.assert_any_call("recall", 0.89)
+    mock_mlflow.log_metric.assert_any_call("training_cost_usd", 123.45)
 
 
-@patch("app.core.ml.mlflow.start_run")
-def test_log_training_run_with_error(mock_start_run):
+@patch("app.core.ml.mlflow")
+def test_log_training_run_with_error(mock_mlflow):
     """Test logging training run with error."""
     metrics = ModelMetrics(
         accuracy=0.95,
@@ -129,16 +133,20 @@ def test_log_training_run_with_error(mock_start_run):
         training_cost=123.45,
     )
 
-    # Mock mlflow.log_param to raise an exception
-    with patch("app.core.ml.mlflow.log_param") as mock_log_param, \
-         patch("app.core.ml.mlflow.log_metric") as mock_log_metric, \
-         pytest.raises(Exception) as exc_info:
-        mock_log_param.side_effect = Exception("MLflow error")
+    # Create a context manager mock
+    mock_context = MagicMock()
+    mock_mlflow.start_run.return_value = mock_context
+    mock_context.__enter__.return_value = None
+    mock_context.__exit__.return_value = None
 
-        # The function should raise the exception
+    # Mock log_param to raise an exception
+    mock_mlflow.log_param.side_effect = Exception("MLflow error")
+
+    # The function should raise the exception
+    with pytest.raises(Exception) as exc_info:
         log_training_run(metrics)
 
     assert str(exc_info.value) == "MLflow error"
-    mock_start_run.assert_called_once()
-    mock_log_param.assert_called_once()
-    mock_log_metric.assert_not_called()
+    mock_mlflow.start_run.assert_called_once()
+    mock_mlflow.log_param.assert_called_once()
+    assert mock_mlflow.log_metric.call_count == 0

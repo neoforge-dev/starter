@@ -1,40 +1,38 @@
 # NeoForge Development Plan
 
-## Phase 1: Core Infrastructure Setup
+## Overview Update
+As of the current implementation, the core backend infrastructure is in place with a working FastAPI application, database integration, middleware, and testing framework. The following plan has been updated to prioritize critical backend improvements before shifting focus to the frontend development.
 
-### 1.1 Project Scaffolding
+## Phase 1: Core Infrastructure Setup (Completed / In Progress)
+- Project Scaffolding: Established initial cookiecutter structure and basic configurations.
+- FastAPI Application Setup: Initial FastAPI setup completed. Pending finalization of middleware (CORS, logging, error handling) and health check endpoints.
+- Database Configuration: Postgres is configured for development; ensure connection stability.
+- Pydantic Integration: Basic data validation is in place; further validation refinements required.
+- MLflow Setup: MLflow installed for model metrics tracking; integration to be detailed in upcoming steps.
+- Continuous Integration: Docker, Make, and pytest configurations are operational.
 
-- [ ] Create cookiecutter template structure
-- [ ] Set up UV and Ruff configurations
-- [ ] Configure GitHub repository
-- [ ] Set up initial GitHub Actions
+## Phase 2: Backend Critical Features
+**Critical tasks to tackle immediately:**
+- Finalize core API endpoints:
+  - Health Check endpoint verification.
+  - Robust User Authentication flow secured with Pydantic validations.
+- Middleware Enhancements:
+  - Complete integration of CORS, logging, and error handling.
+  - Incorporate MLflow for real-time metrics logging and monitoring.
+- Email & File Handling:
+  - Finalize email integration using fastapi-mail.
+  - Implement and test file upload endpoints.
+- Testing & Documentation:
+  - Increase test coverage to at least 80% using pytest.
+  - Update API documentation with OpenAPI specifications.
+  - Record architecture decisions in ADRs and maintain version history in CHANGELOG.md.
 
-### 1.2 Basic Backend Structure
+## Phase 3: Frontend Development (Deferred)
+- Focus on essential frontend components (authentication, API client, routing) after backend critical tasks are completed.
 
-- [ ] FastAPI application setup with modern practices
-- [ ] Core middleware (CORS, logging)
-- [ ] Basic health check endpoints
-- [ ] SQLite configuration for development
-- [ ] Basic user model and authentication
+## Phase 4: Core Features Development
 
-### 1.3 Frontend Foundation
-
-- [ ] Vite + Lit setup
-- [ ] Basic PWA configuration
-- [ ] Core component structure
-- [ ] API client setup
-- [ ] Basic routing
-
-### 1.4 Infrastructure Templates
-
-- [ ] Basic Terraform configuration for DO
-- [ ] Nomad job templates
-- [ ] Cloudflare configuration
-- [ ] Local development Docker setup
-
-## Phase 2: Core Features Development
-
-### 2.1 Backend Features
+### 4.1 Backend Features
 
 - [ ] User authentication flow
 - [ ] Email integration template
@@ -42,7 +40,7 @@
 - [ ] Basic admin interfaces
 - [ ] API documentation setup
 
-### 2.2 Frontend Components
+### 4.2 Frontend Components
 
 - [ ] Authentication components
 - [ ] Layout system
@@ -50,7 +48,7 @@
 - [ ] Table/list components
 - [ ] Basic admin dashboard
 
-### 2.3 Developer Experience
+### 4.3 Developer Experience
 
 - [ ] Debug configurations
 - [ ] VS Code settings
@@ -58,7 +56,7 @@
 - [ ] Hot reload setup
 - [ ] Error handling
 
-### 2.4 Testing Infrastructure
+### 4.4 Testing Infrastructure
 
 - [ ] Backend test setup with pytest
 - [ ] Frontend test setup
@@ -66,9 +64,9 @@
 - [ ] CI test automation
 - [ ] Test documentation
 
-## Phase 3: Documentation and Examples
+## Phase 5: Documentation and Examples
 
-### 3.1 Core Documentation
+### 5.1 Core Documentation
 
 - [ ] Getting started guide
 - [ ] Development workflow
@@ -76,7 +74,7 @@
 - [ ] Best practices
 - [ ] Contributing guidelines
 
-### 3.2 Example Features
+### 5.2 Example Features
 
 - [ ] User management example
 - [ ] Settings management
@@ -84,7 +82,7 @@
 - [ ] API integration example
 - [ ] File upload example
 
-### 3.3 Deployment Documentation
+### 5.3 Deployment Documentation
 
 - [ ] DO deployment guide
 - [ ] Alternative providers guide
@@ -92,9 +90,9 @@
 - [ ] Backup strategies
 - [ ] Monitoring setup
 
-## Phase 4: Production Readiness
+## Phase 6: Production Readiness
 
-### 4.1 Security
+### 6.1 Security
 
 - [ ] Security audit
 - [ ] Rate limiting
@@ -102,7 +100,7 @@
 - [ ] Environment validation
 - [ ] Security documentation
 
-### 4.2 Performance
+### 6.2 Performance
 
 - [ ] Performance testing
 - [ ] Bundle optimization
@@ -110,7 +108,7 @@
 - [ ] Load testing
 - [ ] Performance documentation
 
-### 4.3 Monitoring
+### 6.3 Monitoring
 
 - [ ] Basic metrics
 - [ ] Error tracking
@@ -118,7 +116,7 @@
 - [ ] Cost monitoring
 - [ ] Alerting setup
 
-### 4.4 Final Testing
+### 6.4 Final Testing
 
 - [ ] End-to-end testing
 - [ ] Load testing
@@ -187,24 +185,37 @@
 - [ ] Fast development cycle
 
 ## Next Steps
+Critical Tasks to Tackle Before Frontend Development
 
-1. **Immediate Actions**
-   - Create GitHub repository
-   - Set up project structure
-   - Create initial workflows
-   - Begin cookiecutter template
+1. API Stability & Documentation (High Priority)
 
-2. **Key Decisions Needed**
-   - Email service provider
-   - File storage strategy
-   - Monitoring tools
-   - Database migration strategy
+- [x] Complete OpenAPI documentation for all endpoints
+- [x] Add request/response validation with comprehensive Pydantic models
+- [x] Implement proper error handling middleware
+- [x] Add rate limiting for public endpoints
 
-3. **Resource Needs**
-   - Development environment
-   - Test accounts
-   - Domain for documentation
-   - Cloud credits for testing
+2. Email System Enhancements (High Priority)
+
+- [ ] Finalize email worker implementation
+- [ ] Add email template validation
+- [ ] Implement email bounce handling
+- [ ] Add email queue monitoring
+Security Improvements (Critical)
+- [ ] Implement proper CORS configuration
+- [ ] Add request validation middleware
+- [ ] Set up proper environment variable validation
+- [ ] Add security headers middleware
+Monitoring & Observability (High Priority)
+- [ ] Set up structured logging
+- [ ] Implement health check endpoints with detailed status
+- [ ] Add performance monitoring with MLflow
+- [ ] Set up error tracking
+Database & Performance (Medium Priority)
+- [ ] Implement database migrations system
+- [ ] Add database connection pooling
+- [ ] Optimize query performance
+- [ ] Add caching layer
+
 
 Remember:
 

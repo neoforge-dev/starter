@@ -12,6 +12,9 @@ pool = ConnectionPool.from_url(
     decode_responses=True,
 )
 
+# Create a global Redis client
+redis_client = Redis.from_pool(pool)
+
 async def get_redis() -> AsyncGenerator[Redis, None]:
     """
     Get Redis connection from pool.

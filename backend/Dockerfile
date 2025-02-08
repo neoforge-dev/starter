@@ -69,6 +69,9 @@ FROM development AS test
 
 WORKDIR /app
 
+# Install setuptools and pkg-resources first
+RUN pip install --no-cache-dir setuptools>=69.2.0 pkg_resources>=0.0.0
+
 # Set test environment variables
 ENV ENVIRONMENT=test \
     TESTING=1 \

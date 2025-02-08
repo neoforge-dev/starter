@@ -14,6 +14,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 import asyncpg
 from asyncio import AbstractEventLoop
+from fastapi import FastAPI
 
 from app.core.config import settings
 from app.db.session import get_db
@@ -22,6 +23,7 @@ from app.core.redis import get_redis
 from app.db.base import Base
 from app.core.security import get_password_hash, create_access_token
 from tests.factories import UserFactory
+from app.api.middleware import ErrorHandlerMiddleware, RateLimitMiddleware
 
 # Set test settings
 settings.testing = True
@@ -154,35 +156,65 @@ async def db() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+@pytest.fixture
+def app_with_middleware() -> FastAPI:
+    """Create test FastAPI application with middleware."""
+    app = FastAPI()
+    
+    # Include API router
+    from app.api.v1.api import api_router
+    app.include_router(api_router, prefix=settings.api_v1_str)
+    
+    # Add test endpoints
+    @app.get("/test")
+    async def test_endpoint():
+        return {"message": "success"}
+    
+    @app.get("/error")
+    async def error_endpoint():
+        raise ValueError("Test error")
+        
+    @app.get("/health")
+    async def health_endpoint():
+        return {"status": "ok"}
+    
+    # Add middleware
+    app.add_middleware(ErrorHandlerMiddleware)
+    if settings.enable_rate_limiting:
+        app.add_middleware(RateLimitMiddleware)
+    
+    return app
+
 @pytest_asyncio.fixture(scope="function")
-async def client() -> AsyncGenerator[AsyncClient, None]:
+async def client(app_with_middleware: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """Create a test client."""
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=app_with_middleware)  # Use the test app
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
 
 
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture
 async def redis() -> AsyncGenerator[Redis, None]:
-    """Get Redis connection."""
-    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-    for attempt in range(5):
-        try:
-            redis_client = Redis.from_url(redis_url)
-            await redis_client.ping()  # Test the connection
-            await redis_client.flushdb()
-            yield redis_client
-            break
-        except Exception as e:
-            logger.error(f"Error connecting to Redis (attempt {attempt + 1}/5): {e}")
-            if attempt < 4:
-                await asyncio.sleep(1)
-            else:
-                raise
-        finally:
-            if 'redis_client' in locals():
-                await redis_client.flushdb()
-                await redis_client.aclose()
+    """Create test Redis connection."""
+    import redis.asyncio as redis
+    from app.core.config import settings
+    
+    # Create Redis client
+    client = redis.Redis.from_url(
+        settings.redis_url,
+        encoding="utf-8",
+        decode_responses=True
+    )
+    
+    # Clear all keys before test
+    await client.flushall()
+    
+    yield client
+    
+    # Clear all keys after test
+    await client.flushall()
+    await client.aclose()  # Use aclose() for async Redis
+
 
 @pytest_asyncio.fixture
 async def regular_user_token(db: AsyncSession) -> str:
