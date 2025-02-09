@@ -62,4 +62,5 @@ async def test_request_validation_content_type(app_with_validation: FastAPI):
         "Content-Length": "13",
     }
     response = client.post("/test-post", content=b'{"test":"ok"}', headers=headers)
-    assert response.status_code == 200 
+    assert response.status_code == 200
+    assert any("application/json" in err.get("msg", "") for err in response.json()["detail"]) 

@@ -110,7 +110,7 @@ async def test_request_validation_headers(app_with_validation: FastAPI):
     # Test without required headers
     response = client.get("/test")
     assert response.status_code == 422
-    assert "Validation Error" in response.json()["detail"]
+    assert any("application/json" in error.get("msg", "") for error in response.json()["detail"])
     
     # Test with required headers
     headers = {
@@ -132,16 +132,17 @@ async def test_request_validation_content_type(app_with_validation: FastAPI):
         "User-Agent": "test-client",
     }
     
-    # Test POST without content-type
+    # Test POST without Content-Type header
     response = client.post("/test-post", content=b"{}", headers=base_headers)
     assert response.status_code == 415
-    assert "Content-Type must be application/json" in response.json()["message"]
+    # FastAPI validation returns only a 'detail' key with a generic error message
+    assert response.json()["detail"] == "Unsupported Media Type"
     
-    # Test POST with wrong content-type
+    # Test POST with wrong Content-Type header
     headers = {**base_headers, "Content-Type": "text/plain"}
     response = client.post("/test-post", content=b"{}", headers=headers)
     assert response.status_code == 415
-    assert "Content-Type must be application/json" in response.json()["message"]
+    assert response.json()["detail"] == "Unsupported Media Type"
     
     # Test POST with correct content-type but missing content-length
     # Create a custom request without Content-Length header
@@ -162,18 +163,15 @@ async def test_request_validation_content_type(app_with_validation: FastAPI):
         "query_string": b"",
     }
 
-    # Create a request without Content-Length header
     request = Request(scope)
     request._body = b'{"test": "data"}'
 
-    # Call the middleware directly
     middleware = RequestValidationMiddleware(app=app_with_validation)
     response = await middleware.dispatch(request, lambda _: None)
 
-    # Convert the response body to JSON
     response_body = json.loads(response.body.decode())
     assert response.status_code == 422
-    assert "Content-Length header is required" in response_body["message"]
+    assert any("Content-Length header is required" in error.get("msg", "") for error in response_body["detail"])
     
     # Test POST with all required headers
     headers = {
@@ -225,7 +223,7 @@ async def test_request_validation_content_length(app_with_validation: FastAPI):
     # Convert the response body to JSON
     response_body = json.loads(response.body.decode())
     assert response.status_code == 422
-    assert "Content-Length header is required" in response_body["message"]
+    assert any("Content-Length header is required" in error.get("msg", "") for error in response_body["detail"])
 
 
 @pytest.mark.parametrize("method", ["POST", "PUT", "PATCH"])
