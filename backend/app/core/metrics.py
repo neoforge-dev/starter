@@ -22,8 +22,8 @@ def get_metrics() -> Dict[str, Any]:
                 registry=REGISTRY,
             )
 
-            _metrics["http_requests_total"] = Counter(
-                "http_requests_total",
+            _metrics["http_requests"] = Counter(
+                "http_requests",
                 "Total number of HTTP requests",
                 ["method", "endpoint", "status"],
                 registry=REGISTRY,
@@ -65,8 +65,8 @@ def get_metrics() -> Dict[str, Any]:
                 name = collector.name
                 if name == "http_request_duration_seconds":
                     _metrics["http_request_duration_seconds"] = REGISTRY._names_to_collectors[name]
-                elif name == "http_requests_total":
-                    _metrics["http_requests_total"] = REGISTRY._names_to_collectors[name]
+                elif name == "http_requests":
+                    _metrics["http_requests"] = REGISTRY._names_to_collectors[name]
                 elif name == "db_pool_size":
                     _metrics["db_pool_size"] = REGISTRY._names_to_collectors[name]
                 elif name == "redis_connected":

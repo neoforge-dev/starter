@@ -32,14 +32,30 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Validate and process the request."""
-        if request.url.path == "/health":
-            return await call_next(request)
-
         start_time = time.time()
         method = request.method
         endpoint = request.url.path
 
         try:
+            # Skip validation for health endpoint but still track metrics
+            if request.url.path == "/health":
+                response = await call_next(request)
+                duration = time.time() - start_time
+                
+                # Record metrics
+                self.metrics["http_request_duration_seconds"].labels(
+                    method=method,
+                    endpoint=endpoint,
+                ).observe(duration)
+                
+                self.metrics["http_requests"].labels(
+                    method=method,
+                    endpoint=endpoint,
+                    status=str(response.status_code),
+                ).inc()
+
+                return response
+
             # Validate request headers
             errors = await self._validate_headers(request)
             if errors:
@@ -83,7 +99,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 endpoint=endpoint,
             ).observe(duration)
             
-            self.metrics["http_requests_total"].labels(
+            self.metrics["http_requests"].labels(
                 method=method,
                 endpoint=endpoint,
                 status=str(response.status_code),
@@ -107,7 +123,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 endpoint=endpoint,
             ).observe(duration)
             
-            self.metrics["http_requests_total"].labels(
+            self.metrics["http_requests"].labels(
                 method=method,
                 endpoint=endpoint,
                 status="500",

@@ -81,9 +81,21 @@ def clear_metrics():
     
     # Initialize metrics after clearing
     from app.core.metrics import get_metrics
-    get_metrics()
+    metrics = get_metrics()
     
-    yield
+    # Ensure metrics are properly initialized
+    metrics["http_request_duration_seconds"].labels(
+        method="GET",
+        endpoint="/health",
+    ).observe(0.0)
+    
+    metrics["http_requests_total"].labels(
+        method="GET",
+        endpoint="/health",
+        status="200",
+    ).inc()
+    
+    yield metrics
 
 async def create_test_database() -> None:
     """Create test database."""
@@ -188,7 +200,10 @@ async def client(db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)  # Use the main app
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         # Make a request to ensure middleware is initialized
-        await ac.get("/health")
+        await ac.get("/health", headers={
+            "Accept": "application/json",
+            "User-Agent": "TestClient"
+        })
         yield ac
 
 
