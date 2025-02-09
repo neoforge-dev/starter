@@ -46,7 +46,7 @@ class UserInDBBase(UserBase):
 
 
 # Additional properties to return via API
-class User(UserInDBBase):
+class UserResponse(UserInDBBase):
     """User response schema."""
     pass
 

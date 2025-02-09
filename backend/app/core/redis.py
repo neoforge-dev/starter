@@ -10,8 +10,12 @@ import structlog
 from prometheus_client import Counter, Histogram
 
 from app.core.config import settings
+from app.core.metrics import get_metrics
 
 logger = structlog.get_logger()
+
+# Initialize metrics
+metrics = get_metrics()
 
 # Metrics
 REDIS_OPERATIONS = Counter(
@@ -97,8 +101,11 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
     """
     async with MonitoredRedis.from_pool(pool) as redis:
         try:
+            await redis.ping()
+            metrics["redis_connected"].set(1)
             yield redis
         except Exception as e:
+            metrics["redis_connected"].set(0)
             REDIS_ERRORS.labels(error_type=type(e).__name__).inc()
             logger.error(
                 "redis_connection_error",
@@ -118,8 +125,10 @@ async def check_redis_health() -> tuple[bool, Optional[str]]:
     try:
         async with MonitoredRedis.from_pool(pool) as redis:
             await redis.ping()
+            metrics["redis_connected"].set(1)
             return True, None
     except Exception as e:
+        metrics["redis_connected"].set(0)
         REDIS_ERRORS.labels(error_type=type(e).__name__).inc()
         logger.error(
             "redis_health_check_error",

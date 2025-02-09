@@ -1,5 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 set -e
+exec python -c "import sys; from alembic.config import main; sys.exit(main())" upgrade head
 
 # Initialize migrations if they don't exist
 if [ ! -d "app/migrations/versions" ]; then

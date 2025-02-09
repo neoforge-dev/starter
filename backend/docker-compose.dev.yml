@@ -5,6 +5,9 @@ services:
     build:
       context: .
       target: development
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     volumes:
       - .:/app
     ports:
@@ -32,20 +35,21 @@ services:
   migrate:
     build:
       context: .
-      target: development
-    volumes:
-      - .:/app
+      target: production
+    command: bash -c "python -m alembic upgrade head"
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       - PYTHONPATH=/app
       - environment=development
       - debug=1
       - secret_key=dev_secret_key_replace_in_production_7e1a34bd93b148f0
-      - database_url=postgresql+asyncpg://postgres:postgres@db:5432/app
+      - database_url=postgresql://postgres:postgres@db:5432/test_db
       - redis_url=redis://redis:6379/0
-    depends_on:
-      db:
-        condition: service_healthy
-    command: alembic upgrade head
+    volumes:
+      - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
 
   db:
     image: postgres:15-alpine
@@ -79,23 +83,30 @@ services:
     build:
       context: .
       target: development
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     volumes:
       - .:/app
+      - .pytest_cache:/app/.pytest_cache
+    tmpfs:
+      - /tmp
     environment:
       - PYTHONPATH=/app
       - environment=test
       - debug=1
       - testing=1
       - secret_key=test_secret_key_replace_in_production_7e1a34bd93b148f0
-      - database_url=postgresql+asyncpg://postgres:postgres@db:5432/test
+      - database_url=postgresql+asyncpg://postgres:postgres@db:5432/test_db
       - redis_url=redis://redis:6379/1
+      - COVERAGE_FILE=/tmp/.coverage
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: >
-      bash -c "pip install -r requirements.txt && pip install -r requirements.test.txt && python -m pytest"
+    command: bash -c "rm -f /tmp/.coverage && python -m pytest -v --cov=app --cov-report=term-missing"
 
 volumes:
   postgres_data:
+  .pytest_cache:

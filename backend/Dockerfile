@@ -1,18 +1,20 @@
 # syntax=docker/dockerfile:1.4
 
 # Base stage with shared dependencies
-FROM python:3.12-slim AS base
+FROM python:3.12-slim-bookworm AS base
 
 # Install UV package manager
-COPY --from=ghcr.io/astral-sh/uv:0.7.4 /uv /usr/local/bin/uv
+RUN pip install --no-cache-dir uv==0.5.29
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    UV_NO_CACHE=1
+    UV_NO_CACHE=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    TZ=UTC
 
-# Install runtime dependencies
+# Install essential runtime dependencies first
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     postgresql-client \
@@ -25,7 +27,6 @@ FROM base AS builder
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    gcc \
     python3-dev \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -42,9 +43,18 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install dependencies with cache mount
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --system -e . && \
-    uv pip install --system ".[dev]" && \
-    uv pip freeze > requirements.txt
+    uv pip install -e . && \
+    uv pip install -e .[dev]
+
+# Install pytest and its related packages
+RUN uv pip install pytest pytest-asyncio pytest-cov
+
+# Install and configure Alembic
+RUN uv pip install alembic psycopg2-binary && \
+    mkdir -p /opt/venv/bin && \
+    echo '#!/bin/sh' > /opt/venv/bin/alembic && \
+    echo 'exec python -m alembic "$@"' >> /opt/venv/bin/alembic && \
+    chmod +x /opt/venv/bin/alembic
 
 # Development stage
 FROM base AS development
@@ -55,29 +65,31 @@ WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy only dependency files
+# Copy dependency files
 COPY pyproject.toml ./
-
-# Install dev dependencies with cache mount
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install -e ".[dev]"
 
 # Copy application code
 COPY app ./app
 COPY tests ./tests
+COPY alembic ./alembic
+COPY alembic.ini ./
+
+# Install dependencies in development stage
+RUN uv pip install -e .[dev]
 
 # Production stage
 FROM base AS production
 
 WORKDIR /app
 
-# Copy only necessary files and virtual environment
+# Copy virtual environment and code
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy only dependency files and application code
 COPY pyproject.toml ./
 COPY app ./app
+COPY alembic ./alembic
+COPY alembic.ini ./
 
 # Set user for security
 USER nobody

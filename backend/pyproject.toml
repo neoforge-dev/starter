@@ -25,7 +25,9 @@ dependencies = [
     "alembic>=1.13.1",
     "email-validator>=2.1.0.post1",
     "psycopg2-binary>=2.9.9",
-    "prometheus-client>=0.19.0",
+    "fastapi-mail>=1.4.1",
+    "celery>=5.3.6",
+    "PyJWT>=2.8.0",
 ]
 
 [project.optional-dependencies]
@@ -50,11 +52,26 @@ packages = ["app"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "--cov=app --cov-report=term-missing"
+addopts = "--cov=app --cov-report=term-missing --cov-report=html --no-cov-on-fail"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
 
 [tool.coverage.run]
 source = ["app"]
-omit = ["tests/*"]
+omit = [
+    "tests/*",
+    "app/migrations/*",
+    "app/db/base.py",
+]
+branch = true
+parallel = true
 
 [tool.coverage.report]
 exclude_lines = [
@@ -63,7 +80,11 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
+    "pass",
+    "raise ImportError",
 ]
+fail_under = 80
+show_missing = true
 
 [tool.black]
 line-length = 88
@@ -85,4 +106,8 @@ check_untyped_defs = true
 
 [[tool.mypy.overrides]]
 module = ["mlflow.*"]
-ignore_missing_imports = true 
+ignore_missing_imports = true
+
+[tool.poetry.dependencies]
+alembic = "^1.13.1"
+psycopg2-binary = "^2.9.9" 

@@ -20,27 +20,35 @@ dev-build: ## Rebuild and start development environment
 	@echo "Rebuilding and starting development services..."
 	docker compose -f backend/docker-compose.dev.yml up --build
 
-test: ## Run tests
+test-setup: ## Setup test database
+	@echo "Starting required services..."
+	docker compose -f backend/docker-compose.dev.yml up -d db redis
+	@echo "Setting up test database..."
+	docker compose -f backend/docker-compose.dev.yml exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS test_db;"
+	docker compose -f backend/docker-compose.dev.yml exec -T db psql -U postgres -c "CREATE DATABASE test_db;"
+	docker compose -f backend/docker-compose.dev.yml run --rm migrate
+
+test: test-setup ## Run all tests with coverage
 	@echo "Running tests..."
 	docker compose -f backend/docker-compose.dev.yml run --rm test
-	
-test-lf:
-	docker compose -f backend/docker-compose.dev.yml run --rm test pytest -v --cov=app --lf -x
 
-test-watch: ## Run tests in watch mode
+test-lf: test-setup ## Run only failed tests
+	@echo "Running failed tests..."
+	@docker compose -f backend/docker-compose.dev.yml run --rm test pytest -v --cov=app --lf -x --maxfail=1 && (make beep && make test) || exit 1
+
+test-watch: test-setup ## Run tests in watch mode
 	@echo "Running tests in watch mode..."
 	docker compose -f backend/docker-compose.dev.yml run --rm test pytest -v --cov=app --watch
 
-test-cov:
-	pytest --cov=app --cov-report=term-missing
+test-cov: test-setup ## Generate coverage report
+	@echo "Generating coverage report..."
+	docker compose -f backend/docker-compose.dev.yml run --rm test pytest --cov=app --cov-report=term-missing --cov-report=html
 
-test-cov-html:
-	pytest --cov=app --cov-report=html
-	@echo "Coverage report is available at coverage_html/index.html"
-
-test-clean:
+test-clean: ## Clean test artifacts
+	@echo "Cleaning test artifacts..."
 	rm -rf .coverage coverage_html .pytest_cache .testmondata
 	find . -type d -name "__pycache__" -exec rm -rf {} +
+	docker compose -f backend/docker-compose.dev.yml exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS test_db;"
 
 lint: ## Run linters
 	@echo "Running linters..."
@@ -78,3 +86,15 @@ logs: ## View logs
 health: ## Check service health
 	@echo "Checking service health..."
 	curl -f http://localhost:8000/health/detailed 
+
+beep: ## Play alert sound
+	@echo "Playing alert sound..."
+	@if [ "$(shell uname)" = "Darwin" ]; then \
+		afplay /System/Library/Sounds/Funk.aiff; \
+	elif [ "$(shell uname)" = "Linux" ]; then \
+		paplay /usr/share/sounds/freedesktop/stereo/complete.oga 2>/dev/null || \
+		beep 2>/dev/null || \
+		echo '\a'; \
+	else \
+		echo '\a'; \
+	fi

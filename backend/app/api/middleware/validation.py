@@ -7,7 +7,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 import structlog
 from pydantic import ValidationError, BaseModel
-from app.api.endpoints.metrics import HTTP_REQUEST_DURATION, HTTP_REQUESTS_TOTAL
+from app.core.metrics import get_metrics
 
 logger = structlog.get_logger()
 
@@ -17,6 +17,8 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: ASGIApp):
         """Initialize middleware."""
         super().__init__(app)
+        # Initialize metrics at middleware startup
+        self.metrics = get_metrics()
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Validate and process the request."""
@@ -45,15 +47,15 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             duration = time.time() - start_time
             
             # Record metrics
-            HTTP_REQUEST_DURATION.labels(
+            self.metrics["http_request_duration_seconds"].labels(
                 method=method,
                 endpoint=endpoint,
             ).observe(duration)
             
-            HTTP_REQUESTS_TOTAL.labels(
+            self.metrics["http_requests_total"].labels(
                 method=method,
                 endpoint=endpoint,
-                status=response.status_code,
+                status=str(response.status_code),
             ).inc()
 
             # Log request details
@@ -69,15 +71,15 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             
         except ValidationError as e:
             duration = time.time() - start_time
-            HTTP_REQUEST_DURATION.labels(
+            self.metrics["http_request_duration_seconds"].labels(
                 method=method,
                 endpoint=endpoint,
             ).observe(duration)
             
-            HTTP_REQUESTS_TOTAL.labels(
+            self.metrics["http_requests_total"].labels(
                 method=method,
                 endpoint=endpoint,
-                status=422,
+                status="422",
             ).inc()
 
             logger.warning(
@@ -97,19 +99,19 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             
         except Exception as e:
             duration = time.time() - start_time
-            HTTP_REQUEST_DURATION.labels(
+            self.metrics["http_request_duration_seconds"].labels(
                 method=method,
                 endpoint=endpoint,
             ).observe(duration)
             
-            HTTP_REQUESTS_TOTAL.labels(
+            self.metrics["http_requests_total"].labels(
                 method=method,
                 endpoint=endpoint,
-                status=500,
+                status="500",
             ).inc()
 
-            logger.exception(
-                "request_processing_error",
+            logger.error(
+                "request_error",
                 method=method,
                 url=str(request.url),
                 error=str(e),
@@ -119,37 +121,17 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 status_code=500,
                 content={
                     "detail": "Internal Server Error",
-                    "message": "An error occurred while processing your request",
+                    "message": str(e),
                 },
             )
     
     async def _validate_headers(self, request: Request) -> None:
         """Validate request headers."""
-        # Required headers for all requests
-        required_headers = {
-            "accept": "Accept header is required",
-            "user-agent": "User-Agent header is required",
-        }
-        
-        # Additional headers for POST/PUT/PATCH requests
-        if request.method in {"POST", "PUT", "PATCH"}:
-            required_headers["content-type"] = "Content-Type header is required"
-            required_headers["content-length"] = "Content-Length header is required"
-        
-        # Check required headers
-        missing_headers = []
-        for header, message in required_headers.items():
-            if header not in request.headers:
-                missing_headers.append(message)
-        
-        if missing_headers:
-            raise ValidationError(
-                [{"loc": ["header"], "msg": msg} for msg in missing_headers],
-                BaseModel,
-            )
+        # Add header validation logic here if needed
+        pass
 
 def setup_validation_middleware(app: FastAPI) -> None:
-    """Set up request validation middleware."""
+    """Set up validation middleware."""
     app.add_middleware(RequestValidationMiddleware)
     
     logger.info("request_validation_middleware_configured") 

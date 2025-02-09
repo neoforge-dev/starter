@@ -34,7 +34,7 @@ async def get_current_user(
     """Get current user from token."""
     try:
         payload = jwt.decode(
-            token, settings.secret_key, algorithms=[settings.algorithm]
+            token, settings.secret_key.get_secret_value(), algorithms=[settings.algorithm]
         )
         token_data = TokenPayload(**payload)
     except (jwt.JWTError, ValidationError):

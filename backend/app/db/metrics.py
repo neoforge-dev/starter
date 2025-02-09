@@ -3,18 +3,18 @@ from typing import Dict, Any
 
 from prometheus_client import Counter, Gauge, Histogram
 import structlog
+from sqlalchemy.pool import NullPool
 
 from app.db.session import engine
+from app.core.config import settings
+from app.core.metrics import get_metrics
 
 logger = structlog.get_logger()
 
-# Metrics
-DB_POOL_SIZE = Gauge(
-    "db_pool_size",
-    "Current size of the database connection pool",
-    labelnames=["status"],
-)
+# Initialize metrics
+metrics = get_metrics()
 
+# Metrics
 DB_POOL_CHECKOUTS = Counter(
     "db_pool_checkouts_total",
     "Total number of connection checkouts from the pool",
@@ -39,19 +39,25 @@ DB_QUERY_DURATION = Histogram(
 
 def get_pool_stats() -> Dict[str, Any]:
     """Get current database pool statistics."""
-    pool = engine.pool
-    stats = {
-        "size": pool.size(),
-        "checked_in": pool.checkedin(),
-        "checked_out": pool.checkedout(),
-        "overflow": pool.overflow(),
-    }
+    if isinstance(engine.pool, NullPool):
+        # Return dummy stats for NullPool
+        stats = {
+            "size": 0,
+            "checked_in": 0,
+            "checked_out": 0,
+            "overflow": 0,
+        }
+    else:
+        pool = engine.pool
+        stats = {
+            "size": pool.size(),
+            "checked_in": pool.checkedin(),
+            "checked_out": pool.checkedout(),
+            "overflow": pool.overflow(),
+        }
 
     # Update Prometheus metrics
-    DB_POOL_SIZE.labels(status="total").set(stats["size"])
-    DB_POOL_SIZE.labels(status="checked_in").set(stats["checked_in"])
-    DB_POOL_SIZE.labels(status="checked_out").set(stats["checked_out"])
-    DB_POOL_SIZE.labels(status="overflow").set(stats["overflow"])
+    metrics["db_pool_size"].set(stats["size"])
 
     return stats
 
@@ -71,25 +77,24 @@ async def log_pool_stats() -> None:
         logger.error("db_pool_stats_error", error=str(e))
 
 
-# Add event listeners for connection pool events
-@engine.pool.add_listener("checkout")
-def on_checkout(dbapi_con, con_record, con_proxy):
-    """Handle connection checkout event."""
-    DB_POOL_CHECKOUTS.inc()
+# Add event listeners for connection pool events only in non-test environment
+if not isinstance(engine.pool, NullPool):
+    @engine.pool.add_listener("checkout")
+    def on_checkout(dbapi_con, con_record, con_proxy):
+        """Handle connection checkout event."""
+        DB_POOL_CHECKOUTS.inc()
 
+    @engine.pool.add_listener("checkin")
+    def on_checkin(dbapi_con, con_record):
+        """Handle connection checkin event."""
+        DB_POOL_CHECKINS.inc()
 
-@engine.pool.add_listener("checkin")
-def on_checkin(dbapi_con, con_record):
-    """Handle connection checkin event."""
-    DB_POOL_CHECKINS.inc()
-
-
-@engine.pool.add_listener("overflow")
-def on_overflow(dbapi_con, con_record):
-    """Handle connection pool overflow event."""
-    DB_POOL_OVERFLOW.inc()
-    logger.warning(
-        "db_pool_overflow",
-        current_size=engine.pool.size(),
-        overflow=engine.pool.overflow(),
-    ) 
+    @engine.pool.add_listener("overflow")
+    def on_overflow(dbapi_con, con_record):
+        """Handle connection pool overflow event."""
+        DB_POOL_OVERFLOW.inc()
+        logger.warning(
+            "db_pool_overflow",
+            current_size=engine.pool.size(),
+            overflow=engine.pool.overflow(),
+        ) 

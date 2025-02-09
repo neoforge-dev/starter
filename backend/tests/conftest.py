@@ -33,6 +33,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 import asyncpg
 from asyncio import AbstractEventLoop
+from fastapi.testclient import TestClient
+from prometheus_client import REGISTRY
 
 from app.core.config import settings
 from app.db.base import Base
@@ -69,6 +71,19 @@ async_session = sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
+@pytest.fixture(autouse=True)
+def clear_metrics():
+    """Clear Prometheus registry before each test."""
+    collectors = list(REGISTRY._collector_to_names.keys())
+    for collector in collectors:
+        REGISTRY.unregister(collector)
+    
+    # Initialize metrics after clearing
+    from app.core.metrics import get_metrics
+    get_metrics()
+    
+    yield
 
 async def create_test_database() -> None:
     """Create test database."""
@@ -165,8 +180,15 @@ async def db() -> AsyncGenerator[AsyncSession, None]:
 @pytest_asyncio.fixture(scope="function")
 async def client(db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create a test client."""
+    # Initialize metrics
+    from app.core.metrics import get_metrics
+    metrics = get_metrics()
+    
+    # Create test client
     transport = ASGITransport(app=app)  # Use the main app
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        # Make a request to ensure middleware is initialized
+        await ac.get("/health")
         yield ac
 
 
@@ -240,4 +262,29 @@ def superuser_headers(superuser_token: str) -> dict:
 @pytest.fixture
 def regular_user_headers(user_token: str) -> dict:
     """Create headers with regular user token."""
-    return {"Authorization": f"Bearer {user_token}"} 
+    return {"Authorization": f"Bearer {user_token}"}
+
+@pytest.fixture
+async def regular_user(db: AsyncSession) -> User:
+    """Create a regular test user."""
+    return await UserFactory.create(session=db)
+
+@pytest.fixture
+def user_token(regular_user: User) -> str:
+    """Create a token for the regular test user."""
+    return create_access_token(subject=regular_user.id)
+
+@pytest.fixture
+def regular_user_headers(user_token: str) -> dict:
+    """Headers for regular user authentication."""
+    return {"Authorization": f"Bearer {user_token}"}
+
+@pytest.fixture
+def superuser_token(superuser: User) -> str:
+    """Create a token for the superuser."""
+    return create_access_token(subject=superuser.id)
+
+@pytest.fixture
+def superuser_headers(superuser_token: str) -> dict:
+    """Headers for superuser authentication."""
+    return {"Authorization": f"Bearer {superuser_token}"} 

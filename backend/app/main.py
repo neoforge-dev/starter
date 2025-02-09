@@ -27,6 +27,7 @@ from app.api.v1.api import api_router
 from app.api.endpoints import metrics
 from app.worker.email_worker import email_worker
 from app.api.middleware import setup_security_middleware, setup_validation_middleware
+from app.core.metrics import get_metrics
 
 # Set up structured logging
 setup_logging(settings.model_dump())
@@ -82,12 +83,11 @@ async def lifespan(app: FastAPI):
     await init_db()
     await init_redis()
     
+    # Initialize metrics
+    get_metrics()
+    
     # Start background workers
     email_worker.start()
-    
-    # Configure middleware
-    setup_security_middleware(app)
-    setup_validation_middleware(app)
     
     logger.info(
         "application_startup",

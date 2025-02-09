@@ -25,7 +25,7 @@ async def test_get_current_user_valid_token(db: AsyncSession):
     user = await UserFactory.create(session=db)
     token = jwt.encode(
         {"sub": str(user.id)},
-        settings.secret_key,
+        settings.secret_key.get_secret_value(),
         algorithm=settings.algorithm
     )
     
@@ -46,7 +46,7 @@ async def test_get_current_user_nonexistent_user(db: AsyncSession):
     """Test getting current user with token for nonexistent user."""
     token = jwt.encode(
         {"sub": "999999"},  # Non-existent user ID
-        settings.secret_key,
+        settings.secret_key.get_secret_value(),
         algorithm=settings.algorithm
     )
     
@@ -61,7 +61,7 @@ async def test_get_current_user_inactive_user(db: AsyncSession):
     user = await UserFactory.create(session=db, is_active=False)
     token = jwt.encode(
         {"sub": str(user.id)},
-        settings.secret_key,
+        settings.secret_key.get_secret_value(),
         algorithm=settings.algorithm
     )
     

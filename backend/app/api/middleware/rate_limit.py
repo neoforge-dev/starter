@@ -1,6 +1,6 @@
 """Rate limiting middleware."""
-from typing import Callable, Optional
-from fastapi import FastAPI, Request, Response
+from typing import Callable, Optional, Tuple, NamedTuple
+from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
@@ -13,6 +13,12 @@ from app.core.config import settings
 
 logger = structlog.get_logger()
 
+class RateLimitInfo(NamedTuple):
+    """Rate limit information."""
+    is_allowed: bool
+    remaining: int
+    limit: int
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Middleware for rate limiting requests."""
     
@@ -24,7 +30,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.max_requests = settings.rate_limit_requests
         self.max_auth_requests = settings.rate_limit_auth_requests
     
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable
+    ) -> Response:
         """Process request with rate limiting."""
         try:
             # Skip rate limiting for health check endpoints
@@ -34,20 +42,28 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             # Get client identifier (user ID or IP)
             client_id = await self._get_client_id(request)
             
-            # Check rate limit
-            if not await self._check_rate_limit(client_id):
-                logger.warning(
-                    "rate_limit_exceeded",
-                    client_id=client_id,
-                    path=request.url.path,
-                )
-                return JSONResponse(
-                    status_code=429,
-                    content={"detail": "Too Many Requests"},
-                )
+            # Skip rate limiting for authenticated users
+            if client_id.startswith("user:"):
+                response = await call_next(request)
+                return response
             
-            # Process request
-            return await call_next(request)
+            # Check rate limit and get remaining requests
+            rate_limit_info = await self._check_rate_limit(client_id)
+            if not rate_limit_info.is_allowed:
+                response = JSONResponse(
+                    status_code=429,
+                    content={"detail": "Too Many Requests"}
+                )
+                self._add_rate_limit_headers(response, rate_limit_info)
+                return response
+
+            # Process the request
+            response = await call_next(request)
+
+            # Add rate limit headers
+            self._add_rate_limit_headers(response, rate_limit_info)
+
+            return response
             
         except Exception as e:
             logger.exception(
@@ -60,35 +76,48 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     
     async def _get_client_id(self, request: Request) -> str:
         """Get client identifier from request."""
-        # Try to get user ID from token
-        auth = request.headers.get("Authorization", "")
-        if auth.startswith("Bearer "):
-            try:
-                token = auth.split(" ")[1]
-                payload = jwt.decode(
-                    token,
-                    settings.secret_key,
-                    algorithms=[settings.algorithm],
-                )
-                return f"user:{payload['sub']}"
-            except jwt.InvalidTokenError:
-                pass
-        
-        # Fall back to IP address
-        forwarded = request.headers.get("X-Forwarded-For")
-        if forwarded:
-            return f"ip:{forwarded.split(',')[0].strip()}"
-        return f"ip:{request.client.host}"
+        try:
+            token = request.headers.get("Authorization", "").replace("Bearer ", "")
+            if not token:
+                return request.client.host or "unknown"
+            
+            payload = jwt.decode(
+                token,
+                settings.secret_key.get_secret_value(),
+                algorithms=["HS256"]
+            )
+            return f"user:{payload.get('sub', request.client.host or 'unknown')}"
+        except Exception as e:
+            logger.error(
+                "Rate limit error",
+                extra={
+                    "error": str(e),
+                    "path": request.url.path
+                },
+                exc_info=True
+            )
+            return request.client.host or "unknown"
     
-    async def _check_rate_limit(self, client_id: str) -> bool:
-        """Check if client has exceeded rate limit."""
+    async def _check_rate_limit(self, client_id: str) -> RateLimitInfo:
+        """Check if client has exceeded rate limit.
+        
+        Returns:
+            RateLimitInfo containing:
+            - is_allowed: Whether the request is allowed
+            - remaining: Number of remaining requests
+            - limit: Maximum number of requests allowed
+        """
         if not self.redis:
-            return True
+            return RateLimitInfo(True, self.max_requests, self.max_requests)
             
         try:
             # Get current window
             now = int(time.time())
             window_key = f"ratelimit:{client_id}:{now // self.window}"
+            
+            # Get current count before incrementing
+            current_count = await self.redis.get(window_key)
+            current_count = int(current_count) if current_count else 0
             
             # Increment request count
             count = await self.redis.incr(window_key)
@@ -102,7 +131,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 else self.max_requests
             )
             
-            return count <= max_requests
+            # Calculate remaining requests based on count before increment
+            remaining = max(0, max_requests - count)
+            return RateLimitInfo(count <= max_requests, remaining, max_requests)
             
         except Exception as e:
             logger.exception(
@@ -110,7 +141,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 error=str(e),
                 client_id=client_id,
             )
-            return True  # Allow request through on Redis error
+            return RateLimitInfo(True, self.max_requests, self.max_requests)  # Allow request through on Redis error
+            
+    def _add_rate_limit_headers(self, response: Response, rate_limit_info: RateLimitInfo) -> None:
+        """Add rate limit headers to response."""
+        response.headers["X-RateLimit-Limit"] = str(rate_limit_info.limit)
+        response.headers["X-RateLimit-Remaining"] = str(rate_limit_info.remaining)
+        if rate_limit_info.remaining == 0:
+            response.headers["Retry-After"] = str(self.window)
 
 
 def setup_rate_limit_middleware(app: FastAPI, redis_client: Redis) -> None:
