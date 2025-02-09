@@ -90,7 +90,7 @@ def clear_metrics():
         endpoint="/health",
     ).observe(0.0)
     
-    metrics["http_requests_total"].labels(
+    metrics["http_requests"].labels(
         method="GET",
         endpoint="/health",
         status="200",

@@ -56,7 +56,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                     endpoint=endpoint,
                 ).observe(duration)
                 
-                self.metrics["http_requests_total"].labels(
+                self.metrics["http_requests"].labels(
                     method=method,
                     endpoint=endpoint,
                     status=str(response.status_code),
@@ -79,7 +79,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                     endpoint=endpoint,
                 ).observe(duration)
                 
-                self.metrics["http_requests_total"].labels(
+                self.metrics["http_requests"].labels(
                     method=method,
                     endpoint=endpoint,
                     status=str(response.status_code),
@@ -146,7 +146,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 endpoint=endpoint,
             ).observe(duration)
             
-            self.metrics["http_requests_total"].labels(
+            self.metrics["http_requests"].labels(
                 method=method,
                 endpoint=endpoint,
                 status=str(response.status_code),
@@ -170,7 +170,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 endpoint=endpoint,
             ).observe(duration)
             
-            self.metrics["http_requests_total"].labels(
+            self.metrics["http_requests"].labels(
                 method=method,
                 endpoint=endpoint,
                 status="500",

@@ -207,6 +207,21 @@ class Cache:
             )
             return None
 
+    async def clear_cache(self) -> bool:
+        """Clear all keys from Redis."""
+        try:
+            with CACHE_OPERATION_DURATION.labels("clear_all").time():
+                await self.redis.flushdb()
+            return True
+        except Exception as e:
+            CACHE_ERRORS.labels(error_type=type(e).__name__).inc()
+            logger.error(
+                "cache_clear_all_error",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+            return False
+
 
 def cached(
     expire: Optional[Union[int, timedelta]] = None,
@@ -270,4 +285,12 @@ def cached(
                 return await func(*args, **kwargs)
 
         return wrapper
-    return decorator 
+    return decorator
+
+
+async def clear_cache() -> bool:
+    """Clear all keys from Redis."""
+    from app.core.redis import get_redis
+    redis = await anext(get_redis())
+    cache = Cache(redis)
+    return await cache.clear_cache() 
