@@ -155,13 +155,16 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                     "level": "error",
                     "logger": logger.name,
                     "timestamp": time.time(),
-                    "environment": settings.ENVIRONMENT,
-                    "app_version": settings.VERSION,
+                    "environment": settings.environment,
+                    "app_version": settings.version,
                 })
             )
             return JSONResponse(
                 status_code=500,
-                content={"detail": "Internal server error"}
+                content={
+                    "detail": "Internal Server Error",
+                    "message": "An error occurred while processing your request",
+                },
             )
     
     async def _validate_headers(self, request: Request) -> List[ValidationErrorModel]:

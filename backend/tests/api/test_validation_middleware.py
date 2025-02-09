@@ -176,7 +176,13 @@ async def test_put_request_validation(app_with_validation: FastAPI):
             "user-agent": "test-client/1.0",
             "content-type": "application/json",
         }
-        response = await client.put("/test", headers=headers, json={"test": "data"})
+        # Create request without sending it
+        request = client.build_request("PUT", "/test", headers=headers, json={"test": "data"})
+        # Remove any automatically added Content-Length header
+        if "content-length" in request.headers:
+            del request.headers["content-length"]
+        # Send the modified request
+        response = await client.send(request)
         assert response.status_code == 422
         data = response.json()
         assert "detail" in data

@@ -36,7 +36,10 @@ def test_valid_settings(valid_env_vars: Dict[str, Any]):
         os.environ[key] = value
 
     try:
-        settings = Settings()
+        settings = Settings(
+            app_name=os.getenv("APP_NAME", "NeoForge"),
+            project_name=os.getenv("PROJECT_NAME", "NeoForge"),
+        )
         
         # Check basic settings
         assert settings.app_name == "TestApp"

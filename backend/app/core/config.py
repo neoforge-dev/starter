@@ -24,8 +24,8 @@ class Settings(BaseSettings):
     """Application settings."""
     
     # Application
-    app_name: str = "NeoForge"
-    project_name: str = "NeoForge"  # Used in email templates
+    app_name: str
+    project_name: str
     version: str = "0.1.0"
     debug: bool = False
     environment: str = "development"
@@ -132,6 +132,8 @@ def get_settings() -> Settings:
         return Settings(
             testing="TESTING" in os.environ,
             environment=os.getenv("ENVIRONMENT", "development"),
+            app_name=os.getenv("APP_NAME", "NeoForge"),
+            project_name=os.getenv("PROJECT_NAME", "NeoForge"),
         )
     except ValidationError as e:
         # If we're in test mode, use test defaults
@@ -142,6 +144,8 @@ def get_settings() -> Settings:
                 secret_key=SecretStr("x" * 32),
                 database_url=PostgresDsn("postgresql+asyncpg://postgres:postgres@db:5432/test"),
                 redis_url="redis://redis:6379/0",
+                app_name="NeoForge",
+                project_name="NeoForge",
             )
         logger.error(
             "configuration_error",
