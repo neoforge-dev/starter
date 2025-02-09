@@ -91,13 +91,18 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                         )
                 
                 # Validate Content-Length for write methods
-                if "content-length" not in {k.lower(): v for k, v in request.headers.items()}:
+                if not request.headers.get("content-length", "").strip():
                     return JSONResponse(
                         status_code=422,
                         content={
-                            "detail": "Validation Error",
-                            "message": "Content-Length header is required",
-                        },
+                            "detail": [
+                                {
+                                    "loc": ["body"],
+                                    "msg": "field required",
+                                    "type": "missing"
+                                }
+                            ]
+                        }
                     )
             
             # Process request and track duration
