@@ -59,10 +59,12 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             # Validate request headers
             errors = await self._validate_headers(request)
             if errors:
+                error_models = [error.model_dump() for error in errors]
                 return JSONResponse(
                     status_code=422,
                     content={
-                        'detail': [error.model_dump() for error in errors]
+                        'detail': error_models,
+                        'errors': error_models
                     }
                 )
             

@@ -69,14 +69,13 @@ class Settings(BaseSettings):
     # List of email addresses to notify for admin alerts
     admin_notification_emails: List[EmailStr] = []
 
-    @model_validator(mode='before')
-    def validate_environment_first(cls, values):
-        """Validate environment before other fields."""
-        if 'environment' in values:
-            allowed = {"development", "staging", "production", "test"}
-            if values['environment'] not in allowed:
-                raise ValueError(f"Environment must be one of {allowed}")
-        return values
+    @field_validator("environment")
+    def validate_environment(cls, v: str) -> str:
+        """Validate environment."""
+        allowed = {"development", "staging", "production", "test"}
+        if v not in allowed:
+            raise ValueError(f"Environment must be one of {allowed}")
+        return v
 
     @field_validator("secret_key")
     def validate_secret_key(cls, v: SecretStr) -> SecretStr:
@@ -86,9 +85,9 @@ class Settings(BaseSettings):
         return v
 
     @field_validator("cors_origins")
-    def validate_cors_origins(cls, v: List[str]) -> List[str]:
+    def validate_cors_origins(cls, v: List[str], info) -> List[str]:
         """Validate CORS origins."""
-        if not v and not os.getenv("TESTING"):
+        if not v and not info.data.get("testing", False):
             raise ValueError("CORS origins cannot be empty in non-testing environment")
         return v
 

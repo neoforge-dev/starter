@@ -90,11 +90,24 @@ def test_invalid_environment(valid_env_vars: Dict[str, Any]):
             os.environ[key] = value
         
         with pytest.raises(ValidationError) as exc_info:
-            Settings()
+            Settings(
+                environment="invalid",
+                app_name=env_vars["APP_NAME"],
+                project_name=env_vars["PROJECT_NAME"],
+                secret_key=SecretStr(env_vars["SECRET_KEY"]),
+                database_url=PostgresDsn(env_vars["DATABASE_URL"]),
+                redis_url=env_vars["REDIS_URL"],
+            )
         
-        error = exc_info.value.errors()[0]
-        assert error["loc"] == ("environment",)
-        assert "Environment must be one of" in error["msg"]
+        # Find the environment error in the list of errors
+        env_error = None
+        for error in exc_info.value.errors():
+            if error["loc"] == ("environment",):
+                env_error = error
+                break
+        
+        assert env_error is not None, "No validation error for environment found"
+        assert "Environment must be one of" in env_error["msg"]
     finally:
         # Clean up environment variables after test
         for key in env_vars:
@@ -162,11 +175,26 @@ def test_empty_cors_origins(valid_env_vars: Dict[str, Any]):
             os.environ[key] = value
         
         with pytest.raises(ValidationError) as exc_info:
-            Settings()
+            Settings(
+                app_name=env_vars["APP_NAME"],
+                project_name=env_vars["PROJECT_NAME"],
+                environment=env_vars["ENVIRONMENT"],
+                secret_key=SecretStr(env_vars["SECRET_KEY"]),
+                database_url=PostgresDsn(env_vars["DATABASE_URL"]),
+                redis_url=env_vars["REDIS_URL"],
+                cors_origins=[],  # Empty list
+                testing=False,
+            )
         
-        error = exc_info.value.errors()[0]
-        assert error["loc"] == ("cors_origins",)
-        assert "cannot be empty in non-testing environment" in error["msg"]
+        # Find the cors_origins error in the list of errors
+        cors_error = None
+        for error in exc_info.value.errors():
+            if error["loc"] == ("cors_origins",):
+                cors_error = error
+                break
+        
+        assert cors_error is not None, "No validation error for cors_origins found"
+        assert "cannot be empty in non-testing environment" in cors_error["msg"]
     finally:
         # Clean up environment variables
         for key in env_vars:
@@ -186,7 +214,16 @@ def test_empty_cors_origins_in_testing(valid_env_vars: Dict[str, Any]):
         for key, value in env_vars.items():
             os.environ[key] = value
         
-        settings = Settings()
+        settings = Settings(
+            app_name=env_vars["APP_NAME"],
+            project_name=env_vars["PROJECT_NAME"],
+            environment=env_vars["ENVIRONMENT"],
+            secret_key=SecretStr(env_vars["SECRET_KEY"]),
+            database_url=PostgresDsn(env_vars["DATABASE_URL"]),
+            redis_url=env_vars["REDIS_URL"],
+            cors_origins=[],  # Empty list
+            testing=True,
+        )
         assert settings.cors_origins == []
     finally:
         # Clean up environment variables
@@ -195,22 +232,35 @@ def test_empty_cors_origins_in_testing(valid_env_vars: Dict[str, Any]):
                 del os.environ[key]
 
 
-def test_invalid_database_url():
+def test_invalid_database_url(valid_env_vars: Dict[str, Any]):
     """Test invalid database URL."""
     env_vars = {
-        **valid_env_vars(),
+        **valid_env_vars,
         "DATABASE_URL": "invalid-url",
     }
     
-    for key, value in env_vars.items():
-        os.environ[key] = value
-    
-    with pytest.raises(ValidationError) as exc_info:
-        Settings()
-    
-    error = exc_info.value.errors()[0]
-    assert error["loc"] == ("database_url",)
-    assert "URL scheme" in error["msg"]
+    try:
+        for key, value in env_vars.items():
+            os.environ[key] = value
+        
+        with pytest.raises(ValidationError) as exc_info:
+            Settings(
+                app_name=env_vars["APP_NAME"],
+                project_name=env_vars["PROJECT_NAME"],
+                environment=env_vars["ENVIRONMENT"],
+                secret_key=SecretStr(env_vars["SECRET_KEY"]),
+                database_url=env_vars["DATABASE_URL"],
+                redis_url=env_vars["REDIS_URL"],
+            )
+        
+        error = exc_info.value.errors()[0]
+        assert error["loc"] == ("database_url",)
+        assert "URL scheme" in error["msg"]
+    finally:
+        # Clean up environment variables
+        for key in env_vars:
+            if key in os.environ:
+                del os.environ[key]
 
 
 def test_invalid_redis_url():
