@@ -70,14 +70,25 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             # Validate content type for POST/PUT/PATCH requests
             if request.method in {"POST", "PUT", "PATCH"}:
                 content_type = request.headers.get("content-type", "")
-                if not content_type.startswith("application/json"):
-                    return JSONResponse(
-                        status_code=415,
-                        content={
-                            "detail": "Unsupported Media Type",
-                            "message": "Content-Type must be application/json",
-                        },
-                    )
+                # Allow form data for token endpoint
+                if request.url.path.endswith("/token"):
+                    if not content_type.startswith("application/x-www-form-urlencoded"):
+                        return JSONResponse(
+                            status_code=415,
+                            content={
+                                "detail": "Unsupported Media Type",
+                                "message": "Content-Type must be application/x-www-form-urlencoded",
+                            },
+                        )
+                else:
+                    if not content_type.startswith("application/json"):
+                        return JSONResponse(
+                            status_code=415,
+                            content={
+                                "detail": "Unsupported Media Type",
+                                "message": "Content-Type must be application/json",
+                            },
+                        )
                 
                 # Validate Content-Length for write methods
                 if "content-length" not in request.headers:
@@ -156,20 +167,23 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             'user-agent': None  # Just check presence
         }
         
+        # Convert headers to lowercase for case-insensitive comparison
+        headers = {k.lower(): v for k, v in request.headers.items()}
+        
         for header, expected_value in required_headers.items():
-            if header not in request.headers:
+            if header not in headers:
                 errors.append(ValidationErrorModel(
                     type='validation_error',
                     loc=['header', header],
                     msg=f'Header "{header}" is required',
                     input=None
                 ))
-            elif expected_value and request.headers[header] != expected_value:
+            elif expected_value and headers[header].lower() != expected_value.lower():
                 errors.append(ValidationErrorModel(
                     type='validation_error',
                     loc=['header', header],
                     msg=f'Header "{header}" must be "{expected_value}"',
-                    input=request.headers[header]
+                    input=headers[header]
                 ))
         return errors
 

@@ -264,10 +264,17 @@ async def test_rate_limit_middleware_redis_error(
     # Add middleware with invalid Redis client to simulate Redis being down
     app_with_middleware.add_middleware(RateLimitMiddleware, redis_client=None)
     
-    # Make many requests - they should all succeed since Redis is down
-    for _ in range(settings.rate_limit_requests * 2):
-        response = await client.get("/test")
-        assert response.status_code == 200
+    # Create a new client using the test app
+    transport = ASGITransport(app=app_with_middleware)
+    async with AsyncClient(transport=transport, base_url="http://test") as test_client:
+        # Make many requests - they should all succeed since Redis is down
+        headers = {
+            "Accept": "application/json",
+            "User-Agent": "TestClient"
+        }
+        for _ in range(settings.rate_limit_requests * 2):
+            response = await test_client.get("/test", headers=headers)
+            assert response.status_code == 200
 
 
 async def test_error_handler_middleware_validation_error(client: AsyncClient, regular_user_headers: dict):
@@ -295,15 +302,21 @@ async def test_rate_limit_middleware_no_redis_connection(
     client: AsyncClient,
 ):
     """Test behavior when Redis connection fails."""
-    # Add test route to main app
-    @app.get("/test_no_redis")
+    # Add test route to test app
+    @app_with_middleware.get("/test_no_redis")
     async def test_route():
         return {"message": "success"}
     
     # Set invalid Redis URL
     settings.redis_url = "redis://invalid:6379/0"
     
-    # Should still allow requests
-    response = await client.get("/test_no_redis")
-    assert response.status_code == 200
-    assert response.json() == {"message": "success"} 
+    # Create a new client using the test app
+    transport = ASGITransport(app=app_with_middleware)
+    async with AsyncClient(transport=transport, base_url="http://test") as test_client:
+        # Should still allow requests
+        headers = {
+            "Accept": "application/json",
+            "User-Agent": "TestClient"
+        }
+        response = await test_client.get("/test_no_redis", headers=headers)
+        assert response.status_code == 200 

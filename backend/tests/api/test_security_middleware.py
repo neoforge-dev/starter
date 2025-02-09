@@ -1,11 +1,12 @@
 """Test security and validation middleware."""
 import pytest
-from fastapi import FastAPI
-from httpx import AsyncClient
+from fastapi import FastAPI, Request
 from starlette.testclient import TestClient
+from starlette.responses import Response, JSONResponse
+import json
 
 from app.api.middleware.security import setup_security_middleware
-from app.api.middleware.validation import setup_validation_middleware
+from app.api.middleware.validation import setup_validation_middleware, RequestValidationMiddleware
 from app.core.config import settings
 
 pytestmark = pytest.mark.asyncio
@@ -25,6 +26,22 @@ def app_with_security() -> FastAPI:
         return {"received": data}
     
     setup_security_middleware(app)
+    return app
+
+
+@pytest.fixture
+def app_with_validation() -> FastAPI:
+    """Create test FastAPI application with validation middleware."""
+    app = FastAPI()
+    
+    @app.get("/test")
+    async def test_endpoint():
+        return {"message": "success"}
+    
+    @app.post("/test-post")
+    async def test_post_endpoint(data: dict):
+        return {"received": data}
+    
     setup_validation_middleware(app)
     return app
 
@@ -86,9 +103,9 @@ async def test_content_security_policy(app_with_security: FastAPI):
     assert "object-src 'none'" in csp
 
 
-async def test_request_validation_headers(app_with_security: FastAPI):
+async def test_request_validation_headers(app_with_validation: FastAPI):
     """Test request header validation."""
-    client = TestClient(app_with_security)
+    client = TestClient(app_with_validation)
     
     # Test without required headers
     response = client.get("/test")
@@ -104,9 +121,10 @@ async def test_request_validation_headers(app_with_security: FastAPI):
     assert response.status_code == 200
 
 
-async def test_request_validation_content_type(app_with_security: FastAPI):
+@pytest.mark.asyncio
+async def test_request_validation_content_type(app_with_validation: FastAPI):
     """Test content type validation for POST requests."""
-    client = TestClient(app_with_security)
+    client = TestClient(app_with_validation)
     
     # Required headers for all requests
     base_headers = {
@@ -115,32 +133,61 @@ async def test_request_validation_content_type(app_with_security: FastAPI):
     }
     
     # Test POST without content-type
-    response = client.post("/test-post", json={}, headers=base_headers)
-    assert response.status_code == 422
-    
-    # Test POST with wrong content-type
-    headers = {
-        **base_headers,
-        "Content-Type": "text/plain",
-        "Content-Length": "2",
-    }
-    response = client.post("/test-post", data="{}", headers=headers)
+    response = client.post("/test-post", content=b"{}", headers=base_headers)
     assert response.status_code == 415
     assert "Content-Type must be application/json" in response.json()["message"]
     
-    # Test POST with correct content-type
+    # Test POST with wrong content-type
+    headers = {**base_headers, "Content-Type": "text/plain"}
+    response = client.post("/test-post", content=b"{}", headers=headers)
+    assert response.status_code == 415
+    assert "Content-Type must be application/json" in response.json()["message"]
+    
+    # Test POST with correct content-type but missing content-length
+    # Create a custom request without Content-Length header
+    scope = {
+        "type": "http",
+        "method": "POST",
+        "path": "/test-post",
+        "headers": [
+            (b"accept", b"application/json"),
+            (b"user-agent", b"test-client"),
+            (b"content-type", b"application/json"),
+        ],
+        "client": ("testclient", 50000),
+        "server": ("testserver", 80),
+        "scheme": "http",
+        "http_version": "1.1",
+        "root_path": "",
+        "query_string": b"",
+    }
+
+    # Create a request without Content-Length header
+    request = Request(scope)
+    request._body = b'{"test": "data"}'
+
+    # Call the middleware directly
+    middleware = RequestValidationMiddleware(app=app_with_validation)
+    response = await middleware.dispatch(request, lambda _: None)
+
+    # Convert the response body to JSON
+    response_body = json.loads(response.body.decode())
+    assert response.status_code == 422
+    assert "Content-Length header is required" in response_body["message"]
+    
+    # Test POST with all required headers
     headers = {
         **base_headers,
         "Content-Type": "application/json",
-        "Content-Length": "2",
+        "Content-Length": "13",
     }
-    response = client.post("/test-post", json={}, headers=headers)
+    response = client.post("/test-post", content=b'{"test":"ok"}', headers=headers)
     assert response.status_code == 200
 
 
-async def test_request_validation_content_length(app_with_security: FastAPI):
+async def test_request_validation_content_length(app_with_validation: FastAPI):
     """Test content length validation for POST requests."""
-    client = TestClient(app_with_security)
+    client = TestClient(app_with_validation)
     
     headers = {
         "Accept": "application/json",
@@ -149,15 +196,42 @@ async def test_request_validation_content_length(app_with_security: FastAPI):
     }
     
     # Test POST without content-length
-    response = client.post("/test-post", json={}, headers=headers)
+    # Create a custom request without Content-Length header
+    scope = {
+        "type": "http",
+        "method": "POST",
+        "path": "/test-post",
+        "headers": [
+            (b"accept", b"application/json"),
+            (b"user-agent", b"test-client"),
+            (b"content-type", b"application/json"),
+        ],
+        "client": ("testclient", 50000),
+        "server": ("testserver", 80),
+        "scheme": "http",
+        "http_version": "1.1",
+        "root_path": "",
+        "query_string": b"",
+    }
+
+    # Create a request without Content-Length header
+    request = Request(scope)
+    request._body = b'{"test": "data"}'
+
+    # Call the middleware directly
+    middleware = RequestValidationMiddleware(app=app_with_validation)
+    response = await middleware.dispatch(request, lambda _: None)
+
+    # Convert the response body to JSON
+    response_body = json.loads(response.body.decode())
     assert response.status_code == 422
-    assert "Content-Length header is required" in str(response.json())
+    assert "Content-Length header is required" in response_body["message"]
 
 
 @pytest.mark.parametrize("method", ["POST", "PUT", "PATCH"])
-async def test_request_validation_write_methods(app_with_security: FastAPI, method: str):
+async def test_request_validation_write_methods(app_with_validation: FastAPI, method: str):
     """Test validation for different write methods."""
-    client = TestClient(app_with_security)
+    client = TestClient(app_with_validation)
     
     # Basic headers
     headers = {
@@ -167,7 +241,8 @@ async def test_request_validation_write_methods(app_with_security: FastAPI, meth
     
     # Test without required headers
     response = client.request(method, "/test-post", headers=headers)
-    assert response.status_code == 422
+    assert response.status_code == 415
+    assert "Content-Type must be application/json" in response.json()["message"]
     
     # Test with all required headers
     headers.update({

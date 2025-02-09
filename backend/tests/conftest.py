@@ -89,7 +89,7 @@ def clear_metrics():
         endpoint="/health",
     ).observe(0.0)
     
-    metrics["http_requests_total"].labels(
+    metrics["http_requests"].labels(
         method="GET",
         endpoint="/health",
         status="200",
@@ -248,44 +248,19 @@ async def redis() -> AsyncGenerator[Redis, None]:
 
 
 @pytest_asyncio.fixture
-async def regular_user_token(db: AsyncSession) -> str:
-    """Create a regular user and return their token."""
-    user = await UserFactory.create(session=db)
-    return create_access_token(user.id)
+async def superuser(db: AsyncSession) -> User:
+    """Create a superuser for testing."""
+    return await UserFactory.create(session=db, is_superuser=True)
 
 @pytest_asyncio.fixture
-async def regular_user_headers(regular_user_token: str) -> dict:
-    """Return headers for regular user authentication."""
-    return {
-        "Authorization": f"Bearer {regular_user_token}",
-        "Accept": "application/json",
-        "User-Agent": "TestClient"
-    }
-
-@pytest_asyncio.fixture
-async def superuser_token(db: AsyncSession) -> str:
-    """Create a superuser and return their token."""
-    user = await UserFactory.create(session=db, is_superuser=True)
-    return create_access_token(user.id)
+async def superuser_token(superuser: User) -> str:
+    """Create a token for the superuser."""
+    return create_access_token(subject=superuser.id)
 
 @pytest_asyncio.fixture
 async def superuser_headers(superuser_token: str) -> dict:
-    """Return headers for superuser authentication."""
+    """Headers for superuser authentication."""
     return {"Authorization": f"Bearer {superuser_token}"}
-
-@pytest.fixture
-def superuser_headers(superuser_token: str) -> dict:
-    """Create headers with superuser token."""
-    return {"Authorization": f"Bearer {superuser_token}"}
-
-@pytest.fixture
-def regular_user_headers(user_token: str) -> dict:
-    """Create headers with regular user token."""
-    return {
-        "Authorization": f"Bearer {user_token}",
-        "Accept": "application/json",
-        "User-Agent": "TestClient"
-    }
 
 @pytest.fixture
 async def regular_user(db: AsyncSession) -> User:
@@ -304,14 +279,4 @@ def regular_user_headers(user_token: str) -> dict:
         "Authorization": f"Bearer {user_token}",
         "Accept": "application/json",
         "User-Agent": "TestClient"
-    }
-
-@pytest.fixture
-def superuser_token(superuser: User) -> str:
-    """Create a token for the superuser."""
-    return create_access_token(subject=superuser.id)
-
-@pytest.fixture
-def superuser_headers(superuser_token: str) -> dict:
-    """Headers for superuser authentication."""
-    return {"Authorization": f"Bearer {superuser_token}"} 
+    } 

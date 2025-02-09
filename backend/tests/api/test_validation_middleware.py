@@ -2,11 +2,45 @@
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from httpx import AsyncClient, ASGITransport
+from httpx import AsyncClient, ASGITransport, Request
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.api.middleware.validation import RequestValidationMiddleware
 
 pytestmark = pytest.mark.asyncio
+
+
+class MockStream:
+    """Mock stream for testing."""
+    async def receive(self) -> dict:
+        """Return empty body."""
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(self, message: dict) -> None:
+        """Do nothing."""
+        pass
+
+
+class NoDefaultHeadersTransport(ASGITransport):
+    """Transport that doesn't add default headers."""
+    async def handle_async_request(self, request: Request) -> object:
+        """Handle async request without adding default headers."""
+        headers = request.headers.raw or []  # Use raw headers without defaults
+        scope = {
+            "type": "http",
+            "asgi": {"version": "3.0"},
+            "http_version": "1.1",
+            "method": request.method,
+            "headers": headers,
+            "path": str(request.url.path),
+            "raw_path": str(request.url.path).encode("ascii"),
+            "query_string": str(request.url.query).encode("ascii"),
+            "scheme": request.url.scheme,
+            "server": ("testserver", 80),
+            "client": ("testclient", 50000),
+        }
+        stream = MockStream()
+        return await self.app(scope, stream.receive, stream.send)
 
 
 @pytest.fixture
@@ -49,14 +83,14 @@ async def test_valid_get_request(app_with_validation: FastAPI):
 
 async def test_missing_required_headers(app_with_validation: FastAPI):
     """Test request with missing required headers."""
-    transport = ASGITransport(app=app_with_validation)
+    transport = NoDefaultHeadersTransport(app=app_with_validation)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/test")  # No headers
         assert response.status_code == 422
         data = response.json()
         assert "detail" in data
-        assert "Accept header is required" in str(data)
-        assert "User-Agent header is required" in str(data)
+        assert 'Header "accept" is required' in str(data)
+        assert 'Header "user-agent" is required' in str(data)
 
 
 async def test_post_request_content_type(app_with_validation: FastAPI):

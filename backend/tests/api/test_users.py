@@ -3,6 +3,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from urllib.parse import urlencode
 
 from app import crud
 from app.schemas.user import UserCreate
@@ -22,8 +23,9 @@ async def test_create_user(client: AsyncClient, db: AsyncSession, superuser_head
             "password": "testpassword",
             "full_name": "Test User",
         },
-        headers=superuser_headers,
+        headers={**superuser_headers, "Accept": "application/json"},
     )
+    print(f"Response content: {response.content}")
     assert response.status_code == 201
     data = response.json()
     assert data["email"] == "test@example.com"
@@ -51,6 +53,7 @@ async def test_read_users(client: AsyncClient, db: AsyncSession) -> None:
     response = await client.post(
         f"{settings.api_v1_str}/auth/token",
         data={"username": superuser_in.email, "password": superuser_in.password},
+        headers={"Accept": "application/json"}
     )
     assert response.status_code == 200
     token = response.json()["access_token"]
@@ -68,7 +71,10 @@ async def test_read_users(client: AsyncClient, db: AsyncSession) -> None:
         user = await crud.user.create(db, obj_in=user_in)
         assert user.email == user_in.email
     
-    response = await client.get(f"{settings.api_v1_str}/users/", headers=headers)
+    response = await client.get(
+        f"{settings.api_v1_str}/users/",
+        headers={**headers, "Accept": "application/json"}
+    )
     assert response.status_code == 200
     data = response.json()
     assert len(data) == len(test_users) + 1  # +1 for superuser
@@ -78,7 +84,10 @@ async def test_read_user(client: AsyncClient, db: AsyncSession, superuser_header
     """Test reading single user."""
     user = await UserFactory.create(session=db)
     
-    response = await client.get(f"{settings.api_v1_str}/users/{user.id}", headers=superuser_headers)
+    response = await client.get(
+        f"{settings.api_v1_str}/users/{user.id}",
+        headers={**superuser_headers, "Accept": "application/json"}
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == user.id
@@ -95,7 +104,7 @@ async def test_update_user(client: AsyncClient, db: AsyncSession, superuser_head
         json={
             "full_name": "Updated User",
         },
-        headers=superuser_headers,
+        headers={**superuser_headers, "Accept": "application/json", "Content-Type": "application/json"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -107,9 +116,15 @@ async def test_delete_user(client: AsyncClient, db: AsyncSession, superuser_head
     """Test deleting user."""
     user = await UserFactory.create(session=db)
     
-    response = await client.delete(f"{settings.api_v1_str}/users/{user.id}", headers=superuser_headers)
+    response = await client.delete(
+        f"{settings.api_v1_str}/users/{user.id}",
+        headers={**superuser_headers, "Accept": "application/json"}
+    )
     assert response.status_code == 204
     
     # Verify user is deleted
-    response = await client.get(f"{settings.api_v1_str}/users/{user.id}", headers=superuser_headers)
+    response = await client.get(
+        f"{settings.api_v1_str}/users/{user.id}",
+        headers={**superuser_headers, "Accept": "application/json"}
+    )
     assert response.status_code == 404 
