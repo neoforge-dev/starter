@@ -95,13 +95,8 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                     return JSONResponse(
                         status_code=422,
                         content={
-                            "detail": [
-                                {
-                                    "loc": ["body"],
-                                    "msg": "field required",
-                                    "type": "missing"
-                                }
-                            ]
+                            "detail": "Validation Error",
+                            "message": "Content-Length header is required",
                         }
                     )
             

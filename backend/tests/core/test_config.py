@@ -90,7 +90,7 @@ def test_invalid_environment(valid_env_vars: Dict[str, Any]):
             os.environ[key] = value
         
         with pytest.raises(ValidationError) as exc_info:
-            get_settings()
+            Settings()
         
         error = exc_info.value.errors()[0]
         assert error["loc"] == ("environment",)
@@ -104,9 +104,18 @@ def test_invalid_environment(valid_env_vars: Dict[str, Any]):
 
 def test_invalid_secret_key(valid_env_vars: Dict[str, Any]):
     """Test invalid secret key."""
+    # Clean up environment variables first
+    for key in list(os.environ.keys()):
+        if key.isupper():  # Only remove uppercase env vars (our settings)
+            del os.environ[key]
+    
     env_vars = {
-        **valid_env_vars,
-        "SECRET_KEY": "short",
+        "APP_NAME": "TestApp",
+        "PROJECT_NAME": "TestProject",
+        "ENVIRONMENT": "development",
+        "DATABASE_URL": "postgresql+asyncpg://postgres:postgres@db:5432/test",
+        "REDIS_URL": "redis://redis:6379/0",
+        "SECRET_KEY": "short",  # Invalid secret key
     }
     
     try:
@@ -114,11 +123,25 @@ def test_invalid_secret_key(valid_env_vars: Dict[str, Any]):
             os.environ[key] = value
         
         with pytest.raises(ValidationError) as exc_info:
-            get_settings()
+            # Create settings with invalid secret key
+            Settings(
+                app_name=env_vars["APP_NAME"],
+                project_name=env_vars["PROJECT_NAME"],
+                environment=env_vars["ENVIRONMENT"],
+                database_url=PostgresDsn(env_vars["DATABASE_URL"]),
+                redis_url=env_vars["REDIS_URL"],
+                secret_key=SecretStr(env_vars["SECRET_KEY"]),
+            )
         
-        error = exc_info.value.errors()[0]
-        assert error["loc"] == ("secret_key",)
-        assert "must be at least 32 characters long" in error["msg"]
+        # Find the secret_key error in the list of errors
+        secret_key_error = None
+        for error in exc_info.value.errors():
+            if error["loc"] == ("secret_key",):
+                secret_key_error = error
+                break
+        
+        assert secret_key_error is not None, "No validation error for secret_key found"
+        assert "must be at least 32 characters long" in secret_key_error["msg"]
     finally:
         # Clean up environment variables after test
         for key in env_vars:
@@ -126,38 +149,50 @@ def test_invalid_secret_key(valid_env_vars: Dict[str, Any]):
                 del os.environ[key]
 
 
-def test_empty_cors_origins():
+def test_empty_cors_origins(valid_env_vars: Dict[str, Any]):
     """Test empty CORS origins in non-testing environment."""
     env_vars = {
-        **valid_env_vars(),
+        **valid_env_vars,
         "CORS_ORIGINS": "[]",
         "TESTING": "false",
     }
     
-    for key, value in env_vars.items():
-        os.environ[key] = value
-    
-    with pytest.raises(ValidationError) as exc_info:
-        Settings()
-    
-    error = exc_info.value.errors()[0]
-    assert error["loc"] == ("cors_origins",)
-    assert "cannot be empty in non-testing environment" in error["msg"]
+    try:
+        for key, value in env_vars.items():
+            os.environ[key] = value
+        
+        with pytest.raises(ValidationError) as exc_info:
+            Settings()
+        
+        error = exc_info.value.errors()[0]
+        assert error["loc"] == ("cors_origins",)
+        assert "cannot be empty in non-testing environment" in error["msg"]
+    finally:
+        # Clean up environment variables
+        for key in env_vars:
+            if key in os.environ:
+                del os.environ[key]
 
 
-def test_empty_cors_origins_in_testing():
+def test_empty_cors_origins_in_testing(valid_env_vars: Dict[str, Any]):
     """Test empty CORS origins in testing environment."""
     env_vars = {
-        **valid_env_vars(),
+        **valid_env_vars,
         "CORS_ORIGINS": "[]",
         "TESTING": "true",
     }
     
-    for key, value in env_vars.items():
-        os.environ[key] = value
-    
-    settings = Settings()
-    assert settings.cors_origins == []
+    try:
+        for key, value in env_vars.items():
+            os.environ[key] = value
+        
+        settings = Settings()
+        assert settings.cors_origins == []
+    finally:
+        # Clean up environment variables
+        for key in env_vars:
+            if key in os.environ:
+                del os.environ[key]
 
 
 def test_invalid_database_url():

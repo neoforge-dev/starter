@@ -129,15 +129,16 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Get settings instance based on environment."""
     try:
-        return Settings(
-            testing="TESTING" in os.environ,
-            environment=os.getenv("ENVIRONMENT", "development"),
-            app_name=os.getenv("APP_NAME", "NeoForge"),
-            project_name=os.getenv("PROJECT_NAME", "NeoForge"),
-        )
-    except ValidationError as e:
-        # If we're in test mode, use test defaults
-        if "TESTING" in os.environ:
+        # If SECRET_KEY is provided in environment, use it even in test mode
+        if "SECRET_KEY" in os.environ:
+            return Settings(
+                testing="TESTING" in os.environ,
+                environment=os.getenv("ENVIRONMENT", "development"),
+                app_name=os.getenv("APP_NAME", "NeoForge"),
+                project_name=os.getenv("PROJECT_NAME", "NeoForge"),
+            )
+        # Otherwise, if we're in test mode, use test defaults
+        elif "TESTING" in os.environ:
             return Settings(
                 testing=True,
                 environment="test",
@@ -147,6 +148,14 @@ def get_settings() -> Settings:
                 app_name="NeoForge",
                 project_name="NeoForge",
             )
+        # For non-test mode, use normal settings
+        return Settings(
+            testing="TESTING" in os.environ,
+            environment=os.getenv("ENVIRONMENT", "development"),
+            app_name=os.getenv("APP_NAME", "NeoForge"),
+            project_name=os.getenv("PROJECT_NAME", "NeoForge"),
+        )
+    except ValidationError as e:
         logger.error(
             "configuration_error",
             errors=e.errors(),
