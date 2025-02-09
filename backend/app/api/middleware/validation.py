@@ -91,7 +91,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                         )
                 
                 # Validate Content-Length for write methods
-                if "content-length" not in request.headers:
+                if "content-length" not in {k.lower(): v for k, v in request.headers.items()}:
                     return JSONResponse(
                         status_code=422,
                         content={

@@ -1,8 +1,8 @@
 """Test validation middleware functionality."""
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Depends
 from fastapi.testclient import TestClient
-from httpx import AsyncClient, ASGITransport, Request
+from httpx import AsyncClient, ASGITransport, Request, Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.api.middleware.validation import RequestValidationMiddleware
@@ -25,13 +25,15 @@ class NoDefaultHeadersTransport(ASGITransport):
     """Transport that doesn't add default headers."""
     async def handle_async_request(self, request: Request) -> object:
         """Handle async request without adding default headers."""
-        headers = request.headers.raw or []  # Use raw headers without defaults
+        # Convert headers to a list of tuples as required by ASGI
+        headers = [(k.lower().encode("ascii"), v.encode("ascii")) for k, v in request.headers.items()]
+        
         scope = {
             "type": "http",
             "asgi": {"version": "3.0"},
             "http_version": "1.1",
             "method": request.method,
-            "headers": headers,
+            "headers": headers,  # Pass the headers from the request
             "path": str(request.url.path),
             "raw_path": str(request.url.path).encode("ascii"),
             "query_string": str(request.url.query).encode("ascii"),
@@ -40,7 +42,31 @@ class NoDefaultHeadersTransport(ASGITransport):
             "client": ("testclient", 50000),
         }
         stream = MockStream()
-        return await self.app(scope, stream.receive, stream.send)
+        
+        # Create a list to store response chunks
+        response_chunks = []
+        
+        # Create a send function that captures response chunks
+        async def send_wrapper(message: dict) -> None:
+            response_chunks.append(message)
+            
+        # Call the ASGI app and wait for it to complete
+        await self.app(scope, stream.receive, send_wrapper)
+        
+        # Extract status and headers from response chunks
+        status_code = 500
+        headers = []
+        body = b""
+        
+        for chunk in response_chunks:
+            if chunk["type"] == "http.response.start":
+                status_code = chunk["status"]
+                headers = chunk["headers"]
+            elif chunk["type"] == "http.response.body":
+                body += chunk["body"]
+        
+        # Create and return a Response object
+        return Response(status_code=status_code, headers=headers, content=body)
 
 
 @pytest.fixture
@@ -57,9 +83,10 @@ def app_with_validation() -> FastAPI:
     async def test_post_endpoint(data: dict):
         return {"received": data}
     
-    @app.put("/test")
-    async def test_put_endpoint(data: dict):
-        return {"received": data}
+    @app.put("/test", response_model=None)
+    async def test_put_endpoint(request: Request = Depends()):
+        body = await request.json()
+        return {"received": body}
     
     @app.patch("/test")
     async def test_patch_endpoint(data: dict):
@@ -117,7 +144,7 @@ async def test_post_request_content_type(app_with_validation: FastAPI):
 
 async def test_put_request_validation(app_with_validation: FastAPI):
     """Test PUT request validation."""
-    transport = ASGITransport(app=app_with_validation)
+    transport = NoDefaultHeadersTransport(app=app_with_validation)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Missing content-length header
         headers = {
@@ -125,13 +152,13 @@ async def test_put_request_validation(app_with_validation: FastAPI):
             "user-agent": "test-client/1.0",
             "content-type": "application/json",
         }
-        response = await client.put("/test", headers=headers, json={"test": "data"})
+        response = await client.put("/test", headers=headers, content=b'{"test": "data"}')
         assert response.status_code == 422
         assert "Content-Length header is required" in str(response.json())
         
         # All required headers
         headers["content-length"] = "20"
-        response = await client.put("/test", headers=headers, json={"test": "data"})
+        response = await client.put("/test", headers=headers, content=b'{"test": "data"}')
         assert response.status_code == 200
         assert response.json() == {"received": {"test": "data"}}
 
