@@ -60,3 +60,7 @@ class NoDefaultHeadersTransport(ASGITransport):
                 body += chunk["body"]
 
         return Response(status_code=status_code, headers=headers, content=body) 
+
+    data = response.json()
+    assert "detail" in data
+    assert isinstance(data.get("detail"), list) and len(data.get("detail")) > 0 
