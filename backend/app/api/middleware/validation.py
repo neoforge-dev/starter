@@ -1,15 +1,25 @@
 """Request validation middleware."""
 import time
-from typing import Callable, Dict, Optional, Any
+import json
+from typing import Callable, Dict, Optional, Any, List
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 import structlog
-from pydantic import ValidationError, BaseModel
+from pydantic import ValidationError, BaseModel, create_model
 from app.core.metrics import get_metrics
+from app.core.config import settings
 
 logger = structlog.get_logger()
+
+class ValidationErrorModel(create_model('ValidationErrorModel', 
+    type=(str, 'validation_error'),
+    loc=(List[str], ...),
+    msg=(str, ...),
+    input=(Any, None)
+)):
+    pass
 
 class RequestValidationMiddleware(BaseHTTPMiddleware):
     """Middleware for validating requests."""
@@ -22,13 +32,24 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Validate and process the request."""
+        if request.url.path == "/health":
+            return await call_next(request)
+
         start_time = time.time()
         method = request.method
         endpoint = request.url.path
 
         try:
             # Validate request headers
-            await self._validate_headers(request)
+            errors = await self._validate_headers(request)
+            if errors:
+                return JSONResponse(
+                    status_code=422,
+                    content={
+                        'detail': "Validation Error",
+                        'errors': [error.model_dump() for error in errors]
+                    }
+                )
             
             # Validate content type for POST/PUT/PATCH requests
             if request.method in {"POST", "PUT", "PATCH"}:
@@ -39,6 +60,16 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                         content={
                             "detail": "Unsupported Media Type",
                             "message": "Content-Type must be application/json",
+                        },
+                    )
+                
+                # Validate Content-Length for write methods
+                if "content-length" not in request.headers:
+                    return JSONResponse(
+                        status_code=422,
+                        content={
+                            "detail": "Validation Error",
+                            "message": "Content-Length header is required",
                         },
                     )
             
@@ -69,36 +100,8 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 
             return response
             
-        except ValidationError as e:
-            duration = time.time() - start_time
-            self.metrics["http_request_duration_seconds"].labels(
-                method=method,
-                endpoint=endpoint,
-            ).observe(duration)
-            
-            self.metrics["http_requests_total"].labels(
-                method=method,
-                endpoint=endpoint,
-                status="422",
-            ).inc()
-
-            logger.warning(
-                "validation_error",
-                method=method,
-                url=str(request.url),
-                errors=str(e.errors()),
-                duration_ms=round(duration * 1000, 2),
-            )
-            return JSONResponse(
-                status_code=422,
-                content={
-                    "detail": "Validation Error",
-                    "errors": e.errors(),
-                },
-            )
-            
         except Exception as e:
-            duration = time.time() - start_time
+            duration = (time.time() - start_time) * 1000
             self.metrics["http_request_duration_seconds"].labels(
                 method=method,
                 endpoint=endpoint,
@@ -111,24 +114,49 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             ).inc()
 
             logger.error(
-                "request_error",
-                method=method,
-                url=str(request.url),
-                error=str(e),
-                duration_ms=round(duration * 1000, 2),
+                json.dumps({
+                    "method": method,
+                    "url": str(request.url),
+                    "error": str(e),
+                    "duration_ms": round(duration, 2),
+                    "event": "request_error",
+                    "level": "error",
+                    "logger": logger.name,
+                    "timestamp": time.time(),
+                    "environment": settings.ENVIRONMENT,
+                    "app_version": settings.VERSION,
+                })
             )
             return JSONResponse(
                 status_code=500,
-                content={
-                    "detail": "Internal Server Error",
-                    "message": str(e),
-                },
+                content={"detail": "Internal server error"}
             )
     
-    async def _validate_headers(self, request: Request) -> None:
+    async def _validate_headers(self, request: Request) -> List[ValidationErrorModel]:
         """Validate request headers."""
-        # Add header validation logic here if needed
-        pass
+        errors = []
+        required_headers = {
+            'accept': 'application/json',
+            'user-agent': None  # Just check presence
+        }
+        
+        for header, expected_value in required_headers.items():
+            if header not in request.headers:
+                errors.append(ValidationErrorModel(
+                    type='validation_error',
+                    loc=['header', header],
+                    msg=f'Header "{header}" is required',
+                    input=None
+                ))
+            elif expected_value and request.headers[header] != expected_value:
+                errors.append(ValidationErrorModel(
+                    type='validation_error',
+                    loc=['header', header],
+                    msg=f'Header "{header}" must be "{expected_value}"',
+                    input=request.headers[header]
+                ))
+        return errors
+
 
 def setup_validation_middleware(app: FastAPI) -> None:
     """Set up validation middleware."""

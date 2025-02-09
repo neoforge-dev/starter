@@ -270,10 +270,10 @@ async def test_rate_limit_middleware_redis_error(
         assert response.status_code == 200
 
 
-async def test_error_handler_middleware_validation_error(client: AsyncClient, superuser_headers: dict):
+async def test_error_handler_middleware_validation_error(client: AsyncClient, regular_user_headers: dict):
     """Test handling of validation errors."""
     # Send request to an endpoint that requires validation
-    response = await client.post("/api/v1/users/", json={}, headers=superuser_headers)  # Missing required fields
+    response = await client.post("/api/v1/users/", json={}, headers=regular_user_headers)  # Missing required fields
     assert response.status_code == 422  # Validation error
     data = response.json()
     assert "detail" in data

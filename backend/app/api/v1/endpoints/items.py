@@ -3,12 +3,14 @@ from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+import structlog
 
 from app.crud.item import item as item_crud
 from app.db.session import get_db
 from app.schemas.item import Item, ItemCreate, ItemUpdate
 
 router = APIRouter()
+logger = structlog.get_logger()
 
 
 @router.post("/", response_model=Item, status_code=status.HTTP_201_CREATED)
@@ -18,7 +20,20 @@ async def create_item(
     item_in: ItemCreate,
 ) -> Item:
     """Create new item."""
-    return await item_crud.create(db, obj_in=item_in)
+    logger.info(
+        "create_item_request",
+        item_data=item_in.model_dump(),
+    )
+    try:
+        item = await item_crud.create(db, obj_in=item_in)
+        return item
+    except Exception as e:
+        logger.error(
+            "create_item_error",
+            error=str(e),
+            item_data=item_in.model_dump(),
+        )
+        raise
 
 
 @router.get("/", response_model=List[Item])

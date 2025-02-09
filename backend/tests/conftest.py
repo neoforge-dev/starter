@@ -241,7 +241,11 @@ async def regular_user_token(db: AsyncSession) -> str:
 @pytest_asyncio.fixture
 async def regular_user_headers(regular_user_token: str) -> dict:
     """Return headers for regular user authentication."""
-    return {"Authorization": f"Bearer {regular_user_token}"}
+    return {
+        "Authorization": f"Bearer {regular_user_token}",
+        "Accept": "application/json",
+        "User-Agent": "TestClient"
+    }
 
 @pytest_asyncio.fixture
 async def superuser_token(db: AsyncSession) -> str:
@@ -262,7 +266,11 @@ def superuser_headers(superuser_token: str) -> dict:
 @pytest.fixture
 def regular_user_headers(user_token: str) -> dict:
     """Create headers with regular user token."""
-    return {"Authorization": f"Bearer {user_token}"}
+    return {
+        "Authorization": f"Bearer {user_token}",
+        "Accept": "application/json",
+        "User-Agent": "TestClient"
+    }
 
 @pytest.fixture
 async def regular_user(db: AsyncSession) -> User:
@@ -277,7 +285,11 @@ def user_token(regular_user: User) -> str:
 @pytest.fixture
 def regular_user_headers(user_token: str) -> dict:
     """Headers for regular user authentication."""
-    return {"Authorization": f"Bearer {user_token}"}
+    return {
+        "Authorization": f"Bearer {user_token}",
+        "Accept": "application/json",
+        "User-Agent": "TestClient"
+    }
 
 @pytest.fixture
 def superuser_token(superuser: User) -> str:

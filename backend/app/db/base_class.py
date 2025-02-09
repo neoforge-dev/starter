@@ -30,14 +30,23 @@ class Base(DeclarativeBase):
         return cls.__name__.lower()
 
     id: Mapped[int] = mapped_column(primary_key=True)
-
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    created_at: Mapped[datetime] = mapped_column(
+        TZDateTime,
+        default=utc_now,
+        nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        TZDateTime,
+        default=utc_now,
+        onupdate=utc_now,
+        nullable=False
+    )
 
     def __repr__(self) -> str:
-        """Provide string representation of model."""
+        """String representation."""
         attrs = []
-        for key, value in self.__dict__.items():
-            if not key.startswith("_"):
-                attrs.append(f"{key}={value!r}")
+        for key in self.__mapper__.columns.keys():
+            if key not in {"created_at", "updated_at"}:
+                attrs.append(f"{key}={getattr(self, key)}")
         return f"{self.__class__.__name__}({', '.join(attrs)})" 

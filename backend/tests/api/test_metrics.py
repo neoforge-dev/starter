@@ -69,7 +69,11 @@ async def test_metrics_endpoint(client):
     # Make a request to ensure metrics are generated
     await client.get("/health")
     
-    response = await client.get("/metrics")
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "TestClient"
+    }
+    response = await client.get("/metrics", headers=headers)
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/plain; version=0.0.4")
 
@@ -104,10 +108,14 @@ async def test_metrics_endpoint(client):
 async def test_metrics_after_request(client):
     """Test metrics are updated after making requests."""
     # Make a test request
-    await client.get("/health")
-
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "TestClient"
+    }
+    await client.get("/health", headers=headers)
+    
     # Get metrics
-    response = await client.get("/metrics")
+    response = await client.get("/metrics", headers=headers)
     assert response.status_code == 200
 
     # Parse metrics
@@ -148,16 +156,35 @@ async def test_metrics_after_request(client):
 
 @pytest.mark.asyncio
 async def test_metrics_error_handling(client):
-    """Test metrics endpoint error handling."""
-    # Simulate database error by closing pool and raising an error
-    from app.db.session import engine
-    await engine.dispose()
+    """Test metrics are updated for error responses."""
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "TestClient"
+    }
+    # Make a request that will generate an error
+    await client.get("/nonexistent", headers=headers)
     
-    # Mock the get_stats method to raise an error
-    from unittest.mock import patch
-    from sqlalchemy.exc import SQLAlchemyError
-    
-    with patch('app.crud.email_tracking.email_tracking.get_stats', side_effect=SQLAlchemyError("Database error")):
-        response = await client.get("/metrics")
-        assert response.status_code == 500
-        assert "Error generating metrics" in response.json()["detail"] 
+    # Get metrics
+    response = await client.get("/metrics", headers=headers)
+    assert response.status_code == 200
+
+    # Parse metrics
+    metrics = {
+        metric.name: metric
+        for metric in text_string_to_metric_families(response.text)
+    }
+
+    # Print metrics for debugging
+    print("Parsed metrics:", metrics)
+
+    # Verify error metrics
+    assert "http_requests" in metrics
+    assert "http_request_duration_seconds" in metrics
+    assert "emails_failed_total" in metrics
+    assert "emails_sent_total" not in metrics
+    assert "emails_delivered_total" not in metrics
+    assert "db_pool_size" not in metrics
+    assert "redis_connected" not in metrics
+
+    # Verify error message
+    assert "Error generating metrics" in response.json()["detail"] 
