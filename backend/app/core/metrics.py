@@ -22,8 +22,8 @@ def get_metrics() -> Dict[str, Any]:
                 registry=REGISTRY,
             )
 
-            _metrics["http_requests"] = Counter(
-                "http_requests",
+            _metrics["http_requests_total"] = Counter(
+                "http_requests_total",
                 "Total number of HTTP requests",
                 ["method", "endpoint", "status"],
                 registry=REGISTRY,
@@ -58,30 +58,29 @@ def get_metrics() -> Dict[str, Any]:
                     registry=REGISTRY,
                 ),
             }
-        except ValueError as e:
-            # If metrics are already registered, try to get them from the registry
-            collectors = list(REGISTRY.collect())
-            for collector in collectors:
-                name = collector.name
-                if name == "http_request_duration_seconds":
-                    _metrics["http_request_duration_seconds"] = REGISTRY._names_to_collectors[name]
-                elif name == "http_requests":
-                    _metrics["http_requests"] = REGISTRY._names_to_collectors[name]
-                elif name == "db_pool_size":
-                    _metrics["db_pool_size"] = REGISTRY._names_to_collectors[name]
-                elif name == "redis_connected":
-                    _metrics["redis_connected"] = REGISTRY._names_to_collectors[name]
-                elif name == "emails_sent_total":
-                    if "email_metrics" not in _metrics:
-                        _metrics["email_metrics"] = {}
-                    _metrics["email_metrics"]["sent"] = REGISTRY._names_to_collectors[name]
-                elif name == "emails_delivered_total":
-                    if "email_metrics" not in _metrics:
-                        _metrics["email_metrics"] = {}
-                    _metrics["email_metrics"]["delivered"] = REGISTRY._names_to_collectors[name]
-                elif name == "emails_failed_total":
-                    if "email_metrics" not in _metrics:
-                        _metrics["email_metrics"] = {}
-                    _metrics["email_metrics"]["failed"] = REGISTRY._names_to_collectors[name]
+        except ValueError:
+            # If metrics are already registered, get them from the registry
+            _metrics = {}
+            
+            # Get core metrics
+            if "http_request_duration_seconds" in REGISTRY._names_to_collectors:
+                _metrics["http_request_duration_seconds"] = REGISTRY._names_to_collectors["http_request_duration_seconds"]
+            if "http_requests_total" in REGISTRY._names_to_collectors:
+                _metrics["http_requests_total"] = REGISTRY._names_to_collectors["http_requests_total"]
+            if "db_pool_size" in REGISTRY._names_to_collectors:
+                _metrics["db_pool_size"] = REGISTRY._names_to_collectors["db_pool_size"]
+            if "redis_connected" in REGISTRY._names_to_collectors:
+                _metrics["redis_connected"] = REGISTRY._names_to_collectors["redis_connected"]
+            
+            # Get email metrics
+            email_metrics = {}
+            if "emails_sent_total" in REGISTRY._names_to_collectors:
+                email_metrics["sent"] = REGISTRY._names_to_collectors["emails_sent_total"]
+            if "emails_delivered_total" in REGISTRY._names_to_collectors:
+                email_metrics["delivered"] = REGISTRY._names_to_collectors["emails_delivered_total"]
+            if "emails_failed_total" in REGISTRY._names_to_collectors:
+                email_metrics["failed"] = REGISTRY._names_to_collectors["emails_failed_total"]
+            if email_metrics:
+                _metrics["email_metrics"] = email_metrics
 
     return _metrics 

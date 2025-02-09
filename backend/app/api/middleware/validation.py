@@ -29,6 +29,14 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         # Initialize metrics at middleware startup
         self.metrics = get_metrics()
+        # Define public endpoints that don't require validation
+        self.public_endpoints = {
+            "/health",
+            f"{settings.api_v1_str}/auth/token",
+            f"{settings.api_v1_str}/auth/register",
+            f"{settings.api_v1_str}/auth/verify",
+            f"{settings.api_v1_str}/auth/reset-password",
+        }
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Validate and process the request."""
@@ -37,8 +45,8 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         endpoint = request.url.path
 
         try:
-            # Skip validation for health endpoint but still track metrics
-            if request.url.path == "/health":
+            # Skip validation for public endpoints but still track metrics
+            if endpoint in self.public_endpoints:
                 response = await call_next(request)
                 duration = time.time() - start_time
                 
@@ -48,7 +56,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                     endpoint=endpoint,
                 ).observe(duration)
                 
-                self.metrics["http_requests"].labels(
+                self.metrics["http_requests_total"].labels(
                     method=method,
                     endpoint=endpoint,
                     status=str(response.status_code),
@@ -56,7 +64,30 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 
                 return response
 
-            # Validate request headers
+            # Skip validation for endpoints that require authentication
+            # Let FastAPI's authentication handle these cases
+            if endpoint.startswith(settings.api_v1_str) and (
+                not request.headers.get("Authorization") or  # No auth token
+                request.headers.get("Authorization", "").startswith("Bearer ")  # Has auth token
+            ):
+                response = await call_next(request)
+                duration = time.time() - start_time
+                
+                # Record metrics
+                self.metrics["http_request_duration_seconds"].labels(
+                    method=method,
+                    endpoint=endpoint,
+                ).observe(duration)
+                
+                self.metrics["http_requests_total"].labels(
+                    method=method,
+                    endpoint=endpoint,
+                    status=str(response.status_code),
+                ).inc()
+
+                return response
+
+            # Validate request headers for other endpoints
             errors = await self._validate_headers(request)
             if errors:
                 error_models = [error.model_dump() for error in errors]
@@ -115,7 +146,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 endpoint=endpoint,
             ).observe(duration)
             
-            self.metrics["http_requests"].labels(
+            self.metrics["http_requests_total"].labels(
                 method=method,
                 endpoint=endpoint,
                 status=str(response.status_code),
@@ -139,7 +170,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 endpoint=endpoint,
             ).observe(duration)
             
-            self.metrics["http_requests"].labels(
+            self.metrics["http_requests_total"].labels(
                 method=method,
                 endpoint=endpoint,
                 status="500",

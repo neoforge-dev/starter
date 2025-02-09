@@ -35,6 +35,7 @@ import asyncpg
 from asyncio import AbstractEventLoop
 from fastapi.testclient import TestClient
 from prometheus_client import REGISTRY
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.db.base import Base
@@ -89,7 +90,7 @@ def clear_metrics():
         endpoint="/health",
     ).observe(0.0)
     
-    metrics["http_requests"].labels(
+    metrics["http_requests_total"].labels(
         method="GET",
         endpoint="/health",
         status="200",
@@ -186,6 +187,12 @@ async def setup_test_db() -> AsyncGenerator[None, None]:
 async def db() -> AsyncGenerator[AsyncSession, None]:
     """Create a fresh database session for a test."""
     async with async_session() as session:
+        # Truncate all tables before each test
+        async with session.begin():
+            for table in reversed(Base.metadata.sorted_tables):
+                await session.execute(text(f'TRUNCATE TABLE {table.name} CASCADE'))
+            await session.commit()
+        
         yield session
 
 

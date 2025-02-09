@@ -136,11 +136,7 @@ app = FastAPI(
 # Override the default OpenAPI schema
 app.openapi = custom_openapi
 
-# Set up middleware
-setup_security_middleware(app)
-setup_validation_middleware(app)
-
-# Set up CORS
+# Set up CORS first
 if settings.cors_origins:
     app.add_middleware(
         CORSMiddleware,
@@ -149,6 +145,10 @@ if settings.cors_origins:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+# Set up security middleware before validation
+setup_security_middleware(app)
+setup_validation_middleware(app)
 
 # Add API router
 app.include_router(api_router, prefix=settings.api_v1_str)

@@ -39,7 +39,7 @@ async def test_expired_token(client: AsyncClient):
     """Test authentication with expired JWT token."""
     expired_token = jwt.encode(
         {"sub": "user1", "exp": 1},  # Expired in 1970
-        settings.secret_key,
+        settings.secret_key.get_secret_value(),  # Get actual string value
         algorithm=settings.algorithm,
     )
     headers = {"Authorization": f"Bearer {expired_token}"}

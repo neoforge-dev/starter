@@ -255,7 +255,7 @@ def test_invalid_database_url(valid_env_vars: Dict[str, Any]):
         
         error = exc_info.value.errors()[0]
         assert error["loc"] == ("database_url",)
-        assert "URL scheme" in error["msg"]
+        assert "Input should be a valid URL" in error["msg"]
     finally:
         # Clean up environment variables
         for key in env_vars:
@@ -263,53 +263,95 @@ def test_invalid_database_url(valid_env_vars: Dict[str, Any]):
                 del os.environ[key]
 
 
-def test_invalid_redis_url():
+def test_invalid_redis_url(valid_env_vars: Dict[str, Any]):
     """Test invalid Redis URL."""
     env_vars = {
-        **valid_env_vars(),
+        **valid_env_vars,
         "REDIS_URL": "invalid://redis:6379",
     }
     
-    for key, value in env_vars.items():
-        os.environ[key] = value
-    
-    with pytest.raises(ValidationError) as exc_info:
-        Settings()
-    
-    error = exc_info.value.errors()[0]
-    assert error["loc"] == ("redis_url",)
-    assert "Redis URL must start with redis:// or rediss://" in error["msg"]
+    try:
+        for key, value in env_vars.items():
+            os.environ[key] = value
+        
+        with pytest.raises(ValidationError) as exc_info:
+            Settings(
+                app_name=env_vars["APP_NAME"],
+                project_name=env_vars["PROJECT_NAME"],
+                environment=env_vars["ENVIRONMENT"],
+                secret_key=SecretStr(env_vars["SECRET_KEY"]),
+                database_url=PostgresDsn(env_vars["DATABASE_URL"]),
+                redis_url=env_vars["REDIS_URL"],
+            )
+        
+        error = exc_info.value.errors()[0]
+        assert error["loc"] == ("redis_url",)
+        assert "Redis URL must start with redis:// or rediss://" in error["msg"]
+    finally:
+        # Clean up environment variables
+        for key in env_vars:
+            if key in os.environ:
+                del os.environ[key]
 
 
-def test_smtp_password_required_with_user():
+def test_smtp_password_required_with_user(valid_env_vars: Dict[str, Any]):
     """Test SMTP password is required when user is set."""
     env_vars = {
-        **valid_env_vars(),
+        **valid_env_vars,
         "SMTP_USER": "test@example.com",
         "SMTP_PASSWORD": "",
     }
     
-    for key, value in env_vars.items():
-        os.environ[key] = value
-    
-    with pytest.raises(ValidationError) as exc_info:
-        Settings()
-    
-    error = exc_info.value.errors()[0]
-    assert error["loc"] == ("smtp_password",)
-    assert "SMTP password is required when SMTP user is set" in error["msg"]
+    try:
+        for key, value in env_vars.items():
+            os.environ[key] = value
+        
+        with pytest.raises(ValidationError) as exc_info:
+            Settings(
+                app_name=env_vars["APP_NAME"],
+                project_name=env_vars["PROJECT_NAME"],
+                environment=env_vars["ENVIRONMENT"],
+                secret_key=SecretStr(env_vars["SECRET_KEY"]),
+                database_url=PostgresDsn(env_vars["DATABASE_URL"]),
+                redis_url=env_vars["REDIS_URL"],
+                smtp_user=env_vars["SMTP_USER"],
+                smtp_password=SecretStr(env_vars["SMTP_PASSWORD"]) if env_vars["SMTP_PASSWORD"] else None,
+            )
+        
+        error = exc_info.value.errors()[0]
+        assert error["loc"] == (), "Model-level validation error should have empty location tuple"
+        assert "SMTP password is required when SMTP user is set" in error["msg"]
+    finally:
+        # Clean up environment variables
+        for key in env_vars:
+            if key in os.environ:
+                del os.environ[key]
 
 
-def test_database_url_for_env():
+def test_database_url_for_env(valid_env_vars: Dict[str, Any]):
     """Test database URL modification for testing environment."""
     env_vars = {
-        **valid_env_vars(),
+        **valid_env_vars,
         "TESTING": "true",
     }
     
-    for key, value in env_vars.items():
-        os.environ[key] = value
-    
-    settings = Settings()
-    assert "/test" in settings.database_url_for_env
-    assert settings.database_url_for_env != str(settings.database_url) 
+    try:
+        for key, value in env_vars.items():
+            os.environ[key] = value
+        
+        settings = Settings(
+            app_name=env_vars["APP_NAME"],
+            project_name=env_vars["PROJECT_NAME"],
+            environment=env_vars["ENVIRONMENT"],
+            secret_key=SecretStr(env_vars["SECRET_KEY"]),
+            database_url=PostgresDsn(env_vars["DATABASE_URL"]),
+            redis_url=env_vars["REDIS_URL"],
+            testing=True,
+        )
+        assert "/test" in settings.database_url_for_env
+        assert settings.database_url_for_env != str(settings.database_url)
+    finally:
+        # Clean up environment variables
+        for key in env_vars:
+            if key in os.environ:
+                del os.environ[key] 

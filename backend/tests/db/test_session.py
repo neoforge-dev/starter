@@ -45,14 +45,14 @@ async def test_get_db():
 def test_engine_configuration():
     """Test database engine configuration."""
     engine = create_async_engine(
-        settings.database_url,
+        str(settings.database_url),  # Convert PostgresDsn to string
         echo=settings.debug,
         future=True,
         poolclass=NullPool,
     )
 
     # The URL will have the password masked as '***'
-    assert engine.url.render_as_string().replace("***", "postgres") == settings.database_url
+    assert engine.url.render_as_string().replace("***", "postgres") == str(settings.database_url)
     assert engine.echo == settings.debug
 
 
