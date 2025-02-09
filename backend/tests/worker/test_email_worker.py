@@ -127,8 +127,6 @@ async def test_process_one_success_with_tracking(
 ):
     """Test processing one email successfully with tracking."""
     # Setup
-    await tracking_record  # Await the tracking record fixture
-    
     email = EmailQueueItem(
         email_to="test@example.com",
         subject="Test Subject",
@@ -176,7 +174,7 @@ async def test_process_one_failure_with_tracking(
         template_name="test_email",
         template_data={},
     )
-    mock_queue.dequeue.return_value = ("test-1", email)
+    mock_queue.dequeue.return_value = ("test-queued-1", email)  # Match the tracking record's email_id
     error_msg = "SMTP connection failed: Connection refused"
     mock_send_email.side_effect = Exception(error_msg)
 
@@ -199,10 +197,10 @@ async def test_process_one_failure_with_tracking(
         # Verify
         assert result is False
         mock_queue.mark_completed.assert_not_called()
-        mock_queue.mark_failed.assert_called_once()
+        mock_queue.mark_failed.assert_called_once_with("test-queued-1", error_msg)  # Match the email_id
 
         # Verify tracking
-        tracking = await email_tracking.get_by_email_id(db, email_id="test-1")
+        tracking = await email_tracking.get_by_email_id(db, email_id="test-queued-1")  # Match the email_id
         assert tracking is not None
         assert tracking.status == EmailStatus.FAILED
         assert tracking.failed_at is not None

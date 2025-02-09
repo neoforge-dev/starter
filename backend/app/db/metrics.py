@@ -57,7 +57,10 @@ def get_pool_stats() -> Dict[str, Any]:
         }
 
     # Update Prometheus metrics
-    metrics["db_pool_size"].set(stats["size"])
+    try:
+        metrics["db_pool_size"].set(stats["size"])
+    except (KeyError, AttributeError):
+        logger.debug("db_pool_size metric not initialized")
 
     return stats
 

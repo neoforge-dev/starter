@@ -59,7 +59,7 @@ def test_engine_configuration():
 def test_session_factory_configuration():
     """Test session factory configuration."""
     engine = create_async_engine(
-        settings.database_url,
+        str(settings.database_url),  # Convert PostgresDsn to string
         echo=settings.debug,
         future=True,
         poolclass=NullPool,

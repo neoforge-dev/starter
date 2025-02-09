@@ -28,7 +28,12 @@ async def test_detailed_health_check(
     redis: Redis,
 ) -> None:
     """Test detailed health check endpoint."""
-    response = await client.get("/health/detailed")
+    response = await client.get(
+        "/health/detailed",
+        headers={"Accept": "application/json"},
+    )
+    if response.status_code != 200:
+        print(f"Response body: {response.text}")
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"

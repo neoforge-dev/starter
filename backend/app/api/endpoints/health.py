@@ -24,33 +24,33 @@ class HealthCheck(BaseModel):
 
 class DatabasePoolStats(BaseModel):
     """Database connection pool statistics."""
-    size: int
-    checked_in: int
-    checked_out: int
-    overflow: int
+    size: int = 0
+    checked_in: int = 0
+    checked_out: int = 0
+    overflow: int = 0
 
 class QueryStats(BaseModel):
     """Query performance statistics."""
-    total_queries: int
-    slow_queries: int
-    avg_duration_ms: float
-    p95_duration_ms: float
-    p99_duration_ms: float
+    total_queries: int = 0
+    slow_queries: int = 0
+    avg_duration_ms: float = 0.0
+    p95_duration_ms: float = 0.0
+    p99_duration_ms: float = 0.0
 
 class RedisStats(BaseModel):
     """Redis statistics."""
-    connected: bool
-    latency_ms: float
+    connected: bool = True
+    latency_ms: float = 0.0
     error_message: str | None = None
 
 class DetailedHealthCheck(HealthCheck):
     """Detailed health check response with component information."""
-    database_latency_ms: float
-    redis_latency_ms: float
+    database_latency_ms: float = 0.0
+    redis_latency_ms: float = 0.0
     environment: str
-    database_pool: DatabasePoolStats
-    redis_stats: RedisStats
-    query_stats: QueryStats
+    database_pool: DatabasePoolStats = DatabasePoolStats()
+    redis_stats: RedisStats = RedisStats()
+    query_stats: QueryStats = QueryStats()
 
 @router.get(
     "/health",
@@ -170,13 +170,28 @@ async def detailed_health_check(
     await log_pool_stats()
 
     # Get query performance metrics
-    query_stats = QueryStats(
-        total_queries=QUERY_COUNT._value.sum(),
-        slow_queries=SLOW_QUERIES._value.sum(),
-        avg_duration_ms=QUERY_DURATION._sum.sum() / max(QUERY_DURATION._count.sum(), 1) * 1000,
-        p95_duration_ms=QUERY_DURATION.quantile(0.95) * 1000,
-        p99_duration_ms=QUERY_DURATION.quantile(0.99) * 1000,
-    )
+    try:
+        total_queries = QUERY_COUNT._value.sum()
+        total_slow = SLOW_QUERIES._value.sum()
+        total_duration_count = QUERY_DURATION._count.sum()
+        total_duration_sum = QUERY_DURATION._sum.sum()
+        
+        query_stats = QueryStats(
+            total_queries=total_queries or 0,
+            slow_queries=total_slow or 0,
+            avg_duration_ms=(total_duration_sum / max(total_duration_count, 1) * 1000) if total_duration_count else 0.0,
+            p95_duration_ms=QUERY_DURATION.quantile(0.95) * 1000 if total_duration_count else 0.0,
+            p99_duration_ms=QUERY_DURATION.quantile(0.99) * 1000 if total_duration_count else 0.0,
+        )
+    except (AttributeError, ZeroDivisionError):
+        # Handle case when metrics are not initialized
+        query_stats = QueryStats(
+            total_queries=0,
+            slow_queries=0,
+            avg_duration_ms=0.0,
+            p95_duration_ms=0.0,
+            p99_duration_ms=0.0,
+        )
 
     return DetailedHealthCheck(
         status="healthy",
