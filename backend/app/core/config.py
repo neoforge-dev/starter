@@ -69,13 +69,14 @@ class Settings(BaseSettings):
     # List of email addresses to notify for admin alerts
     admin_notification_emails: List[EmailStr] = []
 
-    @field_validator("environment")
-    def validate_environment(cls, v: str) -> str:
-        """Validate environment setting."""
-        allowed = {"development", "staging", "production", "test"}
-        if v not in allowed:
-            raise ValueError(f"Environment must be one of {allowed}")
-        return v
+    @model_validator(mode='before')
+    def validate_environment_first(cls, values):
+        """Validate environment before other fields."""
+        if 'environment' in values:
+            allowed = {"development", "staging", "production", "test"}
+            if values['environment'] not in allowed:
+                raise ValueError(f"Environment must be one of {allowed}")
+        return values
 
     @field_validator("secret_key")
     def validate_secret_key(cls, v: SecretStr) -> SecretStr:
@@ -136,6 +137,9 @@ def get_settings() -> Settings:
                 environment=os.getenv("ENVIRONMENT", "development"),
                 app_name=os.getenv("APP_NAME", "NeoForge"),
                 project_name=os.getenv("PROJECT_NAME", "NeoForge"),
+                secret_key=SecretStr(os.environ["SECRET_KEY"]),
+                database_url=PostgresDsn(os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/app")),
+                redis_url=os.getenv("REDIS_URL", "redis://redis:6379/0"),
             )
         # Otherwise, if we're in test mode, use test defaults
         elif "TESTING" in os.environ:
@@ -154,6 +158,9 @@ def get_settings() -> Settings:
             environment=os.getenv("ENVIRONMENT", "development"),
             app_name=os.getenv("APP_NAME", "NeoForge"),
             project_name=os.getenv("PROJECT_NAME", "NeoForge"),
+            secret_key=SecretStr(os.getenv("SECRET_KEY", "x" * 32)),
+            database_url=PostgresDsn(os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/app")),
+            redis_url=os.getenv("REDIS_URL", "redis://redis:6379/0"),
         )
     except ValidationError as e:
         logger.error(

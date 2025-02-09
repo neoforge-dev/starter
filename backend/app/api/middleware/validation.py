@@ -14,7 +14,7 @@ from app.core.config import settings
 logger = structlog.get_logger()
 
 class ValidationErrorModel(create_model('ValidationErrorModel', 
-    type=(str, 'validation_error'),
+    type=(str, 'missing'),
     loc=(List[str], ...),
     msg=(str, ...),
     input=(Any, None)
@@ -62,8 +62,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 return JSONResponse(
                     status_code=422,
                     content={
-                        'detail': "Validation Error",
-                        'errors': [error.model_dump() for error in errors]
+                        'detail': [error.model_dump() for error in errors]
                     }
                 )
             
@@ -95,8 +94,12 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                     return JSONResponse(
                         status_code=422,
                         content={
-                            "detail": "Validation Error",
-                            "message": "Content-Length header is required",
+                            'detail': [{
+                                'type': 'missing',
+                                'loc': ['body'],
+                                'msg': 'Content-Length header is required',
+                                'input': None
+                            }]
                         }
                     )
             
