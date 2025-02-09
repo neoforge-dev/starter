@@ -4,8 +4,9 @@ from typing import Dict, Any
 
 import pytest
 from pydantic import ValidationError, SecretStr
+from pydantic.networks import PostgresDsn
 
-from app.core.config import Settings
+from app.core.config import Settings, get_settings
 
 
 @pytest.fixture
@@ -39,6 +40,11 @@ def test_valid_settings(valid_env_vars: Dict[str, Any]):
         settings = Settings(
             app_name=os.getenv("APP_NAME", "NeoForge"),
             project_name=os.getenv("PROJECT_NAME", "NeoForge"),
+            environment=os.getenv("ENVIRONMENT", "development"),
+            debug=os.getenv("DEBUG", "false").lower() == "true",
+            testing=os.getenv("TESTING", "false").lower() == "true",
+            database_url=PostgresDsn(os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/app")),
+            redis_url=os.getenv("REDIS_URL", "redis://redis:6379/0"),
         )
         
         # Check basic settings
@@ -63,40 +69,61 @@ def test_valid_settings(valid_env_vars: Dict[str, Any]):
             os.environ.pop(key, None)
 
 
-def test_invalid_environment():
+def test_invalid_environment(valid_env_vars: Dict[str, Any]):
     """Test invalid environment setting."""
+    # Clean up environment variables
+    for key in list(os.environ.keys()):
+        if key.isupper():  # Only remove uppercase env vars (our settings)
+            del os.environ[key]
+    
     env_vars = {
-        **valid_env_vars(),
         "ENVIRONMENT": "invalid",
+        "APP_NAME": "TestApp",
+        "PROJECT_NAME": "TestProject",
+        "SECRET_KEY": "x" * 32,
+        "DATABASE_URL": "postgresql+asyncpg://postgres:postgres@db:5432/test",
+        "REDIS_URL": "redis://redis:6379/0",
     }
     
-    for key, value in env_vars.items():
-        os.environ[key] = value
-    
-    with pytest.raises(ValidationError) as exc_info:
-        Settings()
-    
-    error = exc_info.value.errors()[0]
-    assert error["loc"] == ("environment",)
-    assert "Environment must be one of" in error["msg"]
+    try:
+        for key, value in env_vars.items():
+            os.environ[key] = value
+        
+        with pytest.raises(ValidationError) as exc_info:
+            get_settings()
+        
+        error = exc_info.value.errors()[0]
+        assert error["loc"] == ("environment",)
+        assert "Environment must be one of" in error["msg"]
+    finally:
+        # Clean up environment variables after test
+        for key in env_vars:
+            if key in os.environ:
+                del os.environ[key]
 
 
-def test_invalid_secret_key():
+def test_invalid_secret_key(valid_env_vars: Dict[str, Any]):
     """Test invalid secret key."""
     env_vars = {
-        **valid_env_vars(),
+        **valid_env_vars,
         "SECRET_KEY": "short",
     }
     
-    for key, value in env_vars.items():
-        os.environ[key] = value
-    
-    with pytest.raises(ValidationError) as exc_info:
-        Settings()
-    
-    error = exc_info.value.errors()[0]
-    assert error["loc"] == ("secret_key",)
-    assert "must be at least 32 characters long" in error["msg"]
+    try:
+        for key, value in env_vars.items():
+            os.environ[key] = value
+        
+        with pytest.raises(ValidationError) as exc_info:
+            get_settings()
+        
+        error = exc_info.value.errors()[0]
+        assert error["loc"] == ("secret_key",)
+        assert "must be at least 32 characters long" in error["msg"]
+    finally:
+        # Clean up environment variables after test
+        for key in env_vars:
+            if key in os.environ:
+                del os.environ[key]
 
 
 def test_empty_cors_origins():
