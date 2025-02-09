@@ -8,8 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.db.session import get_db
-from app.core.redis import get_redis
+from app.core.redis import get_redis, check_redis_health
 from app.db.metrics import get_pool_stats, log_pool_stats
+from app.db.query_monitor import QueryMonitor, QUERY_COUNT, QUERY_DURATION, SLOW_QUERIES
+from app.api.deps import MonitoredDB
 
 router = APIRouter()
 
@@ -27,12 +29,28 @@ class DatabasePoolStats(BaseModel):
     checked_out: int
     overflow: int
 
+class QueryStats(BaseModel):
+    """Query performance statistics."""
+    total_queries: int
+    slow_queries: int
+    avg_duration_ms: float
+    p95_duration_ms: float
+    p99_duration_ms: float
+
+class RedisStats(BaseModel):
+    """Redis statistics."""
+    connected: bool
+    latency_ms: float
+    error_message: str | None = None
+
 class DetailedHealthCheck(HealthCheck):
     """Detailed health check response with component information."""
     database_latency_ms: float
     redis_latency_ms: float
     environment: str
     database_pool: DatabasePoolStats
+    redis_stats: RedisStats
+    query_stats: QueryStats
 
 @router.get(
     "/health",
@@ -40,7 +58,7 @@ class DetailedHealthCheck(HealthCheck):
     tags=["system"],
 )
 async def health_check(
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: MonitoredDB,
     redis: Annotated[Redis, Depends(get_redis)],
 ) -> HealthCheck:
     """
@@ -63,13 +81,12 @@ async def health_check(
 
         # Check Redis connection
         redis_status = "healthy"
-        try:
-            await redis.ping()
-        except Exception as e:
-            redis_status = f"unhealthy: {str(e)}"
+        is_healthy, error = await check_redis_health()
+        if not is_healthy:
+            redis_status = f"unhealthy: {error}"
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Redis unhealthy: {str(e)}",
+                detail=f"Redis unhealthy: {error}",
             )
 
         return HealthCheck(
@@ -91,7 +108,7 @@ async def health_check(
     tags=["system"],
 )
 async def detailed_health_check(
-    db: Annotated[AsyncSession, Depends(get_db)],
+    db: MonitoredDB,
     redis: Annotated[Redis, Depends(get_redis)],
 ) -> DetailedHealthCheck:
     """
@@ -100,6 +117,8 @@ async def detailed_health_check(
     Performs comprehensive health check with:
     - Latency measurements for database and Redis
     - Database connection pool statistics
+    - Redis connection status and metrics
+    - Query performance metrics
     - Environment information
     
     Requires authentication in production.
@@ -120,15 +139,25 @@ async def detailed_health_check(
             detail=f"Database unhealthy: {str(e)}",
         )
 
-    # Check Redis latency
+    # Check Redis health and latency
     redis_status = "healthy"
     redis_latency = 0.0
+    redis_error = None
     try:
         start = time.time()
-        await redis.ping()
+        is_healthy, error = await check_redis_health()
         redis_latency = (time.time() - start) * 1000
+        
+        if not is_healthy:
+            redis_status = f"unhealthy: {error}"
+            redis_error = error
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Redis unhealthy: {error}",
+            )
     except Exception as e:
         redis_status = f"unhealthy: {str(e)}"
+        redis_error = str(e)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Redis unhealthy: {str(e)}",
@@ -139,6 +168,15 @@ async def detailed_health_check(
     
     # Log pool statistics for monitoring
     await log_pool_stats()
+
+    # Get query performance metrics
+    query_stats = QueryStats(
+        total_queries=QUERY_COUNT._value.sum(),
+        slow_queries=SLOW_QUERIES._value.sum(),
+        avg_duration_ms=QUERY_DURATION._sum.sum() / max(QUERY_DURATION._count.sum(), 1) * 1000,
+        p95_duration_ms=QUERY_DURATION.quantile(0.95) * 1000,
+        p99_duration_ms=QUERY_DURATION.quantile(0.99) * 1000,
+    )
 
     return DetailedHealthCheck(
         status="healthy",
@@ -154,4 +192,10 @@ async def detailed_health_check(
             checked_out=pool_stats["checked_out"],
             overflow=pool_stats["overflow"],
         ),
+        redis_stats=RedisStats(
+            connected=redis_error is None,
+            latency_ms=round(redis_latency, 2),
+            error_message=redis_error,
+        ),
+        query_stats=query_stats,
     ) 

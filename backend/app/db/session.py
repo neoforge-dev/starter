@@ -1,5 +1,5 @@
 """Database session module."""
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Dict, Any
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -8,37 +8,48 @@ from sqlalchemy.pool import AsyncAdaptedQueuePool, NullPool
 from app.core.config import settings
 from app.db.base_class import Base
 
+def get_engine_args() -> Dict[str, Any]:
+    """Get database engine arguments based on environment."""
+    common_args = {
+        "echo": settings.debug,
+        "future": True,
+        "pool_pre_ping": True,
+        "connect_args": {
+            "command_timeout": 60,
+            "statement_cache_size": 0 if settings.testing else 1000,
+            "prepared_statement_cache_size": 0 if settings.testing else 500,
+            "server_settings": {
+                "timezone": "UTC",
+                "application_name": "neoforge",
+                "jit": "off",
+                "work_mem": "64MB",
+                "maintenance_work_mem": "128MB",
+                "effective_cache_size": "1GB",
+                "effective_io_concurrency": 200,
+                "random_page_cost": 1.1,
+                "cpu_tuple_cost": 0.03,
+                "cpu_index_tuple_cost": 0.01,
+            },
+        },
+    }
+
+    if settings.testing:
+        common_args["poolclass"] = NullPool
+    else:
+        common_args.update({
+            "poolclass": AsyncAdaptedQueuePool,
+            "pool_size": 20,
+            "max_overflow": 10,
+            "pool_timeout": 30,
+            "pool_recycle": 1800,
+        })
+
+    return common_args
+
 # Create async engine with timezone support and optimized pooling
 engine = create_async_engine(
     settings.database_url_for_env,
-    echo=settings.debug,
-    future=True,
-    pool_pre_ping=True,
-    # Use NullPool for tests, optimized AsyncAdaptedQueuePool for production
-    poolclass=NullPool if settings.testing else AsyncAdaptedQueuePool,
-    # Pool settings
-    pool_size=20,  # Maximum number of connections in the pool
-    max_overflow=10,  # Maximum number of connections that can be created beyond pool_size
-    pool_timeout=30,  # Seconds to wait before giving up on getting a connection from the pool
-    pool_recycle=1800,  # Recycle connections after 30 minutes
-    # Enable timezone support and optimize for production
-    connect_args={
-        "command_timeout": 60,
-        "statement_cache_size": 0 if settings.testing else 1000,  # Increased cache size
-        "prepared_statement_cache_size": 0 if settings.testing else 500,  # Enable prepared statements
-        "server_settings": {
-            "timezone": "UTC",
-            "application_name": "neoforge",
-            "jit": "off",  # Disable JIT for more predictable performance
-            "work_mem": "64MB",  # Memory for sorting and hash operations
-            "maintenance_work_mem": "128MB",  # Memory for maintenance operations
-            "effective_cache_size": "1GB",  # Estimate of disk cache size
-            "effective_io_concurrency": 200,  # Concurrent I/O operations
-            "random_page_cost": 1.1,  # Cost of random disk access
-            "cpu_tuple_cost": 0.03,  # Cost of processing each row
-            "cpu_index_tuple_cost": 0.01,  # Cost of processing each index entry
-        },
-    },
+    **get_engine_args(),
 )
 
 # Create async session factory with optimized settings

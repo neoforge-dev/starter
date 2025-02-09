@@ -1,5 +1,5 @@
 """Dependencies for API endpoints."""
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator, Optional, Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -12,8 +12,9 @@ from app.models.user import User
 from app.models.admin import Admin
 from app.core import security
 from app.core.config import settings
-from app.db.session import AsyncSessionLocal
+from app.db.session import AsyncSessionLocal, get_db
 from app.schemas.auth import TokenPayload
+from app.db.query_monitor import QueryMonitor
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.api_v1_str}/auth/token"
@@ -97,4 +98,30 @@ async def get_current_active_admin(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive admin user",
         )
-    return current_admin 
+    return current_admin
+
+
+async def get_monitored_db() -> AsyncGenerator[QueryMonitor, None]:
+    """
+    Get database session with query monitoring.
+    
+    This dependency provides a monitored database session that tracks:
+    - Query execution time
+    - Query types and tables
+    - Slow queries (>100ms)
+    - Query errors
+    
+    Example:
+        @router.get("/items")
+        async def get_items(db: Annotated[QueryMonitor, Depends(get_monitored_db)]):
+            result = await db.execute("SELECT * FROM items")
+            return result.fetchall()
+    """
+    async for session in get_db():
+        try:
+            yield QueryMonitor(session)
+        finally:
+            await session.close()
+
+# Type alias for monitored database dependency
+MonitoredDB = Annotated[QueryMonitor, Depends(get_monitored_db)] 
