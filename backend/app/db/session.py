@@ -33,8 +33,15 @@ def get_engine_args() -> Dict[str, Any]:
         },
     }
 
+    # Use a small pool for testing to enable pool metrics
     if settings.testing:
-        common_args["poolclass"] = NullPool
+        common_args.update({
+            "poolclass": AsyncAdaptedQueuePool,
+            "pool_size": 5,
+            "max_overflow": 2,
+            "pool_timeout": 5,
+            "pool_recycle": 300,
+        })
     else:
         common_args.update({
             "poolclass": AsyncAdaptedQueuePool,

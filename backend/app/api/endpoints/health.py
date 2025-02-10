@@ -5,15 +5,20 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.db.session import get_db
 from app.core.redis import get_redis, check_redis_health
 from app.db.metrics import get_pool_stats, log_pool_stats
-from app.db.query_monitor import QueryMonitor, QUERY_COUNT, QUERY_DURATION, SLOW_QUERIES
+from app.db.query_monitor import QueryMonitor
+from app.core.metrics import get_metrics
 from app.api.deps import MonitoredDB
 
 router = APIRouter()
+
+# Initialize metrics
+metrics = get_metrics()
 
 class HealthCheck(BaseModel):
     """Health check response model."""
@@ -67,40 +72,45 @@ async def health_check(
     Performs basic health check of the API and its dependencies.
     Returns 200 if healthy, 503 if unhealthy.
     """
+    db_status = "healthy"
+    redis_status = "healthy"
+    is_healthy = True
+    error_details = []
+
+    # Check database connection
     try:
-        # Check database connection
-        db_status = "healthy"
-        try:
-            await db.execute("SELECT 1")
-        except Exception as e:
-            db_status = f"unhealthy: {str(e)}"
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Database unhealthy: {str(e)}",
-            )
-
-        # Check Redis connection
-        redis_status = "healthy"
-        is_healthy, error = await check_redis_health()
-        if not is_healthy:
-            redis_status = f"unhealthy: {error}"
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Redis unhealthy: {error}",
-            )
-
-        return HealthCheck(
-            status="healthy",
-            version=settings.version,
-            database_status=db_status,
-            redis_status=redis_status,
-        )
-
+        await db.execute(text("SELECT 1"))
     except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+        is_healthy = False
+        error_details.append(f"Database unhealthy: {str(e)}")
+
+    # Check Redis connection
+    try:
+        redis_healthy, error = await check_redis_health(redis)
+        if not redis_healthy:
+            redis_status = f"unhealthy: {error}"
+            is_healthy = False
+            error_details.append(f"Redis unhealthy: {error}")
+    except Exception as e:
+        redis_status = f"unhealthy: {str(e)}"
+        is_healthy = False
+        error_details.append(f"Redis unhealthy: {str(e)}")
+
+    response = HealthCheck(
+        status="healthy" if is_healthy else "unhealthy",
+        version=settings.version,
+        database_status=db_status,
+        redis_status=redis_status,
+    )
+
+    if not is_healthy:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(e),
+            detail={"message": "Service unhealthy", "errors": error_details},
         )
+
+    return response
 
 @router.get(
     "/health/detailed",
@@ -125,92 +135,89 @@ async def detailed_health_check(
     """
     import time
 
-    # Check database latency
     db_status = "healthy"
+    redis_status = "healthy"
     db_latency = 0.0
+    redis_latency = 0.0
+    redis_error = None
+    is_healthy = True
+
+    # Check database latency
     try:
         start = time.time()
-        await db.execute("SELECT 1")
+        await db.execute(text("SELECT 1"))
         db_latency = (time.time() - start) * 1000
     except Exception as e:
         db_status = f"unhealthy: {str(e)}"
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Database unhealthy: {str(e)}",
-        )
+        is_healthy = False
+        db_latency = 0.0
 
     # Check Redis health and latency
-    redis_status = "healthy"
-    redis_latency = 0.0
-    redis_error = None
     try:
         start = time.time()
-        is_healthy, error = await check_redis_health()
+        redis_healthy, error = await check_redis_health(redis)
         redis_latency = (time.time() - start) * 1000
         
-        if not is_healthy:
+        if not redis_healthy:
             redis_status = f"unhealthy: {error}"
             redis_error = error
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Redis unhealthy: {error}",
-            )
+            is_healthy = False
     except Exception as e:
         redis_status = f"unhealthy: {str(e)}"
         redis_error = str(e)
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Redis unhealthy: {str(e)}",
-        )
+        is_healthy = False
+        redis_latency = 0.0
 
     # Get database pool statistics
-    pool_stats = get_pool_stats()
-    
-    # Log pool statistics for monitoring
-    await log_pool_stats()
+    try:
+        pool_stats = get_pool_stats()
+    except Exception as e:
+        pool_stats = DatabasePoolStats().dict()
+        is_healthy = False
 
     # Get query performance metrics
     try:
-        total_queries = QUERY_COUNT._value.sum()
-        total_slow = SLOW_QUERIES._value.sum()
-        total_duration_count = QUERY_DURATION._count.sum()
-        total_duration_sum = QUERY_DURATION._sum.sum()
+        query_count = metrics["db_query_count"]
+        query_duration = metrics["db_query_duration"]
+        slow_queries = metrics["db_slow_queries"]
+        
+        total_queries = sum(query_count._value.values())
+        total_slow = sum(slow_queries._value.values())
+        total_duration_count = query_duration._count.sum()
+        total_duration_sum = query_duration._sum.sum()
         
         query_stats = QueryStats(
             total_queries=total_queries or 0,
             slow_queries=total_slow or 0,
             avg_duration_ms=(total_duration_sum / max(total_duration_count, 1) * 1000) if total_duration_count else 0.0,
-            p95_duration_ms=QUERY_DURATION.quantile(0.95) * 1000 if total_duration_count else 0.0,
-            p99_duration_ms=QUERY_DURATION.quantile(0.99) * 1000 if total_duration_count else 0.0,
+            p95_duration_ms=query_duration.quantile(0.95) * 1000 if total_duration_count else 0.0,
+            p99_duration_ms=query_duration.quantile(0.99) * 1000 if total_duration_count else 0.0,
         )
-    except (AttributeError, ZeroDivisionError):
+    except (AttributeError, ZeroDivisionError, KeyError):
         # Handle case when metrics are not initialized
-        query_stats = QueryStats(
-            total_queries=0,
-            slow_queries=0,
-            avg_duration_ms=0.0,
-            p95_duration_ms=0.0,
-            p99_duration_ms=0.0,
-        )
+        query_stats = QueryStats()
 
-    return DetailedHealthCheck(
-        status="healthy",
+    response = DetailedHealthCheck(
+        status="healthy" if is_healthy else "unhealthy",
         version=settings.version,
         database_status=db_status,
         redis_status=redis_status,
-        database_latency_ms=round(db_latency, 2),
-        redis_latency_ms=round(redis_latency, 2),
+        database_latency_ms=db_latency,
+        redis_latency_ms=redis_latency,
         environment=settings.environment,
-        database_pool=DatabasePoolStats(
-            size=pool_stats["size"],
-            checked_in=pool_stats["checked_in"],
-            checked_out=pool_stats["checked_out"],
-            overflow=pool_stats["overflow"],
-        ),
+        database_pool=DatabasePoolStats(**pool_stats),
         redis_stats=RedisStats(
-            connected=redis_error is None,
-            latency_ms=round(redis_latency, 2),
+            connected=is_healthy,
+            latency_ms=redis_latency,
             error_message=redis_error,
         ),
         query_stats=query_stats,
-    ) 
+    )
+
+    if not is_healthy:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=response.dict(),
+        )
+
+    return response 

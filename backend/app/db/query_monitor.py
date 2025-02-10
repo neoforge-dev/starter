@@ -3,41 +3,19 @@ import time
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Dict, Optional
 
-from prometheus_client import Counter, Histogram
 import structlog
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
+from sqlalchemy import text
 
 from app.db.session import engine
+from app.core.metrics import get_metrics
 
 logger = structlog.get_logger()
 
-# Metrics
-QUERY_COUNT = Counter(
-    "sql_queries_total",
-    "Total number of SQL queries",
-    labelnames=["query_type", "table"],
-)
-
-QUERY_DURATION = Histogram(
-    "sql_query_duration_seconds",
-    "Duration of SQL queries",
-    labelnames=["query_type", "table"],
-    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0),
-)
-
-QUERY_ERRORS = Counter(
-    "sql_query_errors_total",
-    "Total number of SQL query errors",
-    labelnames=["error_type", "query_type"],
-)
-
-SLOW_QUERIES = Counter(
-    "sql_slow_queries_total",
-    "Total number of slow SQL queries (>100ms)",
-    labelnames=["query_type", "table"],
-)
+# Initialize metrics
+metrics = get_metrics()
 
 def extract_table_name(query: str) -> str:
     """Extract main table name from SQL query."""
@@ -69,37 +47,48 @@ def get_query_type(query: str) -> str:
     else:
         return "other"
 
-@event.listens_for(Engine, "before_cursor_execute")
+def record_query_metrics(query: str, duration: float) -> None:
+    """Record query metrics."""
+    query_type = get_query_type(query)
+    table = extract_table_name(query)
+    
+    # Update metrics
+    metrics["db_query_count"].labels(query_type=query_type, table=table).inc()
+    metrics["db_query_duration"].labels(query_type=query_type, table=table).observe(duration)
+    
+    # Log slow queries (>100ms)
+    if duration > 0.1:
+        metrics["db_slow_queries"].labels(query_type=query_type, table=table).inc()
+        logger.warning(
+            "slow_query_detected",
+            query_type=query_type,
+            table=table,
+            duration=duration,
+            query=query,
+        )
+
 def before_cursor_execute(
     conn, cursor, statement, parameters, context, executemany
 ):
     """Event listener for query execution start."""
     context._query_start_time = time.time()
     
-@event.listens_for(Engine, "after_cursor_execute")
 def after_cursor_execute(
     conn, cursor, statement, parameters, context, executemany
 ):
     """Event listener for query execution end."""
     total_time = time.time() - context._query_start_time
-    
-    query_type = get_query_type(statement)
-    table = extract_table_name(statement)
-    
-    # Update metrics
-    QUERY_COUNT.labels(query_type=query_type, table=table).inc()
-    QUERY_DURATION.labels(query_type=query_type, table=table).observe(total_time)
-    
-    # Log slow queries (>100ms)
-    if total_time > 0.1:
-        SLOW_QUERIES.labels(query_type=query_type, table=table).inc()
-        logger.warning(
-            "slow_query_detected",
-            query_type=query_type,
-            table=table,
-            duration=total_time,
-            query=statement,
-        )
+    record_query_metrics(statement, total_time)
+
+# Register event listeners for both sync and async engines
+if isinstance(engine, AsyncEngine):
+    # Register events on the sync engine for async connections
+    event.listen(engine.sync_engine, "before_cursor_execute", before_cursor_execute)
+    event.listen(engine.sync_engine, "after_cursor_execute", after_cursor_execute)
+else:
+    # If using sync engine only
+    event.listen(engine, "before_cursor_execute", before_cursor_execute)
+    event.listen(engine, "after_cursor_execute", after_cursor_execute)
 
 @asynccontextmanager
 async def monitor_query() -> AsyncGenerator[Dict[str, Any], None]:
@@ -110,31 +99,35 @@ async def monitor_query() -> AsyncGenerator[Dict[str, Any], None]:
         async with monitor_query() as stats:
             result = await db.execute(query)
             # stats contains query execution information
+    
+    Returns:
+        Dictionary with query statistics:
+        - duration: Total time spent in context (float, in seconds)
+        - is_slow: Whether any query was slow (>100ms)
+        - query_count: Number of queries executed
+        - slow_queries: Number of slow queries
+        - errors: Number of query errors
     """
     start_time = time.time()
     stats: Dict[str, Any] = {
         "start_time": start_time,
         "query_count": 0,
-        "duration": 0,
+        "duration": 0.0,
         "slow_queries": 0,
         "errors": 0,
     }
     
     try:
         yield stats
+    except Exception as e:
+        stats["errors"] += 1
+        raise
     finally:
         duration = time.time() - start_time
         stats.update({
-            "duration": duration,
+            "duration": duration,  # Keep as float
             "is_slow": duration > 0.1,
         })
-        
-        if duration > 0.1:
-            logger.warning(
-                "slow_query_in_context",
-                duration=duration,
-                **stats,
-            )
 
 class QueryMonitor:
     """Query monitoring wrapper for database sessions."""
@@ -142,7 +135,28 @@ class QueryMonitor:
     def __init__(self, session: AsyncSession):
         """Initialize with database session."""
         self.session = session
-        self._query_stats: Dict[str, Any] = {}
+        self._query_stats: Dict[str, Any] = {
+            "total_queries": 0,
+            "slow_queries": 0,
+            "errors": 0,
+            "total_duration": 0.0,  # Initialize as float
+        }
+
+    async def begin(self):
+        """Begin a transaction."""
+        return await self.session.begin()
+
+    async def commit(self):
+        """Commit the current transaction."""
+        return await self.session.commit()
+
+    async def rollback(self):
+        """Rollback the current transaction."""
+        return await self.session.rollback()
+
+    async def close(self):
+        """Close the session."""
+        return await self.session.close()
 
     async def execute(
         self,
@@ -160,43 +174,29 @@ class QueryMonitor:
             Query result
         """
         start_time = time.time()
-        query_type = (
-            get_query_type(str(statement))
-            if isinstance(statement, str)
-            else "other"
-        )
+        query_str = str(statement)
+        query_type = get_query_type(query_str)
         
         try:
+            # Convert string queries to text() objects
+            if isinstance(statement, str):
+                statement = text(statement)
+            
             result = await self.session.execute(statement, params)
             duration = time.time() - start_time
             
-            # Update metrics
-            QUERY_COUNT.labels(
-                query_type=query_type,
-                table=extract_table_name(str(statement)),
-            ).inc()
-            QUERY_DURATION.labels(
-                query_type=query_type,
-                table=extract_table_name(str(statement)),
-            ).observe(duration)
+            # Update instance stats
+            self._query_stats["total_queries"] += 1
+            self._query_stats["total_duration"] += duration
             
-            # Track slow queries
-            if duration > 0.1:
-                SLOW_QUERIES.labels(
-                    query_type=query_type,
-                    table=extract_table_name(str(statement)),
-                ).inc()
-                logger.warning(
-                    "slow_query_detected",
-                    query_type=query_type,
-                    duration=duration,
-                    query=str(statement),
-                )
+            # Record metrics
+            record_query_metrics(query_str, duration)
             
             return result
             
         except Exception as e:
-            QUERY_ERRORS.labels(
+            self._query_stats["errors"] += 1
+            metrics["db_query_errors"].labels(
                 error_type=type(e).__name__,
                 query_type=query_type,
             ).inc()
@@ -205,25 +205,14 @@ class QueryMonitor:
                 query_type=query_type,
                 error=str(e),
                 error_type=type(e).__name__,
-                query=str(statement),
+                query=query_str,
             )
             raise
 
     @property
     def stats(self) -> Dict[str, Any]:
-        """Get query statistics."""
-        return self._query_stats
-
-    @asynccontextmanager
-    async def begin(self):
-        """Begin a transaction."""
-        async with self.session.begin() as transaction:
-            yield transaction
-
-    async def commit(self):
-        """Commit the current transaction."""
-        await self.session.commit()
-
-    async def rollback(self):
-        """Rollback the current transaction."""
-        await self.session.rollback() 
+        """Get query statistics with duration as float."""
+        return {
+            **self._query_stats,
+            "total_duration": self._query_stats["total_duration"],  # Keep as float
+        } 

@@ -67,7 +67,7 @@ async def test_query_types(db: MonitoredDB) -> dict:
     # Test transaction
     async with monitor_query() as stats:
         # Start a new transaction
-        async with db.begin():
+        async with db.session.begin_nested():  # Nested transaction to avoid conflict
             # Multiple statements in transaction
             await db.execute(text("SELECT 1"))
             await db.execute(text("SELECT 2"))

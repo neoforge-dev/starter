@@ -44,8 +44,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             
             # Skip rate limiting for authenticated users
             if client_id.startswith("user:"):
-                response = await call_next(request)
-                return response
+                return await call_next(request)
             
             # Check rate limit and get remaining requests
             rate_limit_info = await self._check_rate_limit(client_id)
@@ -60,7 +59,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             # Process the request
             response = await call_next(request)
 
-            # Add rate limit headers
+            # Add rate limit headers for unauthenticated users
             self._add_rate_limit_headers(response, rate_limit_info)
 
             return response

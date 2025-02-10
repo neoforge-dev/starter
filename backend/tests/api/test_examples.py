@@ -65,7 +65,7 @@ async def test_query_types(client: AsyncClient):
 
 async def test_connection_pool(client: AsyncClient):
     """Test connection pool endpoint."""
-    response = await client.get("/examples/connection-pool", headers={
+    response = await client.get(f"{settings.api_v1_str}/examples/connection-pool", headers={
         "Accept": "application/json",
         "User-Agent": "TestClient"
     })
@@ -82,7 +82,7 @@ async def test_connection_pool(client: AsyncClient):
 
 async def test_error_handling(client: AsyncClient):
     """Test error handling endpoint."""
-    response = await client.get("/examples/error-handling", headers={
+    response = await client.get(f"{settings.api_v1_str}/examples/error-handling", headers={
         "Accept": "application/json",
         "User-Agent": "TestClient"
     })

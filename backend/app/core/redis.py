@@ -1,5 +1,5 @@
 """Redis connection module with advanced pooling and monitoring."""
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator, Optional, Tuple
 import time
 
 from redis.asyncio import Redis, ConnectionPool, BlockingConnectionPool
@@ -99,40 +99,27 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
     Yields:
         Redis connection with monitoring
     """
-    async with MonitoredRedis.from_pool(pool) as redis:
-        try:
-            await redis.ping()
-            metrics["redis_connected"].set(1)
-            yield redis
-        except Exception as e:
-            metrics["redis_connected"].set(0)
-            REDIS_ERRORS.labels(error_type=type(e).__name__).inc()
-            logger.error(
-                "redis_connection_error",
-                error=str(e),
-                error_type=type(e).__name__,
-            )
-            raise
+    try:
+        yield redis_client
+    except Exception as e:
+        logger.error("redis_connection_error", error=str(e))
+        raise
 
 
-async def check_redis_health() -> tuple[bool, Optional[str]]:
+async def check_redis_health(redis: Redis) -> Tuple[bool, Optional[str]]:
     """
     Check Redis connection health.
     
+    Args:
+        redis: Redis connection to check
+        
     Returns:
         Tuple of (is_healthy, error_message)
     """
     try:
-        async with MonitoredRedis.from_pool(pool) as redis:
-            await redis.ping()
-            metrics["redis_connected"].set(1)
-            return True, None
+        # Try to ping Redis
+        await redis.ping()
+        return True, None
     except Exception as e:
-        metrics["redis_connected"].set(0)
-        REDIS_ERRORS.labels(error_type=type(e).__name__).inc()
-        logger.error(
-            "redis_health_check_error",
-            error=str(e),
-            error_type=type(e).__name__,
-        )
+        logger.error("redis_health_check_error", error=str(e))
         return False, str(e) 

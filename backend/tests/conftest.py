@@ -43,7 +43,7 @@ from app.main import app
 from app.models.user import User
 from app.core.security import get_password_hash, create_access_token
 from app.db.session import get_db
-from app.core.redis import get_redis
+from app.core.redis import get_redis, redis_client
 from tests.factories import UserFactory
 
 # Override settings for testing
@@ -218,29 +218,22 @@ async def client(db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 async def redis() -> AsyncGenerator[Redis, None]:
     """Create test Redis connection."""
     import redis.asyncio as redis
-    from app.core.config import settings
     
     # Use Docker service name for Redis in test environment
     redis_url = "redis://redis:6379/0"
     
     try:
-        # Create Redis client with retry logic
-        for _ in range(3):  # Try 3 times
-            try:
-                client = redis.Redis.from_url(
-                    redis_url,
-                    encoding="utf-8",
-                    decode_responses=True,
-                    socket_timeout=5.0,  # 5 second timeout
-                    socket_connect_timeout=5.0,
-                )
-                # Test connection
-                await client.ping()
-                break
-            except (redis.ConnectionError, redis.TimeoutError):
-                await asyncio.sleep(1)  # Wait 1 second before retry
-        else:
-            raise redis.ConnectionError(f"Could not connect to Redis at {redis_url}")
+        # Create a fresh Redis client for each test
+        client = redis.Redis.from_url(
+            redis_url,
+            encoding="utf-8",
+            decode_responses=True,
+            socket_timeout=5.0,
+            socket_connect_timeout=5.0,
+        )
+        
+        # Test connection
+        await client.ping()
         
         # Clear all keys before test
         await client.flushall()
@@ -250,8 +243,9 @@ async def redis() -> AsyncGenerator[Redis, None]:
         # Clear all keys after test
         await client.flushall()
         await client.aclose()
+        
     except Exception as e:
-        pytest.skip(f"Redis not available: {str(e)}")
+        pytest.fail(f"Redis connection failed: {e}")
 
 
 @pytest_asyncio.fixture
