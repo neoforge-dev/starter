@@ -4,7 +4,7 @@ from httpx import AsyncClient
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 pytestmark = pytest.mark.asyncio
 
@@ -69,14 +69,12 @@ async def test_health_check_redis_failure(
     redis: Redis,
 ) -> None:
     """Test health check when Redis is down."""
-    # Mock Redis health check to return unhealthy
-    with patch('app.api.endpoints.health.check_redis_health') as mock_check:
-        mock_check.return_value = (False, "Redis connection error")
-        
+    # Mock Redis ping to raise an exception at the application level
+    with patch('app.core.redis.redis_client.ping', side_effect=Exception("Redis connection error")):
         response = await client.get("/health")
         assert response.status_code == 503
         data = response.json()
-        assert "Redis unhealthy" in data["detail"]["errors"][0]
+        assert "Redis unhealthy" in data["detail"]
 
 
 async def test_detailed_health_check_db_failure(
@@ -86,8 +84,18 @@ async def test_detailed_health_check_db_failure(
 ) -> None:
     """Test detailed health check when database is down."""
     # Mock database execute to raise an exception
-    with patch('sqlalchemy.ext.asyncio.AsyncSession.execute') as mock_execute:
-        mock_execute.side_effect = Exception("Database connection error")
+    with patch('app.api.deps.get_monitored_db') as mock_db:
+        # Create a mock QueryMonitor that raises an exception
+        mock_monitor = AsyncMock()
+        mock_monitor.execute.side_effect = Exception("Database connection error")
+        mock_monitor.current_query = "SELECT 1"  # Set current query to indicate health check
+        
+        # Make the mock generator raise an exception
+        async def mock_generator():
+            raise Exception("Database connection error")
+            yield mock_monitor  # This line will never be reached
+        
+        mock_db.return_value = mock_generator()
         
         response = await client.get("/health/detailed")
         assert response.status_code == 503

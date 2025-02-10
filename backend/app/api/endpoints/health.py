@@ -2,7 +2,7 @@
 from typing import Annotated, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -141,6 +141,7 @@ async def detailed_health_check(
     redis_latency = 0.0
     redis_error = None
     is_healthy = True
+    errors = []
 
     # Check database latency
     try:
@@ -149,8 +150,14 @@ async def detailed_health_check(
         db_latency = (time.time() - start) * 1000
     except Exception as e:
         db_status = f"unhealthy: {str(e)}"
+        errors.append(f"Database unhealthy: {str(e)}")
         is_healthy = False
         db_latency = 0.0
+        # If database is down, return error immediately
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="; ".join(errors),
+        )
 
     # Check Redis health and latency
     try:
@@ -161,10 +168,12 @@ async def detailed_health_check(
         if not redis_healthy:
             redis_status = f"unhealthy: {error}"
             redis_error = error
+            errors.append(f"Redis unhealthy: {error}")
             is_healthy = False
     except Exception as e:
         redis_status = f"unhealthy: {str(e)}"
         redis_error = str(e)
+        errors.append(f"Redis unhealthy: {str(e)}")
         is_healthy = False
         redis_latency = 0.0
 
@@ -173,6 +182,7 @@ async def detailed_health_check(
         pool_stats = get_pool_stats()
     except Exception as e:
         pool_stats = DatabasePoolStats().dict()
+        errors.append(f"Pool stats error: {str(e)}")
         is_healthy = False
 
     # Get query performance metrics
@@ -197,27 +207,34 @@ async def detailed_health_check(
         # Handle case when metrics are not initialized
         query_stats = QueryStats()
 
-    response = DetailedHealthCheck(
-        status="healthy" if is_healthy else "unhealthy",
-        version=settings.version,
-        database_status=db_status,
-        redis_status=redis_status,
-        database_latency_ms=db_latency,
-        redis_latency_ms=redis_latency,
-        environment=settings.environment,
-        database_pool=DatabasePoolStats(**pool_stats),
-        redis_stats=RedisStats(
+    # Create response data
+    response_data = {
+        "status": "healthy" if is_healthy else "unhealthy",
+        "version": settings.version,
+        "database_status": db_status,
+        "redis_status": redis_status,
+        "database_latency_ms": db_latency,
+        "redis_latency_ms": redis_latency,
+        "environment": settings.environment,
+        "database_pool": DatabasePoolStats(**pool_stats),
+        "redis_stats": RedisStats(
             connected=is_healthy,
             latency_ms=redis_latency,
             error_message=redis_error,
         ),
-        query_stats=query_stats,
-    )
+        "query_stats": query_stats,
+    }
+
+    try:
+        response = DetailedHealthCheck(**response_data)
+    except ValidationError as e:
+        errors.append(f"Response validation error: {str(e)}")
+        is_healthy = False
 
     if not is_healthy:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=response.dict(),
+            detail="; ".join(errors),
         )
 
-    return response 
+    return response

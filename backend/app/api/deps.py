@@ -117,11 +117,31 @@ async def get_monitored_db() -> AsyncGenerator[QueryMonitor, None]:
             result = await db.execute("SELECT * FROM items")
             return result.fetchall()
     """
-    async for session in get_db():
-        try:
-            yield QueryMonitor(session)
-        finally:
-            await session.close()
+    try:
+        async for session in get_db():
+            monitor = QueryMonitor(session)
+            try:
+                yield monitor
+            except Exception as e:
+                # Ensure session is closed on error
+                await session.close()
+                # For health check endpoints, convert database errors to 503
+                if "health" in str(monitor.current_query):
+                    raise HTTPException(
+                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                        detail=f"Database unhealthy: {str(e)}",
+                    ) from e
+                raise
+            finally:
+                await session.close()
+    except Exception as e:
+        # For health check endpoints, convert database errors to 503
+        if "health" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Database unhealthy: {str(e)}",
+            ) from e
+        raise
 
 # Type alias for monitored database dependency
 MonitoredDB = Annotated[QueryMonitor, Depends(get_monitored_db)] 

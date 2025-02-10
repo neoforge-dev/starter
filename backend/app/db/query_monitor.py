@@ -172,6 +172,9 @@ class QueryMonitor:
             
         Returns:
             Query result
+            
+        Raises:
+            Exception: Any database-related exception that occurs during execution
         """
         start_time = time.time()
         query_str = str(statement)
@@ -207,6 +210,8 @@ class QueryMonitor:
                 error_type=type(e).__name__,
                 query=query_str,
             )
+            # Ensure the session is rolled back on error
+            await self.session.rollback()
             raise
 
     @property
