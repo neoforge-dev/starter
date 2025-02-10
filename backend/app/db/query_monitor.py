@@ -112,13 +112,22 @@ async def monitor_query() -> AsyncGenerator[Dict[str, Any], None]:
             # stats contains query execution information
     """
     start_time = time.time()
-    stats: Dict[str, Any] = {}
+    stats: Dict[str, Any] = {
+        "start_time": start_time,
+        "query_count": 0,
+        "duration": 0,
+        "slow_queries": 0,
+        "errors": 0,
+    }
     
     try:
         yield stats
     finally:
         duration = time.time() - start_time
-        stats["duration"] = duration
+        stats.update({
+            "duration": duration,
+            "is_slow": duration > 0.1,
+        })
         
         if duration > 0.1:
             logger.warning(
@@ -202,5 +211,19 @@ class QueryMonitor:
 
     @property
     def stats(self) -> Dict[str, Any]:
-        """Get current query statistics."""
-        return self._query_stats.copy() 
+        """Get query statistics."""
+        return self._query_stats
+
+    @asynccontextmanager
+    async def begin(self):
+        """Begin a transaction."""
+        async with self.session.begin() as transaction:
+            yield transaction
+
+    async def commit(self):
+        """Commit the current transaction."""
+        await self.session.commit()
+
+    async def rollback(self):
+        """Rollback the current transaction."""
+        await self.session.rollback() 

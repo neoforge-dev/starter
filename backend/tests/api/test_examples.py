@@ -4,6 +4,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cache import clear_cache
+from app.core.config import settings
 from tests.factories import UserFactory
 
 pytestmark = pytest.mark.asyncio
@@ -15,7 +16,7 @@ async def test_cached_users(client: AsyncClient, db: AsyncSession):
     await db.commit()
     
     # First request should hit database
-    response = await client.get("/examples/cached-users", headers={
+    response = await client.get(f"{settings.api_v1_str}/examples/cached-users", headers={
         "Accept": "application/json",
         "User-Agent": "TestClient"
     })
@@ -23,7 +24,7 @@ async def test_cached_users(client: AsyncClient, db: AsyncSession):
     assert len(response.json()) == 3
     
     # Second request should use cache
-    response = await client.get("/examples/cached-users", headers={
+    response = await client.get(f"{settings.api_v1_str}/examples/cached-users", headers={
         "Accept": "application/json",
         "User-Agent": "TestClient"
     })
@@ -32,7 +33,7 @@ async def test_cached_users(client: AsyncClient, db: AsyncSession):
     
     # Clear cache and verify it hits database again
     await clear_cache()
-    response = await client.get("/examples/cached-users", headers={
+    response = await client.get(f"{settings.api_v1_str}/examples/cached-users", headers={
         "Accept": "application/json",
         "User-Agent": "TestClient"
     })
@@ -41,7 +42,7 @@ async def test_cached_users(client: AsyncClient, db: AsyncSession):
 
 async def test_query_types(client: AsyncClient):
     """Test query types endpoint."""
-    response = await client.get("/examples/query-types", headers={
+    response = await client.get(f"{settings.api_v1_str}/examples/query-types", headers={
         "Accept": "application/json",
         "User-Agent": "TestClient"
     })

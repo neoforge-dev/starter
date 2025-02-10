@@ -51,22 +51,23 @@ async def test_query_types(db: MonitoredDB) -> dict:
     
     # Test SELECT
     async with monitor_query() as stats:
-        await db.execute("SELECT pg_sleep(0.05)")  # Intentionally slow query
+        await db.execute(text("SELECT pg_sleep(0.05)"))  # Intentionally slow query
         results["select"] = stats
     
     # Test complex join
     async with monitor_query() as stats:
-        await db.execute("""
+        await db.execute(text("""
             SELECT u.*, i.title 
             FROM users u 
             LEFT JOIN items i ON i.owner_id = u.id 
             WHERE u.is_active = true
-        """)
+        """))
         results["join"] = stats
     
     # Test transaction
     async with monitor_query() as stats:
-        async with db.session.begin():
+        # Start a new transaction
+        async with db.begin():
             # Multiple statements in transaction
             await db.execute(text("SELECT 1"))
             await db.execute(text("SELECT 2"))
