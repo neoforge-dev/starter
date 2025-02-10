@@ -5,6 +5,11 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from unittest.mock import patch, AsyncMock
+from fastapi import HTTPException, status
+from app.api.deps import get_monitored_db, get_db
+from app.main import app
+from app.db.query_monitor import QueryMonitor
+from app.api.deps import MonitoredDB
 
 pytestmark = pytest.mark.asyncio
 
@@ -25,7 +30,7 @@ async def test_health_check(
 
 
 async def test_detailed_health_check(
-    client: AsyncClient,
+    client: AsyncSession,
     db: AsyncSession,
     redis: Redis,
 ) -> None:
@@ -83,24 +88,24 @@ async def test_detailed_health_check_db_failure(
     redis: Redis,
 ) -> None:
     """Test detailed health check when database is down."""
-    # Mock database execute to raise an exception
-    with patch('app.api.deps.get_monitored_db') as mock_db:
-        # Create a mock QueryMonitor that raises an exception
-        mock_monitor = AsyncMock()
-        mock_monitor.execute.side_effect = Exception("Database connection error")
-        mock_monitor.current_query = "SELECT 1"  # Set current query to indicate health check
-        
-        # Make the mock generator raise an exception
-        async def mock_generator():
-            raise Exception("Database connection error")
-            yield mock_monitor  # This line will never be reached
-        
-        mock_db.return_value = mock_generator()
-        
+    async def failing_db_generator():
+          instance = object.__new__(MonitoredDB)
+          async def failing_execute(query):
+              raise Exception("Database connection error")
+          instance.execute = failing_execute
+          yield instance
+
+    app.dependency_overrides[get_monitored_db] = failing_db_generator
+    app.dependency_overrides[get_db] = failing_db_generator
+
+    try:
         response = await client.get("/health/detailed")
         assert response.status_code == 503
         data = response.json()
-        assert "Database unhealthy" in data["detail"]
+        assert "Database unhealthy" in data["detail"]["errors"][0]
+    finally:
+        app.dependency_overrides.pop(get_monitored_db, None)
+        app.dependency_overrides.pop(get_db, None)
 
 
 async def test_detailed_health_check_redis_failure(
@@ -116,7 +121,7 @@ async def test_detailed_health_check_redis_failure(
         response = await client.get("/health/detailed")
         assert response.status_code == 503
         data = response.json()
-        assert "Redis unhealthy" in data["detail"]
+        assert "Redis unhealthy" in data["detail"]["errors"][0]
 
 
 async def test_detailed_health_check_pool_stats(

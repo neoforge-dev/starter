@@ -13,7 +13,7 @@ from app.core.redis import get_redis, check_redis_health
 from app.db.metrics import get_pool_stats, log_pool_stats
 from app.db.query_monitor import QueryMonitor
 from app.core.metrics import get_metrics
-from app.api.deps import MonitoredDB
+from app.api.deps import MonitoredDB, get_monitored_db
 
 router = APIRouter()
 
@@ -59,13 +59,13 @@ class DetailedHealthCheck(HealthCheck):
 
 @router.get(
     "/health",
-    response_model=HealthCheck,
+    response_model=None,
     tags=["system"],
 )
 async def health_check(
     db: MonitoredDB,
     redis: Annotated[Redis, Depends(get_redis)],
-) -> HealthCheck:
+) -> Dict:
     """
     Check API health status.
     
@@ -97,12 +97,12 @@ async def health_check(
         is_healthy = False
         error_details.append(f"Redis unhealthy: {str(e)}")
 
-    response = HealthCheck(
-        status="healthy" if is_healthy else "unhealthy",
-        version=settings.version,
-        database_status=db_status,
-        redis_status=redis_status,
-    )
+    response_data = {
+        "status": "healthy" if is_healthy else "unhealthy",
+        "version": settings.version,
+        "database_status": db_status,
+        "redis_status": redis_status,
+    }
 
     if not is_healthy:
         raise HTTPException(
@@ -110,17 +110,23 @@ async def health_check(
             detail={"message": "Service unhealthy", "errors": error_details},
         )
 
-    return response
+    try:
+        return HealthCheck(**response_data)
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"message": "Health check validation failed", "errors": [str(e)]},
+        )
 
 @router.get(
     "/health/detailed",
-    response_model=DetailedHealthCheck,
+    response_model=None,
     tags=["system"],
 )
 async def detailed_health_check(
-    db: MonitoredDB,
+    db: Annotated[MonitoredDB, Depends(get_monitored_db)],
     redis: Annotated[Redis, Depends(get_redis)],
-) -> DetailedHealthCheck:
+) -> Dict:
     """
     Detailed health check with latency and pool information.
     
@@ -153,11 +159,6 @@ async def detailed_health_check(
         errors.append(f"Database unhealthy: {str(e)}")
         is_healthy = False
         db_latency = 0.0
-        # If database is down, return error immediately
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="; ".join(errors),
-        )
 
     # Check Redis health and latency
     try:
@@ -225,16 +226,23 @@ async def detailed_health_check(
         "query_stats": query_stats,
     }
 
-    try:
-        response = DetailedHealthCheck(**response_data)
-    except ValidationError as e:
-        errors.append(f"Response validation error: {str(e)}")
-        is_healthy = False
-
+    # If any service is unhealthy, raise 503 immediately
     if not is_healthy:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="; ".join(errors),
+            detail={"message": "Service unhealthy", "errors": errors},
         )
 
-    return response
+    try:
+        # Create and return response object
+        return DetailedHealthCheck(**response_data)
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"message": "Health check validation failed", "errors": [str(e)]},
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"message": "Health check failed", "errors": [str(e)]},
+        )

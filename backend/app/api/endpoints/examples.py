@@ -113,12 +113,12 @@ async def test_error_handling(db: MonitoredDB) -> dict:
     """
     try:
         # Execute invalid query
-        await db.execute("SELECT * FROM nonexistent_table")
+        await db.execute(text("SELECT * FROM nonexistent_table"))
     except Exception as e:
         # Error will be logged and tracked in metrics
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Query error demonstration",
-        )
+        ) from e
     
     return {"status": "This should not be reached"} 

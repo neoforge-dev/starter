@@ -118,15 +118,21 @@ async def get_monitored_db() -> AsyncGenerator[QueryMonitor, None]:
             return result.fetchall()
     """
     try:
-        async for session in get_db():
+        # Create a generator to get the session
+        session_gen = get_db()
+        try:
+            # Get the session from the generator
+            session = await anext(session_gen)
             monitor = QueryMonitor(session)
             try:
+                # Set initial query to None
+                monitor.current_query = None
                 yield monitor
             except Exception as e:
                 # Ensure session is closed on error
                 await session.close()
                 # For health check endpoints, convert database errors to 503
-                if "health" in str(monitor.current_query):
+                if hasattr(monitor, 'current_query') and monitor.current_query and 'health' in str(monitor.current_query).lower():
                     raise HTTPException(
                         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                         detail=f"Database unhealthy: {str(e)}",
@@ -134,9 +140,23 @@ async def get_monitored_db() -> AsyncGenerator[QueryMonitor, None]:
                 raise
             finally:
                 await session.close()
+        except StopAsyncIteration:
+            # Handle the case where the generator is empty
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Database connection failed",
+            )
+        except Exception as e:
+            # For health check endpoints, convert database errors to 503
+            if 'health' in str(e).lower():
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=f"Database unhealthy: {str(e)}",
+                ) from e
+            raise
     except Exception as e:
         # For health check endpoints, convert database errors to 503
-        if "health" in str(e):
+        if 'health' in str(e).lower() or 'health' in str(e.__context__).lower():
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=f"Database unhealthy: {str(e)}",

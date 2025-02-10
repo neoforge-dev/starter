@@ -135,6 +135,7 @@ class QueryMonitor:
     def __init__(self, session: AsyncSession):
         """Initialize with database session."""
         self.session = session
+        self.current_query = None
         self._query_stats: Dict[str, Any] = {
             "total_queries": 0,
             "slow_queries": 0,
@@ -181,6 +182,9 @@ class QueryMonitor:
         query_type = get_query_type(query_str)
         
         try:
+            # Set current query
+            self.current_query = query_str
+            
             # Convert string queries to text() objects
             if isinstance(statement, str):
                 statement = text(statement)
@@ -213,6 +217,9 @@ class QueryMonitor:
             # Ensure the session is rolled back on error
             await self.session.rollback()
             raise
+        finally:
+            # Clear current query
+            self.current_query = None
 
     @property
     def stats(self) -> Dict[str, Any]:
