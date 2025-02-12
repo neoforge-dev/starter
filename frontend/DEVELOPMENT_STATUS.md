@@ -32,6 +32,7 @@
 - [x] Checkbox component
 - [x] Select component with search and groups
 - [x] Phone input component with international support
+- [x] Layout system (Grid, Container, Responsive layouts)
 
 ### Pages
 - [x] Landing page
@@ -73,7 +74,6 @@
 ### Components
 - [ ] Autoform for schema-driven forms
 - [ ] Sidebar navigation system
-- [ ] Layout system
 - [ ] Hero section
 - [ ] Bento grid for feature showcases
 - [ ] Testimonials component
