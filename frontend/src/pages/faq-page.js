@@ -1,7 +1,7 @@
-import { LitElement, html, css } from "/vendor/lit-core.min.js";
+import { LitElement, html, css } from "lit";
 import { baseStyles } from "../styles/base.js";
 
-export class FaqPage extends LitElement {
+export class FAQPage extends LitElement {
   static styles = [
     baseStyles,
     css`
@@ -49,4 +49,4 @@ export class FaqPage extends LitElement {
   }
 }
 
-customElements.define("faq-page", FaqPage);
+customElements.define("faq-page", FAQPage);

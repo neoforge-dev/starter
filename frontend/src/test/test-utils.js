@@ -33,89 +33,56 @@ export class TestRunner {
 
     for (const test of this.tests) {
       try {
-        // Run beforeEach hooks
-        for (const beforeFn of this.beforeEachFns) {
-          await beforeFn();
-        }
-
-        // Run test
+        console.log(`Running test: ${test.name}`);
+        for (const beforeFn of this.beforeEachFns) await beforeFn();
         await test.fn();
-
-        // Run afterEach hooks
-        for (const afterFn of this.afterEachFns) {
-          await afterFn();
-        }
-
-        console.log(`✅ ${test.name}`);
+        for (const afterFn of this.afterEachFns) await afterFn();
+        console.log(`✓ Passed: ${test.name}`);
         results.passed++;
       } catch (error) {
-        console.error(`❌ ${test.name}`);
+        console.error(`✗ Failed: ${test.name}`);
         console.error(error);
         results.failed++;
       }
     }
-
-    console.log(`\nResults: ${results.passed}/${results.total} tests passed`);
     return results;
-  }
-}
-
-// Assertion utilities
-export class Assert {
-  static equal(actual, expected, message = "") {
-    if (actual !== expected) {
-      throw new Error(`${message} Expected ${expected} but got ${actual}`);
-    }
-  }
-
-  static notEqual(actual, expected, message = "") {
-    if (actual === expected) {
-      throw new Error(`${message} Expected ${actual} not to equal ${expected}`);
-    }
-  }
-
-  static true(value, message = "") {
-    if (!value) {
-      throw new Error(`${message} Expected true but got ${value}`);
-    }
-  }
-
-  static false(value, message = "") {
-    if (value) {
-      throw new Error(`${message} Expected false but got ${value}`);
-    }
-  }
-
-  static contains(text, substring, message = "") {
-    if (!text.includes(substring)) {
-      throw new Error(
-        `${message} Expected "${text}" to contain "${substring}"`
-      );
-    }
-  }
-
-  static async throws(fn, errorType, message = "") {
-    try {
-      await fn();
-      throw new Error(
-        `${message} Expected function to throw ${errorType.name}`
-      );
-    } catch (error) {
-      if (!(error instanceof errorType)) {
-        throw new Error(
-          `${message} Expected ${errorType.name} but got ${error.constructor.name}`
-        );
-      }
-    }
   }
 }
 
 // Component testing utilities
 export class ComponentTester {
-  static async render(component) {
-    const el = document.createElement(component.tagName);
+  static async render(ComponentClass) {
+    // Create and mount the element
+    const tagName =
+      ComponentClass.tagName ||
+      ComponentClass.name
+        .replace(/([A-Z])/g, "-$1")
+        .toLowerCase()
+        .replace(/^-/, ""); // Remove leading hyphen
+    if (!customElements.get(tagName)) {
+      customElements.define(tagName, ComponentClass);
+    }
+    const el = document.createElement(tagName);
     document.body.appendChild(el);
+
+    // Wait for element to be connected and upgraded
     await el.updateComplete;
+
+    // Wait for shadowRoot to be available
+    await new Promise((resolve) => {
+      if (el.shadowRoot) {
+        resolve();
+      } else {
+        const observer = new MutationObserver(() => {
+          if (el.shadowRoot) {
+            observer.disconnect();
+            resolve();
+          }
+        });
+        observer.observe(el, { attributes: true, childList: true });
+      }
+    });
+
     return el;
   }
 
@@ -165,5 +132,65 @@ export class Mock {
 
   static reset() {
     Mock.fn().calls = [];
+  }
+}
+
+// Add component mounting utility
+export function mountComponent(tagName) {
+  const element = document.createElement(tagName);
+  document.body.appendChild(element);
+  return element;
+}
+
+// Add assertion utilities
+export class Assert {
+  static equal(actual, expected, message) {
+    if (actual !== expected) {
+      throw new Error(message || `Expected ${expected} but got ${actual}`);
+    }
+  }
+
+  static notEqual(actual, expected, message) {
+    if (actual === expected) {
+      throw new Error(message || `Expected ${actual} not to equal ${expected}`);
+    }
+  }
+
+  static true(value, message) {
+    if (!value) {
+      throw new Error(message || "Expected true but got false");
+    }
+  }
+
+  static false(value, message) {
+    if (value) {
+      throw new Error(message || "Expected false but got true");
+    }
+  }
+
+  static notNull(value, message) {
+    if (value === null || value === undefined) {
+      throw new Error(message || "Expected value to not be null/undefined");
+    }
+  }
+
+  static isNull(value, message) {
+    if (value !== null && value !== undefined) {
+      throw new Error(message || `Expected null but got ${value}`);
+    }
+  }
+
+  static greaterThan(actual, expected, message) {
+    if (actual <= expected) {
+      throw new Error(
+        message || `Expected ${actual} to be greater than ${expected}`
+      );
+    }
+  }
+
+  static include(haystack, needle, message) {
+    if (!haystack.includes(needle)) {
+      throw new Error(message || `Expected ${haystack} to include ${needle}`);
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "/vendor/lit-core.min.js";
+import { LitElement, html, css } from "lit";
 import { apiService } from "../services/api.js";
 import { Logger } from "../utils/logger.js";
 

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Input Component Story</title>
+    <!-- Import Lit library from CDN -->
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js"
+    ></script>
+    <!-- Import your custom component (adjust the path as needed) -->
+    <script type="module" src="../components/my-input.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Input Component Story</h1>
+    <my-input id="testInput" placeholder="Type something..."></my-input>
+
+    <script type="module">
+      const input = document.getElementById("testInput");
+      input.addEventListener("change", (event) => {
+        console.log("Input changed:", event.target.value);
+      });
+    </script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-import { LitElement, html } from "/vendor/lit-core.min.js";
+import { LitElement, html } from "lit";
 import { baseStyles } from "../../styles/base.js";
 import { authStyles } from "../../styles/auth.js";
 import { authService } from "../../services/auth-service.js";

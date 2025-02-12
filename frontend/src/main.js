@@ -1,5 +1,5 @@
 import { Logger } from "./utils/logger.js";
-import { LitElement, html } from "/vendor/lit-core.min.js";
+import { LitElement, html } from "lit";
 import { baseStyles } from "./styles/base.js";
 import "./components/core/app-header.js";
 import "./components/core/app-footer.js";

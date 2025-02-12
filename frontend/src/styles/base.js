@@ -1,4 +1,4 @@
-import { css } from "/vendor/lit-core.min.js";
+import { css } from "lit";
 
 export const baseStyles = css`
   :host {

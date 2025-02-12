@@ -1,4 +1,4 @@
-import { LitElement, html } from "/vendor/lit-core.min.js";
+import { LitElement, html } from "lit";
 import { baseStyles } from "../../styles/base.js";
 
 export class AppFooter extends LitElement {

@@ -1,4 +1,4 @@
-import { LitElement, html } from "/vendor/lit-core.min.js";
+import { LitElement, html } from "lit";
 
 /**
  * Transition manager component for handling page transitions

@@ -1,4 +1,4 @@
-import { EventTarget } from "/vendor/lit-core.min.js";
+import { EventTarget } from "lit";
 
 export class Store extends EventTarget {
   constructor(initialState = {}) {

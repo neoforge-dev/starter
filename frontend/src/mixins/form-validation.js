@@ -1,4 +1,4 @@
-import { html } from "/vendor/lit-core.min.js";
+import { html } from "lit";
 
 /**
  * Mixin that provides a simple form validation system.

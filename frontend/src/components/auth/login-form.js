@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "/vendor/lit-core.min.js";
+import { LitElement, html, css } from "lit";
 import { authService } from "../services/auth.js";
 
 export class LoginForm extends LitElement {

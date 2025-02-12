@@ -1,6 +1,6 @@
-import { dedupeMixin } from "/vendor/lit-core.min.js";
-import { html } from "/vendor/lit-core.min.js";
-import { css } from "/vendor/lit-core.min.js";
+import { dedupeMixin } from "../utils/dedupeMixin.js";
+import { html } from "lit";
+import { css } from "lit";
 
 /**
  * Loading mixin for Lit components

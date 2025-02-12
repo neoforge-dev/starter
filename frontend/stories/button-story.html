@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Button Component Story</title>
+    <!-- Import Lit library from CDN -->
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js"
+    ></script>
+    <!-- Import your custom component (adjust the path as needed) -->
+    <script type="module" src="../components/my-button.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 16px;
+      }
+      /* Optional styles if needed */
+      my-button.clicked {
+        border: 2px solid var(--success-color);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Button Component Story</h1>
+    <my-button id="testButton">Click me!</my-button>
+
+    <script type="module">
+      const button = document.getElementById("testButton");
+      button.addEventListener("click", () => {
+        console.log("Button clicked!");
+        // For testing purposes, add a "clicked" class
+        button.classList.add("clicked");
+      });
+    </script>
+  </body>
+</html>
