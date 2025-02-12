@@ -1,0 +1,96 @@
+/* Toast container */
+.toast-container {
+  position: fixed;
+  z-index: var(--z-toast);
+  pointer-events: none;
+  width: 100%;
+  height: 0;
+}
+
+/* Position containers */
+.toast-container[data-position^="top-"] {
+  top: 0;
+}
+
+.toast-container[data-position^="bottom-"] {
+  bottom: 0;
+}
+
+.toast-container[data-position$="-right"] {
+  right: 0;
+}
+
+.toast-container[data-position$="-left"] {
+  left: 0;
+}
+
+/* Toast stacking */
+.toast-container[data-position^="top-"] .neo-toast {
+  margin-bottom: 0.5rem;
+}
+
+.toast-container[data-position^="bottom-"] .neo-toast {
+  margin-top: 0.5rem;
+}
+
+/* Re-enable pointer events for toasts */
+.toast-container .neo-toast {
+  pointer-events: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .toast-container {
+    padding: 0.5rem;
+  }
+
+  .toast-container .neo-toast {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Animation container */
+.toast-container[data-animated="true"] .neo-toast {
+  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+              opacity 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Toast groups */
+.toast-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Position-specific animations */
+.toast-container[data-position="top-right"] .neo-toast,
+.toast-container[data-position="top-left"] .neo-toast {
+  transform-origin: top center;
+}
+
+.toast-container[data-position="bottom-right"] .neo-toast,
+.toast-container[data-position="bottom-left"] .neo-toast {
+  transform-origin: bottom center;
+}
+
+/* Toast limit warning */
+.toast-container::after {
+  content: attr(data-toast-count);
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background: var(--surface-color);
+  color: var(--text-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.toast-container[data-toast-count]:not([data-toast-count=""]):after {
+  opacity: 0.7;
+} 

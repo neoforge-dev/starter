@@ -142,8 +142,12 @@ class EmailWorker:
     async def process_one(self) -> bool:
         """Process one email from the queue."""
         try:
-            # Get next email from queue
-            email_id, email = await self.queue.dequeue()
+            result = await self.queue.dequeue()
+            if result is None:
+                # No emails in queue, just return
+                return True
+            
+            email_id, email = result
             if not email:
                 return True
             
@@ -215,6 +219,8 @@ class EmailWorker:
         
         except Exception as e:
             logger.error("Error processing email queue: %s", str(e), exc_info=True)
+            # Add exponential backoff if needed
+            await asyncio.sleep(1)
             return False
     
     async def run(self, interval: float = 1.0):

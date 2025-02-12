@@ -15,9 +15,9 @@
 ### Required Software
 
 - Python 3.12+
-- Node.js 20+
 - Docker Desktop
 - Git
+- A modern web browser (Chrome, Firefox, Safari, or Edge)
 
 ### Optional (but recommended)
 
@@ -59,10 +59,10 @@ make dev
 
 Your development environment is now running:
 
-- Frontend: <http://localhost:5173>
-- Backend API: <http://localhost:8000>
-- API Documentation: <http://localhost:8000/docs>
-- Admin Interface: <http://localhost:8000/admin> (if enabled)
+- Frontend: http://localhost:8080 (served directly, no build needed)
+- Backend API: http://localhost:8000
+- API Documentation: http://localhost:8000/docs
+- Admin Interface: http://localhost:8000/admin (if enabled)
 
 ## Development Environment
 
@@ -75,8 +75,8 @@ make dev
 # Run backend only
 make backend
 
-# Run frontend only
-make frontend
+# Serve frontend (no build needed)
+python -m http.server 8080 --directory frontend
 
 # Run tests
 make test
@@ -120,15 +120,17 @@ your-project/
 │   │   └── session.py     # DB session
 │   ├── models/            # SQLModel models
 │   └── schemas/           # Pydantic schemas
-├── frontend/              # Lit PWA
+├── frontend/              # Browser-native web components
 │   ├── src/
 │   │   ├── components/    # Web components
-│   │   ├── pages/         # Route pages
-│   │   └── styles/        # Shared styles
-│   └── index.html         # Entry point
+│   │   │   ├── core/     # Core components
+│   │   │   └── features/ # Feature components
+│   │   ├── pages/        # Route pages
+│   │   └── styles/       # Shared styles
+│   └── index.html        # Entry point
 ├── deploy/                # Deployment configs
-├── tests/                 # Test suite
-└── docker/                # Docker configs
+├── tests/                # Test suite
+└── docker/               # Docker configs
 ```
 
 ## First Application
@@ -170,53 +172,62 @@ async def create_item(
 
 ### 3. Create Frontend Component
 
-```typescript
-// frontend/src/components/item-list.ts
-import { LitElement, html } from 'lit'
-import { customElement, property } from 'lit/decorators.js'
+```javascript
+// frontend/src/components/features/item-list.js
+import { LitElement, html } from 'lit';
 
-@customElement('item-list')
 export class ItemList extends LitElement {
-  @property({ type: Array }) items = []
+    static properties = {
+        items: { type: Array }
+    };
 
-  render() {
-    return html`
-      <div class="items">
-        ${this.items.map(item => html`
-          <div class="item">
-            <h3>${item.name}</h3>
-            <p>${item.description}</p>
-            <span>${item.price}</span>
-          </div>
-        `)}
-      </div>
-    `
-  }
+    constructor() {
+        super();
+        this.items = [];
+    }
+
+    render() {
+        return html`
+            <div class="items">
+                ${this.items.map(item => html`
+                    <div class="item">
+                        <h3>${item.name}</h3>
+                        <p>${item.description}</p>
+                        <span>${item.price}</span>
+                    </div>
+                `)}
+            </div>
+        `;
+    }
 }
+
+customElements.define('item-list', ItemList);
 ```
 
 ### 4. Connect Frontend to API
 
-```typescript
-// frontend/src/services/api.ts
+```javascript
+// frontend/src/services/api.js
 export class ApiService {
-  private baseUrl = 'http://localhost:8000/api/v1'
+    constructor(baseUrl = 'http://localhost:8000/api/v1') {
+        this.baseUrl = baseUrl;
+    }
 
-  async getItems() {
-    const response = await fetch(`${this.baseUrl}/items`)
-    return await response.json()
-  }
+    async getItems() {
+        const response = await fetch(`${this.baseUrl}/items`);
+        return await response.json();
+    }
 
-  async createItem(item: ItemCreate) {
-    const response = await fetch(`${this.baseUrl}/items`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(item)
-    })
-    return await response.json()
-  }
+    async createItem(item) {
+        const response = await fetch(`${this.baseUrl}/items`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(item)
+        });
+        return await response.json();
+    }
 }
 ```
 
@@ -225,10 +236,10 @@ export class ApiService {
 ### 1. Local Testing
 
 ```bash
-# Build production assets
-make build
+# Build backend
+make build-backend
 
-# Run production environment locally
+# Test production setup locally
 make prod
 ```
 
@@ -258,28 +269,26 @@ make logs
 ## Next Steps
 
 1. **Add Authentication**
-
    ```bash
    make add-auth provider=auth0  # or 'jwt' or 'oauth'
    ```
 
 2. **Setup Monitoring**
-
    ```bash
    make add-monitoring  # Adds Prometheus + Grafana
    ```
 
 3. **Enable CDN**
-
    ```bash
    make add-cdn provider=cloudflare
    ```
 
 4. **Configure Emails**
-
    ```bash
    make add-email provider=sendgrid  # or 'ses' or 'postmark'
    ```
+
+Remember: NeoForge is designed to help you move fast while keeping costs low. Start with the minimal setup you need and scale as your product grows.
 
 ## Common Tasks
 

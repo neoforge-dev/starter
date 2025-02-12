@@ -1,0 +1,174 @@
+/* Button base styles */
+.neo-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  text-decoration: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Size variants */
+.neo-button[data-size="sm"] {
+  height: 32px;
+  padding: 0 0.75rem;
+  font-size: var(--font-size-sm);
+}
+
+.neo-button[data-size="md"] {
+  height: 40px;
+  padding: 0 1rem;
+  font-size: var(--font-size-base);
+}
+
+.neo-button[data-size="lg"] {
+  height: 48px;
+  padding: 0 1.5rem;
+  font-size: var(--font-size-lg);
+}
+
+/* Color variants */
+.neo-button[data-variant="primary"] {
+  background: var(--primary-color);
+  color: white;
+}
+
+.neo-button[data-variant="primary"]:hover {
+  background: var(--primary-dark);
+}
+
+.neo-button[data-variant="secondary"] {
+  background: var(--secondary-color);
+  color: white;
+}
+
+.neo-button[data-variant="secondary"]:hover {
+  filter: brightness(1.1);
+}
+
+.neo-button[data-variant="outline"] {
+  background: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.neo-button[data-variant="outline"]:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.neo-button[data-variant="text"] {
+  background: transparent;
+  color: var(--primary-color);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.neo-button[data-variant="text"]:hover {
+  background: rgba(var(--primary-color-rgb), 0.1);
+}
+
+/* States */
+.neo-button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.neo-button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.neo-button[data-full-width="true"] {
+  width: 100%;
+}
+
+/* Loading state */
+.neo-button .loading-dots {
+  color: inherit;
+}
+
+.neo-button[data-variant="outline"] .loading-dots,
+.neo-button[data-variant="text"] .loading-dots {
+  color: var(--primary-color);
+}
+
+/* Icon styles */
+.neo-button .button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+}
+
+.neo-button .button-icon[data-position="left"] {
+  margin-right: 0.25rem;
+}
+
+.neo-button .button-icon[data-position="right"] {
+  margin-left: 0.25rem;
+}
+
+/* Ripple effect */
+.neo-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.neo-button:active::after {
+  opacity: 0.1;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .neo-button[data-variant="outline"] {
+  border-color: var(--primary-light);
+  color: var(--primary-light);
+}
+
+[data-theme="dark"] .neo-button[data-variant="outline"]:hover {
+  background: var(--primary-light);
+  color: var(--background-color);
+}
+
+[data-theme="dark"] .neo-button[data-variant="text"] {
+  color: var(--primary-light);
+}
+
+[data-theme="dark"] .neo-button[data-variant="text"]:hover {
+  background: rgba(var(--primary-light-rgb), 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .neo-button[data-size="lg"] {
+    height: 44px;
+    padding: 0 1.25rem;
+  }
+}
+
+/* Animation for click feedback */
+@keyframes button-click {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+.neo-button:active {
+  animation: button-click 0.2s ease;
+} 

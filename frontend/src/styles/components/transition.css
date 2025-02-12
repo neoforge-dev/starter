@@ -1,0 +1,79 @@
+.transition-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.transition-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition: all var(--transition-duration) ease-in-out;
+}
+
+/* Current page styles */
+.transition-page.current {
+  z-index: 1;
+}
+
+/* Previous page styles */
+.transition-page.previous {
+  z-index: 0;
+}
+
+/* Fade transition */
+[data-transition="fade"] .transition-page.current {
+  opacity: 0;
+}
+
+[data-transition="fade"][data-transitioning="true"] .transition-page.current {
+  opacity: 1;
+}
+
+[data-transition="fade"][data-transitioning="true"] .transition-page.previous {
+  opacity: 0;
+}
+
+/* Slide transition */
+[data-transition="slide"] .transition-page.current {
+  transform: translateX(100%);
+}
+
+[data-transition="slide"][data-transitioning="true"] .transition-page.current {
+  transform: translateX(0);
+}
+
+[data-transition="slide"][data-transitioning="true"] .transition-page.previous {
+  transform: translateX(-100%);
+}
+
+/* Scale transition */
+[data-transition="scale"] .transition-page.current {
+  transform: scale(0.8);
+  opacity: 0;
+}
+
+[data-transition="scale"][data-transitioning="true"] .transition-page.current {
+  transform: scale(1);
+  opacity: 1;
+}
+
+[data-transition="scale"][data-transitioning="true"] .transition-page.previous {
+  transform: scale(1.2);
+  opacity: 0;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .transition-page {
+    transition: none !important;
+  }
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .transition-page {
+  background-color: var(--background-color);
+} 

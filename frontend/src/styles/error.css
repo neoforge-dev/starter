@@ -1,0 +1,119 @@
+/* Error styles */
+.error-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 8px;
+  background-color: var(--error-color);
+  color: white;
+  font-size: var(--font-size-sm);
+  animation: slide-in 0.3s ease-out;
+}
+
+.error-icon {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+}
+
+.error-message {
+  flex: 1;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.error-close {
+  flex-shrink: 0;
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.error-close:hover {
+  opacity: 1;
+}
+
+/* Error animations */
+@keyframes slide-in {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Error variants */
+.error-container[data-variant="warning"] {
+  background-color: var(--warning-color);
+}
+
+.error-container[data-variant="info"] {
+  background-color: var(--info-color);
+}
+
+/* Toast-style errors */
+.error-toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  max-width: 400px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Error list styles */
+.error-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.error-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background-color: var(--error-color);
+  color: white;
+}
+
+/* Form error styles */
+.form-error {
+  font-size: var(--font-size-sm);
+  color: var(--error-color);
+  margin-top: 0.25rem;
+}
+
+.input-error {
+  border-color: var(--error-color) !important;
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1);
+}
+
+/* Accessibility */
+.error-container:focus-within {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .error-container {
+    animation: none;
+  }
+} 

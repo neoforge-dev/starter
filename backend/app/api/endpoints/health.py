@@ -1,8 +1,10 @@
 """Health check endpoints."""
-from typing import Annotated, Dict
+from typing import Annotated, Dict, Optional, Any
+import time
+import os
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -19,6 +21,8 @@ router = APIRouter()
 
 # Initialize metrics
 metrics = get_metrics()
+
+START_TIME = time.time()
 
 class HealthCheck(BaseModel):
     """Health check response model."""
@@ -48,14 +52,19 @@ class RedisStats(BaseModel):
     latency_ms: float = 0.0
     error_message: str | None = None
 
-class DetailedHealthCheck(HealthCheck):
-    """Detailed health check response with component information."""
-    database_latency_ms: float = 0.0
-    redis_latency_ms: float = 0.0
-    environment: str
-    database_pool: DatabasePoolStats = DatabasePoolStats()
-    redis_stats: RedisStats = RedisStats()
-    query_stats: QueryStats = QueryStats()
+class DetailedHealthResponse(BaseModel):
+    """Detailed health check response."""
+    status: str = Field(..., description="Overall health status")
+    version: str = Field(..., description="Application version")
+    database_status: str = Field(..., alias="databaseStatus", description="Database health status")
+    redis_status: str = Field(..., alias="redisStatus", description="Redis health status")
+    database_latency_ms: float = Field(..., description="Database latency in milliseconds")
+    redis_latency_ms: float = Field(..., description="Redis latency in milliseconds")
+    environment: str = Field(..., description="Application environment")
+    pool_stats: Optional[dict] = Field(None, alias="poolStats", description="Database pool statistics")
+    uptime: float = Field(..., description="Application uptime in seconds")
+    load_avg: list[float] = Field(..., alias="loadAvg", description="System load averages")
+    errors: Optional[list[str]] = Field(None, description="List of errors if any")
 
 @router.get(
     "/health",
@@ -63,7 +72,7 @@ class DetailedHealthCheck(HealthCheck):
     tags=["system"],
 )
 async def health_check(
-    db: MonitoredDB,
+    db: Annotated[Any, Depends(get_monitored_db)],
     redis: Annotated[Redis, Depends(get_redis)],
 ) -> Dict:
     """
@@ -120,129 +129,61 @@ async def health_check(
 
 @router.get(
     "/health/detailed",
-    response_model=None,
-    tags=["system"],
+    response_model=DetailedHealthResponse,
+    responses={503: {"description": "Service Unavailable"}},
 )
 async def detailed_health_check(
-    db: Annotated[MonitoredDB, Depends(get_monitored_db)],
-    redis: Annotated[Redis, Depends(get_redis)],
-) -> Dict:
+    db: AsyncSession = Depends(get_monitored_db),
+    redis: Redis = Depends(get_redis),
+) -> DetailedHealthResponse:
     """
-    Detailed health check with latency and pool information.
-    
-    Performs comprehensive health check with:
-    - Latency measurements for database and Redis
-    - Database connection pool statistics
-    - Redis connection status and metrics
-    - Query performance metrics
-    - Environment information
-    
-    Requires authentication in production.
+    Get detailed health status of the application.
     """
-    import time
+    db_start = time.time()
+    db_healthy, db_status = await check_db_health(db)
+    db_latency = (time.time() - db_start) * 1000
 
-    db_status = "healthy"
-    redis_status = "healthy"
-    db_latency = 0.0
-    redis_latency = 0.0
-    redis_error = None
-    is_healthy = True
+    redis_start = time.time()
+    redis_healthy, redis_status = await check_redis_health(redis)
+    redis_latency = (time.time() - redis_start) * 1000
+
     errors = []
+    if not db_healthy:
+        errors.append(db_status)
+    if not redis_healthy:
+        errors.append(redis_status)
 
-    # Check database latency
-    try:
-        start = time.time()
-        await db.execute(text("SELECT 1"))
-        db_latency = (time.time() - start) * 1000
-    except Exception as e:
-        db_status = f"unhealthy: {str(e)}"
-        errors.append(f"Database unhealthy: {str(e)}")
-        is_healthy = False
-        db_latency = 0.0
+    response = DetailedHealthResponse(
+        status="healthy" if (db_healthy and redis_healthy) else "unhealthy",
+        version=settings.version,
+        database_status=db_status,
+        redis_status=redis_status,
+        database_latency_ms=db_latency,
+        redis_latency_ms=redis_latency,
+        environment=settings.environment,
+        pool_stats=getattr(db, 'pool_stats', None),
+        uptime=time.time() - START_TIME,
+        load_avg=list(os.getloadavg()),
+        errors=errors if errors else None
+    )
 
-    # Check Redis health and latency
-    try:
-        start = time.time()
-        redis_healthy, error = await check_redis_health(redis)
-        redis_latency = (time.time() - start) * 1000
-        
-        if not redis_healthy:
-            redis_status = f"unhealthy: {error}"
-            redis_error = error
-            errors.append(f"Redis unhealthy: {error}")
-            is_healthy = False
-    except Exception as e:
-        redis_status = f"unhealthy: {str(e)}"
-        redis_error = str(e)
-        errors.append(f"Redis unhealthy: {str(e)}")
-        is_healthy = False
-        redis_latency = 0.0
-
-    # Get database pool statistics
-    try:
-        pool_stats = get_pool_stats()
-    except Exception as e:
-        pool_stats = DatabasePoolStats().dict()
-        errors.append(f"Pool stats error: {str(e)}")
-        is_healthy = False
-
-    # Get query performance metrics
-    try:
-        query_count = metrics["db_query_count"]
-        query_duration = metrics["db_query_duration"]
-        slow_queries = metrics["db_slow_queries"]
-        
-        total_queries = sum(query_count._value.values())
-        total_slow = sum(slow_queries._value.values())
-        total_duration_count = query_duration._count.sum()
-        total_duration_sum = query_duration._sum.sum()
-        
-        query_stats = QueryStats(
-            total_queries=total_queries or 0,
-            slow_queries=total_slow or 0,
-            avg_duration_ms=(total_duration_sum / max(total_duration_count, 1) * 1000) if total_duration_count else 0.0,
-            p95_duration_ms=query_duration.quantile(0.95) * 1000 if total_duration_count else 0.0,
-            p99_duration_ms=query_duration.quantile(0.99) * 1000 if total_duration_count else 0.0,
-        )
-    except (AttributeError, ZeroDivisionError, KeyError):
-        # Handle case when metrics are not initialized
-        query_stats = QueryStats()
-
-    # Create response data
-    response_data = {
-        "status": "healthy" if is_healthy else "unhealthy",
-        "version": settings.version,
-        "database_status": db_status,
-        "redis_status": redis_status,
-        "database_latency_ms": db_latency,
-        "redis_latency_ms": redis_latency,
-        "environment": settings.environment,
-        "database_pool": DatabasePoolStats(**pool_stats),
-        "redis_stats": RedisStats(
-            connected=is_healthy,
-            latency_ms=redis_latency,
-            error_message=redis_error,
-        ),
-        "query_stats": query_stats,
-    }
-
-    # If any service is unhealthy, raise 503 immediately
-    if not is_healthy:
+    if not db_healthy or not redis_healthy:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={"message": "Service unhealthy", "errors": errors},
         )
 
+    return response
+
+async def check_db_health(db: Any) -> tuple[bool, str]:
+    """Check database health by executing a simple query."""
     try:
-        # Create and return response object
-        return DetailedHealthCheck(**response_data)
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"message": "Health check validation failed", "errors": [str(e)]},
-        )
+        if not hasattr(db, 'execute'):
+            return False, "Database connection not available"
+        try:
+            await db.execute(text("SELECT 1"))
+            return True, "healthy"
+        except Exception as e:
+            return False, f"Database error: {str(e)}"
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"message": "Health check failed", "errors": [str(e)]},
-        )
+        return False, f"Database error: {str(e)}"

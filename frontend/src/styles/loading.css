@@ -1,0 +1,204 @@
+/* Initial loading state */
+.app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--background-color);
+  color: var(--primary-color);
+  font-family: var(--font-sans);
+}
+
+.app-loading-content {
+  text-align: center;
+}
+
+.app-loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--primary-color);
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.app-loading-text {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--text-color);
+}
+
+/* Offline notification */
+.offline-notification {
+  display: none;
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--error-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  z-index: var(--z-toast);
+  box-shadow: var(--shadow-lg);
+}
+
+body.offline .offline-notification {
+  display: block;
+}
+
+/* Hide app until loaded */
+neo-app:not(:defined) {
+  display: none;
+}
+
+/* Loading animations and skeleton styles */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-message {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-color) 25%,
+    var(--border-color) 37%,
+    var(--surface-color) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+}
+
+.skeleton-text {
+  height: 1em;
+  border-radius: 4px;
+  margin-bottom: 0.5em;
+}
+
+.skeleton-text.title {
+  width: 50%;
+  height: 1.5em;
+}
+
+.skeleton-text.subtitle {
+  width: 70%;
+}
+
+.skeleton-text.body {
+  width: 100%;
+}
+
+.skeleton-image {
+  aspect-ratio: 16/9;
+  width: 100%;
+  border-radius: 8px;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.skeleton-button {
+  height: 36px;
+  width: 120px;
+  border-radius: 18px;
+}
+
+/* Animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* Loading states for components */
+[data-loading] {
+  position: relative;
+  pointer-events: none;
+}
+
+[data-loading]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--background-color);
+  opacity: 0.7;
+  z-index: 10;
+}
+
+/* Pulse animation for loading states */
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+/* Loading overlay for full-page loading */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--background-color);
+  opacity: 0.9;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading dots animation */
+.loading-dots::after {
+  content: '...';
+  animation: loading-dots 1.5s steps(4, end) infinite;
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+@keyframes loading-dots {
+  to { width: 20px; }
+} 

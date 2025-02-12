@@ -1,0 +1,154 @@
+/* Input container */
+.input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* Input label */
+.input-label {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--weight-medium);
+  transition: color 0.2s ease;
+}
+
+.input-label[data-required="true"]::after {
+  content: '*';
+  color: var(--error-color);
+  margin-left: 0.25rem;
+}
+
+/* Input field */
+.neo-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 1rem;
+  background: var(--background-color);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-color);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  transition: all 0.2s ease;
+}
+
+.neo-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Focus state */
+.neo-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1);
+}
+
+.neo-input:focus + .input-label {
+  color: var(--primary-color);
+}
+
+/* Error state */
+.neo-input[data-error="true"] {
+  border-color: var(--error-color);
+}
+
+.neo-input[data-error="true"]:focus {
+  box-shadow: 0 0 0 2px rgba(var(--error-color-rgb), 0.1);
+}
+
+/* Disabled state */
+.neo-input:disabled {
+  background: var(--surface-color);
+  border-color: var(--border-color);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+
+/* Helper and error text */
+.input-helper,
+.input-error {
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.input-helper {
+  color: var(--text-secondary);
+}
+
+.input-error {
+  color: var(--error-color);
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Input types */
+.neo-input[type="search"] {
+  padding-left: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 1rem center;
+  background-size: 1rem;
+}
+
+.neo-input[type="password"] {
+  letter-spacing: 0.25em;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .neo-input {
+  background: var(--surface-color);
+}
+
+[data-theme="dark"] .neo-input:disabled {
+  background: rgba(var(--surface-color-rgb), 0.5);
+}
+
+/* Animations */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .neo-input {
+    height: 44px;
+    font-size: var(--font-size-base);
+  }
+}
+
+/* Autofill styles */
+.neo-input:-webkit-autofill,
+.neo-input:-webkit-autofill:hover,
+.neo-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-color);
+  -webkit-box-shadow: 0 0 0px 1000px var(--background-color) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Input sizes */
+.neo-input[data-size="sm"] {
+  height: 32px;
+  padding: 0 0.75rem;
+  font-size: var(--font-size-sm);
+}
+
+.neo-input[data-size="lg"] {
+  height: 48px;
+  padding: 0 1.25rem;
+  font-size: var(--font-size-lg);
+}
+
+/* Required indicator animation */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.input-label[data-required="true"]::after {
+  display: inline-block;
+  animation: pulse 1s ease infinite;
+} 

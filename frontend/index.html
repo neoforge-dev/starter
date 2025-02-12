@@ -1,30 +1,107 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeoForge</title>
-    <link rel="stylesheet" href="/css/main.css">
-    <script type="importmap">
-    {
-        "imports": {
-            "lit": "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js",
-            "@lit/task": "https://cdn.jsdelivr.net/npm/@lit/task@1.0.0/+esm",
-            "components/": "/js/components/"
-        }
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NeoForge - Modern Full-Stack Starter Kit</title>
+    <meta
+      name="description"
+      content="A modern, efficient, and cost-effective development starter kit"
+    />
+
+    <!-- PWA setup -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#2563eb" />
+    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+
+    <!-- Base styles -->
+    <link rel="stylesheet" href="/src/styles/global.css" />
+    <link rel="stylesheet" href="/src/styles/loading.css" />
+
+    <!-- Import lit from vendor -->
+    <script type="module" src="/vendor/lit-core.min.js"></script>
+
+    <!-- Import our main app -->
+    <script type="module" src="/src/main.js"></script>
+
+    <!-- Import header component -->
+    <script type="module" src="/src/components/header.js"></script>
+
+    <!-- Import footer component -->
+    <script type="module" src="/src/components/footer.js"></script>
+
+    <!-- Import landing page component -->
+    <script type="module" src="/src/pages/landing-page.js"></script>
+  </head>
+  <body>
+    <!-- Loading state -->
+    <div class="app-loading">
+      <div class="app-loading-content">
+        <div class="app-loading-spinner"></div>
+        <div class="app-loading-text">Loading NeoForge...</div>
+      </div>
+    </div>
+
+    <!-- App root -->
+    <app-header></app-header>
+    <landing-page></landing-page>
+    <app-footer></app-footer>
+
+    <!-- Offline notification -->
+    <div class="offline-notification">
+      <span
+        class="material-icons"
+        style="vertical-align: middle; margin-right: 0.5rem"
+        >wifi_off</span
+      >
+      You are currently offline
+    </div>
+
+    <script type="module">
+      // Hide loading state and show app when components are ready
+      customElements.whenDefined("neo-app").then(() => {
+        document.querySelector(".app-loading").style.display = "none";
+        document.querySelector("neo-app").style.display = "block";
+      });
+
+      // Offline detection - activate in production; force online in development
+      if (import.meta.env.PROD) {
+        window.addEventListener("online", () =>
+          document.body.classList.remove("offline")
+        );
+        window.addEventListener("offline", () =>
+          document.body.classList.add("offline")
+        );
+      } else {
+        // Force online state in development mode
+        document.body.classList.remove("offline");
+      }
+
+      // Register service worker
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/service-worker.js");
+      }
     </script>
-    <script type="module" src="/js/app.js"></script>
-</head>
-<body>
-    <app-shell>
-        <nav slot="navigation">
-            <a href="/">Home</a>
-            <a href="/dashboard">Dashboard</a>
-        </nav>
-        <main>
-            Loading...
-        </main>
-    </app-shell>
-</body>
-</html> 
+
+    <!-- Fallback for older browsers -->
+    <noscript>
+      <div style="padding: 2rem; text-align: center">
+        <h1>JavaScript Required</h1>
+        <p>Please enable JavaScript to use this application.</p>
+      </div>
+    </noscript>
+  </body>
+</html>

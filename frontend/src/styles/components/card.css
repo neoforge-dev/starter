@@ -1,0 +1,157 @@
+/* Card base styles */
+.neo-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+/* Variants */
+.neo-card[data-variant="default"] {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.neo-card[data-variant="elevated"] {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.neo-card[data-variant="outline"] {
+  border: 2px solid var(--border-color);
+}
+
+/* Hover effects */
+.neo-card[data-hoverable="true"] {
+  transform: translateY(0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.neo-card[data-hoverable="true"]:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Clickable state */
+.neo-card[data-clickable="true"] {
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  background: none;
+  text-align: left;
+  width: 100%;
+}
+
+.neo-card[data-clickable="true"]:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Card sections */
+.card-header {
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card-media {
+  position: relative;
+  width: 100%;
+}
+
+.card-media img,
+.card-media video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.card-content {
+  padding: 1.25rem;
+  flex: 1;
+}
+
+.card-footer {
+  padding: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .neo-card {
+  background: var(--surface-color);
+}
+
+[data-theme="dark"] .neo-card[data-variant="default"] {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] .neo-card[data-variant="elevated"] {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading state */
+.neo-card[data-loading="true"] {
+  pointer-events: none;
+}
+
+.neo-card[data-loading="true"] .card-content {
+  min-height: 200px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .card-header,
+  .card-content,
+  .card-footer,
+  .card-actions {
+    padding: 1rem;
+  }
+}
+
+/* Animation for content reveal */
+@keyframes card-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.neo-card {
+  animation: card-reveal 0.3s ease-out;
+}
+
+/* Grid layout support */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* Card aspect ratio container */
+.card-media[data-aspect-ratio] {
+  position: relative;
+  padding-bottom: var(--aspect-ratio, 56.25%); /* 16:9 by default */
+}
+
+.card-media[data-aspect-ratio] img,
+.card-media[data-aspect-ratio] video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+} 

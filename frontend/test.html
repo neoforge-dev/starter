@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NeoForge Frontend Tests</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      #results {
+        margin-top: 2rem;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background: #f3f4f6;
+      }
+
+      .test-group {
+        margin-left: 1rem;
+      }
+
+      .pass {
+        color: #10b981;
+      }
+
+      .fail {
+        color: #ef4444;
+      }
+
+      .error-details {
+        background: #fef2f2;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        margin: 0.5rem 0;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>NeoForge Frontend Tests</h1>
+    <div id="results">Running tests...</div>
+
+    <!-- Test utilities -->
+    <script type="module" src="/src/test/test-utils.js"></script>
+
+    <!-- Component tests -->
+    <script type="module" src="/src/test/components/app-shell.test.js"></script>
+    <script type="module" src="/src/test/pages/home-page.test.js"></script>
+    <script type="module" src="/src/test/pages/dashboard-page.test.js"></script>
+    <script type="module" src="/src/test/pages/settings-page.test.js"></script>
+    <script type="module" src="/src/test/pages/not-found-page.test.js"></script>
+
+    <!-- Test runner -->
+    <script type="module">
+      import { TestRunner } from "/src/test/test-utils.js";
+
+      // Wait for all test modules to load and run
+      window.addEventListener("load", async () => {
+        const results = document.getElementById("results");
+        results.innerHTML = "";
+
+        try {
+          // Run all registered tests
+          const runner = new TestRunner();
+          const testResults = await runner.run();
+
+          // Update UI with results
+          const summary = document.createElement("div");
+          summary.innerHTML = `
+                    <h2>Test Results</h2>
+                    <p>
+                        <span class="pass">✓ ${testResults.passed} passed</span> / 
+                        <span class="fail">✗ ${testResults.failed} failed</span>
+                        (${testResults.total} total)
+                    </p>
+                `;
+          results.appendChild(summary);
+
+          // Exit code for CI
+          window.testsCompleted = true;
+          window.testsPassed = testResults.failed === 0;
+        } catch (error) {
+          results.innerHTML = `
+                    <h2 class="fail">Test Runner Error</h2>
+                    <div class="error-details">${error.stack}</div>
+                `;
+        }
+      });
+    </script>
+  </body>
+</html>
