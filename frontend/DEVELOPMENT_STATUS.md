@@ -19,6 +19,19 @@
 - [x] Modal dialogs
 - [x] File upload component with tests
 - [x] Toast notifications
+- [x] Data tables with sorting and filtering
+- [x] Rich text editor
+- [x] Date picker
+- [x] Breadcrumbs
+- [x] Pagination
+- [x] Charts
+- [x] Tabs
+- [x] Language selector
+- [x] Badge system
+- [x] Radio component
+- [x] Checkbox component
+- [x] Select component with search and groups
+- [x] Phone input component with international support
 
 ### Pages
 - [x] Landing page
@@ -45,11 +58,6 @@
 
 ## In Progress 🚧
 
-### Components
-- [ ] Data tables (80% complete)
-- [ ] Rich text editor (started)
-- [ ] Date picker (design phase)
-
 ### Features
 - [ ] Real API integration (50% complete)
 - [ ] State management system (30% complete)
@@ -63,8 +71,14 @@
 ## Planned Features 📋
 
 ### Components
-- [ ] Charts and graphs
-- [ ] Infinite scroll lists
+- [ ] Autoform for schema-driven forms
+- [ ] Sidebar navigation system
+- [ ] Layout system
+- [ ] Hero section
+- [ ] Bento grid for feature showcases
+- [ ] Testimonials component
+- [ ] Pricing tables
+- [ ] FAQ accordion
 - [ ] Tree view component
 - [ ] Drag and drop interface
 - [ ] Color picker

@@ -1,7 +1,7 @@
 import { playwrightLauncher } from "@web/test-runner-playwright";
 
 export default {
-  files: "src/**/*.test.js",
+  files: "tests/components/**/*.test.js",
   nodeResolve: true,
   browsers: [
     playwrightLauncher({ product: "chromium" }),
@@ -10,8 +10,8 @@ export default {
   ],
   testFramework: {
     config: {
+      timeout: "5000",
       ui: "bdd",
-      timeout: "10000",
     },
   },
   testRunnerHtml: (testFramework) => `
@@ -65,7 +65,7 @@ export default {
   ],
   coverageConfig: {
     include: ["src/**/*.js"],
-    exclude: ["src/**/*.test.js", "src/test/**/*"],
+    exclude: ["src/**/*.stories.js", "src/**/*.test.js"],
     threshold: {
       statements: 80,
       branches: 80,

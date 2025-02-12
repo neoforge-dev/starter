@@ -1,118 +1,79 @@
 import { LitElement, html, css } from "lit";
-import { Loading } from "../../mixins/loading.js";
-import { baseStyles } from "../../styles/base.js";
 
 /**
  * Button component with multiple variants and states
- * @element neo-button
+ * @element my-button
  *
- * @prop {string} variant - Button variant (primary, secondary, outline, text)
- * @prop {string} size - Button size (sm, md, lg)
- * @prop {boolean} loading - Loading state
+ * @prop {string} variant - Button variant (primary, secondary)
  * @prop {boolean} disabled - Disabled state
- * @prop {boolean} fullWidth - Full width button
- * @prop {string} type - Button type (button, submit, reset)
- *
- * @fires click - Native click event
+ * @prop {boolean} loading - Loading state
  */
-export class Button extends Loading(LitElement) {
+export class Button extends LitElement {
   static properties = {
     variant: { type: String, reflect: true },
-    size: { type: String, reflect: true },
     disabled: { type: Boolean, reflect: true },
-    fullWidth: { type: Boolean, reflect: true },
-    type: { type: String, reflect: true },
-    icon: { type: String },
-    iconPosition: { type: String },
+    loading: { type: Boolean, reflect: true },
   };
 
-  static styles = [
-    baseStyles,
-    css`
-      :host {
-        display: inline-block;
-      }
+  static styles = css`
+    :host {
+      display: inline-block;
+    }
 
-      button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: var(--spacing-sm);
-        padding: var(--spacing-sm) var(--spacing-lg);
-        border: none;
-        border-radius: var(--radius-md);
-        font-weight: var(--font-weight-medium);
-        cursor: pointer;
-        transition: all var(--transition-fast);
-      }
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-      /* Variants */
-      button.primary {
-        background: var(--primary-color);
-        color: white;
-      }
+    button[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
-      button.primary:hover {
-        background: var(--primary-dark);
-      }
+    /* Variants */
+    button.primary {
+      background: var(--primary-color, #007bff);
+      color: white;
+    }
 
-      button.secondary {
-        background: var(--surface-color);
-        border: 1px solid var(--border-color);
-        color: var(--text-color);
-      }
+    button.secondary {
+      background: var(--secondary-color, #6c757d);
+      color: white;
+    }
 
-      button.secondary:hover {
-        background: var(--border-color);
-      }
+    button:hover:not([disabled]) {
+      opacity: 0.9;
+    }
 
-      /* Sizes */
-      button.small {
-        padding: var(--spacing-xs) var(--spacing-md);
-        font-size: var(--font-size-sm);
-      }
+    /* Loading state */
+    .loading-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      border-right-color: transparent;
+      animation: spin 0.6s linear infinite;
+    }
 
-      button.large {
-        padding: var(--spacing-md) var(--spacing-xl);
-        font-size: var(--font-size-lg);
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
       }
-
-      /* States */
-      button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      .loading-spinner {
-        width: 16px;
-        height: 16px;
-        border: 2px solid currentColor;
-        border-right-color: transparent;
-        border-radius: 50%;
-        animation: spin 0.75s linear infinite;
-      }
-
-      @keyframes spin {
-        from {
-          transform: rotate(0deg);
-        }
-        to {
-          transform: rotate(360deg);
-        }
-      }
-    `,
-  ];
+    }
+  `;
 
   constructor() {
     super();
     this.variant = "primary";
-    this.size = "md";
     this.disabled = false;
-    this.fullWidth = false;
-    this.type = "button";
-    this.icon = "";
-    this.iconPosition = "left";
-    this.loadingType = "dots";
+    this.loading = false;
   }
 
   /**
@@ -120,45 +81,30 @@ export class Button extends Loading(LitElement) {
    * @param {Event} e
    */
   _handleClick(e) {
-    if (this.disabled || this.loading) {
-      e.preventDefault();
-      return;
+    if (!this.disabled && !this.loading) {
+      this.dispatchEvent(
+        new CustomEvent("click", {
+          bubbles: true,
+          composed: true,
+          detail: { originalEvent: e },
+        })
+      );
     }
-    this.dispatchEvent(
-      new CustomEvent("click", {
-        bubbles: true,
-        composed: true,
-        detail: { originalEvent: e },
-      })
-    );
-  }
-
-  /**
-   * Render icon
-   * @returns {import('lit').TemplateResult}
-   */
-  _renderIcon() {
-    if (!this.icon) return null;
-    return html`<span class="button-icon" data-position=${this.iconPosition}
-      >${this.icon}</span
-    >`;
   }
 
   render() {
     return html`
       <button
-        class="${this.variant} ${this.size}"
-        type=${this.type}
+        class=${this.variant}
         ?disabled=${this.disabled || this.loading}
-        data-full-width=${this.fullWidth}
         @click=${this._handleClick}
       >
-        ${this.iconPosition === "left" ? this._renderIcon() : ""}
-        ${this.loading ? this.renderLoading() : html`<slot></slot>`}
-        ${this.iconPosition === "right" ? this._renderIcon() : ""}
+        ${this.loading
+          ? html`<span class="loading-spinner"></span>`
+          : html`<slot></slot>`}
       </button>
     `;
   }
 }
 
-customElements.define("neo-button", Button);
+customElements.define("my-button", Button);

@@ -11,7 +11,9 @@
     "preview": "vite preview",
     "lint": "eslint src --ext .js",
     "format": "prettier --write \"src/**/*.js\"",
-    "test": "web-test-runner \"src/**/*.test.js\" --node-resolve",
+    "test": "npm run test:components",
+    "test:components": "web-test-runner \"tests/components/**/*.test.js\" --node-resolve",
+    "test:e2e": "playwright test tests/e2e",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test-storybook": "test-storybook"

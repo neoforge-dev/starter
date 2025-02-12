@@ -199,3 +199,164 @@ export const Empty = () => html`
     ?pageable=${true}
   ></neo-data-table>
 `;
+
+// Column pinning
+export const PinnedColumns = () => {
+  const table = document.createElement("neo-data-table");
+  table.style.width = "800px";
+  table.columns = columns;
+  table.data = users;
+  table.pinnedColumns = ["name"];
+
+  table.addEventListener("pin", (e) => {
+    console.log("Pin event:", e.detail);
+  });
+
+  return table;
+};
+
+// Row grouping
+export const GroupedRows = () => {
+  const table = document.createElement("neo-data-table");
+  table.style.width = "800px";
+  table.columns = columns;
+  table.data = users;
+  table.groupBy = "role";
+
+  table.addEventListener("group", (e) => {
+    console.log("Group event:", e.detail);
+  });
+
+  return table;
+};
+
+// Row detail expansion
+export const ExpandableRows = () => {
+  const table = document.createElement("neo-data-table");
+  table.style.width = "800px";
+  table.columns = columns;
+  table.data = users;
+  table.expandable = true;
+  table.detailTemplate = (row) => html`
+    <div style="padding: 1rem;">
+      <h3>User Details</h3>
+      <div
+        style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;"
+      >
+        <div><strong>Name:</strong> ${row.name}</div>
+        <div><strong>Email:</strong> ${row.email}</div>
+        <div><strong>Role:</strong> ${row.role}</div>
+        <div><strong>Status:</strong> ${row.status}</div>
+        <div>
+          <strong>Last Login:</strong>
+          ${new Date(row.lastLogin).toLocaleString()}
+        </div>
+      </div>
+    </div>
+  `;
+
+  table.addEventListener("expand", (e) => {
+    console.log("Expand event:", e.detail);
+  });
+
+  return table;
+};
+
+// Export functionality
+export const ExportOptions = () => {
+  const table = document.createElement("neo-data-table");
+  table.style.width = "800px";
+  table.columns = columns;
+  table.data = users;
+  table.exportFormats = ["csv", "excel", "json"];
+
+  table.addEventListener("export", (e) => {
+    console.log("Export event:", e.detail);
+  });
+
+  return table;
+};
+
+// Column menu
+export const ColumnMenu = () => {
+  const table = document.createElement("neo-data-table");
+  table.style.width = "800px";
+  table.columns = columns;
+  table.data = users;
+  table.sortable = true;
+  table.filterable = true;
+  table.resizable = true;
+
+  // Event handlers
+  table.addEventListener("pin", (e) => {
+    console.log("Pin event:", e.detail);
+  });
+
+  table.addEventListener("group", (e) => {
+    console.log("Group event:", e.detail);
+  });
+
+  table.addEventListener("column-menu", (e) => {
+    console.log("Column menu event:", e.detail);
+  });
+
+  return table;
+};
+
+// Combined features
+export const AllFeatures = () => {
+  const table = document.createElement("neo-data-table");
+  table.style.width = "800px";
+  table.columns = columns;
+  table.data = users;
+  table.sortable = true;
+  table.filterable = true;
+  table.pageable = true;
+  table.selectable = true;
+  table.resizable = true;
+  table.expandable = true;
+  table.pinnedColumns = ["name"];
+  table.groupBy = "role";
+  table.exportFormats = ["csv", "excel", "json"];
+  table.pageSize = 10;
+
+  table.detailTemplate = (row) => html`
+    <div style="padding: 1rem;">
+      <h3>User Details</h3>
+      <div
+        style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;"
+      >
+        <div><strong>Name:</strong> ${row.name}</div>
+        <div><strong>Email:</strong> ${row.email}</div>
+        <div><strong>Role:</strong> ${row.role}</div>
+        <div><strong>Status:</strong> ${row.status}</div>
+        <div>
+          <strong>Last Login:</strong>
+          ${new Date(row.lastLogin).toLocaleString()}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Event handlers
+  const events = [
+    "sort",
+    "filter",
+    "page",
+    "select",
+    "resize",
+    "pin",
+    "group",
+    "expand",
+    "export",
+    "column-menu",
+  ];
+
+  events.forEach((event) => {
+    table.addEventListener(event, (e) => {
+      console.log(`${event} event:`, e.detail);
+    });
+  });
+
+  return table;
+};

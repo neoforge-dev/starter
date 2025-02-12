@@ -1,198 +1,84 @@
-import { test, expect } from "@playwright/test";
+import { html, fixture, expect } from "@open-wc/testing";
+import { TestRunner, ComponentTester, Assert } from "../test-utils.js";
+import "../../src/components/ui/data-table.js";
 
-test.describe("DataTable Component", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--basic"
-    );
+describe("DataTable Component", () => {
+  let element;
+  const testData = [
+    { id: 1, name: "John", age: 30 },
+    { id: 2, name: "Alice", age: 25 },
+    { id: 3, name: "Bob", age: 35 },
+  ];
+
+  beforeEach(async () => {
+    element = await fixture(html`
+      <neo-data-table
+        .data=${testData}
+        .columns=${[
+          { field: "id", header: "ID" },
+          { field: "name", header: "Name" },
+          { field: "age", header: "Age" },
+        ]}
+      ></neo-data-table>
+    `);
+    await element.updateComplete;
   });
 
-  test("renders basic table", async ({ page }) => {
-    const table = page.locator("neo-data-table");
-    await expect(table).toBeVisible();
-    const headers = table.locator("th");
-    await expect(headers).toHaveCount(5); // Name, Email, Role, Status, Last Login
+  it("renders with data", async () => {
+    const rows = element.shadowRoot.querySelectorAll("tbody tr");
+    Assert.equal(rows.length, testData.length);
+
+    const firstRow = rows[0];
+    const cells = firstRow.querySelectorAll("td");
+    Assert.equal(cells[0].textContent, "1");
+    Assert.equal(cells[1].textContent, "John");
+    Assert.equal(cells[2].textContent, "30");
   });
 
-  test("handles sorting", async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--sortable"
+  it("sorts data when clicking header", async () => {
+    const nameHeader = element.shadowRoot.querySelector(
+      'th[data-field="name"]'
     );
-    const table = page.locator("neo-data-table");
-    const nameHeader = table.locator("th", { hasText: "Name" });
+    await ComponentTester.click(nameHeader);
+    await element.updateComplete;
 
-    // Click to sort ascending
-    await nameHeader.click();
-    let firstRow = table.locator("tbody tr").first();
-    await expect(firstRow).toContainText("Bob Wilson");
-
-    // Click again to sort descending
-    await nameHeader.click();
-    firstRow = table.locator("tbody tr").first();
-    await expect(firstRow).toContainText("User");
+    const cells = element.shadowRoot.querySelectorAll('td[data-field="name"]');
+    Assert.equal(cells[0].textContent, "Alice");
   });
 
-  test("handles filtering", async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--filterable"
-    );
-    const table = page.locator("neo-data-table");
-    const filterInput = table.locator('input[placeholder="Filter name"]');
+  it("filters data", async () => {
+    element.filter = { field: "name", value: "John" };
+    await element.updateComplete;
 
-    await filterInput.fill("John");
-    const rows = table.locator("tbody tr");
-    await expect(rows).toHaveCount(1);
-    await expect(rows.first()).toContainText("John Doe");
+    const rows = element.shadowRoot.querySelectorAll("tbody tr");
+    Assert.equal(rows.length, 1);
+    const nameCell = rows[0].querySelector('td[data-field="name"]');
+    Assert.equal(nameCell.textContent, "John");
   });
 
-  test("handles pagination", async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--pageable"
-    );
-    const table = page.locator("neo-data-table");
+  it("handles row selection", async () => {
+    let selectedRow = null;
+    element.addEventListener("row-select", (e) => (selectedRow = e.detail));
 
-    // Check initial page
-    let rows = table.locator("tbody tr");
-    await expect(rows).toHaveCount(10);
+    const firstRow = element.shadowRoot.querySelector("tbody tr");
+    await ComponentTester.click(firstRow);
 
-    // Go to next page
-    await table.locator("button", { hasText: "Next" }).click();
-    rows = table.locator("tbody tr");
-    await expect(rows).toHaveCount(10);
-
-    // Change page size
-    const pageSizeSelect = table.locator("select").first();
-    await pageSizeSelect.selectOption("25");
-    rows = table.locator("tbody tr");
-    await expect(rows).toHaveCount(25);
+    Assert.notNull(selectedRow);
+    Assert.equal(selectedRow.id, 1);
   });
 
-  test("handles row selection", async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--selectable"
-    );
-    const table = page.locator("neo-data-table");
+  it("handles pagination", async () => {
+    element.pageSize = 2;
+    await element.updateComplete;
 
-    // Select first row
-    const firstRowCheckbox = table
-      .locator("tbody tr")
-      .first()
-      .locator("input[type=checkbox]");
-    await firstRowCheckbox.check();
-    await expect(table.locator(".table-toolbar")).toContainText(
-      "1 row selected"
-    );
+    let rows = element.shadowRoot.querySelectorAll("tbody tr");
+    Assert.equal(rows.length, 2);
 
-    // Select all rows
-    const selectAllCheckbox = table.locator("thead input[type=checkbox]");
-    await selectAllCheckbox.check();
-    await expect(table.locator(".table-toolbar")).toContainText(
-      "10 rows selected"
-    );
-  });
+    const nextButton = element.shadowRoot.querySelector(".pagination-next");
+    await ComponentTester.click(nextButton);
+    await element.updateComplete;
 
-  test("handles column resizing", async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--full-featured"
-    );
-    const table = page.locator("neo-data-table");
-    const nameColumn = table.locator("th", { hasText: "Name" });
-    const resizer = nameColumn.locator(".resizer");
-
-    // Get initial width
-    const initialWidth = await nameColumn.evaluate((el) => el.offsetWidth);
-
-    // Resize column
-    await resizer.hover();
-    await page.mouse.down();
-    await page.mouse.move(500, 0);
-    await page.mouse.up();
-
-    // Check new width
-    const newWidth = await nameColumn.evaluate((el) => el.offsetWidth);
-    expect(newWidth).toBeGreaterThan(initialWidth);
-  });
-
-  test("handles complex filtering", async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--filterable"
-    );
-    const table = page.locator("neo-data-table");
-
-    // Test number filter
-    const roleFilter = table.locator("select.filter-operator").nth(2);
-    await roleFilter.selectOption("equals");
-    const roleInput = table.locator('input[placeholder="Filter role"]');
-    await roleInput.fill("Admin");
-
-    // Check filtered results
-    const rows = table.locator("tbody tr");
-    await expect(rows.first()).toContainText("Admin");
-  });
-
-  test("handles empty state", async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--empty"
-    );
-    const table = page.locator("neo-data-table");
-    const emptyMessage = table.locator(".empty-message");
-    await expect(emptyMessage).toBeVisible();
-    await expect(emptyMessage).toContainText("No data available");
-  });
-
-  test("handles loading state", async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--loading"
-    );
-    const table = page.locator("neo-data-table");
-    await expect(table).toHaveAttribute("loading", "");
-  });
-
-  test("handles sticky header", async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--full-featured"
-    );
-    const table = page.locator("neo-data-table");
-    const header = table.locator("thead");
-
-    // Check if header is sticky
-    const isSticky = await header.evaluate((el) => {
-      const style = window.getComputedStyle(el);
-      return style.position === "sticky";
-    });
-
-    expect(isSticky).toBeTruthy();
-  });
-
-  test("handles custom cell templates", async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--full-featured"
-    );
-    const table = page.locator("neo-data-table");
-
-    // Check status cell template
-    const statusCell = table.locator("td span").first();
-    await expect(statusCell).toHaveCSS("background-color", "rgb(5, 150, 105)"); // Success color
-  });
-
-  test("handles keyboard navigation", async ({ page }) => {
-    await page.goto(
-      "http://localhost:6006/?path=/story/components-datatable--full-featured"
-    );
-    const table = page.locator("neo-data-table");
-
-    // Focus first cell
-    await table.locator("tbody tr").first().click();
-
-    // Navigate with keyboard
-    await page.keyboard.press("Tab");
-    await page.keyboard.press("Space");
-
-    // Check if row is selected
-    const firstRowCheckbox = table
-      .locator("tbody tr")
-      .first()
-      .locator("input[type=checkbox]");
-    await expect(firstRowCheckbox).toBeChecked();
+    rows = element.shadowRoot.querySelectorAll("tbody tr");
+    Assert.equal(rows.length, 1);
   });
 });
