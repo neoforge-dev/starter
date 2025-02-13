@@ -34,6 +34,16 @@
 - [x] Phone input component with international support
 - [x] Layout system (Grid, Container, Responsive layouts)
 - [x] Sidebar navigation system with collapsible menus
+- [x] Hero section with multiple variants and features
+- [x] Bento grid for feature showcases
+- [x] Testimonials component with multiple layouts
+- [x] Pricing tables with comparison view
+- [x] FAQ accordion with multiple layouts
+- [x] Tree view component with drag and drop
+- [x] Drag and drop interface with multiple layouts
+- [x] Color picker with gradient support
+- [x] Rating component with half-star support
+- [x] Autoform with schema validation
 
 ### Pages
 - [x] Landing page
@@ -71,18 +81,6 @@
 - [ ] Performance tests (planning)
 
 ## Planned Features 📋
-
-### Components
-- [ ] Autoform for schema-driven forms
-- [ ] Hero section
-- [ ] Bento grid for feature showcases
-- [ ] Testimonials component
-- [ ] Pricing tables
-- [ ] FAQ accordion
-- [ ] Tree view component
-- [ ] Drag and drop interface
-- [ ] Color picker
-- [ ] Rating component
 
 ### Features
 - [ ] Offline support

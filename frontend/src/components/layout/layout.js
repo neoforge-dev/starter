@@ -4,13 +4,14 @@ import {
   css,
 } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
-// Layout Component
+// Layout Component with improved mobile support
 export class Layout extends LitElement {
   static properties = {
     variant: { type: String },
     fluid: { type: Boolean },
     gap: { type: String },
     padding: { type: String },
+    sidebarOpen: { type: Boolean, reflect: true, attribute: "sidebar-open" },
   };
 
   static styles = css`
@@ -23,6 +24,8 @@ export class Layout extends LitElement {
       display: grid;
       min-height: 100vh;
       grid-template-rows: auto 1fr auto;
+      position: relative;
+      overflow-x: hidden;
     }
 
     .layout-dashboard {
@@ -51,21 +54,35 @@ export class Layout extends LitElement {
 
     .header {
       grid-area: header;
+      position: sticky;
+      top: 0;
+      z-index: var(--z-header);
+      background: var(--layout-header-bg, white);
+      border-bottom: 1px solid var(--layout-border-color, #e5e7eb);
     }
 
     .sidebar {
       grid-area: sidebar;
       background: var(--layout-sidebar-bg, #f9fafb);
       border-right: 1px solid var(--layout-border-color, #e5e7eb);
+      position: sticky;
+      top: var(--header-height, 64px);
+      height: calc(100vh - var(--header-height, 64px));
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .main {
       grid-area: main;
       background: var(--layout-main-bg, white);
+      min-height: calc(100vh - var(--header-height, 64px));
+      transition: transform var(--transition-normal);
     }
 
     .footer {
       grid-area: footer;
+      background: var(--layout-footer-bg, white);
+      border-top: 1px solid var(--layout-border-color, #e5e7eb);
     }
 
     /* Gap Utilities */
@@ -111,6 +128,7 @@ export class Layout extends LitElement {
       padding-right: 0;
     }
 
+    /* Mobile Styles */
     @media (max-width: 768px) {
       .layout-dashboard,
       .layout-docs {
@@ -122,7 +140,53 @@ export class Layout extends LitElement {
       }
 
       .sidebar {
-        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: var(--z-sidebar);
+        transform: translateX(-100%);
+        transition: transform var(--transition-normal);
+      }
+
+      :host([sidebar-open]) .sidebar {
+        transform: translateX(0);
+      }
+
+      :host([sidebar-open]) .main {
+        transform: translateX(80%);
+        pointer-events: none;
+      }
+
+      :host([sidebar-open])::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: calc(var(--z-sidebar) - 1);
+        opacity: 1;
+        transition: opacity var(--transition-normal);
+      }
+
+      .container {
+        padding-left: var(--layout-padding-mobile, 1rem);
+        padding-right: var(--layout-padding-mobile, 1rem);
+      }
+    }
+
+    /* Tablet Styles */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .layout-dashboard,
+      .layout-docs {
+        grid-template-columns: 80px 1fr;
+      }
+
+      .sidebar {
+        width: 80px;
       }
     }
   `;
@@ -133,6 +197,33 @@ export class Layout extends LitElement {
     this.fluid = false;
     this.gap = "medium";
     this.padding = "medium";
+    this.sidebarOpen = false;
+    this._handleBackdropClick = this._handleBackdropClick.bind(this);
+    this._handleEscapeKey = this._handleEscapeKey.bind(this);
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    document.addEventListener("keydown", this._handleEscapeKey);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    document.removeEventListener("keydown", this._handleEscapeKey);
+  }
+
+  _handleBackdropClick(e) {
+    if (e.target === this && this.sidebarOpen) {
+      this.sidebarOpen = false;
+      this.dispatchEvent(new CustomEvent("sidebar-close"));
+    }
+  }
+
+  _handleEscapeKey(e) {
+    if (e.key === "Escape" && this.sidebarOpen) {
+      this.sidebarOpen = false;
+      this.dispatchEvent(new CustomEvent("sidebar-close"));
+    }
   }
 
   render() {
@@ -140,7 +231,7 @@ export class Layout extends LitElement {
     const containerClass = this.fluid ? "fluid" : "container";
 
     return html`
-      <div class=${layoutClass}>
+      <div class=${layoutClass} @click=${this._handleBackdropClick}>
         <header class="header">
           <div class=${containerClass}>
             <slot name="header"></slot>
@@ -149,19 +240,19 @@ export class Layout extends LitElement {
 
         ${this.variant === "dashboard" || this.variant === "docs"
           ? html`
-              <aside class="sidebar">
+              <aside class="sidebar" role="complementary">
                 <slot name="sidebar"></slot>
               </aside>
             `
           : ""}
 
-        <main class="main">
+        <main class="main" role="main">
           <div class=${containerClass}>
             <slot></slot>
           </div>
         </main>
 
-        <footer class="footer">
+        <footer class="footer" role="contentinfo">
           <div class=${containerClass}>
             <slot name="footer"></slot>
           </div>
@@ -317,6 +408,6 @@ export class Container extends LitElement {
   }
 }
 
-customElements.define("ui-layout", Layout);
+customElements.define("neo-layout", Layout);
 customElements.define("ui-grid", Grid);
 customElements.define("ui-container", Container);
