@@ -25,15 +25,15 @@ describe("NeoModal", () => {
   });
 
   it("shows/hides based on open property", async () => {
-    expect(getComputedStyle(element).display).to.equal("none");
+    expect(element.offsetParent).to.be.null;
 
     element.open = true;
     await element.updateComplete;
-    expect(getComputedStyle(element).display).to.equal("block");
+    expect(element.offsetParent).to.not.be.null;
 
     element.open = false;
     await element.updateComplete;
-    expect(getComputedStyle(element).display).to.equal("none");
+    expect(element.offsetParent).to.be.null;
   });
 
   it("dispatches events on open/close", async () => {

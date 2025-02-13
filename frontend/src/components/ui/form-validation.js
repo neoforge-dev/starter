@@ -89,9 +89,13 @@ export class NeoForm extends LitElement {
       error = "This field is required";
     } else if (field.type === "email" && value && !this._isValidEmail(value)) {
       error = "Please enter a valid email address";
-    } else if (field.minLength && value.length < field.minLength) {
+    } else if (field.minLength && value.length < parseInt(field.minLength)) {
       error = `Minimum length is ${field.minLength} characters`;
-    } else if (field.maxLength && value.length > field.maxLength) {
+    } else if (
+      field.maxLength &&
+      parseInt(field.maxLength) > 0 &&
+      value.length > parseInt(field.maxLength)
+    ) {
       error = `Maximum length is ${field.maxLength} characters`;
     } else if (field.pattern && !new RegExp(field.pattern).test(value)) {
       error = field.title || "Please match the requested format";
@@ -124,8 +128,9 @@ export class NeoForm extends LitElement {
       Array.from(fields).map((field) => this._validateField(field))
     );
 
+    const valid = results.every(Boolean);
     return {
-      valid: results.every(Boolean),
+      valid,
       errors: this.errors,
     };
   }
@@ -141,9 +146,16 @@ export class NeoForm extends LitElement {
   render() {
     return html`
       <form
-        @submit=${(e) => {
-          if (!this.isValid()) {
-            e.preventDefault();
+        @submit=${async (e) => {
+          e.preventDefault();
+          const result = await this.validate();
+          if (result.valid) {
+            const submitEvent = new Event("submit", {
+              bubbles: true,
+              cancelable: true,
+            });
+            Object.defineProperty(submitEvent, "target", { value: e.target });
+            this.dispatchEvent(submitEvent);
           }
         }}
       >

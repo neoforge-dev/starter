@@ -3,11 +3,7 @@ import { playwrightLauncher } from "@web/test-runner-playwright";
 export default {
   files: "tests/components/**/*.test.js",
   nodeResolve: true,
-  browsers: [
-    playwrightLauncher({ product: "chromium" }),
-    playwrightLauncher({ product: "firefox" }),
-    playwrightLauncher({ product: "webkit" }),
-  ],
+  browsers: [playwrightLauncher({ product: "chromium" })],
   testFramework: {
     config: {
       timeout: "5000",

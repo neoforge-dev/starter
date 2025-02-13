@@ -20,11 +20,11 @@ export class NeoModal extends LitElement {
         width: 100%;
         height: 100%;
         z-index: var(--z-modal);
-        display: none;
+        display: none !important;
       }
 
       :host([open]) {
-        display: block;
+        display: block !important;
       }
 
       .modal-backdrop {
