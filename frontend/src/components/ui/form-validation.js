@@ -54,23 +54,23 @@ export class NeoForm extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.addEventListener("input", this._handleInput);
+    this.addEventListener("input", this._handleInput, true);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this.removeEventListener("input", this._handleInput);
+    this.removeEventListener("input", this._handleInput, true);
   }
 
-  async _handleInput(event) {
+  _handleInput(event) {
     const input = event.target;
     if (input.hasAttribute("data-validate")) {
-      await this._validateField(input);
+      this._validateField(input);
       this.dispatchEvent(new CustomEvent("validation-change"));
     }
   }
 
-  async _validateField(field) {
+  _validateField(field) {
     const name = field.name;
     const value = field.value;
     let error = null;
@@ -122,12 +122,18 @@ export class NeoForm extends LitElement {
     };
   }
 
-  async validate() {
-    const fields = this.querySelectorAll("[data-validate]");
-    const results = await Promise.all(
-      Array.from(fields).map((field) => this._validateField(field))
-    );
-
+  validate() {
+    let fields = [];
+    const slot = this.shadowRoot.querySelector("slot");
+    if (slot) {
+      fields = slot
+        .assignedElements({ flatten: true })
+        .filter((el) => el.hasAttribute && el.hasAttribute("data-validate"));
+    }
+    if (fields.length === 0) {
+      fields = Array.from(this.querySelectorAll("[data-validate]"));
+    }
+    const results = fields.map((field) => this._validateField(field));
     const valid = results.every(Boolean);
     return {
       valid,
@@ -146,16 +152,10 @@ export class NeoForm extends LitElement {
   render() {
     return html`
       <form
-        @submit=${async (e) => {
-          e.preventDefault();
-          const result = await this.validate();
-          if (result.valid) {
-            const submitEvent = new Event("submit", {
-              bubbles: true,
-              cancelable: true,
-            });
-            Object.defineProperty(submitEvent, "target", { value: e.target });
-            this.dispatchEvent(submitEvent);
+        @submit=${(e) => {
+          const result = this.validate();
+          if (!result.valid) {
+            e.preventDefault();
           }
         }}
       >

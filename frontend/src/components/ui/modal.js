@@ -91,6 +91,7 @@ export class NeoModal extends LitElement {
 
   updated(changedProperties) {
     if (changedProperties.has("open")) {
+      this.style.display = this.open ? "block" : "none";
       if (this.open) {
         this.dispatchEvent(new CustomEvent("modal-open"));
       } else {
