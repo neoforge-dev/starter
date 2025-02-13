@@ -1,6 +1,5 @@
-import { expect } from "@esm-bundle/chai";
-import { fixture, html, oneEvent } from "@open-wc/testing";
-import "../../components/error/error-page.js";
+import { expect, fixture, html, oneEvent } from "@open-wc/testing";
+import { ErrorPage } from "../../components/error-page.js";
 import { AppError, ErrorType } from "../../services/error-service.js";
 
 describe("ErrorPage", () => {
@@ -10,196 +9,250 @@ describe("ErrorPage", () => {
     element = await fixture(html`<neo-error-page></neo-error-page>`);
   });
 
-  it("renders with default properties", () => {
-    const container = element.shadowRoot.querySelector(".error-container");
-    const icon = element.shadowRoot.querySelector(".error-icon");
-    const title = element.shadowRoot.querySelector(".error-title");
-    const message = element.shadowRoot.querySelector(".error-message");
-    const actions = element.shadowRoot.querySelector(".error-actions");
-
-    expect(container).to.exist;
-    expect(icon).to.exist;
-    expect(title).to.exist;
-    expect(message).to.exist;
-    expect(actions).to.exist;
-
-    expect(title.textContent).to.equal("Error");
-    expect(message.textContent).to.equal("An unknown error occurred");
-    expect(icon.textContent.trim()).to.equal("error");
-  });
-
-  it("displays validation error correctly", async () => {
-    const error = new AppError("Invalid form data", ErrorType.VALIDATION, {
-      fields: ["username", "email"],
-    });
-    element.error = error;
-    await element.updateComplete;
-
-    const icon = element.shadowRoot.querySelector(".error-icon");
-    const title = element.shadowRoot.querySelector(".error-title");
-    const message = element.shadowRoot.querySelector(".error-message");
-    const details = element.shadowRoot.querySelector(".error-details");
-
-    expect(icon.textContent.trim()).to.equal("warning");
-    expect(title.textContent).to.equal("Validation Error");
-    expect(message.textContent).to.equal(
-      "Please check your input and try again"
-    );
-    expect(details).to.exist;
-    expect(details.textContent).to.include("username");
-    expect(details.textContent).to.include("email");
-  });
-
-  it("displays network error correctly", async () => {
-    const error = new AppError("Failed to fetch", ErrorType.NETWORK, {
-      url: "https://api.example.com/data",
-    });
-    element.error = error;
-    await element.updateComplete;
-
-    const icon = element.shadowRoot.querySelector(".error-icon");
-    const title = element.shadowRoot.querySelector(".error-title");
-    const message = element.shadowRoot.querySelector(".error-message");
-
-    expect(icon.textContent.trim()).to.equal("wifi_off");
-    expect(title.textContent).to.equal("Network Error");
-    expect(message.textContent).to.equal(
-      "Unable to connect to the server. Please check your internet connection"
-    );
-  });
-
-  it("displays auth error correctly", async () => {
-    const error = new AppError("Token expired", ErrorType.AUTH, {
-      expiredAt: new Date().toISOString(),
-    });
-    element.error = error;
-    await element.updateComplete;
-
-    const icon = element.shadowRoot.querySelector(".error-icon");
-    const title = element.shadowRoot.querySelector(".error-title");
-    const message = element.shadowRoot.querySelector(".error-message");
-
-    expect(icon.textContent.trim()).to.equal("lock");
-    expect(title.textContent).to.equal("Authentication Error");
-    expect(message.textContent).to.equal(
-      "You need to be logged in to access this page"
-    );
-  });
-
-  it("displays API error correctly", async () => {
-    const error = new AppError("Resource not found", ErrorType.API, {
-      status: 404,
-      resource: "user",
-    });
-    element.error = error;
-    await element.updateComplete;
-
-    const icon = element.shadowRoot.querySelector(".error-icon");
-    const title = element.shadowRoot.querySelector(".error-title");
-    const message = element.shadowRoot.querySelector(".error-message");
-
-    expect(icon.textContent.trim()).to.equal("cloud_off");
-    expect(title.textContent).to.equal("API Error");
-    expect(message.textContent).to.equal("Resource not found");
-  });
-
-  it("handles retry action", async () => {
-    // Mock window.location.reload
-    const originalReload = window.location.reload;
-    let reloadCalled = false;
-    window.location.reload = () => {
-      reloadCalled = true;
-    };
-
-    const retryButton = element.shadowRoot.querySelector(".button-primary");
-    retryButton.click();
-
-    expect(reloadCalled).to.be.true;
-
-    // Restore original reload function
-    window.location.reload = originalReload;
-  });
-
-  it("handles return home action", async () => {
-    // Mock window.location.href
-    const originalHref = window.location.href;
-    Object.defineProperty(window.location, "href", {
-      writable: true,
-      value: originalHref,
+  describe("Rendering", () => {
+    it("renders with default properties", async () => {
+      expect(element).to.be.instanceOf(ErrorPage);
+      expect(element.shadowRoot).to.exist;
+      expect(element.error).to.be.null;
     });
 
-    const homeButton = element.shadowRoot.querySelector(".button-secondary");
-    homeButton.click();
+    it("renders validation error correctly", async () => {
+      const error = new AppError({
+        type: ErrorType.VALIDATION,
+        message: "Invalid email format",
+      });
+      element.error = error;
+      await element.updateComplete;
 
-    expect(window.location.href).to.equal("/");
+      const title = element.shadowRoot.querySelector(".error-title");
+      const message = element.shadowRoot.querySelector(".error-message");
+      const icon = element.shadowRoot.querySelector(".error-icon");
 
-    // Restore original href
-    window.location.href = originalHref;
-  });
-
-  it("displays error details when available", async () => {
-    const error = new AppError("Complex error", ErrorType.UNKNOWN, {
-      code: "ERR_001",
-      timestamp: new Date().toISOString(),
-      context: {
-        module: "users",
-        action: "create",
-        params: { id: 123 },
-      },
+      expect(title.textContent).to.include("Validation Error");
+      expect(message.textContent).to.include("Invalid email format");
+      expect(icon.innerHTML).to.include("exclamation-circle");
     });
-    element.error = error;
-    await element.updateComplete;
 
-    const details = element.shadowRoot.querySelector(".error-details");
-    expect(details).to.exist;
-    expect(details.textContent).to.include("ERR_001");
-    expect(details.textContent).to.include("users");
-    expect(details.textContent).to.include("123");
+    it("renders network error correctly", async () => {
+      const error = new AppError({
+        type: ErrorType.NETWORK,
+        message: "Failed to fetch",
+      });
+      element.error = error;
+      await element.updateComplete;
+
+      const title = element.shadowRoot.querySelector(".error-title");
+      const message = element.shadowRoot.querySelector(".error-message");
+      const icon = element.shadowRoot.querySelector(".error-icon");
+
+      expect(title.textContent).to.include("Network Error");
+      expect(message.textContent).to.include(
+        "Network error. Please check your connection."
+      );
+      expect(icon.innerHTML).to.include("wifi-off");
+    });
+
+    it("renders API error correctly", async () => {
+      const error = new AppError({
+        type: ErrorType.API,
+        message: "Resource not found",
+        details: { status: 404 },
+      });
+      element.error = error;
+      await element.updateComplete;
+
+      const title = element.shadowRoot.querySelector(".error-title");
+      const message = element.shadowRoot.querySelector(".error-message");
+      const details = element.shadowRoot.querySelector(".error-details");
+
+      expect(title.textContent).to.include("API Error");
+      expect(message.textContent).to.include("Resource not found");
+      expect(details.textContent).to.include("404");
+    });
+
+    it("renders unknown error correctly", async () => {
+      const error = new AppError({
+        type: ErrorType.UNKNOWN,
+        message: "Something went wrong",
+      });
+      element.error = error;
+      await element.updateComplete;
+
+      const title = element.shadowRoot.querySelector(".error-title");
+      const message = element.shadowRoot.querySelector(".error-message");
+
+      expect(title.textContent).to.include("Unexpected Error");
+      expect(message.textContent).to.include("Something went wrong");
+    });
   });
 
-  it("hides error details when not available", async () => {
-    const error = new AppError("Simple error");
-    element.error = error;
-    await element.updateComplete;
+  describe("Accessibility", () => {
+    it("is accessible", async () => {
+      await expect(element).to.be.accessible();
+    });
 
-    const details = element.shadowRoot.querySelector(".error-details");
-    expect(details).to.not.exist;
+    it("has proper ARIA attributes", async () => {
+      const error = new AppError({
+        type: ErrorType.API,
+        message: "Test error",
+      });
+      element.error = error;
+      await element.updateComplete;
+
+      const errorRegion = element.shadowRoot.querySelector("[role='alert']");
+      expect(errorRegion).to.exist;
+      expect(errorRegion.getAttribute("aria-live")).to.equal("polite");
+    });
+
+    it("maintains focus management", async () => {
+      const error = new AppError({
+        type: ErrorType.API,
+        message: "Test error",
+      });
+      element.error = error;
+      await element.updateComplete;
+
+      const retryButton = element.shadowRoot.querySelector(".retry-button");
+      const homeButton = element.shadowRoot.querySelector(".home-button");
+
+      expect(document.activeElement).to.equal(retryButton);
+      homeButton.focus();
+      expect(document.activeElement).to.equal(homeButton);
+    });
   });
 
-  it("handles non-AppError errors", async () => {
-    const error = new Error("Standard JS error");
-    element.error = error;
-    await element.updateComplete;
+  describe("User Interaction", () => {
+    it("emits retry event when retry button is clicked", async () => {
+      const error = new AppError({
+        type: ErrorType.NETWORK,
+        message: "Connection failed",
+      });
+      element.error = error;
+      await element.updateComplete;
 
-    const title = element.shadowRoot.querySelector(".error-title");
-    const message = element.shadowRoot.querySelector(".error-message");
+      const retryButton = element.shadowRoot.querySelector(".retry-button");
+      setTimeout(() => retryButton.click());
+      const { detail } = await oneEvent(element, "retry");
 
-    expect(title.textContent).to.equal("Error");
-    expect(message.textContent).to.equal("Standard JS error");
+      expect(detail.error).to.equal(error);
+    });
+
+    it("navigates home when home button is clicked", async () => {
+      const error = new AppError({
+        type: ErrorType.API,
+        message: "Test error",
+      });
+      element.error = error;
+      await element.updateComplete;
+
+      const homeButton = element.shadowRoot.querySelector(".home-button");
+      const navigateSpy = vi.spyOn(window.history, "pushState");
+
+      homeButton.click();
+      expect(navigateSpy).to.have.been.calledWith({}, "", "/");
+    });
+
+    it("shows technical details when toggle is clicked", async () => {
+      const error = new AppError({
+        type: ErrorType.API,
+        message: "Test error",
+        details: { status: 500, stack: "Error stack" },
+      });
+      element.error = error;
+      await element.updateComplete;
+
+      const toggleButton = element.shadowRoot.querySelector(".details-toggle");
+      const detailsSection =
+        element.shadowRoot.querySelector(".technical-details");
+
+      expect(detailsSection.hasAttribute("hidden")).to.be.true;
+
+      toggleButton.click();
+      await element.updateComplete;
+
+      expect(detailsSection.hasAttribute("hidden")).to.be.false;
+      expect(detailsSection.textContent).to.include("Error stack");
+    });
   });
 
-  it("supports keyboard navigation", async () => {
-    const buttons = element.shadowRoot.querySelectorAll("button");
+  describe("Responsive Design", () => {
+    it("adjusts layout for mobile screens", async () => {
+      const mediaQuery = window.matchMedia("(max-width: 768px)");
+      const originalMatches = mediaQuery.matches;
+      Object.defineProperty(mediaQuery, "matches", { value: true });
 
-    // Test focus handling
-    buttons[0].focus();
-    expect(document.activeElement).to.equal(buttons[0]);
+      const error = new AppError({
+        type: ErrorType.API,
+        message: "Test error",
+      });
+      element.error = error;
+      await element.updateComplete;
 
-    // Test keyboard interaction
-    const event = new KeyboardEvent("keydown", { key: "Enter" });
-    buttons[0].dispatchEvent(event);
+      const container = element.shadowRoot.querySelector(".error-container");
+      const styles = window.getComputedStyle(container);
 
-    // Focus should move to next button
-    buttons[1].focus();
-    expect(document.activeElement).to.equal(buttons[1]);
+      expect(styles.flexDirection).to.equal("column");
+      expect(styles.padding).to.equal("1rem");
+
+      Object.defineProperty(mediaQuery, "matches", {
+        value: originalMatches,
+      });
+    });
+
+    it("maintains readability on small screens", async () => {
+      const error = new AppError({
+        type: ErrorType.API,
+        message:
+          "A very long error message that should wrap properly on mobile devices",
+      });
+      element.error = error;
+      await element.updateComplete;
+
+      const message = element.shadowRoot.querySelector(".error-message");
+      const styles = window.getComputedStyle(message);
+
+      expect(styles.wordBreak).to.equal("break-word");
+      expect(parseInt(styles.maxWidth)).to.be.lessThan(500);
+    });
   });
 
-  it("maintains accessibility attributes", () => {
-    const container = element.shadowRoot.querySelector(".error-container");
-    const buttons = element.shadowRoot.querySelectorAll("button");
+  describe("Animation", () => {
+    it("applies entrance animation", async () => {
+      const error = new AppError({
+        type: ErrorType.API,
+        message: "Test error",
+      });
+      element.error = error;
+      await element.updateComplete;
 
-    expect(container.getAttribute("role")).to.not.exist; // Container should not have a role
-    expect(buttons[0].getAttribute("class")).to.include("button-primary");
-    expect(buttons[1].getAttribute("class")).to.include("button-secondary");
+      const container = element.shadowRoot.querySelector(".error-container");
+      expect(container.classList.contains("animate-in")).to.be.true;
+
+      // Wait for animation
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(container.classList.contains("animate-in")).to.be.false;
+    });
+
+    it("respects reduced motion preferences", async () => {
+      const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const originalMatches = mediaQuery.matches;
+      Object.defineProperty(mediaQuery, "matches", { value: true });
+
+      const error = new AppError({
+        type: ErrorType.API,
+        message: "Test error",
+      });
+      element.error = error;
+      await element.updateComplete;
+
+      const container = element.shadowRoot.querySelector(".error-container");
+      const styles = window.getComputedStyle(container);
+
+      expect(styles.animation).to.equal("none");
+
+      Object.defineProperty(mediaQuery, "matches", {
+        value: originalMatches,
+      });
+    });
   });
 });
