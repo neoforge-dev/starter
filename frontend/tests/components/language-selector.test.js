@@ -20,6 +20,14 @@ describe("Language Selector Component", () => {
     `);
   });
 
+  afterEach(() => {
+    document.querySelectorAll("neo-language-selector").forEach((selector) => {
+      selector.remove();
+    });
+    // Remove any event listeners
+    document.removeEventListener("keydown", element._handleKeyDown);
+  });
+
   it("should be defined", () => {
     expect(element).to.be.instanceOf(
       customElements.get("neo-language-selector")
@@ -45,14 +53,16 @@ describe("Language Selector Component", () => {
 
   it("should emit event on language change", async () => {
     let selectedLang = null;
-    element.addEventListener("language-change", (e) => {
+    const handler = (e) => {
       selectedLang = e.detail.language;
-    });
+    };
+    element.addEventListener("language-change", handler);
 
     const spanishOption = element.shadowRoot.querySelector('[data-lang="es"]');
     spanishOption.click();
 
     expect(selectedLang).to.equal("es");
+    element.removeEventListener("language-change", handler);
   });
 
   it("should update current language property", async () => {
@@ -70,7 +80,8 @@ describe("Language Selector Component", () => {
 
     // Simulate keyboard navigation
     select.focus();
-    select.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+    const event = new KeyboardEvent("keydown", { key: "ArrowDown" });
+    select.dispatchEvent(event);
     await element.updateComplete;
 
     expect(document.activeElement).to.equal(select);

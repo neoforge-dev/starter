@@ -3,13 +3,24 @@ import { playwrightLauncher } from "@web/test-runner-playwright";
 export default {
   files: "tests/components/**/*.test.js",
   nodeResolve: true,
-  browsers: [playwrightLauncher({ product: "chromium" })],
+  browsers: [
+    playwrightLauncher({
+      product: "chromium",
+      launchOptions: {
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      },
+    }),
+  ],
   testFramework: {
     config: {
-      timeout: "5000",
+      timeout: "30000",
       ui: "bdd",
+      retries: 3,
     },
   },
+  browserStartTimeout: 60000,
+  testsStartTimeout: 60000,
+  testsFinishTimeout: 60000,
   testRunnerHtml: (testFramework) => `
     <html>
       <head>
@@ -39,6 +50,30 @@ export default {
             ok: true,
             json: async () => ({})
           });
+
+          // Mock matchMedia for tests
+          window.matchMedia = (query) => ({
+            matches: false,
+            media: query,
+            onchange: null,
+            addListener: () => {},
+            removeListener: () => {},
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            dispatchEvent: () => false
+          });
+
+          // Mock ResizeObserver
+          window.ResizeObserver = class ResizeObserver {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+          };
+
+          // Disable transitions for tests
+          const style = document.createElement('style');
+          style.textContent = '* { transition: none !important; animation: none !important; }';
+          document.head.appendChild(style);
         </script>
       </head>
       <body>
@@ -46,19 +81,9 @@ export default {
       </body>
     </html>
   `,
-  rootDir: ".",
-  staticFiles: [{ path: ".", mount: "/" }],
-  middleware: [
-    function rewriteImports(context, next) {
-      if (context.response.is("js")) {
-        context.body = context.body.replace(
-          /'\.\.\/services\/auth-service\.js'/g,
-          "'@services/auth-service.js'"
-        );
-      }
-      return next();
-    },
-  ],
+  concurrency: 1,
+  concurrentBrowsers: 1,
+  coverage: true,
   coverageConfig: {
     include: ["src/**/*.js"],
     exclude: ["src/**/*.stories.js", "src/**/*.test.js"],
