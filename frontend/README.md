@@ -1,4 +1,108 @@
-# NeoForge Frontend Development
+# NeoForge Frontend
+
+[![Test Coverage](https://codecov.io/gh/neoforge/frontend/branch/main/graph/badge.svg)](https://codecov.io/gh/neoforge/frontend)
+[![Tests](https://github.com/neoforge/frontend/actions/workflows/test-coverage.yml/badge.svg)](https://github.com/neoforge/frontend/actions/workflows/test-coverage.yml)
+[![Code Style](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://prettier.io)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+## Test Coverage
+
+We maintain high test coverage standards to ensure code quality and reliability:
+
+| Type | Threshold |
+|------|-----------|
+| Statements | 80% |
+| Branches | 80% |
+| Functions | 80% |
+| Lines | 80% |
+
+### Running Tests with Coverage
+
+```bash
+# Run tests with coverage
+npm run test:coverage
+
+# Generate detailed coverage report
+npm run test:coverage:report
+
+# Watch mode for development
+npm run test:watch
+```
+
+The coverage report will be generated in the `coverage` directory:
+- `coverage/index.html` - Interactive HTML report
+- `coverage/lcov.info` - LCOV format for CI tools
+- `coverage/clover.xml` - Clover format for IDE integration
+
+### Coverage Tools
+
+- **Local Development**: View the HTML report in your browser
+- **Pull Requests**: Coverage changes are automatically commented
+- **Codecov**: Detailed coverage analytics and history
+- **CI/CD**: Enforced coverage thresholds in GitHub Actions
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run linter
+npm run lint
+
+# Format code
+npm run format
+```
+
+## Component Testing
+
+We use several testing approaches:
+
+1. **Unit Tests**: Component functionality and props
+   ```bash
+   npm run test:components
+   ```
+
+2. **Visual Tests**: Component appearance and styling
+   ```bash
+   npm run test-visual
+   ```
+
+3. **E2E Tests**: User interactions and flows
+   ```bash
+   npm run test:e2e
+   ```
+
+4. **Storybook Tests**: Component isolation and documentation
+   ```bash
+   npm run test-storybook
+   ```
+
+## Documentation
+
+- [Component Library](./docs/COMPONENTS.md)
+- [Atomic Design System](./docs/ATOMIC_DESIGN.md)
+- [Pattern Library](./docs/PATTERN_LIBRARY.md)
+- [Development Status](./DEVELOPMENT_STATUS.md)
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Ensure tests pass and coverage meets thresholds
+4. Commit your changes (`git commit -m 'Add amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Quick Start
 
@@ -153,13 +257,6 @@ static styles = css`
 - Auto-opens browser
 - Watches for file changes
 - Shows error overlay
-
-## Contributing
-
-1. Branch naming: `feature/name` or `fix/issue`
-2. Commit messages: Clear and descriptive
-3. Test coverage: Required for new features
-4. Documentation: Update as needed
 
 ## Resources
 

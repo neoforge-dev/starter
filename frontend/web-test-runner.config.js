@@ -1,19 +1,17 @@
 import { playwrightLauncher } from "@web/test-runner-playwright";
+import { coverageConfig } from "@web/test-runner-coverage-v8";
 
 export default {
-  files: "tests/components/**/*.test.js",
+  files: "tests/**/*.test.js",
   nodeResolve: true,
   browsers: [
-    playwrightLauncher({
-      product: "chromium",
-      launchOptions: {
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      },
-    }),
+    playwrightLauncher({ product: "chromium" }),
+    playwrightLauncher({ product: "firefox" }),
+    playwrightLauncher({ product: "webkit" }),
   ],
   testFramework: {
     config: {
-      timeout: "30000",
+      timeout: "5000",
       ui: "bdd",
       retries: 3,
     },
@@ -89,6 +87,10 @@ export default {
         </script>
       </head>
       <body>
+        <script type="module">
+          // Set up any global test environment here
+          window.process = { env: { NODE_ENV: 'test' } };
+        </script>
         <script type="module" src="${testFramework}"></script>
       </body>
     </html>
@@ -97,13 +99,28 @@ export default {
   concurrentBrowsers: 1,
   coverage: true,
   coverageConfig: {
-    include: ["src/**/*.js"],
-    exclude: ["src/**/*.stories.js", "src/**/*.test.js"],
+    report: true,
+    reportDir: "coverage",
     threshold: {
       statements: 80,
       branches: 80,
       functions: 80,
       lines: 80,
     },
+    exclude: [
+      "node_modules/**/*",
+      "tests/**/*",
+      "**/*.stories.js",
+      "**/storybook-static/**/*",
+    ],
+    reporters: ["html", "lcov", "clover", "text"],
   },
+  middleware: [
+    function rewriteIndex(context, next) {
+      return next();
+    },
+  ],
+  plugins: [
+    // Add any required plugins here
+  ],
 };

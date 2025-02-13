@@ -1,0 +1,90 @@
+name: Test Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test:coverage:report
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+          verbose: true
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+      - name: Check coverage thresholds
+        run: |
+          COVERAGE_SUMMARY=$(cat coverage/coverage-summary.json)
+          STATEMENTS=$(echo $COVERAGE_SUMMARY | jq '.total.statements.pct')
+          BRANCHES=$(echo $COVERAGE_SUMMARY | jq '.total.branches.pct')
+          FUNCTIONS=$(echo $COVERAGE_SUMMARY | jq '.total.functions.pct')
+          LINES=$(echo $COVERAGE_SUMMARY | jq '.total.lines.pct')
+
+          if (( $(echo "$STATEMENTS < 80" | bc -l) )) || \
+             (( $(echo "$BRANCHES < 80" | bc -l) )) || \
+             (( $(echo "$FUNCTIONS < 80" | bc -l) )) || \
+             (( $(echo "$LINES < 80" | bc -l) )); then
+            echo "Coverage thresholds not met:"
+            echo "Statements: $STATEMENTS% (required: 80%)"
+            echo "Branches: $BRANCHES% (required: 80%)"
+            echo "Functions: $FUNCTIONS% (required: 80%)"
+            echo "Lines: $LINES% (required: 80%)"
+            exit 1
+          fi
+
+      - name: Comment PR with coverage report
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const coverageSummary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            const total = coverageSummary.total;
+
+            let comment = '### Test Coverage Report\n\n';
+            comment += '| Type | Coverage | Threshold |\n';
+            comment += '|------|-----------|------------|\n';
+            comment += `| Statements | ${total.statements.pct}% | 80% |\n`;
+            comment += `| Branches | ${total.branches.pct}% | 80% |\n`;
+            comment += `| Functions | ${total.functions.pct}% | 80% |\n`;
+            comment += `| Lines | ${total.lines.pct}% | 80% |\n\n`;
+
+            comment += 'Detailed coverage report has been uploaded as a build artifact.\n';
+            comment += 'You can also view the report on [Codecov](https://codecov.io/gh/${{ github.repository }}/pull/${{ github.event.pull_request.number }}).\n';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
