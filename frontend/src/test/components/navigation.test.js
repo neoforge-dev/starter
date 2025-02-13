@@ -4,154 +4,210 @@ import "../../components/ui/navigation.js";
 
 describe("NeoNavigation", () => {
   let element;
-  const items = [
-    { id: "1", label: "Home", path: "/" },
-    { id: "2", label: "About", path: "/about" },
+  const mockItems = [
     {
-      id: "3",
-      label: "Products",
-      path: "/products",
+      id: "1",
+      label: "Dashboard",
+      path: "/dashboard",
+    },
+    {
+      id: "2",
+      label: "Projects",
+      path: "/projects",
       children: [
-        { id: "3.1", label: "Hardware", path: "/products/hardware" },
-        { id: "3.2", label: "Software", path: "/products/software" },
+        {
+          id: "2.1",
+          label: "Active",
+          path: "/projects/active",
+        },
+        {
+          id: "2.2",
+          label: "Archived",
+          path: "/projects/archived",
+        },
       ],
     },
-    { id: "4", label: "Contact", path: "/contact" },
+    {
+      id: "3",
+      label: "Settings",
+      path: "/settings",
+    },
   ];
 
   beforeEach(async () => {
     element = await fixture(html`
-      <neo-navigation .items=${items} current-path="/"></neo-navigation>
+      <neo-navigation
+        .items=${mockItems}
+        current-path="/dashboard"
+      ></neo-navigation>
     `);
   });
 
-  it("renders with default properties", () => {
-    const nav = element.shadowRoot.querySelector("nav");
-    const navItems = element.shadowRoot.querySelectorAll(".nav-item");
-
-    expect(nav).to.exist;
-    expect(navItems.length).to.equal(items.length);
-    expect(element.expanded).to.be.false;
+  // Desktop functionality tests
+  it("renders navigation items correctly", () => {
+    const items = element.shadowRoot.querySelectorAll(".nav-item");
+    expect(items.length).to.equal(mockItems.length);
   });
 
-  it("highlights active item", async () => {
-    const activeItem = element.shadowRoot.querySelector(".nav-item.active");
-    expect(activeItem).to.exist;
-    expect(activeItem.getAttribute("data-path")).to.equal("/");
-  });
-
-  it("expands/collapses submenu on click", async () => {
-    const parentItem = element.shadowRoot.querySelector('[data-id="3"]');
-    const clickPromise = oneEvent(element, "click");
-
-    parentItem.click();
-    await clickPromise;
-    await element.updateComplete;
-
-    expect(parentItem.classList.contains("expanded")).to.be.true;
-    const subItems = parentItem.querySelectorAll(".nav-subitem");
-    expect(subItems.length).to.equal(2);
-
-    // Click again to collapse
-    const collapsePromise = oneEvent(element, "click");
-    parentItem.click();
-    await collapsePromise;
-    await element.updateComplete;
-
-    expect(parentItem.classList.contains("expanded")).to.be.false;
-  });
-
-  it("handles mobile navigation toggle", async () => {
-    const toggleButton = element.shadowRoot.querySelector(".nav-toggle");
-    expect(toggleButton).to.exist;
-
-    const togglePromise = oneEvent(element, "click");
-    toggleButton.click();
-    await togglePromise;
-    await element.updateComplete;
-
-    expect(element.expanded).to.be.true;
-    expect(element.classList.contains("nav-expanded")).to.be.true;
-
-    // Click again to collapse
-    const collapsePromise = oneEvent(element, "click");
-    toggleButton.click();
-    await collapsePromise;
-    await element.updateComplete;
-
-    expect(element.expanded).to.be.false;
-    expect(element.classList.contains("nav-expanded")).to.be.false;
-  });
-
-  it("maintains accessibility attributes", () => {
-    const nav = element.shadowRoot.querySelector("nav");
-    const toggleButton = element.shadowRoot.querySelector(".nav-toggle");
-    const navItems = element.shadowRoot.querySelectorAll(".nav-item");
-
-    expect(nav.getAttribute("role")).to.equal("navigation");
-    expect(nav.getAttribute("aria-label")).to.equal("Main navigation");
-    expect(toggleButton.getAttribute("aria-label")).to.equal(
-      "Toggle navigation"
+  it("highlights current path", () => {
+    const activeItem = element.shadowRoot.querySelector(
+      ".nav-item-header.active"
     );
+    expect(activeItem).to.exist;
+    expect(activeItem.textContent.trim()).to.equal("Dashboard");
+  });
 
-    navItems.forEach((item) => {
-      expect(item.getAttribute("tabindex")).to.equal("0");
+  it("expands/collapses items with children", async () => {
+    const projectsItem = element.shadowRoot.querySelector('[data-id="2"]');
+    const header = projectsItem.querySelector(".nav-item-header");
+
+    // Initially collapsed
+    expect(projectsItem.classList.contains("expanded")).to.be.false;
+
+    // Click to expand
+    header.click();
+    await element.updateComplete;
+    expect(projectsItem.classList.contains("expanded")).to.be.true;
+
+    // Click to collapse
+    header.click();
+    await element.updateComplete;
+    expect(projectsItem.classList.contains("expanded")).to.be.false;
+  });
+
+  // Mobile functionality tests
+  describe("Mobile View", () => {
+    beforeEach(() => {
+      // Mock mobile viewport
+      window.matchMedia = (query) => ({
+        matches: query.includes("max-width: 768px"),
+        addListener: () => {},
+        removeListener: () => {},
+      });
+    });
+
+    it("shows mobile toggle button", () => {
+      const toggle = element.shadowRoot.querySelector(".nav-toggle");
+      expect(toggle).to.exist;
+      expect(toggle.style.display).to.not.equal("none");
+    });
+
+    it("toggles mobile menu", async () => {
+      const toggle = element.shadowRoot.querySelector(".nav-toggle");
+
+      // Initially not expanded
+      expect(element.expanded).to.be.false;
+
+      // Click to expand
+      toggle.click();
+      await element.updateComplete;
+      expect(element.expanded).to.be.true;
+
+      // Click to collapse
+      toggle.click();
+      await element.updateComplete;
+      expect(element.expanded).to.be.false;
+    });
+
+    it("closes mobile menu when selecting an item", async () => {
+      // Open menu
+      element.expanded = true;
+      await element.updateComplete;
+
+      // Click a nav item
+      const item = element.shadowRoot.querySelector('[data-path="/dashboard"]');
+      const header = item.querySelector(".nav-item-header");
+      header.click();
+
+      await element.updateComplete;
+      expect(element.expanded).to.be.false;
+    });
+
+    it("handles touch events correctly", async () => {
+      const item = element.shadowRoot.querySelector('[data-id="2"]');
+      const header = item.querySelector(".nav-item-header");
+
+      // Simulate touch events
+      header.dispatchEvent(new TouchEvent("touchstart"));
+      header.dispatchEvent(new TouchEvent("touchend"));
+
+      await element.updateComplete;
+      expect(item.classList.contains("expanded")).to.be.true;
+    });
+
+    it("updates body scroll when menu opens/closes", async () => {
+      // Open menu
+      element.expanded = true;
+      await element.updateComplete;
+      expect(document.body.style.overflow).to.equal("hidden");
+
+      // Close menu
+      element.expanded = false;
+      await element.updateComplete;
+      expect(document.body.style.overflow).to.equal("");
+    });
+
+    it("handles window resize", async () => {
+      // Open menu in mobile
+      element.expanded = true;
+      await element.updateComplete;
+
+      // Simulate resize to desktop
+      window.matchMedia = (query) => ({
+        matches: false,
+        addListener: () => {},
+        removeListener: () => {},
+      });
+
+      window.dispatchEvent(new Event("resize"));
+      await element.updateComplete;
+
+      expect(element.expanded).to.be.false;
+      expect(document.body.style.overflow).to.equal("");
     });
   });
 
-  it("handles keyboard navigation", async () => {
-    const firstItem = element.shadowRoot.querySelector(".nav-item");
+  // Accessibility tests
+  describe("Accessibility", () => {
+    it("has proper ARIA attributes", () => {
+      const nav = element.shadowRoot.querySelector('[role="navigation"]');
+      expect(nav).to.exist;
+      expect(nav.getAttribute("aria-label")).to.equal("Main navigation");
+    });
 
-    // Test Enter key
-    const enterPromise = oneEvent(element, "click");
-    firstItem.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
-    await enterPromise;
+    it("has proper ARIA attributes for expandable items", () => {
+      const expandableItem = element.shadowRoot.querySelector(
+        '[data-id="2"] .nav-item-header'
+      );
+      expect(expandableItem.getAttribute("role")).to.equal("button");
+      expect(expandableItem.getAttribute("aria-expanded")).to.exist;
+    });
 
-    // Test Space key
-    const spacePromise = oneEvent(element, "click");
-    firstItem.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
-    await spacePromise;
-  });
+    it("handles keyboard navigation", async () => {
+      const item = element.shadowRoot.querySelector('[data-id="2"]');
+      const header = item.querySelector(".nav-item-header");
 
-  it("closes mobile menu when selecting an item", async () => {
-    // First expand the mobile menu
-    element.expanded = true;
-    await element.updateComplete;
+      // Press Enter
+      header.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+      await element.updateComplete;
+      expect(item.classList.contains("expanded")).to.be.true;
 
-    const navItem = element.shadowRoot.querySelector(".nav-item");
-    const clickPromise = oneEvent(element, "click");
-    navItem.click();
-    await clickPromise;
-    await element.updateComplete;
+      // Press Space
+      header.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+      await element.updateComplete;
+      expect(item.classList.contains("expanded")).to.be.false;
+    });
 
-    expect(element.expanded).to.be.false;
-  });
+    it("maintains focus management", async () => {
+      const toggle = element.shadowRoot.querySelector(".nav-toggle");
+      const firstItem = element.shadowRoot.querySelector(".nav-item-header");
 
-  it("handles window resize events", async () => {
-    // Simulate mobile view
-    window.innerWidth = 767;
-    window.dispatchEvent(new Event("resize"));
-    await element.updateComplete;
+      // Open menu and check focus
+      toggle.focus();
+      toggle.click();
+      await element.updateComplete;
 
-    expect(getComputedStyle(element).position).to.equal("fixed");
-
-    // Simulate desktop view
-    window.innerWidth = 1024;
-    window.dispatchEvent(new Event("resize"));
-    await element.updateComplete;
-
-    expect(getComputedStyle(element).position).to.not.equal("fixed");
-  });
-
-  it("prevents body scroll when mobile menu is open", async () => {
-    element.expanded = true;
-    await element.updateComplete;
-
-    expect(document.body.style.overflow).to.equal("hidden");
-
-    element.expanded = false;
-    await element.updateComplete;
-
-    expect(document.body.style.overflow).to.equal("");
+      expect(document.activeElement).to.equal(firstItem);
+    });
   });
 });

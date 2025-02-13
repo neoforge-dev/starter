@@ -1,128 +1,209 @@
-import { expect } from "@esm-bundle/chai";
-import { fixture, html, oneEvent } from "@open-wc/testing";
-import "../../components/ui/toast.js";
+import { fixture, expect, oneEvent } from "@open-wc/testing";
+import { html } from "lit";
+import { ToastNotification, showToast } from "../../components/ui/toast.js";
 
-describe("NeoToast", () => {
+describe("Toast", () => {
   let element;
 
   beforeEach(async () => {
-    element = await fixture(html`<neo-toast></neo-toast>`);
+    element = await fixture(html`
+      <toast-notification
+        message="Test message"
+        type="info"
+        duration="3000"
+      ></toast-notification>
+    `);
   });
 
   it("renders with default properties", () => {
-    expect(element.visible).to.be.false;
-    expect(element.messages).to.deep.equal([]);
-    expect(element.classList.contains("visible")).to.be.false;
+    expect(element.message).to.equal("Test message");
+    expect(element.type).to.equal("info");
+    expect(element.duration).to.equal(3000);
+
+    const toast = element.shadowRoot.querySelector(".toast");
+    expect(toast).to.exist;
+    expect(toast.classList.contains("type-info")).to.be.true;
   });
 
-  it("shows a toast message", async () => {
-    const message = "Test message";
-    const showPromise = oneEvent(element, "toast-show");
-
-    element.show({ message });
-    await showPromise;
-
-    expect(element.visible).to.be.true;
-    expect(element.classList.contains("visible")).to.be.true;
-    expect(element.messages).to.have.lengthOf(1);
-    expect(element.messages[0].message).to.equal(message);
-    expect(element.messages[0].type).to.equal("info"); // default type
-  });
-
-  it("shows different types of toast messages", async () => {
+  it("renders different types correctly", async () => {
     const types = ["success", "error", "warning", "info"];
 
     for (const type of types) {
-      element.show({ message: `${type} message`, type });
+      element.type = type;
       await element.updateComplete;
 
-      const toast = element.shadowRoot.querySelector(`.toast-${type}`);
-      expect(toast).to.exist;
-      expect(toast.textContent).to.include(`${type} message`);
+      const toast = element.shadowRoot.querySelector(".toast");
+      expect(toast.classList.contains(`type-${type}`)).to.be.true;
     }
   });
 
-  it("removes toast after duration", async () => {
-    const duration = 100; // Short duration for testing
-    const hidePromise = oneEvent(element, "toast-hide");
+  it("auto-dismisses after duration", async () => {
+    element.duration = 100; // Short duration for testing
+    element.show();
 
-    element.show({ message: "Test message", duration });
-    await new Promise((resolve) => setTimeout(resolve, duration + 50));
-    await hidePromise;
+    expect(element.visible).to.be.true;
+
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(element.visible).to.be.false;
+  });
+
+  it("can be dismissed manually", async () => {
+    element.show();
+    expect(element.visible).to.be.true;
+
+    const closeButton = element.shadowRoot.querySelector(".toast-close");
+    closeButton.click();
+    await element.updateComplete;
 
     expect(element.visible).to.be.false;
-    expect(element.messages).to.have.lengthOf(0);
-    expect(element.classList.contains("visible")).to.be.false;
   });
 
-  it("removes specific toast on click", async () => {
-    element.show({ message: "First message" });
-    element.show({ message: "Second message" });
-    await element.updateComplete;
+  it("pauses auto-dismiss on hover", async () => {
+    element.duration = 100;
+    element.show();
 
-    expect(element.messages).to.have.lengthOf(2);
+    const toast = element.shadowRoot.querySelector(".toast");
+    toast.dispatchEvent(new MouseEvent("mouseenter"));
 
-    const firstToast = element.shadowRoot.querySelector(".toast-item");
-    firstToast.click();
-    await element.updateComplete;
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(element.visible).to.be.true;
 
-    expect(element.messages).to.have.lengthOf(1);
-    expect(element.messages[0].message).to.equal("Second message");
-  });
-
-  it("limits maximum number of toasts to 3", async () => {
-    for (let i = 1; i <= 5; i++) {
-      element.show({ message: `Message ${i}` });
-      await element.updateComplete;
-    }
-
-    expect(element.messages).to.have.lengthOf(3);
-    expect(element.messages[0].message).to.equal("Message 3");
-    expect(element.messages[1].message).to.equal("Message 4");
-    expect(element.messages[2].message).to.equal("Message 5");
-  });
-
-  it("hides all toasts", async () => {
-    element.show({ message: "First message" });
-    element.show({ message: "Second message" });
-    await element.updateComplete;
-
-    const hidePromise = oneEvent(element, "toast-hide");
-    element.hide();
-    await hidePromise;
-
+    toast.dispatchEvent(new MouseEvent("mouseleave"));
+    await new Promise((resolve) => setTimeout(resolve, 150));
     expect(element.visible).to.be.false;
-    expect(element.messages).to.have.lengthOf(0);
-    expect(element.classList.contains("visible")).to.be.false;
   });
 
-  it("maintains toast order", async () => {
-    const messages = ["First", "Second", "Third"];
+  it("stacks multiple toasts correctly", async () => {
+    const toast1 = await fixture(html`
+      <toast-notification message="First toast"></toast-notification>
+    `);
+    const toast2 = await fixture(html`
+      <toast-notification message="Second toast"></toast-notification>
+    `);
 
-    for (const msg of messages) {
-      element.show({ message: msg });
-      await element.updateComplete;
-    }
+    toast1.show();
+    toast2.show();
 
-    const toastElements = element.shadowRoot.querySelectorAll(".toast-item");
-    expect(toastElements).to.have.lengthOf(3);
+    const container = document.querySelector(".toast-container");
+    expect(container.children.length).to.equal(2);
+  });
 
-    toastElements.forEach((toast, index) => {
-      expect(toast.textContent).to.include(messages[index]);
+  it("maintains proper z-index stacking", async () => {
+    const toast1 = await fixture(html`
+      <toast-notification message="First toast"></toast-notification>
+    `);
+    const toast2 = await fixture(html`
+      <toast-notification message="Second toast"></toast-notification>
+    `);
+
+    toast1.show();
+    toast2.show();
+
+    const zIndex1 = getComputedStyle(toast1).zIndex;
+    const zIndex2 = getComputedStyle(toast2).zIndex;
+    expect(parseInt(zIndex2)).to.be.greaterThan(parseInt(zIndex1));
+  });
+
+  it("handles long messages correctly", async () => {
+    const longMessage = "A".repeat(200);
+    element.message = longMessage;
+    await element.updateComplete;
+
+    const messageEl = element.shadowRoot.querySelector(".toast-message");
+    expect(messageEl.textContent).to.equal(longMessage);
+    expect(getComputedStyle(messageEl).textOverflow).to.equal("ellipsis");
+  });
+
+  it("supports custom icons", async () => {
+    element.icon = "custom-icon";
+    await element.updateComplete;
+
+    const icon = element.shadowRoot.querySelector(".toast-icon");
+    expect(icon.textContent).to.include("custom-icon");
+  });
+});
+
+describe("Toast Service", () => {
+  afterEach(() => {
+    // Clean up any remaining toasts
+    document.querySelectorAll("toast-notification").forEach((toast) => {
+      toast.remove();
     });
   });
 
-  it("handles empty or invalid messages", async () => {
-    element.show({ message: "" });
-    await element.updateComplete;
-    expect(element.messages).to.have.lengthOf(1);
+  it("shows toast via service function", async () => {
+    const toast = await showToast({
+      message: "Service test",
+      type: "success",
+      duration: 3000,
+    });
 
-    element.show({});
-    await element.updateComplete;
-    expect(element.messages).to.have.lengthOf(2);
+    expect(toast instanceof ToastNotification).to.be.true;
+    expect(toast.message).to.equal("Service test");
+    expect(toast.type).to.equal("success");
+    expect(toast.visible).to.be.true;
+  });
 
-    element.show();
-    await element.updateComplete;
-    expect(element.messages).to.have.lengthOf(3);
+  it("supports promise-based usage", async () => {
+    const promise = showToast({
+      message: "Promise test",
+      duration: 100,
+    });
+
+    expect(promise).to.be.a("promise");
+    await promise; // Should resolve when toast is dismissed
+  });
+
+  it("queues toasts when many are shown rapidly", async () => {
+    const toasts = await Promise.all([
+      showToast({ message: "First" }),
+      showToast({ message: "Second" }),
+      showToast({ message: "Third" }),
+    ]);
+
+    const container = document.querySelector(".toast-container");
+    expect(container.children.length).to.equal(3);
+
+    // Check if they're properly stacked
+    const positions = toasts.map((toast) => {
+      const rect = toast.getBoundingClientRect();
+      return rect.top;
+    });
+
+    // Each toast should be positioned below the previous one
+    expect(positions[1]).to.be.greaterThan(positions[0]);
+    expect(positions[2]).to.be.greaterThan(positions[1]);
+  });
+
+  it("maintains accessibility attributes", async () => {
+    const toast = await showToast({ message: "Accessibility test" });
+
+    expect(toast.getAttribute("role")).to.equal("alert");
+    expect(toast.getAttribute("aria-live")).to.equal("polite");
+
+    const closeButton = toast.shadowRoot.querySelector(".toast-close");
+    expect(closeButton.getAttribute("aria-label")).to.equal(
+      "Close notification"
+    );
+  });
+
+  it("handles different positions", async () => {
+    const positions = [
+      "top-right",
+      "top-left",
+      "bottom-right",
+      "bottom-left",
+      "top-center",
+      "bottom-center",
+    ];
+
+    for (const position of positions) {
+      const toast = await showToast({
+        message: `${position} toast`,
+        position,
+      });
+
+      expect(toast.classList.contains(`position-${position}`)).to.be.true;
+    }
   });
 });
