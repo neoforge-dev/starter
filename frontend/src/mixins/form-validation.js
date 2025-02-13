@@ -1,4 +1,12 @@
 import { html } from "lit";
+import { AppError, ErrorType } from "../services/error-service.js";
+
+/**
+ * Form validation rules
+ * @typedef {Object} ValidationRule
+ * @property {Function} validate - Validation function
+ * @property {string} message - Error message
+ */
 
 /**
  * Form validation mixin for Lit components
@@ -13,6 +21,9 @@ export const FormValidationMixin = (superClass) =>
       formTouched: { type: Object, state: true },
       isSubmitting: { type: Boolean, state: true },
       isValid: { type: Boolean, state: true },
+      validationRules: { type: Object },
+      validateOnChange: { type: Boolean },
+      validateOnBlur: { type: Boolean },
     };
 
     constructor() {
@@ -22,139 +33,175 @@ export const FormValidationMixin = (superClass) =>
       this.formTouched = {};
       this.isSubmitting = false;
       this.isValid = true;
-      this._validators = new Map();
-      this._asyncValidators = new Map();
+      this.validationRules = {};
+      this.validateOnChange = true;
+      this.validateOnBlur = true;
     }
 
     /**
-     * Add a synchronous validator
-     * @param {string} fieldName - Field name
-     * @param {Function} validator - Validator function
+     * Default validation rules
+     * @protected
      */
-    addValidator(fieldName, validator) {
-      if (!this._validators.has(fieldName)) {
-        this._validators.set(fieldName, []);
-      }
-      this._validators.get(fieldName).push(validator);
-    }
-
-    /**
-     * Add an asynchronous validator
-     * @param {string} fieldName - Field name
-     * @param {Function} validator - Async validator function
-     */
-    addAsyncValidator(fieldName, validator) {
-      if (!this._asyncValidators.has(fieldName)) {
-        this._asyncValidators.set(fieldName, []);
-      }
-      this._asyncValidators.get(fieldName).push(validator);
-    }
-
-    /**
-     * Handle form input changes
-     * @param {Event} e - Input event
-     */
-    handleInput(e) {
-      const { name, value } = e.target;
-      this.setFieldValue(name, value);
-    }
-
-    /**
-     * Set a field value and validate
-     * @param {string} name - Field name
-     * @param {any} value - Field value
-     */
-    setFieldValue(name, value) {
-      this.formState = {
-        ...this.formState,
-        [name]: value,
+    get defaultRules() {
+      return {
+        required: {
+          validate: (value) =>
+            value !== undefined && value !== null && value !== "",
+          message: "This field is required",
+        },
+        email: {
+          validate: (value) =>
+            !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+          message: "Please enter a valid email address",
+        },
+        minLength: {
+          validate: (value, min) => !value || value.length >= min,
+          message: (min) => `Must be at least ${min} characters`,
+        },
+        maxLength: {
+          validate: (value, max) => !value || value.length <= max,
+          message: (max) => `Must be no more than ${max} characters`,
+        },
+        pattern: {
+          validate: (value, pattern) => !value || pattern.test(value),
+          message: "Please enter a valid value",
+        },
+        match: {
+          validate: (value, field) => !value || value === this.formState[field],
+          message: (field) => `Must match ${field}`,
+        },
       };
-      this.validateField(name);
     }
 
     /**
-     * Mark a field as touched
-     * @param {string} name - Field name
+     * Initialize form state
+     * @param {Object} initialState - Initial form state
+     * @protected
      */
-    setFieldTouched(name) {
-      this.formTouched = {
-        ...this.formTouched,
-        [name]: true,
-      };
-      this.validateField(name);
-    }
-
-    /**
-     * Reset form state
-     */
-    resetForm() {
-      this.formState = {};
+    initForm(initialState = {}) {
+      this.formState = { ...initialState };
       this.formErrors = {};
       this.formTouched = {};
       this.isSubmitting = false;
-      this.isValid = true;
     }
 
     /**
-     * Validate a specific field
-     * @param {string} name - Field name
+     * Reset form to initial state
+     * @protected
      */
-    async validateField(name) {
-      const value = this.formState[name];
-      let errors = [];
+    resetForm() {
+      this.initForm();
+      this.requestUpdate();
+    }
 
-      // Run synchronous validators
-      if (this._validators.has(name)) {
-        for (const validator of this._validators.get(name)) {
-          const error = validator(value, this.formState);
-          if (error) errors.push(error);
-        }
-      }
+    /**
+     * Handle field change
+     * @param {Event} e - Change event
+     * @protected
+     */
+    async handleFieldChange(e) {
+      const field = e.target.name;
+      const value =
+        e.target.type === "checkbox" ? e.target.checked : e.target.value;
 
-      // Run async validators
-      if (this._asyncValidators.has(name)) {
-        const asyncResults = await Promise.all(
-          this._asyncValidators
-            .get(name)
-            .map((validator) => validator(value, this.formState))
-        );
-        errors = [...errors, ...asyncResults.filter(Boolean)];
-      }
-
-      this.formErrors = {
-        ...this.formErrors,
-        [name]: errors.length ? errors : null,
+      this.formState = {
+        ...this.formState,
+        [field]: value,
       };
 
-      this.isValid = Object.values(this.formErrors).every(
-        (error) => !error || error.length === 0
-      );
+      if (this.validateOnChange) {
+        await this.validateField(field);
+      }
 
-      return errors.length === 0;
+      this.requestUpdate();
     }
 
     /**
-     * Validate all form fields
+     * Handle field blur
+     * @param {Event} e - Blur event
+     * @protected
+     */
+    async handleFieldBlur(e) {
+      const field = e.target.name;
+
+      this.formTouched = {
+        ...this.formTouched,
+        [field]: true,
+      };
+
+      if (this.validateOnBlur) {
+        await this.validateField(field);
+      }
+
+      this.requestUpdate();
+    }
+
+    /**
+     * Validate a single field
+     * @param {string} field - Field name
+     * @returns {Promise<boolean>}
+     * @protected
+     */
+    async validateField(field) {
+      const value = this.formState[field];
+      const rules = this.validationRules[field] || {};
+
+      try {
+        for (const [ruleName, ruleConfig] of Object.entries(rules)) {
+          const rule = this.defaultRules[ruleName];
+          if (!rule) continue;
+
+          const isValid = await rule.validate(value, ruleConfig.value);
+          if (!isValid) {
+            const message =
+              typeof rule.message === "function"
+                ? rule.message(ruleConfig.value)
+                : ruleConfig.message || rule.message;
+
+            throw new AppError(message, ErrorType.VALIDATION, {
+              field,
+              rule: ruleName,
+              value,
+            });
+          }
+        }
+
+        // Clear error if validation passes
+        this.formErrors = {
+          ...this.formErrors,
+          [field]: undefined,
+        };
+
+        return true;
+      } catch (error) {
+        // Set validation error
+        this.formErrors = {
+          ...this.formErrors,
+          [field]: error.message,
+        };
+
+        return false;
+      }
+    }
+
+    /**
+     * Validate entire form
+     * @returns {Promise<boolean>}
+     * @protected
      */
     async validateForm() {
-      const fieldNames = [
-        ...new Set([
-          ...Object.keys(this.formState),
-          ...this._validators.keys(),
-          ...this._asyncValidators.keys(),
-        ]),
-      ];
-
-      const results = await Promise.all(
-        fieldNames.map((name) => this.validateField(name))
+      const validations = Object.keys(this.validationRules).map((field) =>
+        this.validateField(field)
       );
 
+      const results = await Promise.all(validations);
       return results.every(Boolean);
     }
 
     /**
      * Handle form submission
      * @param {Event} e - Submit event
+     * @protected
      */
     async handleSubmit(e) {
       e.preventDefault();
@@ -169,26 +216,49 @@ export const FormValidationMixin = (superClass) =>
             {}
           );
           this.formTouched = touchedState;
-          return false;
+
+          throw new AppError(
+            "Please fix the validation errors",
+            ErrorType.VALIDATION,
+            {
+              errors: this.formErrors,
+            }
+          );
         }
 
         if (this.onSubmit) {
           await this.onSubmit(this.formState);
         }
+
         return true;
+      } catch (error) {
+        if (!(error instanceof AppError)) {
+          throw new AppError("Form submission failed", ErrorType.UNKNOWN, {
+            originalError: error,
+          });
+        }
+        throw error;
       } finally {
         this.isSubmitting = false;
       }
     }
 
     /**
-     * Render error message for a given field.
-     * @param {string} field - Field name.
+     * Render error message for a field
+     * @param {string} field - Field name
      * @returns {import('lit').TemplateResult|null}
+     * @protected
      */
     renderError(field) {
-      if (this.formErrors[field]) {
-        return html`<div class="error-message">${this.formErrors[field]}</div>`;
+      if (
+        this.formErrors[field] &&
+        (this.formTouched[field] || this.isSubmitting)
+      ) {
+        return html`
+          <div class="error-message" role="alert">
+            ${this.formErrors[field]}
+          </div>
+        `;
       }
       return null;
     }

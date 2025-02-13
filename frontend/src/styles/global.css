@@ -11,13 +11,29 @@
   --error-color: #dc2626;
   --info-color: #0284c7;
 
-  /* Light theme */
-  --background-color: #ffffff;
-  --surface-color: #f8fafc;
-  --border-color: #e2e8f0;
-  --text-color: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #94a3b8;
+  /* Light theme colors */
+  --background-color-light: #ffffff;
+  --surface-color-light: #f8fafc;
+  --border-color-light: #e2e8f0;
+  --text-color-light: #0f172a;
+  --text-secondary-light: #475569;
+  --text-tertiary-light: #94a3b8;
+
+  /* Dark theme colors */
+  --background-color-dark: #0f172a;
+  --surface-color-dark: #1e293b;
+  --border-color-dark: #334155;
+  --text-color-dark: #f8fafc;
+  --text-secondary-dark: #cbd5e1;
+  --text-tertiary-dark: #64748b;
+
+  /* Current theme colors (will be updated based on theme) */
+  --background-color: var(--background-color-light);
+  --surface-color: var(--surface-color-light);
+  --border-color: var(--border-color-light);
+  --text-color: var(--text-color-light);
+  --text-secondary: var(--text-secondary-light);
+  --text-tertiary: var(--text-tertiary-light);
 
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -81,6 +97,7 @@
   --transition-fast: 150ms;
   --transition-normal: 250ms;
   --transition-slow: 350ms;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Focus */
   --focus-ring-color: rgb(37 99 235 / 0.5);
@@ -89,26 +106,30 @@
 
 /* Dark theme */
 [data-theme="dark"] {
-  --primary-color: #3b82f6;
-  --primary-dark: #2563eb;
-  --primary-light: #60a5fa;
-  --secondary-color: #6366f1;
-  --accent-color: #38bdf8;
-  --success-color: #10b981;
-  --warning-color: #f59e0b;
-  --error-color: #ef4444;
-  
-  --background-color: #0f172a;
-  --surface-color: #1e293b;
-  --border-color: #334155;
-  --text-color: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #64748b;
+  --background-color: var(--background-color-dark);
+  --surface-color: var(--surface-color-dark);
+  --border-color: var(--border-color-dark);
+  --text-color: var(--text-color-dark);
+  --text-secondary: var(--text-secondary-dark);
+  --text-tertiary: var(--text-tertiary-dark);
 
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6);
+}
+
+/* Theme transition handling */
+.theme-transition,
+.theme-transition * {
+  transition: background-color var(--transition-normal) var(--transition-timing),
+              border-color var(--transition-normal) var(--transition-timing),
+              color var(--transition-normal) var(--transition-timing),
+              fill var(--transition-normal) var(--transition-timing),
+              stroke var(--transition-normal) var(--transition-timing),
+              opacity var(--transition-normal) var(--transition-timing),
+              box-shadow var(--transition-normal) var(--transition-timing),
+              transform var(--transition-normal) var(--transition-timing) !important;
 }
 
 /* Reset */
@@ -133,7 +154,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100%;
-  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 /* Typography */
@@ -240,5 +260,43 @@ button {
 
   .container {
     padding: 0 var(--spacing-sm);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .theme-transition,
+  .theme-transition * {
+    transition: none !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  :root {
+    --text-color: #000000;
+    --text-secondary: #333333;
+    --text-tertiary: #666666;
+    --background-color: #ffffff;
+    --surface-color: #ffffff;
+    --border-color: #cccccc;
+  }
+
+  body {
+    background: none;
+  }
+
+  .theme-transition,
+  .theme-transition * {
+    transition: none !important;
   }
 } 
