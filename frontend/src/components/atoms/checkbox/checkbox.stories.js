@@ -1,0 +1,167 @@
+import { html } from 'lit';
+import { ifDefined } from 'lit/directives/if-defined.js';
+import './checkbox.js';
+
+export default {
+  title: 'Atoms/Checkbox',
+  component: 'neo-checkbox',
+  argTypes: {
+    label: {
+      control: 'text',
+      description: 'Label text for the checkbox',
+    },
+    checked: {
+      control: 'boolean',
+      description: 'Whether the checkbox is checked',
+    },
+    indeterminate: {
+      control: 'boolean',
+      description: 'Whether the checkbox is in an indeterminate state',
+    },
+    disabled: {
+      control: 'boolean',
+      description: 'Whether the checkbox is disabled',
+    },
+    required: {
+      control: 'boolean',
+      description: 'Whether the checkbox is required',
+    },
+    error: {
+      control: 'text',
+      description: 'Error message to display',
+    },
+    helper: {
+      control: 'text',
+      description: 'Helper text to display',
+    },
+    onChange: { action: 'changed' },
+  },
+  parameters: {
+    design: {
+      type: 'figma',
+      url: 'https://www.figma.com/file/...',
+    },
+    docs: {
+      description: {
+        component: 'A checkbox component that follows atomic design principles and provides various states.',
+      },
+    },
+    a11y: {
+      config: {
+        rules: [
+          {
+            id: 'label',
+            enabled: true,
+          },
+          {
+            id: 'aria-allowed-attr',
+            enabled: true,
+          },
+        ],
+      },
+    },
+  },
+};
+
+// Base Template
+const Template = ({ 
+  label, 
+  checked, 
+  indeterminate, 
+  disabled, 
+  required, 
+  error, 
+  helper 
+}) => html\`
+  <neo-checkbox
+    ?checked=\${checked}
+    ?indeterminate=\${indeterminate}
+    ?disabled=\${disabled}
+    ?required=\${required}
+    error=\${ifDefined(error)}
+    helper=\${ifDefined(helper)}
+    @change=\${(e) => console.log('Checkbox changed:', e.target.checked)}
+  >
+    \${label}
+  </neo-checkbox>
+\`;
+
+// Stories
+export const Default = Template.bind({});
+Default.args = {
+  label: 'Default Checkbox',
+};
+
+export const Checked = Template.bind({});
+Checked.args = {
+  label: 'Checked Checkbox',
+  checked: true,
+};
+
+export const Indeterminate = Template.bind({});
+Indeterminate.args = {
+  label: 'Indeterminate Checkbox',
+  indeterminate: true,
+};
+
+export const Disabled = Template.bind({});
+Disabled.args = {
+  label: 'Disabled Checkbox',
+  disabled: true,
+};
+
+export const Required = Template.bind({});
+Required.args = {
+  label: 'Required Checkbox',
+  required: true,
+};
+
+export const WithError = Template.bind({});
+WithError.args = {
+  label: 'Checkbox with Error',
+  error: 'This field is required',
+};
+
+export const WithHelper = Template.bind({});
+WithHelper.args = {
+  label: 'Checkbox with Helper',
+  helper: 'Additional information about this option',
+};
+
+// Checkbox Group Example
+export const CheckboxGroup = () => html\`
+  <div style="display: grid; gap: 8px;">
+    <neo-checkbox checked>Option 1</neo-checkbox>
+    <neo-checkbox>Option 2</neo-checkbox>
+    <neo-checkbox>Option 3</neo-checkbox>
+  </div>
+\`;
+
+// Nested Checkbox Example
+export const NestedCheckboxes = () => html\`
+  <div style="display: grid; gap: 8px;">
+    <neo-checkbox indeterminate>Parent Option</neo-checkbox>
+    <div style="margin-left: 24px; display: grid; gap: 8px;">
+      <neo-checkbox checked>Child Option 1</neo-checkbox>
+      <neo-checkbox>Child Option 2</neo-checkbox>
+      <neo-checkbox checked>Child Option 3</neo-checkbox>
+    </div>
+  </div>
+\`;
+
+// Terms and Conditions Example
+export const TermsCheckbox = () => html\`
+  <neo-checkbox 
+    required
+    helper="Please read and accept the terms"
+  >
+    I agree to the <a href="#" style="color: var(--color-primary);">Terms and Conditions</a>
+  </neo-checkbox>
+\`;
+
+// Custom Styling Example
+export const CustomStyled = () => html\`
+  <neo-checkbox style="--checkbox-color: var(--color-success); --checkbox-size: 24px;">
+    Custom Styled Checkbox
+  </neo-checkbox>
+\`; 

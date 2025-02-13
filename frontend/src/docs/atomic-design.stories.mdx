@@ -1,0 +1,182 @@
+import { Meta, Story, Canvas, ArgsTable } from "@storybook/addon-docs";
+import { html } from "lit";
+
+<Meta title='Design System/Atomic Design' />
+
+# NeoForge Atomic Design System
+
+Our component library follows atomic design principles to create a scalable and maintainable design system.
+
+## Atomic Design Principles
+
+Atomic design breaks down interfaces into five distinct levels:
+
+### 1. Atoms
+
+The basic building blocks of matter. In interfaces, these are our foundational components:
+
+<Canvas>
+  <Story name="Atomic Components">
+    {() => html\`
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <neo-button variant="primary">Button</neo-button>
+        <neo-input placeholder="Input"></neo-input>
+        <neo-badge variant="primary">Badge</neo-badge>
+      </div>
+    \`}
+  </Story>
+</Canvas>
+
+### 2. Molecules
+
+Groups of atoms bonded together. These form simple, functional components:
+
+<Canvas>
+  <Story name="Molecular Components">
+    {() => html\`
+      <neo-card>
+        <h3 slot="header">Card Title</h3>
+        <div slot="content">
+          <neo-input label="Email" type="email"></neo-input>
+          <neo-button variant="primary">Submit</neo-button>
+        </div>
+      </neo-card>
+    \`}
+  </Story>
+</Canvas>
+
+### 3. Organisms
+
+Complex components composed of molecules and atoms:
+
+<Canvas>
+  <Story name="Organism Components">
+    {() => html\`
+      <neo-form>
+        <neo-card>
+          <h3 slot="header">Contact Form</h3>
+          <div slot="content" style="display: grid; gap: 16px;">
+            <neo-input label="Name" required></neo-input>
+            <neo-input label="Email" type="email" required></neo-input>
+            <neo-input label="Message" type="textarea"></neo-input>
+          </div>
+          <div slot="footer">
+            <neo-button variant="primary">Send Message</neo-button>
+          </div>
+        </neo-card>
+      </neo-form>
+    \`}
+  </Story>
+</Canvas>
+
+## Design Tokens
+
+Our design system uses tokens to maintain consistency:
+
+### Colors
+
+<Canvas>
+  <Story name="Color Tokens">
+    {() => html\`
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <div style="padding: 16px; background: var(--color-primary); color: white;">Primary</div>
+        <div style="padding: 16px; background: var(--color-secondary); color: white;">Secondary</div>
+        <div style="padding: 16px; background: var(--color-accent); color: white;">Accent</div>
+      </div>
+    \`}
+  </Story>
+</Canvas>
+
+### Typography
+
+<Canvas>
+  <Story name="Typography">
+    {() => html\`
+      <div style="display: grid; gap: 16px;">
+        <h1 style="font-family: var(--font-primary); margin: 0;">Heading 1</h1>
+        <h2 style="font-family: var(--font-primary); margin: 0;">Heading 2</h2>
+        <p style="font-family: var(--font-primary); margin: 0;">Body text</p>
+      </div>
+    \`}
+  </Story>
+</Canvas>
+
+## Component Patterns
+
+### Composition Pattern
+
+```javascript
+class MyComponent extends LitElement {
+  static properties = {
+    variant: { type: String },
+    size: { type: String },
+  };
+
+  static styles = css\`
+    :host {
+      display: block;
+      padding: var(--spacing-md);
+    }
+  \`;
+
+  render() {
+    return html\`
+      <div class=\${classMap({
+        container: true,
+        [\`variant-\${this.variant}\`]: true,
+        [\`size-\${this.size}\`]: true,
+      })}>
+        <slot></slot>
+      </div>
+    \`;
+  }
+}
+```
+
+### Event Handling Pattern
+
+```javascript
+handleEvent() {
+  this.dispatchEvent(new CustomEvent('custom-event', {
+    detail: { /* event data */ },
+    bubbles: true,
+    composed: true
+  }));
+}
+```
+
+## Best Practices
+
+1. **Component Creation**
+
+   - Keep components focused and single-purpose
+   - Use composition over inheritance
+   - Follow the Single Responsibility Principle
+
+2. **State Management**
+
+   - Use properties for component state
+   - Implement reactive updates
+   - Keep state changes predictable
+
+3. **Styling**
+
+   - Use design tokens for consistency
+   - Implement CSS custom properties
+   - Follow BEM naming convention
+
+4. **Accessibility**
+   - Include ARIA attributes
+   - Support keyboard navigation
+   - Maintain proper contrast ratios
+
+## Contributing
+
+When creating new components:
+
+1. Start at the atomic level
+2. Use existing design tokens
+3. Follow component patterns
+4. Include documentation
+5. Add appropriate tests
+6. Create stories for all states

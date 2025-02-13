@@ -1,209 +1,262 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
-import { ToastNotification, showToast } from "../../components/ui/toast.js";
+import { expect } from "@esm-bundle/chai";
+import { fixture, html, oneEvent } from "@open-wc/testing";
+import "../../components/organisms/toast/toast.js";
 
-describe("Toast", () => {
+describe("NeoToast", () => {
   let element;
 
   beforeEach(async () => {
-    element = await fixture(html`
-      <toast-notification
-        message="Test message"
-        type="info"
-        duration="3000"
-      ></toast-notification>
-    `);
+    element = await fixture(html`<neo-toast>Test message</neo-toast>`);
   });
 
   it("renders with default properties", () => {
-    expect(element.message).to.equal("Test message");
-    expect(element.type).to.equal("info");
+    expect(element.variant).to.equal("info");
     expect(element.duration).to.equal(3000);
-
-    const toast = element.shadowRoot.querySelector(".toast");
-    expect(toast).to.exist;
-    expect(toast.classList.contains("type-info")).to.be.true;
+    expect(element.closable).to.be.true;
+    expect(element.animate).to.be.true;
+    expect(element.position).to.equal("bottom-right");
+    expect(element.textContent.trim()).to.equal("Test message");
   });
 
-  it("renders different types correctly", async () => {
-    const types = ["success", "error", "warning", "info"];
+  it("reflects variant changes", async () => {
+    const variants = ["success", "warning", "error", "info"];
 
-    for (const type of types) {
-      element.type = type;
+    for (const variant of variants) {
+      element.variant = variant;
       await element.updateComplete;
-
-      const toast = element.shadowRoot.querySelector(".toast");
-      expect(toast.classList.contains(`type-${type}`)).to.be.true;
+      expect(element.shadowRoot.querySelector(".toast")).to.have.class(variant);
     }
   });
 
-  it("auto-dismisses after duration", async () => {
-    element.duration = 100; // Short duration for testing
-    element.show();
-
-    expect(element.visible).to.be.true;
-
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    expect(element.visible).to.be.false;
-  });
-
-  it("can be dismissed manually", async () => {
-    element.show();
-    expect(element.visible).to.be.true;
-
-    const closeButton = element.shadowRoot.querySelector(".toast-close");
-    closeButton.click();
-    await element.updateComplete;
-
-    expect(element.visible).to.be.false;
-  });
-
-  it("pauses auto-dismiss on hover", async () => {
-    element.duration = 100;
-    element.show();
-
-    const toast = element.shadowRoot.querySelector(".toast");
-    toast.dispatchEvent(new MouseEvent("mouseenter"));
-
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    expect(element.visible).to.be.true;
-
-    toast.dispatchEvent(new MouseEvent("mouseleave"));
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    expect(element.visible).to.be.false;
-  });
-
-  it("stacks multiple toasts correctly", async () => {
-    const toast1 = await fixture(html`
-      <toast-notification message="First toast"></toast-notification>
-    `);
-    const toast2 = await fixture(html`
-      <toast-notification message="Second toast"></toast-notification>
-    `);
-
-    toast1.show();
-    toast2.show();
-
-    const container = document.querySelector(".toast-container");
-    expect(container.children.length).to.equal(2);
-  });
-
-  it("maintains proper z-index stacking", async () => {
-    const toast1 = await fixture(html`
-      <toast-notification message="First toast"></toast-notification>
-    `);
-    const toast2 = await fixture(html`
-      <toast-notification message="Second toast"></toast-notification>
-    `);
-
-    toast1.show();
-    toast2.show();
-
-    const zIndex1 = getComputedStyle(toast1).zIndex;
-    const zIndex2 = getComputedStyle(toast2).zIndex;
-    expect(parseInt(zIndex2)).to.be.greaterThan(parseInt(zIndex1));
-  });
-
-  it("handles long messages correctly", async () => {
-    const longMessage = "A".repeat(200);
-    element.message = longMessage;
-    await element.updateComplete;
-
-    const messageEl = element.shadowRoot.querySelector(".toast-message");
-    expect(messageEl.textContent).to.equal(longMessage);
-    expect(getComputedStyle(messageEl).textOverflow).to.equal("ellipsis");
-  });
-
-  it("supports custom icons", async () => {
-    element.icon = "custom-icon";
-    await element.updateComplete;
-
-    const icon = element.shadowRoot.querySelector(".toast-icon");
-    expect(icon.textContent).to.include("custom-icon");
-  });
-});
-
-describe("Toast Service", () => {
-  afterEach(() => {
-    // Clean up any remaining toasts
-    document.querySelectorAll("toast-notification").forEach((toast) => {
-      toast.remove();
-    });
-  });
-
-  it("shows toast via service function", async () => {
-    const toast = await showToast({
-      message: "Service test",
-      type: "success",
-      duration: 3000,
-    });
-
-    expect(toast instanceof ToastNotification).to.be.true;
-    expect(toast.message).to.equal("Service test");
-    expect(toast.type).to.equal("success");
-    expect(toast.visible).to.be.true;
-  });
-
-  it("supports promise-based usage", async () => {
-    const promise = showToast({
-      message: "Promise test",
-      duration: 100,
-    });
-
-    expect(promise).to.be.a("promise");
-    await promise; // Should resolve when toast is dismissed
-  });
-
-  it("queues toasts when many are shown rapidly", async () => {
-    const toasts = await Promise.all([
-      showToast({ message: "First" }),
-      showToast({ message: "Second" }),
-      showToast({ message: "Third" }),
-    ]);
-
-    const container = document.querySelector(".toast-container");
-    expect(container.children.length).to.equal(3);
-
-    // Check if they're properly stacked
-    const positions = toasts.map((toast) => {
-      const rect = toast.getBoundingClientRect();
-      return rect.top;
-    });
-
-    // Each toast should be positioned below the previous one
-    expect(positions[1]).to.be.greaterThan(positions[0]);
-    expect(positions[2]).to.be.greaterThan(positions[1]);
-  });
-
-  it("maintains accessibility attributes", async () => {
-    const toast = await showToast({ message: "Accessibility test" });
-
-    expect(toast.getAttribute("role")).to.equal("alert");
-    expect(toast.getAttribute("aria-live")).to.equal("polite");
-
-    const closeButton = toast.shadowRoot.querySelector(".toast-close");
-    expect(closeButton.getAttribute("aria-label")).to.equal(
-      "Close notification"
-    );
-  });
-
-  it("handles different positions", async () => {
+  it("handles position changes", async () => {
     const positions = [
-      "top-right",
       "top-left",
-      "bottom-right",
-      "bottom-left",
+      "top-right",
       "top-center",
+      "bottom-left",
+      "bottom-right",
       "bottom-center",
     ];
 
     for (const position of positions) {
-      const toast = await showToast({
-        message: `${position} toast`,
-        position,
-      });
-
-      expect(toast.classList.contains(`position-${position}`)).to.be.true;
+      element.position = position;
+      await element.updateComplete;
+      expect(element.shadowRoot.querySelector(".toast")).to.have.class(
+        `position-${position}`
+      );
     }
+  });
+
+  it("auto-closes after duration", async () => {
+    element.duration = 100;
+    element.show();
+    await element.updateComplete;
+
+    expect(element.open).to.be.true;
+
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(element.open).to.be.false;
+  });
+
+  it("doesn't auto-close when duration is 0", async () => {
+    element.duration = 0;
+    element.show();
+    await element.updateComplete;
+
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(element.open).to.be.true;
+  });
+
+  it("handles manual close", async () => {
+    element.show();
+    await element.updateComplete;
+
+    const closePromise = oneEvent(element, "toast-close");
+    element.shadowRoot.querySelector(".close-button").click();
+    await closePromise;
+
+    expect(element.open).to.be.false;
+  });
+
+  it("pauses auto-close on hover", async () => {
+    element.duration = 200;
+    element.show();
+    await element.updateComplete;
+
+    // Simulate mouse enter
+    element.dispatchEvent(new MouseEvent("mouseenter"));
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(element.open).to.be.true;
+
+    // Simulate mouse leave
+    element.dispatchEvent(new MouseEvent("mouseleave"));
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(element.open).to.be.false;
+  });
+
+  it("maintains proper ARIA attributes", async () => {
+    element.show();
+    await element.updateComplete;
+
+    const toast = element.shadowRoot.querySelector(".toast");
+    expect(toast).to.have.attribute("role", "alert");
+    expect(toast).to.have.attribute("aria-live", "polite");
+
+    element.variant = "error";
+    await element.updateComplete;
+    expect(toast).to.have.attribute("aria-live", "assertive");
+  });
+
+  it("supports custom styles", async () => {
+    element.style.setProperty("--toast-background", "purple");
+    element.style.setProperty("--toast-text-color", "white");
+    await element.updateComplete;
+
+    const toast = element.shadowRoot.querySelector(".toast");
+    const styles = window.getComputedStyle(toast);
+    expect(styles.backgroundColor).to.equal("purple");
+    expect(styles.color).to.equal("white");
+  });
+
+  it("handles animation states", async () => {
+    element.show();
+    await element.updateComplete;
+    expect(element.shadowRoot.querySelector(".toast")).to.have.class(
+      "animate-in"
+    );
+
+    element.hide();
+    await element.updateComplete;
+    expect(element.shadowRoot.querySelector(".toast")).to.have.class(
+      "animate-out"
+    );
+  });
+
+  it("renders with icon", async () => {
+    const toastWithIcon = await fixture(html`
+      <neo-toast variant="success">
+        <neo-icon slot="icon" name="check"></neo-icon>
+        Success message
+      </neo-toast>
+    `);
+
+    expect(toastWithIcon.shadowRoot.querySelector("slot[name='icon']")).to
+      .exist;
+  });
+
+  it("supports action buttons", async () => {
+    const toastWithAction = await fixture(html`
+      <neo-toast>
+        <span>Message with action</span>
+        <neo-button slot="action">Undo</neo-button>
+      </neo-toast>
+    `);
+
+    expect(toastWithAction.shadowRoot.querySelector("slot[name='action']")).to
+      .exist;
+  });
+
+  it("handles stacked toasts", async () => {
+    const container = await fixture(html`
+      <div>
+        <neo-toast position="top-right">First toast</neo-toast>
+        <neo-toast position="top-right">Second toast</neo-toast>
+      </div>
+    `);
+
+    const [toast1, toast2] = container.querySelectorAll("neo-toast");
+    toast1.show();
+    toast2.show();
+    await toast2.updateComplete;
+
+    const rect1 = toast1.getBoundingClientRect();
+    const rect2 = toast2.getBoundingClientRect();
+    expect(rect2.top).to.be.greaterThan(rect1.bottom);
+  });
+});
+
+describe("ToastService", () => {
+  let toastService;
+
+  beforeEach(() => {
+    toastService = new window.ToastService();
+  });
+
+  afterEach(() => {
+    document.querySelectorAll("neo-toast").forEach((toast) => toast.remove());
+  });
+
+  it("shows a toast message", async () => {
+    const toast = await toastService.show({
+      message: "Test message",
+      variant: "info",
+    });
+
+    expect(toast).to.exist;
+    expect(toast.textContent.trim()).to.equal("Test message");
+    expect(toast.variant).to.equal("info");
+    expect(toast.open).to.be.true;
+  });
+
+  it("shows success toast", async () => {
+    const toast = await toastService.success("Success message");
+    expect(toast.variant).to.equal("success");
+    expect(toast.textContent.trim()).to.equal("Success message");
+  });
+
+  it("shows error toast", async () => {
+    const toast = await toastService.error("Error message");
+    expect(toast.variant).to.equal("error");
+    expect(toast.textContent.trim()).to.equal("Error message");
+  });
+
+  it("shows warning toast", async () => {
+    const toast = await toastService.warning("Warning message");
+    expect(toast.variant).to.equal("warning");
+    expect(toast.textContent.trim()).to.equal("Warning message");
+  });
+
+  it("supports custom duration", async () => {
+    const toast = await toastService.show({
+      message: "Quick message",
+      duration: 100,
+    });
+
+    expect(toast.open).to.be.true;
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    expect(toast.open).to.be.false;
+  });
+
+  it("supports custom position", async () => {
+    const toast = await toastService.show({
+      message: "Positioned message",
+      position: "top-center",
+    });
+
+    expect(toast.position).to.equal("top-center");
+  });
+
+  it("manages toast queue", async () => {
+    const toast1 = await toastService.show({ message: "First" });
+    const toast2 = await toastService.show({ message: "Second" });
+    const toast3 = await toastService.show({ message: "Third" });
+
+    expect(document.querySelectorAll("neo-toast").length).to.equal(3);
+    expect(toast1.style.zIndex).to.be.lessThan(toast2.style.zIndex);
+    expect(toast2.style.zIndex).to.be.lessThan(toast3.style.zIndex);
+  });
+
+  it("clears all toasts", async () => {
+    await toastService.show({ message: "Toast 1" });
+    await toastService.show({ message: "Toast 2" });
+    await toastService.show({ message: "Toast 3" });
+
+    toastService.clearAll();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const openToasts = Array.from(
+      document.querySelectorAll("neo-toast")
+    ).filter((toast) => toast.open);
+    expect(openToasts.length).to.equal(0);
   });
 });

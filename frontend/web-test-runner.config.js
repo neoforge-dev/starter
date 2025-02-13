@@ -24,10 +24,22 @@ export default {
   testRunnerHtml: (testFramework) => `
     <html>
       <head>
+        <script>
+          // Debug logging
+          window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+          });
+          window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled rejection:', e.reason);
+          });
+        </script>
         <script type="importmap">
           {
             "imports": {
               "lit": "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js",
+              "@lit/reactive-element": "https://cdn.jsdelivr.net/gh/lit/dist@3/reactive-element/reactive-element.js",
+              "lit-html": "https://cdn.jsdelivr.net/gh/lit/dist@3/lit-html/lit-html.js",
+              "lit-element": "https://cdn.jsdelivr.net/gh/lit/dist@3/lit-element/lit-element.js",
               "@services": "/src/services",
               "@components": "/src/components",
               "@utils": "/src/utils",
