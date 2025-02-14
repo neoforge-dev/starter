@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline - NeoForge</title>
+    <style>
+      :root {
+        --color-primary: #4f46e5;
+        --color-primary-dark: #4338ca;
+        --color-background: #f9fafb;
+        --color-text: #111827;
+        --color-text-secondary: #6b7280;
+        --spacing-sm: 0.5rem;
+        --spacing-md: 1rem;
+        --spacing-lg: 2rem;
+        --spacing-xl: 4rem;
+        --radius-sm: 0.25rem;
+        --radius-md: 0.5rem;
+        --font-sans:
+          system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: var(--font-sans);
+        background: var(--color-background);
+        color: var(--color-text);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: var(--spacing-md);
+      }
+
+      .offline-container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .offline-icon {
+        font-size: 4rem;
+        margin-bottom: var(--spacing-lg);
+      }
+
+      h1 {
+        font-size: 2rem;
+        margin: 0 0 var(--spacing-md);
+      }
+
+      p {
+        color: var(--color-text-secondary);
+        margin: 0 0 var(--spacing-lg);
+        line-height: 1.5;
+      }
+
+      .retry-button {
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        padding: var(--spacing-sm) var(--spacing-lg);
+        border-radius: var(--radius-sm);
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+
+      .retry-button:hover {
+        background: var(--color-primary-dark);
+      }
+
+      .cached-pages {
+        margin-top: var(--spacing-xl);
+        padding: var(--spacing-md);
+        background: white;
+        border-radius: var(--radius-md);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .cached-pages h2 {
+        font-size: 1.25rem;
+        margin: 0 0 var(--spacing-md);
+      }
+
+      .cached-pages ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        text-align: left;
+      }
+
+      .cached-pages li {
+        padding: var(--spacing-sm) 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .cached-pages li:last-child {
+        border-bottom: none;
+      }
+
+      .cached-pages a {
+        color: var(--color-primary);
+        text-decoration: none;
+      }
+
+      .cached-pages a:hover {
+        text-decoration: underline;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --color-background: #1f2937;
+          --color-text: #f9fafb;
+          --color-text-secondary: #9ca3af;
+        }
+
+        .cached-pages {
+          background: #374151;
+        }
+
+        .cached-pages li {
+          border-bottom-color: #4b5563;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="offline-container">
+      <div class="offline-icon">📡</div>
+      <h1>You're Offline</h1>
+      <p>
+        Sorry, it looks like you've lost your internet connection. The page
+        you're trying to visit hasn't been cached for offline use.
+      </p>
+      <button class="retry-button" onclick="window.location.reload()">
+        Try Again
+      </button>
+
+      <div class="cached-pages">
+        <h2>Available Offline</h2>
+        <ul id="cached-pages-list">
+          <li><a href="/">Home</a></li>
+          <li><a href="/docs">Documentation</a></li>
+          <li><a href="/examples">Examples</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      // Check if we're back online
+      window.addEventListener("online", () => {
+        window.location.reload();
+      });
+
+      // Update cached pages list
+      async function updateCachedPages() {
+        try {
+          const cache = await caches.open("neoforge-cache-v1");
+          const keys = await cache.keys();
+          const cachedUrls = keys
+            .map((request) => request.url)
+            .filter((url) => url.endsWith(".html") || url.endsWith("/"))
+            .map((url) => new URL(url).pathname);
+
+          const list = document.getElementById("cached-pages-list");
+          list.innerHTML = cachedUrls
+            .map(
+              (path) =>
+                `<li><a href="${path}">${path === "/" ? "Home" : path.split("/").pop()}</a></li>`
+            )
+            .join("");
+        } catch (error) {
+          console.error("Error updating cached pages:", error);
+        }
+      }
+
+      // Update the list when the page loads
+      updateCachedPages();
+    </script>
+  </body>
+</html>

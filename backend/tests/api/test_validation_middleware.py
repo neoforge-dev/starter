@@ -1,3 +1,8 @@
+import pytest
+from httpx import ASGITransport, Request, Response
+from fastapi import FastAPI
+import httpx
+
 class MockStream:
     """Mock stream for testing."""
     def __init__(self, body: bytes):
@@ -12,7 +17,7 @@ class MockStream:
 
 class NoDefaultHeadersTransport(ASGITransport):
     """Transport that doesn't add default headers."""
-    async def handle_async_request(self, request: Request) -> object:
+    async def handle_async_request(self, request: Request) -> Response:
         # Build headers from request without modification
         headers_list = [(k.lower().encode("ascii"), v.encode("ascii")) for k, v in request.headers.items()]
 
@@ -59,8 +64,14 @@ class NoDefaultHeadersTransport(ASGITransport):
             elif chunk["type"] == "http.response.body":
                 body += chunk["body"]
 
-        return Response(status_code=status_code, headers=headers, content=body) 
+        return Response(status_code=status_code, headers=headers, content=body)
 
+@pytest.mark.asyncio
+async def test_validation_middleware():
+    """Test validation middleware with invalid request."""
+    app = FastAPI()
+    client = httpx.AsyncClient(app=app, transport=NoDefaultHeadersTransport())
+    response = await client.post("/test", json={"invalid": "data"})
     data = response.json()
     assert "detail" in data
     assert isinstance(data.get("detail"), list) and len(data.get("detail")) > 0 

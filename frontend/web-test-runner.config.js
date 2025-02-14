@@ -1,4 +1,5 @@
 import { playwrightLauncher } from "@web/test-runner-playwright";
+import { visualRegressionPlugin } from "@web/test-runner-visual-regression/plugin";
 
 // Development configuration (faster)
 const devConfig = {
@@ -12,6 +13,14 @@ const devConfig = {
       retries: 1,
     },
   },
+  plugins: [
+    visualRegressionPlugin({
+      update: process.env.UPDATE_VISUAL === "true",
+      baseDir: "src/test/visual/baseline",
+      diffDir: "src/test/visual/diff",
+      failureThreshold: 0.05,
+    }),
+  ],
   browserStartTimeout: 30000,
   testsStartTimeout: 30000,
   testsFinishTimeout: 60000,

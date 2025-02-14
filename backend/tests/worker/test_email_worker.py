@@ -1,4 +1,7 @@
-from unittest.mock import patch
+import pytest
+import pytest_asyncio
+from unittest.mock import AsyncMock, patch
+from app.worker.email_worker import EmailWorker
 
 @pytest.mark.asyncio
 async def test_process_one_template_validation_error(worker, mock_queue, mock_tracking):
@@ -39,3 +42,18 @@ async def test_process_one_template_validation_error(worker, mock_queue, mock_tr
         # Verify tracking record was updated
         assert tracking_record.status == EmailStatus.FAILED
         assert "Template validation failed" in tracking_record.error_message 
+
+@pytest.mark.asyncio
+async def test_email_worker_process_one():
+    """Test processing one email from the queue."""
+    # Create a mock queue
+    mock_queue = AsyncMock()
+    mock_queue.dequeue.return_value = None  # Empty queue
+    
+    # Create worker with mock queue
+    worker = EmailWorker(queue=mock_queue)
+    
+    # Test processing empty queue
+    result = await worker.process_one()
+    assert result is False
+    mock_queue.dequeue.assert_called_once() 

@@ -9,42 +9,64 @@
       content="A modern, efficient, and cost-effective development starter kit"
     />
 
-    <!-- PWA setup -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#2563eb" />
-    <link rel="icon" type="image/png" href="/assets/icons/icon-192x192.png" />
-    <link rel="apple-touch-icon" href="/assets/icons/icon-192x192.png" />
+    <!-- Critical CSS -->
+    <link rel="stylesheet" href="./src/components/styles/critical.css" />
 
-    <!-- Fonts -->
+    <!-- PWA setup -->
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#2563eb" />
+    <link rel="icon" type="image/png" href="./assets/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" href="./assets/icons/icon-192x192.png" />
+
+    <!-- Fonts - Load with preload for better performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    />
+    <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
     <link
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
 
-    <!-- Base styles -->
-    <link rel="stylesheet" href="/src/styles/global.css" />
-    <link rel="stylesheet" href="/src/styles/loading.css" />
+    <!-- Non-critical styles - Load asynchronously -->
+    <link
+      rel="stylesheet"
+      href="./src/styles/global.css"
+      media="print"
+      onload="this.media='all'"
+    />
+    <link
+      rel="stylesheet"
+      href="./src/styles/loading.css"
+      media="print"
+      onload="this.media='all'"
+    />
 
     <!-- Import lit from vendor -->
-    <script type="module" src="/vendor/lit-core.min.js"></script>
+    <script type="module" src="./vendor/lit-core.min.js"></script>
 
     <!-- Import our main app -->
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="./src/main.js"></script>
 
-    <!-- Import header component -->
-    <script type="module" src="/src/components/header.js"></script>
-
-    <!-- Import footer component -->
-    <script type="module" src="/src/components/footer.js"></script>
-
-    <!-- Import landing page component -->
-    <script type="module" src="/src/pages/landing-page.js"></script>
+    <!-- Import components -->
+    <script type="module" src="./src/components/header.js"></script>
+    <script type="module" src="./src/components/footer.js"></script>
   </head>
   <body>
     <!-- Loading state -->
@@ -92,7 +114,7 @@
 
       // Register service worker
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/service-worker.js");
+        navigator.serviceWorker.register("./service-worker.js");
       }
     </script>
 

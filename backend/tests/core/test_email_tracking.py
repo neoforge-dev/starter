@@ -1,19 +1,23 @@
+import pytest
+import pytest_asyncio
+from datetime import datetime
+from typing import AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.email_tracking import EmailTracking
+from app.crud.email_tracking import email_tracking
+
 @pytest_asyncio.fixture
 async def tracking_record(db: AsyncSession) -> AsyncGenerator[EmailTracking, None]:
-    """Create a test email tracking record."""
-    tracking_in = EmailTrackingCreate(
-        email_id="test123",
-        recipient="test@example.com",
-        subject="Test Email",
-        template_name="test_template",
-        status=EmailStatus.QUEUED
+    """Create test email tracking entry."""
+    return await email_tracking.create(
+        db,
+        obj_in={
+            "email_id": "test-id",
+            "status": "sent",
+            "sent_at": datetime.utcnow(),
+            "recipient": "test@example.com"
+        }
     )
-    tracking = await email_tracking.create_with_event(
-        db=db,
-        obj_in=tracking_in,
-        event_type=EmailStatus.QUEUED
-    )
-    yield tracking
 
 
 @pytest.mark.asyncio
@@ -78,3 +82,16 @@ async def test_get_stats_with_date_range(db):
     assert stats.delivery_rate == 0.0  # No delivered emails
     assert stats.open_rate == 0.0  # No opened emails
     assert stats.click_rate == 0.0  # No clicked emails 
+
+@pytest_asyncio.fixture
+async def test_email_tracking(db_session):
+    """Create test email tracking entry."""
+    return await email_tracking.create(
+        db_session,
+        obj_in={
+            "email_id": "test-id",
+            "status": "sent",
+            "sent_at": datetime.utcnow(),
+            "recipient": "test@example.com"
+        }
+    ) 

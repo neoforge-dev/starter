@@ -167,105 +167,59 @@ async def custom_swagger_ui_html():
         swagger_css_url="/static/swagger-ui.css",
     )
 
-@app.get(
-    "/health",
-    response_model=HealthCheck,
-    tags=["system"],
-)
+@app.get("/health", response_model=HealthCheck, tags=["system"])
 async def health_check(
     db: Annotated[AsyncSession, Depends(get_db)],
-    redis: Annotated[Redis, Depends(get_redis)],
+    redis: Annotated[Redis, Depends(get_redis)]
 ) -> HealthCheck:
-    """
-    Check API health status.
-    
-    Performs basic health check of the API and its dependencies.
-    Returns 200 if healthy, 503 if unhealthy.
-    """
-    try:
-        # Check database connection
-        db_status = "healthy"
-        try:
-            await db.execute(text("SELECT 1"))
-        except Exception as e:
-            db_status = f"unhealthy: {str(e)}"
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Database unhealthy: {str(e)}",
-            )
-
-        # Check Redis connection
-        redis_status = "healthy"
-        try:
-            await redis.ping()
-        except Exception as e:
-            redis_status = f"unhealthy: {str(e)}"
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Redis unhealthy: {str(e)}",
-            )
-
-        response = HealthCheck(
-            status="healthy",
-            version=settings.version,
-            database_status=db_status,
-            redis_status=redis_status,
-        )
-        logger.info("Health check response", response=response.model_dump())
-        return response
-
-    except Exception as e:
-        logger.exception("Health check failed", error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(e),
-        )
-
-@app.get(
-    "/health/detailed",
-    response_model=DetailedHealthCheck,
-    tags=["system"],
-)
-async def detailed_health_check(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    redis: Annotated[Redis, Depends(get_redis)],
-) -> DetailedHealthCheck:
-    """
-    Detailed health check with latency information.
-    
-    Performs comprehensive health check with latency measurements.
-    Requires authentication in production.
-    """
-    # Check database latency
+    """Check API health status with dependency statuses."""
     db_status = "healthy"
-    db_latency = 0.0
+    redis_status = "healthy"
     try:
-        start = time.time()
         await db.execute(text("SELECT 1"))
-        db_latency = (time.time() - start) * 1000
     except Exception as e:
         db_status = f"unhealthy: {str(e)}"
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Database unhealthy: {str(e)}",
-        )
-
-    # Check Redis latency
-    redis_status = "healthy"
-    redis_latency = 0.0
     try:
-        start = time.time()
         await redis.ping()
-        redis_latency = (time.time() - start) * 1000
     except Exception as e:
         redis_status = f"unhealthy: {str(e)}"
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Redis unhealthy: {str(e)}",
-        )
+    overall_status = "healthy" if db_status == "healthy" and redis_status == "healthy" else "unhealthy"
+    return HealthCheck(
+        status=overall_status,
+        version=settings.version,
+        database_status=db_status,
+        redis_status=redis_status
+    )
 
+@app.get("/health/detailed", response_model=DetailedHealthCheck, tags=["system"])
+async def detailed_health_check(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    redis: Annotated[Redis, Depends(get_redis)]
+) -> DetailedHealthCheck:
+    """Detailed health check with latency information."""
+    import time
+    db_status = "healthy"
+    redis_status = "healthy"
+
+    t_db = time.perf_counter()
+    try:
+        await db.execute(text("SELECT 1"))
+        db_latency = (time.perf_counter() - t_db) * 1000
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+        db_latency = 0.0
+
+    t_redis = time.perf_counter()
+    try:
+        await redis.ping()
+        redis_latency = (time.perf_counter() - t_redis) * 1000
+    except Exception as e:
+        redis_status = f"unhealthy: {str(e)}"
+        redis_latency = 0.0
+
+    overall_status = "healthy" if db_status == "healthy" and redis_status == "healthy" else "unhealthy"
     return DetailedHealthCheck(
-        status="healthy",
+        status=overall_status,
         version=settings.version,
         database_status=db_status,
         redis_status=redis_status,

@@ -1,66 +1,74 @@
 import { LitElement, html, css } from "lit";
+import { baseStyles } from "./styles/base.js";
 
 export class AppFooter extends LitElement {
-  static styles = css`
-    :host {
-      display: block;
-      background: var(--surface-color);
-      padding: var(--spacing-xl) 0;
-      margin-top: auto;
-    }
+  static styles = [
+    baseStyles,
+    css`
+      :host {
+        display: block;
+        background: #f9fafb;
+        padding: var(--spacing-lg) 0;
+        margin-top: auto;
+      }
 
-    .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 var(--spacing-lg);
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: var(--spacing-xl);
-    }
+      .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 var(--spacing-lg);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing-xl);
+      }
 
-    .footer-section h3 {
-      color: var(--text-color);
-      margin-bottom: var(--spacing-md);
-    }
+      .footer-section h3 {
+        font-size: 1rem;
+        font-weight: var(--font-weight-medium);
+        margin-bottom: var(--spacing-md);
+        color: var(--color-text);
+      }
 
-    .footer-links {
-      list-style: none;
-      padding: 0;
-    }
+      .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
 
-    .footer-links li {
-      margin-bottom: var(--spacing-sm);
-    }
+      .footer-links li {
+        margin-bottom: var(--spacing-sm);
+      }
 
-    .footer-links a {
-      color: var(--text-secondary);
-      text-decoration: none;
-      transition: color var(--transition-fast);
-    }
+      .footer-links a {
+        color: var(--color-secondary);
+        text-decoration: none;
+        transition: color var(--transition-fast);
+      }
 
-    .footer-links a:hover {
-      color: var(--primary-color);
-    }
+      .footer-links a:hover {
+        color: var(--color-primary);
+      }
 
-    .copyright {
-      text-align: center;
-      margin-top: var(--spacing-xl);
-      padding-top: var(--spacing-lg);
-      border-top: 1px solid var(--border-color);
-      color: var(--text-tertiary);
-    }
-  `;
+      .copyright {
+        text-align: center;
+        margin-top: var(--spacing-xl);
+        padding-top: var(--spacing-lg);
+        border-top: 1px solid #e5e7eb;
+        color: var(--color-secondary);
+      }
+    `,
+  ];
 
   render() {
     return html`
       <footer>
         <div class="footer-content">
           <div class="footer-section">
-            <h3>Resources</h3>
+            <h3>Documentation</h3>
             <ul class="footer-links">
-              <li><a href="/docs">Documentation</a></li>
-              <li><a href="/tutorials">Tutorials</a></li>
-              <li><a href="/examples">Examples</a></li>
+              <li><a href="/docs/getting-started">Getting Started</a></li>
+              <li><a href="/docs/components">Components</a></li>
+              <li><a href="/docs/api">API Reference</a></li>
+              <li><a href="/docs/examples">Examples</a></li>
             </ul>
           </div>
           <div class="footer-section">
@@ -69,14 +77,16 @@ export class AppFooter extends LitElement {
               <li><a href="/github">GitHub</a></li>
               <li><a href="/discord">Discord</a></li>
               <li><a href="/twitter">Twitter</a></li>
+              <li><a href="/blog">Blog</a></li>
             </ul>
           </div>
           <div class="footer-section">
-            <h3>Support</h3>
+            <h3>Resources</h3>
             <ul class="footer-links">
-              <li><a href="/faq">FAQ</a></li>
-              <li><a href="/contact">Contact</a></li>
-              <li><a href="/status">Status</a></li>
+              <li><a href="/tutorials">Tutorials</a></li>
+              <li><a href="/showcase">Showcase</a></li>
+              <li><a href="/roadmap">Roadmap</a></li>
+              <li><a href="/contributing">Contributing</a></li>
             </ul>
           </div>
         </div>

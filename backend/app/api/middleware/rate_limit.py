@@ -1,12 +1,16 @@
 import jwt
 import logging
-from fastapi import Request
+from fastapi import Request, FastAPI
 from typing import Optional
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 class RateLimitMiddleware:
-    # ... (other methods and initializations)
+    def __init__(self, config):
+        self.config = config
+        self.rate_limit = 100  # requests per minute
+        self.window = 60  # seconds
 
     async def _get_client_id(self, request: Request) -> Optional[str]:
         # Extract the token from header. Expect header "Authorization: Bearer <token>"
@@ -30,6 +34,15 @@ class RateLimitMiddleware:
             return None
 
     async def dispatch(self, request: Request, call_next):
-        # ... (code before)
         client_id = await self._get_client_id(request)
-        # ... (rest of dispatch logic) 
+        if not client_id:
+            # If no client ID, proceed without rate limiting
+            return await call_next(request)
+            
+        # TODO: Implement rate limiting logic here
+        return await call_next(request)
+
+def setup_rate_limit_middleware(app: FastAPI) -> None:
+    """Set up rate limiting middleware for the FastAPI application."""
+    middleware = RateLimitMiddleware(settings)
+    app.middleware("http")(middleware.dispatch) 

@@ -1,4 +1,4 @@
-.PHONY: setup serve dev dev-build test clean frontend backend
+.PHONY: setup serve dev dev-build test clean frontend backend test-lf beep
 
 setup: ## Initial setup of development environment
 	@echo "Creating development environment..."
@@ -29,7 +29,7 @@ dev-build: ## Rebuild and start development environment
 
 test: ## Run tests
 	@echo "Running tests..."
-	# cd frontend && npm test
+	# cd frontend && npm test:fast
 	docker compose -f backend/docker-compose.dev.yml run --rm api pytest
 
 clean: ## Clean up development environment
@@ -39,5 +39,12 @@ clean: ## Clean up development environment
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+test-lf: ## Run only the last failed tests
+	@echo "Running last failed tests..."
+	docker compose -f backend/docker-compose.dev.yml run --rm api pytest --lf
+
+beep: ## Emit a beep notification
+	@echo "Beep! You've reached the failure threshold. Please check your tests!"
 
 .DEFAULT_GOAL := help

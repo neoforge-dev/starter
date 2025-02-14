@@ -43,7 +43,7 @@ export class NeoRadio extends LitElement {
       display: grid;
       place-content: center;
       background-color: var(--radio-color, transparent);
-      transition: background-color 0.2s ease-in-out;
+      transition: all 0.2s ease-in-out;
     }
 
     .radio::before {
@@ -86,12 +86,10 @@ export class NeoRadio extends LitElement {
 
     .radio.checked {
       border-color: var(--radio-checked-color, #2563eb);
-      background-color: var(--radio-color, transparent);
     }
 
     .radio.disabled {
       border-color: var(--radio-disabled-color, #9ca3af);
-      background-color: var(--radio-color, transparent);
     }
   `;
 
@@ -120,37 +118,9 @@ export class NeoRadio extends LitElement {
 
   _handleFormData = (e) => {
     if (this.checked) {
-      e.formData.append(this.name, this.value);
+      e.formData.set(this.name, this.value);
     }
   };
-
-  render() {
-    return html`
-      <label>
-        <input
-          type="radio"
-          class="radio ${this.checked ? "checked" : ""} ${this.disabled
-            ? "disabled"
-            : ""}"
-          name=${this.name}
-          value=${this.value}
-          ?checked=${this.checked}
-          ?disabled=${this.disabled}
-          ?required=${this.required}
-          @change=${this._handleChange}
-          @keydown=${this._handleKeydown}
-          role="radio"
-          aria-checked=${this.checked}
-          aria-disabled=${this.disabled}
-        />
-        ${this.label}
-        <slot></slot>
-        ${this.validationMessage
-          ? html` <div class="error-message">${this.validationMessage}</div> `
-          : ""}
-      </label>
-    `;
-  }
 
   _handleChange = (e) => {
     if (this.disabled) return;
@@ -164,6 +134,17 @@ export class NeoRadio extends LitElement {
       group.forEach((radio) => {
         if (radio !== this && radio.name === this.name) {
           radio.checked = false;
+          radio.dispatchEvent(
+            new CustomEvent("change", {
+              detail: {
+                checked: false,
+                value: radio.value,
+                name: radio.name,
+              },
+              bubbles: true,
+              composed: true,
+            })
+          );
         }
       });
 
@@ -230,6 +211,7 @@ export class NeoRadio extends LitElement {
     if (nextRadio) {
       nextRadio.focus();
       nextRadio.checked = true;
+      this.checked = false;
       nextRadio.dispatchEvent(
         new CustomEvent("change", {
           detail: {
@@ -251,6 +233,7 @@ export class NeoRadio extends LitElement {
     if (previousRadio) {
       previousRadio.focus();
       previousRadio.checked = true;
+      this.checked = false;
       previousRadio.dispatchEvent(
         new CustomEvent("change", {
           detail: {
@@ -300,16 +283,45 @@ export class NeoRadio extends LitElement {
     return this.closest("form");
   }
 
-  get value() {
-    return this.getAttribute("value");
+  updated(changedProperties) {
+    super.updated(changedProperties);
+    if (changedProperties.has("checked") && this.checked) {
+      // Uncheck other radios in the same group
+      const group = this._getRadioGroup();
+      group.forEach((radio) => {
+        if (radio !== this && radio.name === this.name) {
+          radio.checked = false;
+        }
+      });
+    }
   }
 
-  set value(val) {
-    if (val === null) {
-      this.removeAttribute("value");
-    } else {
-      this.setAttribute("value", val);
-    }
+  render() {
+    return html`
+      <label>
+        <input
+          type="radio"
+          class="radio ${this.checked ? "checked" : ""} ${this.disabled
+            ? "disabled"
+            : ""}"
+          name=${this.name}
+          value=${this.value}
+          ?checked=${this.checked}
+          ?disabled=${this.disabled}
+          ?required=${this.required}
+          @change=${this._handleChange}
+          @keydown=${this._handleKeydown}
+          role="radio"
+          aria-checked=${this.checked}
+          aria-disabled=${this.disabled}
+        />
+        ${this.label}
+        <slot></slot>
+        ${this.validationMessage
+          ? html` <div class="error-message">${this.validationMessage}</div> `
+          : ""}
+      </label>
+    `;
   }
 }
 

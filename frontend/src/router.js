@@ -1,31 +1,46 @@
 import { authService } from "./services/auth-service.js";
+import { lazyLoad } from "./utils/lazy-load.js";
 
-// Route definitions
+// Route definitions with metadata
 const routes = [
   // Public routes
   {
     path: "/",
-    component: () => import("./pages/home-page.js"),
+    component: "landing-page",
+    import: () =>
+      lazyLoad("./pages/landing-page.js", "landing-page", {
+        fallback: () =>
+          '<div class="loading-fallback">Loading homepage...</div>',
+      }),
     public: true,
   },
   {
     path: "/docs",
-    component: () => import("./pages/docs-page.js"),
-    public: true,
-  },
-  {
-    path: "/components",
-    component: () => import("./pages/components-page.js"),
+    component: "docs-page",
+    import: () =>
+      lazyLoad("./pages/docs-page.js", "docs-page", {
+        fallback: () =>
+          '<div class="loading-fallback">Loading documentation...</div>',
+      }),
     public: true,
   },
   {
     path: "/examples",
-    component: () => import("./pages/examples-page.js"),
+    component: "examples-page",
+    import: () =>
+      lazyLoad("./pages/examples-page.js", "examples-page", {
+        fallback: () =>
+          '<div class="loading-fallback">Loading examples...</div>',
+      }),
     public: true,
   },
   {
     path: "/blog",
-    component: () => import("./pages/blog-page.js"),
+    component: "blog-page",
+    import: () =>
+      lazyLoad("./pages/blog-page.js", "blog-page", {
+        fallback: () => '<div class="loading-fallback">Loading blog...</div>',
+      }),
     public: true,
   },
   {
@@ -43,35 +58,58 @@ const routes = [
     component: () => import("./pages/support-page.js"),
     public: true,
   },
-
   // Auth routes (guest only)
   {
     path: "/auth/login",
-    component: () => import("./pages/auth/login-page.js"),
+    component: "login-page",
+    import: () =>
+      lazyLoad("./pages/auth/login-page.js", "login-page", {
+        fallback: () =>
+          '<div class="loading-fallback">Loading login page...</div>',
+      }),
     public: true,
     guestOnly: true,
   },
   {
     path: "/auth/register",
-    component: () => import("./pages/auth/register-page.js"),
+    component: "register-page",
+    import: () =>
+      lazyLoad("./pages/auth/register-page.js", "register-page", {
+        fallback: () =>
+          '<div class="loading-fallback">Loading registration...</div>',
+      }),
     public: true,
     guestOnly: true,
   },
-
-  // Protected routes (require authentication)
+  // Protected routes
   {
     path: "/dashboard",
-    component: () => import("./pages/dashboard-page.js"),
+    component: "dashboard-page",
+    import: () =>
+      lazyLoad("./pages/dashboard-page.js", "dashboard-page", {
+        fallback: () =>
+          '<div class="loading-fallback">Loading dashboard...</div>',
+      }),
     public: false,
   },
   {
     path: "/profile",
-    component: () => import("./pages/profile-page.js"),
+    component: "profile-page",
+    import: () =>
+      lazyLoad("./pages/profile-page.js", "profile-page", {
+        fallback: () =>
+          '<div class="loading-fallback">Loading profile...</div>',
+      }),
     public: false,
   },
   {
     path: "/settings",
-    component: () => import("./pages/settings-page.js"),
+    component: "settings-page",
+    import: () =>
+      lazyLoad("./pages/settings-page.js", "settings-page", {
+        fallback: () =>
+          '<div class="loading-fallback">Loading settings...</div>',
+      }),
     public: false,
   },
 ];
@@ -79,7 +117,6 @@ const routes = [
 class Router {
   constructor() {
     this._routes = new Map(routes.map((route) => [route.path, route]));
-
     this._mainContent = document.querySelector("main");
 
     window.addEventListener("popstate", () => this.handleRoute());
@@ -98,7 +135,11 @@ class Router {
   async handleRoute() {
     const path = window.location.pathname;
     const route = this._routes.get(path) || {
-      component: () => import("./pages/not-found-page.js"),
+      component: "not-found-page",
+      import: () =>
+        lazyLoad("./pages/not-found-page.js", "not-found-page", {
+          fallback: () => '<div class="loading-fallback">Page not found</div>',
+        }),
       public: true,
     };
 
@@ -106,63 +147,78 @@ class Router {
     const isAuthenticated = authService.isAuthenticated;
 
     if (!route.public && !isAuthenticated) {
-      // Redirect to login if trying to access protected route
       this.navigate("/auth/login");
       return;
     }
 
     if (route.guestOnly && isAuthenticated) {
-      // Redirect to dashboard if trying to access guest-only route while logged in
       this.navigate("/dashboard");
       return;
     }
 
     try {
+      // Clear existing content
+      this._mainContent.innerHTML = "";
+
+      // Create error boundary
+      const errorBoundary = document.createElement("error-boundary");
+      this._mainContent.appendChild(errorBoundary);
+
+      // Create and mount new component inside error boundary
+      const element = document.createElement(route.component);
+      errorBoundary.appendChild(element);
+
       // Load component
-      const module = await route.component();
-      const tagName =
-        Object.values(module)[0].tagName || this._getTagName(path);
+      await route.import();
 
-      if (!customElements.get(tagName)) {
-        // Wait for component to be defined if it's not already
-        await customElements.whenDefined(tagName);
-      }
-
-      // Update content
-      this._mainContent.innerHTML = `<${tagName}></${tagName}>`;
-
-      // Update title
+      // Update title and meta
       document.title = `${this._getTitle(path)} - NeoForge`;
+      this._updateMeta(route);
 
       // Scroll to top
       window.scrollTo(0, 0);
+
+      // Analytics
+      this._trackPageView(path);
     } catch (error) {
       console.error("Error loading page:", error);
-      this._mainContent.innerHTML = `
-        <div class="error-page">
-          <h1>Error Loading Page</h1>
-          <p>${error.message}</p>
-          <button onclick="window.location.href='/'">Return Home</button>
-        </div>
-      `;
+      // Error will be handled by error boundary
     }
   }
 
-  navigate(path) {
-    window.history.pushState({}, "", path);
-    this.handleRoute();
-  }
-
-  _getTagName(path) {
-    // Convert path to tag name (e.g., /auth/login -> login-page)
-    const basename = path.split("/").pop() || "home";
-    return `${basename}-page`;
+  navigate(path, options = {}) {
+    window.history.pushState(null, "", path);
+    return this.handleRoute();
   }
 
   _getTitle(path) {
-    // Convert path to title (e.g., /auth/login -> Login)
-    const basename = path.split("/").pop() || "Home";
-    return basename.charAt(0).toUpperCase() + basename.slice(1);
+    return path === "/"
+      ? "Home"
+      : path
+          .split("/")
+          .pop()
+          .split("-")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+  }
+
+  _updateMeta(route) {
+    // Update meta tags based on route metadata
+    const description =
+      route.description || "NeoForge - Modern Web Components Framework";
+    const keywords = route.keywords || "web components, frontend, framework";
+
+    document.querySelector('meta[name="description"]').content = description;
+    document.querySelector('meta[name="keywords"]').content = keywords;
+  }
+
+  _trackPageView(path) {
+    // Simple analytics tracking
+    if (window.gtag) {
+      window.gtag("config", "GA-TRACKING-ID", {
+        page_path: path,
+      });
+    }
   }
 }
 

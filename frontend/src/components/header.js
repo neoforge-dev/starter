@@ -9,11 +9,8 @@ export class AppHeader extends ThemeToggleMixin(LitElement) {
     css`
       :host {
         display: block;
-        background: var(--surface-color);
-        box-shadow: var(--shadow-sm);
-        position: sticky;
-        top: 0;
-        z-index: var(--z-sticky);
+        background: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       }
       nav {
         display: flex;
@@ -24,24 +21,24 @@ export class AppHeader extends ThemeToggleMixin(LitElement) {
         margin: 0 auto;
       }
       .logo {
-        font-weight: var(--font-weight-bold);
-        font-size: var(--font-size-lg);
-        color: var(--primary-color);
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--color-primary);
         text-decoration: none;
       }
       .nav-links {
         display: flex;
         gap: var(--spacing-md);
       }
-      .nav-link {
-        color: var(--text-color);
+      a {
+        color: var(--color-text);
         text-decoration: none;
-        padding: var(--spacing-sm);
+        padding: var(--spacing-xs) var(--spacing-sm);
         border-radius: var(--radius-md);
-        transition: background-color var(--transition-fast);
+        transition: background var(--transition-fast);
       }
-      .nav-link:hover {
-        background-color: var(--border-color);
+      a:hover {
+        background: rgba(0, 0, 0, 0.05);
       }
       .theme-toggle {
         background: none;
