@@ -1,213 +1,142 @@
 import { expect } from "@esm-bundle/chai";
-import { fixture, html, oneEvent } from "@open-wc/testing";
-import "../../components/ui/navigation.js";
+import { fixture, html } from "@open-wc/testing";
+import "../../src/components/ui/navigation.js";
 
-describe("NeoNavigation", () => {
+describe("Navigation Component", () => {
   let element;
-  const mockItems = [
+  const defaultNavItems = [
     {
-      id: "1",
+      id: "dashboard",
       label: "Dashboard",
+      icon: "dashboard",
       path: "/dashboard",
     },
     {
-      id: "2",
-      label: "Projects",
-      path: "/projects",
+      id: "settings",
+      label: "Settings",
+      icon: "settings",
+      path: "/settings",
       children: [
-        {
-          id: "2.1",
-          label: "Active",
-          path: "/projects/active",
-        },
-        {
-          id: "2.2",
-          label: "Archived",
-          path: "/projects/archived",
-        },
+        { id: "profile", label: "Profile", path: "/settings/profile" },
+        { id: "security", label: "Security", path: "/settings/security" },
       ],
     },
     {
-      id: "3",
-      label: "Settings",
-      path: "/settings",
+      id: "docs",
+      label: "Documentation",
+      icon: "book",
+      path: "/docs",
     },
   ];
 
   beforeEach(async () => {
     element = await fixture(html`
-      <neo-navigation
-        .items=${mockItems}
-        current-path="/dashboard"
-      ></neo-navigation>
+      <neo-navigation .items=${defaultNavItems} current-path="/dashboard">
+      </neo-navigation>
     `);
   });
 
-  // Desktop functionality tests
-  it("renders navigation items correctly", () => {
+  afterEach(() => {
+    // Clean up any modals that might have been added to the body
+    document.querySelectorAll("neo-navigation").forEach((nav) => {
+      nav.remove();
+    });
+    // Remove any event listeners
+    window.removeEventListener("resize", element._handleResize);
+  });
+
+  it("should be defined", () => {
+    expect(element).to.be.instanceOf(customElements.get("neo-navigation"));
+  });
+
+  it("should render navigation items", async () => {
     const items = element.shadowRoot.querySelectorAll(".nav-item");
-    expect(items.length).to.equal(mockItems.length);
+    expect(items.length).to.equal(defaultNavItems.length);
+
+    items.forEach((item, index) => {
+      expect(item.textContent).to.include(defaultNavItems[index].label);
+    });
   });
 
-  it("highlights current path", () => {
-    const activeItem = element.shadowRoot.querySelector(
-      ".nav-item-header.active"
-    );
+  it("should highlight current path", async () => {
+    const activeItem = element.shadowRoot.querySelector(".nav-item.active");
     expect(activeItem).to.exist;
-    expect(activeItem.textContent.trim()).to.equal("Dashboard");
+    expect(activeItem.getAttribute("data-path")).to.equal("/dashboard");
   });
 
-  it("expands/collapses items with children", async () => {
-    const projectsItem = element.shadowRoot.querySelector('[data-id="2"]');
-    const header = projectsItem.querySelector(".nav-item-header");
-
-    // Initially collapsed
-    expect(projectsItem.classList.contains("expanded")).to.be.false;
-
-    // Click to expand
-    header.click();
+  it("should handle nested navigation", async () => {
+    const settingsItem = element.shadowRoot.querySelector(
+      '[data-id="settings"]'
+    );
+    settingsItem.click();
     await element.updateComplete;
-    expect(projectsItem.classList.contains("expanded")).to.be.true;
 
-    // Click to collapse
-    header.click();
+    const subItems = element.shadowRoot.querySelectorAll(".nav-subitem");
+    expect(subItems.length).to.equal(2);
+    expect(subItems[0].textContent).to.include("Profile");
+  });
+
+  it("should emit navigation events", async () => {
+    let navigatedPath = null;
+    const handler = (e) => {
+      navigatedPath = e.detail.path;
+    };
+    element.addEventListener("navigate", handler);
+
+    const docsItem = element.shadowRoot.querySelector('[data-id="docs"]');
+    docsItem.click();
+
+    expect(navigatedPath).to.equal("/docs");
+    element.removeEventListener("navigate", handler);
+  });
+
+  it("should handle mobile navigation toggle", async () => {
+    const toggleButton = element.shadowRoot.querySelector(".nav-toggle");
+    toggleButton.click();
     await element.updateComplete;
-    expect(projectsItem.classList.contains("expanded")).to.be.false;
+
+    expect(element.classList.contains("nav-expanded")).to.be.true;
+
+    toggleButton.click();
+    await element.updateComplete;
+    expect(element.classList.contains("nav-expanded")).to.be.false;
   });
 
-  // Mobile functionality tests
-  describe("Mobile View", () => {
-    beforeEach(() => {
-      // Mock mobile viewport
-      window.matchMedia = (query) => ({
-        matches: query.includes("max-width: 768px"),
-        addListener: () => {},
-        removeListener: () => {},
-      });
-    });
+  it("should collapse other items when expanding one", async () => {
+    const settingsItem = element.shadowRoot.querySelector(
+      '[data-id="settings"]'
+    );
+    settingsItem.click();
+    await element.updateComplete;
 
-    it("shows mobile toggle button", () => {
-      const toggle = element.shadowRoot.querySelector(".nav-toggle");
-      expect(toggle).to.exist;
-      expect(toggle.style.display).to.not.equal("none");
-    });
+    expect(settingsItem.classList.contains("expanded")).to.be.true;
 
-    it("toggles mobile menu", async () => {
-      const toggle = element.shadowRoot.querySelector(".nav-toggle");
+    const docsItem = element.shadowRoot.querySelector('[data-id="docs"]');
+    docsItem.click();
+    await element.updateComplete;
 
-      // Initially not expanded
-      expect(element.expanded).to.be.false;
-
-      // Click to expand
-      toggle.click();
-      await element.updateComplete;
-      expect(element.expanded).to.be.true;
-
-      // Click to collapse
-      toggle.click();
-      await element.updateComplete;
-      expect(element.expanded).to.be.false;
-    });
-
-    it("closes mobile menu when selecting an item", async () => {
-      // Open menu
-      element.expanded = true;
-      await element.updateComplete;
-
-      // Click a nav item
-      const item = element.shadowRoot.querySelector('[data-path="/dashboard"]');
-      const header = item.querySelector(".nav-item-header");
-      header.click();
-
-      await element.updateComplete;
-      expect(element.expanded).to.be.false;
-    });
-
-    it("handles touch events correctly", async () => {
-      const item = element.shadowRoot.querySelector('[data-id="2"]');
-      const header = item.querySelector(".nav-item-header");
-
-      // Simulate touch events
-      header.dispatchEvent(new TouchEvent("touchstart"));
-      header.dispatchEvent(new TouchEvent("touchend"));
-
-      await element.updateComplete;
-      expect(item.classList.contains("expanded")).to.be.true;
-    });
-
-    it("updates body scroll when menu opens/closes", async () => {
-      // Open menu
-      element.expanded = true;
-      await element.updateComplete;
-      expect(document.body.style.overflow).to.equal("hidden");
-
-      // Close menu
-      element.expanded = false;
-      await element.updateComplete;
-      expect(document.body.style.overflow).to.equal("");
-    });
-
-    it("handles window resize", async () => {
-      // Open menu in mobile
-      element.expanded = true;
-      await element.updateComplete;
-
-      // Simulate resize to desktop
-      window.matchMedia = (query) => ({
-        matches: false,
-        addListener: () => {},
-        removeListener: () => {},
-      });
-
-      window.dispatchEvent(new Event("resize"));
-      await element.updateComplete;
-
-      expect(element.expanded).to.be.false;
-      expect(document.body.style.overflow).to.equal("");
-    });
+    expect(settingsItem.classList.contains("expanded")).to.be.false;
   });
 
-  // Accessibility tests
-  describe("Accessibility", () => {
-    it("has proper ARIA attributes", () => {
-      const nav = element.shadowRoot.querySelector('[role="navigation"]');
-      expect(nav).to.exist;
-      expect(nav.getAttribute("aria-label")).to.equal("Main navigation");
-    });
+  it("should handle keyboard navigation", async () => {
+    const firstItem = element.shadowRoot.querySelector(".nav-item");
+    firstItem.focus();
 
-    it("has proper ARIA attributes for expandable items", () => {
-      const expandableItem = element.shadowRoot.querySelector(
-        '[data-id="2"] .nav-item-header'
-      );
-      expect(expandableItem.getAttribute("role")).to.equal("button");
-      expect(expandableItem.getAttribute("aria-expanded")).to.exist;
-    });
+    // Test arrow down navigation
+    const event = new KeyboardEvent("keydown", { key: "ArrowDown" });
+    firstItem.dispatchEvent(event);
+    await element.updateComplete;
 
-    it("handles keyboard navigation", async () => {
-      const item = element.shadowRoot.querySelector('[data-id="2"]');
-      const header = item.querySelector(".nav-item-header");
+    const secondItem = element.shadowRoot.querySelector('[data-id="settings"]');
+    expect(document.activeElement).to.equal(secondItem);
+  });
 
-      // Press Enter
-      header.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
-      await element.updateComplete;
-      expect(item.classList.contains("expanded")).to.be.true;
+  it("should handle route changes", async () => {
+    element.currentPath = "/settings/profile";
+    await element.updateComplete;
 
-      // Press Space
-      header.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
-      await element.updateComplete;
-      expect(item.classList.contains("expanded")).to.be.false;
-    });
-
-    it("maintains focus management", async () => {
-      const toggle = element.shadowRoot.querySelector(".nav-toggle");
-      const firstItem = element.shadowRoot.querySelector(".nav-item-header");
-
-      // Open menu and check focus
-      toggle.focus();
-      toggle.click();
-      await element.updateComplete;
-
-      expect(document.activeElement).to.equal(firstItem);
-    });
+    const activeItem = element.shadowRoot.querySelector(".nav-subitem.active");
+    expect(activeItem).to.exist;
+    expect(activeItem.getAttribute("data-path")).to.equal("/settings/profile");
   });
 });

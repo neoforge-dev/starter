@@ -1,6 +1,6 @@
 import { expect } from "@esm-bundle/chai";
 import { fixture, html } from "@open-wc/testing";
-import "../../components/atoms/badge/badge.js";
+import "../../../src/components/atoms/badge/badge.js";
 
 describe("NeoBadge", () => {
   let element;
@@ -12,16 +12,21 @@ describe("NeoBadge", () => {
   it("renders with default properties", () => {
     expect(element.variant).to.equal("default");
     expect(element.size).to.equal("medium");
+    expect(element.rounded).to.be.false;
+    expect(element.outlined).to.be.false;
+    expect(element.removable).to.be.false;
     expect(element.textContent.trim()).to.equal("Default");
   });
 
   it("reflects variant changes", async () => {
-    const variants = ["success", "warning", "error", "info"];
+    const variants = ["primary", "success", "warning", "error", "info"];
 
     for (const variant of variants) {
       element.variant = variant;
       await element.updateComplete;
-      expect(element.shadowRoot.querySelector(".badge")).to.have.class(variant);
+      expect(element.shadowRoot.querySelector(".badge")).to.have.class(
+        `variant-${variant}`
+      );
     }
   });
 
@@ -31,8 +36,72 @@ describe("NeoBadge", () => {
     for (const size of sizes) {
       element.size = size;
       await element.updateComplete;
-      expect(element.shadowRoot.querySelector(".badge")).to.have.class(size);
+      expect(element.shadowRoot.querySelector(".badge")).to.have.class(
+        `size-${size}`
+      );
     }
+  });
+
+  it("handles rounded style", async () => {
+    element.rounded = true;
+    await element.updateComplete;
+    expect(element.shadowRoot.querySelector(".badge")).to.have.class("rounded");
+  });
+
+  it("handles outlined style", async () => {
+    element.outlined = true;
+    await element.updateComplete;
+    expect(element.shadowRoot.querySelector(".badge")).to.have.class(
+      "outlined"
+    );
+  });
+
+  it("renders with icon", async () => {
+    const badgeWithIcon = await fixture(html`
+      <neo-badge icon="check">Success</neo-badge>
+    `);
+
+    const icon = badgeWithIcon.shadowRoot.querySelector("neo-icon");
+    expect(icon).to.exist;
+    expect(icon.getAttribute("name")).to.equal("check");
+  });
+
+  it("handles removable state", async () => {
+    element.removable = true;
+    await element.updateComplete;
+
+    const closeButton = element.shadowRoot.querySelector(".close-button");
+    expect(closeButton).to.exist;
+    expect(closeButton).to.have.attribute("aria-label", "Remove");
+  });
+
+  it("dispatches remove event", async () => {
+    element.removable = true;
+    await element.updateComplete;
+
+    let removed = false;
+    element.addEventListener("remove", () => (removed = true));
+
+    const closeButton = element.shadowRoot.querySelector(".close-button");
+    closeButton.click();
+
+    expect(removed).to.be.true;
+  });
+
+  it("truncates long content", async () => {
+    const longContent =
+      "This is a very long badge content that should be truncated";
+    element.textContent = longContent;
+    await element.updateComplete;
+
+    const badge = element.shadowRoot.querySelector(".badge");
+    expect(badge).to.have.class("truncate");
+    expect(badge).to.have.attribute("title", longContent);
+  });
+
+  it("maintains proper ARIA attributes", async () => {
+    const badge = element.shadowRoot.querySelector(".badge");
+    expect(badge).to.have.attribute("role", "status");
   });
 
   it("handles slotted content", async () => {
@@ -47,15 +116,6 @@ describe("NeoBadge", () => {
     const slots = badge.shadowRoot.querySelectorAll("slot");
     expect(slots.length).to.equal(3); // prefix, default, suffix slots
     expect(badge.textContent.trim()).to.equal("Custom Content");
-  });
-
-  it("maintains proper ARIA attributes", async () => {
-    element.setAttribute("role", "status");
-    await element.updateComplete;
-    expect(element.shadowRoot.querySelector(".badge")).to.have.attribute(
-      "role",
-      "status"
-    );
   });
 
   it("handles dynamic content updates", async () => {

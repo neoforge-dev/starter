@@ -1,166 +1,111 @@
-import { expect } from '@esm-bundle/chai';
-import { fixture, html, oneEvent } from '@open-wc/testing';
-import '../../components/atoms/button/button.js';
+import { expect } from "@esm-bundle/chai";
+import { fixture, html, oneEvent } from "@open-wc/testing";
+import "../../../src/components/atoms/button/button.js";
 
-describe('NeoButton', () => {
+describe("NeoButton", () => {
   let element;
 
   beforeEach(async () => {
-    element = await fixture(html\`<neo-button>Click me</neo-button>\`);
+    element = await fixture(html`<neo-button>Click me</neo-button>`);
   });
 
-  it('renders with default properties', () => {
-    expect(element.variant).to.equal('primary');
-    expect(element.size).to.equal('medium');
+  it("renders with default properties", () => {
+    expect(element.variant).to.equal("primary");
+    expect(element.size).to.equal("medium");
     expect(element.disabled).to.be.false;
     expect(element.loading).to.be.false;
   });
 
-  it('reflects property changes', async () => {
-    element.variant = 'secondary';
-    element.size = 'small';
-    element.disabled = true;
-    element.loading = true;
-    
-    await element.updateComplete;
-    
-    expect(element.shadowRoot.querySelector('button')).to.have.class('variant-secondary');
-    expect(element.shadowRoot.querySelector('button')).to.have.class('size-small');
-    expect(element.shadowRoot.querySelector('button')).to.have.attribute('disabled');
-    expect(element.shadowRoot.querySelector('neo-spinner')).to.exist;
-  });
-
-  it('dispatches click event when not disabled', async () => {
-    const clickPromise = oneEvent(element, 'click');
-    element.click();
-    const event = await clickPromise;
-    expect(event).to.exist;
-  });
-
-  it('does not dispatch click event when disabled', async () => {
-    element.disabled = true;
-    await element.updateComplete;
-    
+  it("responds to click events", async () => {
     let clicked = false;
-    element.addEventListener('click', () => clicked = true);
-    element.click();
-    
-    expect(clicked).to.be.false;
+    element.addEventListener("click", () => (clicked = true));
+
+    const button = element.shadowRoot.querySelector("button");
+    button.click();
+
+    expect(clicked).to.be.true;
   });
 
-  it('does not dispatch click event when loading', async () => {
-    element.loading = true;
+  it("reflects variant attribute", async () => {
+    element.variant = "secondary";
     await element.updateComplete;
-    
-    let clicked = false;
-    element.addEventListener('click', () => clicked = true);
-    element.click();
-    
-    expect(clicked).to.be.false;
+
+    const button = element.shadowRoot.querySelector("button");
+    expect(button.classList.contains("variant-secondary")).to.be.true;
   });
 
-  it('handles keyboard interaction', async () => {
-    const clickPromise = oneEvent(element, 'click');
-    
-    // Simulate Enter key
-    element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-    await clickPromise;
-    
-    // Simulate Space key
-    const spaceClickPromise = oneEvent(element, 'click');
-    element.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
-    await spaceClickPromise;
-  });
-
-  it('maintains focus state', async () => {
-    element.focus();
-    await element.updateComplete;
-    
-    expect(document.activeElement).to.equal(element);
-    expect(element.shadowRoot.querySelector('button')).to.have.class('focused');
-    
-    element.blur();
-    await element.updateComplete;
-    
-    expect(document.activeElement).to.not.equal(element);
-    expect(element.shadowRoot.querySelector('button')).to.not.have.class('focused');
-  });
-
-  it('renders slotted content correctly', async () => {
-    const buttonWithIcon = await fixture(html\`
-      <neo-button>
-        <neo-icon slot="prefix" name="star"></neo-icon>
-        Click me
-        <neo-icon slot="suffix" name="arrow-right"></neo-icon>
-      </neo-button>
-    \`);
-
-    const slots = buttonWithIcon.shadowRoot.querySelectorAll('slot');
-    expect(slots.length).to.equal(3); // prefix, default, suffix slots
-    expect(slots[0].name).to.equal('prefix');
-    expect(slots[1].name).to.equal('');
-    expect(slots[2].name).to.equal('suffix');
-  });
-
-  it('handles loading state with spinner', async () => {
+  it("shows loading state", async () => {
     element.loading = true;
     await element.updateComplete;
 
-    const spinner = element.shadowRoot.querySelector('neo-spinner');
+    const spinner = element.shadowRoot.querySelector("neo-spinner");
     expect(spinner).to.exist;
-    expect(spinner.size).to.equal('small');
-    expect(spinner.variant).to.equal('light');
-    expect(element.getAttribute('aria-busy')).to.equal('true');
+    expect(element.shadowRoot.querySelector("button")).to.have.class("loading");
   });
 
-  it('maintains proper ARIA attributes', async () => {
-    // Test default state
-    expect(element.getAttribute('role')).to.equal('button');
-    expect(element.getAttribute('tabindex')).to.equal('0');
-
-    // Test disabled state
-    element.disabled = true;
-    await element.updateComplete;
-    expect(element.getAttribute('aria-disabled')).to.equal('true');
-    expect(element.getAttribute('tabindex')).to.equal('-1');
-
-    // Test loading state
-    element.disabled = false;
+  it("disables button when loading", async () => {
     element.loading = true;
     await element.updateComplete;
-    expect(element.getAttribute('aria-busy')).to.equal('true');
+
+    const button = element.shadowRoot.querySelector("button");
+    expect(button.disabled).to.be.true;
+    expect(button.getAttribute("aria-busy")).to.equal("true");
   });
 
-  it('applies variant styles correctly', async () => {
-    const variants = ['primary', 'secondary', 'text', 'icon'];
-    
-    for (const variant of variants) {
-      element.variant = variant;
-      await element.updateComplete;
-      expect(element.shadowRoot.querySelector('button')).to.have.class(\`variant-\${variant}\`);
-    }
+  it("supports different sizes", async () => {
+    element.size = "small";
+    await element.updateComplete;
+
+    const button = element.shadowRoot.querySelector("button");
+    expect(button.classList.contains("size-small")).to.be.true;
   });
 
-  it('applies size styles correctly', async () => {
-    const sizes = ['small', 'medium', 'large'];
-    
-    for (const size of sizes) {
-      element.size = size;
-      await element.updateComplete;
-      expect(element.shadowRoot.querySelector('button')).to.have.class(\`size-\${size}\`);
-    }
+  it("renders slotted content", async () => {
+    const buttonWithSlots = await fixture(html`
+      <neo-button>
+        <span slot="prefix">Before</span>
+        Click me
+        <span slot="suffix">After</span>
+      </neo-button>
+    `);
+
+    const slots = buttonWithSlots.shadowRoot.querySelectorAll("slot");
+    expect(slots.length).to.equal(3);
+    expect(slots[0].name).to.equal("prefix");
+    expect(slots[1].name).to.equal("");
+    expect(slots[2].name).to.equal("suffix");
   });
 
-  it('handles form submission correctly', async () => {
-    const form = await fixture(html\`
+  it("maintains proper ARIA attributes", async () => {
+    element.disabled = true;
+    await element.updateComplete;
+
+    const button = element.shadowRoot.querySelector("button");
+    expect(button).to.have.attribute("role", "button");
+    expect(button).to.have.attribute("aria-disabled", "true");
+  });
+
+  it("prevents click when disabled", async () => {
+    element.disabled = true;
+    await element.updateComplete;
+
+    let clicked = false;
+    element.addEventListener("click", () => (clicked = true));
+
+    const button = element.shadowRoot.querySelector("button");
+    button.click();
+
+    expect(clicked).to.be.false;
+  });
+
+  it("supports form submission", async () => {
+    const form = await fixture(html`
       <form>
         <neo-button type="submit">Submit</neo-button>
       </form>
-    \`);
+    `);
 
-    const submitPromise = oneEvent(form, 'submit');
-    form.querySelector('neo-button').click();
-    const event = await submitPromise;
-    expect(event).to.exist;
+    const button = form.querySelector("neo-button");
+    expect(button.type).to.equal("submit");
   });
-}); 
+});

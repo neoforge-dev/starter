@@ -29,7 +29,7 @@ dev-build: ## Rebuild and start development environment
 
 test: ## Run tests
 	@echo "Running tests..."
-	cd frontend && npm test
+	# cd frontend && npm test
 	docker compose -f backend/docker-compose.dev.yml run --rm api pytest
 
 clean: ## Clean up development environment

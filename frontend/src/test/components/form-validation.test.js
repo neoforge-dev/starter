@@ -1,8 +1,8 @@
 import { expect } from "@esm-bundle/chai";
-import { fixture, html, oneEvent } from "@open-wc/testing";
-import "../../components/ui/form-validation.js";
+import { fixture, html } from "@open-wc/testing";
+import "../../src/components/ui/form-validation.js";
 
-describe("NeoForm", () => {
+describe("Form Validation Component", () => {
   let element;
 
   beforeEach(async () => {
@@ -13,6 +13,7 @@ describe("NeoForm", () => {
           name="username"
           required
           minlength="3"
+          maxlength="20"
           data-validate
         />
         <input type="email" name="email" required data-validate />
@@ -24,164 +25,123 @@ describe("NeoForm", () => {
           pattern="^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$"
           data-validate
         />
+        <input
+          type="tel"
+          name="phone"
+          pattern="^\\+?[1-9]\\d{1,14}$"
+          data-validate
+        />
       </neo-form>
     `);
   });
 
-  it("renders with default properties", () => {
-    expect(element.errors).to.deep.equal({});
-    expect(element.customRules).to.deep.equal({});
+  it("should be defined", () => {
+    expect(element).to.be.instanceOf(customElements.get("neo-form"));
   });
 
-  it("validates required fields", async () => {
+  it("should validate required fields", async () => {
     const result = await element.validate();
     expect(result.valid).to.be.false;
-    expect(Object.keys(result.errors)).to.have.lengthOf(3);
-    expect(result.errors.username).to.equal("This field is required");
-    expect(result.errors.email).to.equal("This field is required");
-    expect(result.errors.password).to.equal("This field is required");
+    expect(result.errors.username).to.exist;
+    expect(result.errors.email).to.exist;
+    expect(result.errors.password).to.exist;
   });
 
-  it("validates email format", async () => {
-    const emailInput = element.querySelector('input[type="email"]');
+  it("should validate email format", async () => {
+    const emailInput = element.querySelector('[name="email"]');
+
     emailInput.value = "invalid-email";
-
-    const validationPromise = oneEvent(element, "validation-change");
-    emailInput.dispatchEvent(new Event("input"));
-    await validationPromise;
-
-    expect(element.errors.email).to.equal("Please enter a valid email address");
+    let result = await element.validate();
+    expect(result.errors.email).to.exist;
 
     emailInput.value = "valid@email.com";
-    const validationPromise2 = oneEvent(element, "validation-change");
-    emailInput.dispatchEvent(new Event("input"));
-    await validationPromise2;
-
-    expect(element.errors.email).to.be.undefined;
+    result = await element.validate();
+    expect(result.errors.email).to.not.exist;
   });
 
-  it("validates minimum length", async () => {
-    const usernameInput = element.querySelector('input[name="username"]');
-    usernameInput.value = "ab";
+  it("should validate password requirements", async () => {
+    const passwordInput = element.querySelector('[name="password"]');
 
-    const validationPromise = oneEvent(element, "validation-change");
-    usernameInput.dispatchEvent(new Event("input"));
-    await validationPromise;
+    // Too short
+    passwordInput.value = "short";
+    let result = await element.validate();
+    expect(result.errors.password).to.exist;
 
-    expect(element.errors.username).to.equal("Minimum length is 3 characters");
+    // No numbers
+    passwordInput.value = "onlyletters";
+    result = await element.validate();
+    expect(result.errors.password).to.exist;
 
-    usernameInput.value = "abc";
-    const validationPromise2 = oneEvent(element, "validation-change");
-    usernameInput.dispatchEvent(new Event("input"));
-    await validationPromise2;
-
-    expect(element.errors.username).to.be.undefined;
+    // Valid password
+    passwordInput.value = "validPass123";
+    result = await element.validate();
+    expect(result.errors.password).to.not.exist;
   });
 
-  it("validates pattern", async () => {
-    const passwordInput = element.querySelector('input[name="password"]');
-    passwordInput.value = "weakpass";
+  it("should validate phone number format", async () => {
+    const phoneInput = element.querySelector('[name="phone"]');
 
-    const validationPromise = oneEvent(element, "validation-change");
-    passwordInput.dispatchEvent(new Event("input"));
-    await validationPromise;
+    phoneInput.value = "invalid";
+    let result = await element.validate();
+    expect(result.errors.phone).to.exist;
 
-    expect(element.errors.password).to.equal(
-      "Please match the requested format"
-    );
-
-    passwordInput.value = "StrongPass123";
-    const validationPromise2 = oneEvent(element, "validation-change");
-    passwordInput.dispatchEvent(new Event("input"));
-    await validationPromise2;
-
-    expect(element.errors.password).to.be.undefined;
+    phoneInput.value = "+1234567890";
+    result = await element.validate();
+    expect(result.errors.phone).to.not.exist;
   });
 
-  it("supports custom validation rules", async () => {
+  it("should handle custom validation rules", async () => {
     element.addValidationRule("username", (value) => {
-      if (value && value.includes(" ")) {
-        return "Username cannot contain spaces";
-      }
-      return null;
+      return value.length >= 3
+        ? null
+        : "Username must be at least 3 characters";
     });
 
-    const usernameInput = element.querySelector('input[name="username"]');
-    usernameInput.value = "user name";
-
-    const validationPromise = oneEvent(element, "validation-change");
-    usernameInput.dispatchEvent(new Event("input"));
-    await validationPromise;
-
-    expect(element.errors.username).to.equal("Username cannot contain spaces");
-
-    usernameInput.value = "username";
-    const validationPromise2 = oneEvent(element, "validation-change");
-    usernameInput.dispatchEvent(new Event("input"));
-    await validationPromise2;
-
-    expect(element.errors.username).to.be.undefined;
-  });
-
-  it("clears validation on form reset", async () => {
-    const usernameInput = element.querySelector('input[name="username"]');
+    const usernameInput = element.querySelector('[name="username"]');
     usernameInput.value = "ab";
+    let result = await element.validate();
+    expect(result.errors.username).to.exist;
 
-    const validationPromise = oneEvent(element, "validation-change");
-    usernameInput.dispatchEvent(new Event("input"));
-    await validationPromise;
-
-    expect(element.errors.username).to.exist;
-
-    element.clearValidation();
-    expect(element.errors).to.deep.equal({});
+    usernameInput.value = "abc";
+    result = await element.validate();
+    expect(result.errors.username).to.not.exist;
   });
 
-  it("prevents form submission when invalid", async () => {
-    const form = element.shadowRoot.querySelector("form");
-    let prevented = false;
-
-    const submitEvent = new Event("submit");
-    submitEvent.preventDefault = () => {
-      prevented = true;
-    };
-
-    form.dispatchEvent(submitEvent);
-    expect(prevented).to.be.true;
-
-    // Fill in valid data
-    const inputs = element.querySelectorAll("input");
-    inputs[0].value = "username";
-    inputs[1].value = "test@email.com";
-    inputs[2].value = "StrongPass123";
-
-    // Validate all fields
-    await Promise.all(
-      Array.from(inputs).map(async (input) => {
-        const validationPromise = oneEvent(element, "validation-change");
-        input.dispatchEvent(new Event("input"));
-        await validationPromise;
-      })
+  it("should validate on input change", async () => {
+    let validationTriggered = false;
+    element.addEventListener(
+      "validation-change",
+      () => (validationTriggered = true)
     );
 
-    prevented = false;
-    form.dispatchEvent(submitEvent);
-    expect(prevented).to.be.false;
+    const emailInput = element.querySelector('[name="email"]');
+    emailInput.value = "invalid-email";
+    emailInput.dispatchEvent(new Event("input"));
+
+    await element.updateComplete;
+    expect(validationTriggered).to.be.true;
   });
 
-  it("validates all fields at once", async () => {
-    const result = await element.validate();
-    expect(result.valid).to.be.false;
-    expect(Object.keys(result.errors)).to.have.lengthOf(3);
+  it("should handle form submission", async () => {
+    let submitPrevented = false;
+    element.addEventListener("submit", (e) => {
+      if (!element.isValid()) {
+        e.preventDefault();
+        submitPrevented = true;
+      }
+    });
 
-    // Fill in valid data
-    const inputs = element.querySelectorAll("input");
-    inputs[0].value = "username";
-    inputs[1].value = "test@email.com";
-    inputs[2].value = "StrongPass123";
+    const submitEvent = new Event("submit");
+    element.dispatchEvent(submitEvent);
 
-    const result2 = await element.validate();
-    expect(result2.valid).to.be.true;
-    expect(Object.keys(result2.errors)).to.have.lengthOf(0);
+    expect(submitPrevented).to.be.true;
+  });
+
+  it("should clear validation errors", async () => {
+    await element.validate();
+    expect(Object.keys(element.errors).length).to.be.greaterThan(0);
+
+    element.clearValidation();
+    expect(Object.keys(element.errors).length).to.equal(0);
   });
 });

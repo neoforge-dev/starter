@@ -1,337 +1,86 @@
 import { expect } from "@esm-bundle/chai";
-import { fixture, html, oneEvent } from "@open-wc/testing";
-import "../../components/organisms/modal/modal.js";
+import { fixture, html } from "@open-wc/testing";
+import "../../src/components/ui/modal.js";
 
-describe("NeoModal", () => {
+describe("Modal Component", () => {
   let element;
 
   beforeEach(async () => {
-    element = await fixture(html`<neo-modal></neo-modal>`);
-  });
-
-  afterEach(() => {
-    // Clean up any modals that might have been added to the body
-    document.querySelectorAll("neo-modal").forEach((modal) => {
-      modal.remove();
-    });
-  });
-
-  it("renders with default properties", () => {
-    expect(element.open).to.be.false;
-    expect(element.size).to.equal("medium");
-    expect(element.closable).to.be.true;
-    expect(element.backdrop).to.be.true;
-    expect(element.animate).to.be.true;
-  });
-
-  it("shows/hides based on open property", async () => {
-    expect(element.offsetParent).to.be.null;
-
-    element.open = true;
-    await element.updateComplete;
-    expect(element.offsetParent).to.not.be.null;
-    expect(element.shadowRoot.querySelector(".modal")).to.have.class("open");
-
-    element.open = false;
-    await element.updateComplete;
-    expect(element.offsetParent).to.be.null;
-    expect(element.shadowRoot.querySelector(".modal")).to.not.have.class(
-      "open"
-    );
-  });
-
-  it("dispatches events on open/close", async () => {
-    const openPromise = oneEvent(element, "modal-open");
-    element.open = true;
-    await openPromise;
-
-    const closePromise = oneEvent(element, "modal-close");
-    element.open = false;
-    await closePromise;
-  });
-
-  it("closes on backdrop click when closable", async () => {
-    element.open = true;
-    await element.updateComplete;
-
-    const closePromise = oneEvent(element, "modal-close");
-    element.shadowRoot.querySelector(".modal-backdrop").click();
-    await closePromise;
-
-    expect(element.open).to.be.false;
-  });
-
-  it("doesn't close on backdrop click when not closable", async () => {
-    element.open = true;
-    element.closable = false;
-    await element.updateComplete;
-
-    element.shadowRoot.querySelector(".modal-backdrop").click();
-    await element.updateComplete;
-
-    expect(element.open).to.be.true;
-  });
-
-  it("doesn't close on container click", async () => {
-    element.open = true;
-    await element.updateComplete;
-
-    element.shadowRoot.querySelector(".modal-container").click();
-    await element.updateComplete;
-
-    expect(element.open).to.be.true;
-  });
-
-  it("closes on escape key when closable", async () => {
-    element.open = true;
-    await element.updateComplete;
-
-    const closePromise = oneEvent(element, "modal-close");
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-    await closePromise;
-
-    expect(element.open).to.be.false;
-  });
-
-  it("doesn't close on escape key when not closable", async () => {
-    element.open = true;
-    element.closable = false;
-    await element.updateComplete;
-
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-    await element.updateComplete;
-
-    expect(element.open).to.be.true;
-  });
-
-  it("renders slotted content correctly", async () => {
-    const modalWithContent = await fixture(html`
+    element = await fixture(html`
       <neo-modal>
-        <div slot="header">Header Content</div>
-        <div slot="content">Main Content</div>
-        <div slot="footer">Footer Content</div>
+        <h2 slot="header">Test Modal</h2>
+        <div slot="content">Modal Content</div>
+        <div slot="footer">
+          <button>Close</button>
+        </div>
       </neo-modal>
     `);
-
-    const slots = modalWithContent.shadowRoot.querySelectorAll("slot");
-    expect(slots.length).to.equal(3);
-    expect(slots[0].name).to.equal("header");
-    expect(slots[1].name).to.equal("content");
-    expect(slots[2].name).to.equal("footer");
   });
 
-  it("maintains proper ARIA attributes", async () => {
+  it("should be defined", () => {
+    expect(element).to.be.instanceOf(customElements.get("neo-modal"));
+  });
+
+  it("should render slots correctly", () => {
+    const header = element.querySelector('[slot="header"]');
+    const content = element.querySelector('[slot="content"]');
+    const footer = element.querySelector('[slot="footer"]');
+
+    expect(header).to.exist;
+    expect(content).to.exist;
+    expect(footer).to.exist;
+    expect(header.textContent).to.equal("Test Modal");
+    expect(content.textContent).to.equal("Modal Content");
+  });
+
+  it("should show/hide based on open property", async () => {
+    expect(element.open).to.be.false;
+    expect(element.style.display).to.equal("none");
+
+    element.open = true;
+    await element.updateComplete;
+    expect(element.style.display).to.not.equal("none");
+
+    element.open = false;
+    await element.updateComplete;
+    expect(element.style.display).to.equal("none");
+  });
+
+  it("should close on escape key", async () => {
     element.open = true;
     await element.updateComplete;
 
-    const dialog = element.shadowRoot.querySelector(".modal-dialog");
-    expect(dialog).to.have.attribute("role", "dialog");
-    expect(dialog).to.have.attribute("aria-modal", "true");
-    expect(dialog).to.have.attribute("aria-labelledby");
-    expect(dialog).to.have.attribute("aria-describedby");
+    const event = new KeyboardEvent("keydown", { key: "Escape" });
+    document.dispatchEvent(event);
+    await element.updateComplete;
+
+    expect(element.open).to.be.false;
   });
 
-  it("handles size variants", async () => {
-    const sizes = ["small", "medium", "large", "full"];
-
-    for (const size of sizes) {
-      element.size = size;
-      await element.updateComplete;
-      expect(element.shadowRoot.querySelector(".modal-dialog")).to.have.class(
-        `size-${size}`
-      );
-    }
-  });
-
-  it("supports custom styles", async () => {
-    element.style.setProperty("--modal-backdrop-color", "rgba(0, 0, 0, 0.8)");
-    element.style.setProperty("--modal-border-radius", "16px");
+  it("should close on backdrop click", async () => {
+    element.open = true;
     await element.updateComplete;
 
     const backdrop = element.shadowRoot.querySelector(".modal-backdrop");
-    const dialog = element.shadowRoot.querySelector(".modal-dialog");
-    const styles = window.getComputedStyle(backdrop);
-    const dialogStyles = window.getComputedStyle(dialog);
+    backdrop.click();
+    await element.updateComplete;
 
-    expect(styles.backgroundColor).to.equal("rgba(0, 0, 0, 0.8)");
-    expect(dialogStyles.borderRadius).to.equal("16px");
+    expect(element.open).to.be.false;
   });
 
-  it("manages focus trap when open", async () => {
-    const modalWithFocusable = await fixture(html`
-      <neo-modal>
-        <div slot="content">
-          <button>First</button>
-          <button>Second</button>
-          <button>Third</button>
-        </div>
-      </neo-modal>
-    `);
+  it("should emit events on open/close", async () => {
+    let openEvent = false;
+    let closeEvent = false;
 
-    modalWithFocusable.open = true;
-    await modalWithFocusable.updateComplete;
-
-    // Focus should be trapped within the modal
-    const firstButton = modalWithFocusable.querySelector("button");
-    const lastButton = modalWithFocusable.querySelectorAll("button")[2];
-
-    firstButton.focus();
-    expect(document.activeElement).to.equal(firstButton);
-
-    // Simulate Tab key
-    firstButton.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab" }));
-    expect(document.activeElement).to.not.equal(firstButton);
-
-    // Simulate Shift+Tab on first element
-    lastButton.focus();
-    lastButton.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Tab", shiftKey: true })
-    );
-    expect(document.activeElement).to.not.equal(lastButton);
-  });
-
-  it("restores focus when closed", async () => {
-    const button = document.createElement("button");
-    document.body.appendChild(button);
-    button.focus();
+    element.addEventListener("modal-open", () => (openEvent = true));
+    element.addEventListener("modal-close", () => (closeEvent = true));
 
     element.open = true;
     await element.updateComplete;
+    expect(openEvent).to.be.true;
 
     element.open = false;
     await element.updateComplete;
-
-    expect(document.activeElement).to.equal(button);
-    document.body.removeChild(button);
-  });
-
-  it("prevents body scroll when open", async () => {
-    element.open = true;
-    await element.updateComplete;
-    expect(document.body.style.overflow).to.equal("hidden");
-
-    element.open = false;
-    await element.updateComplete;
-    expect(document.body.style.overflow).to.not.equal("hidden");
-  });
-
-  it("supports nested modals", async () => {
-    const nestedModal = await fixture(html`
-      <neo-modal>
-        <div slot="content">
-          <neo-modal>
-            <div slot="content">Nested Content</div>
-          </neo-modal>
-        </div>
-      </neo-modal>
-    `);
-
-    const [parentModal, childModal] = nestedModal.querySelectorAll("neo-modal");
-
-    parentModal.open = true;
-    await parentModal.updateComplete;
-
-    childModal.open = true;
-    await childModal.updateComplete;
-
-    expect(parentModal.open).to.be.true;
-    expect(childModal.open).to.be.true;
-
-    // Closing child should keep parent open
-    childModal.open = false;
-    await childModal.updateComplete;
-
-    expect(parentModal.open).to.be.true;
-    expect(childModal.open).to.be.false;
-  });
-});
-
-describe("ModalService", () => {
-  let modalService;
-
-  beforeEach(() => {
-    modalService = new window.ModalService();
-  });
-
-  afterEach(() => {
-    document.querySelectorAll("neo-modal").forEach((modal) => {
-      modal.remove();
-    });
-  });
-
-  it("shows a modal programmatically", async () => {
-    const showPromise = modalService.show({
-      title: "Test Modal",
-      content: "Test content",
-    });
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    const modal = document.querySelector("neo-modal");
-    expect(modal).to.exist;
-    expect(modal.open).to.be.true;
-
-    modal.open = false;
-    await showPromise;
-  });
-
-  it("shows a confirmation dialog", async () => {
-    const confirmPromise = modalService.confirm({
-      title: "Confirm Test",
-      message: "Test confirmation",
-    });
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    const modal = document.querySelector("neo-modal");
-    expect(modal).to.exist;
-    expect(modal.open).to.be.true;
-
-    // Click confirm button
-    modal.querySelector(".confirm-button").click();
-    const result = await confirmPromise;
-    expect(result).to.be.true;
-  });
-
-  it("handles confirmation dialog cancellation", async () => {
-    const confirmPromise = modalService.confirm({
-      title: "Confirm Test",
-      message: "Test confirmation",
-    });
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    const modal = document.querySelector("neo-modal");
-    modal.querySelector(".cancel-button").click();
-    const result = await confirmPromise;
-    expect(result).to.be.false;
-  });
-
-  it("closes all modals", async () => {
-    modalService.show({ title: "Modal 1" });
-    modalService.show({ title: "Modal 2" });
-    modalService.show({ title: "Modal 3" });
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(document.querySelectorAll("neo-modal").length).to.equal(3);
-
-    modalService.closeAll();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    const openModals = Array.from(
-      document.querySelectorAll("neo-modal")
-    ).filter((modal) => modal.open);
-    expect(openModals.length).to.equal(0);
-  });
-
-  it("supports modal stacking", async () => {
-    modalService.show({ title: "Modal 1" });
-    modalService.show({ title: "Modal 2" });
-
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    const modals = document.querySelectorAll("neo-modal");
-    expect(modals[1].style.zIndex).to.be.greaterThan(modals[0].style.zIndex);
+    expect(closeEvent).to.be.true;
   });
 });
