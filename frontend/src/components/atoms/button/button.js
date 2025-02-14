@@ -1,179 +1,151 @@
 import { LitElement, html, css } from "lit";
-import { classMap } from "lit/directives/class-map.js";
+import { baseStyles } from "../../styles/base.js";
 
+/**
+ * Button component with multiple variants and states
+ * @element neo-button
+ *
+ * @prop {string} variant - Button variant (primary, secondary, text)
+ * @prop {string} size - Button size (sm, md, lg)
+ * @prop {string} type - Button type (button, submit, reset)
+ * @prop {boolean} disabled - Disabled state
+ * @prop {boolean} loading - Loading state
+ */
 export class NeoButton extends LitElement {
   static properties = {
-    variant: { type: String },
-    size: { type: String },
-    disabled: { type: Boolean },
-    loading: { type: Boolean },
-    type: { type: String },
+    variant: { type: String, reflect: true },
+    size: { type: String, reflect: true },
+    type: { type: String, reflect: true },
+    disabled: { type: Boolean, reflect: true },
+    loading: { type: Boolean, reflect: true },
   };
 
-  static styles = css`
-    :host {
-      display: inline-block;
-    }
+  static styles = [
+    baseStyles,
+    css`
+      :host {
+        display: inline-block;
+      }
 
-    button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--spacing-xs);
-      border: none;
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      font-family: var(--font-family-primary);
-      font-weight: var(--font-weight-medium);
-      transition: all 0.2s ease-in-out;
-      position: relative;
-      overflow: hidden;
-    }
+      button {
+        font-family: var(--font-family);
+        border: none;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-weight: var(--font-weight-medium);
+        transition: all var(--transition-fast);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-xs);
+        padding: var(--button-padding);
+        height: var(--button-height);
+      }
 
-    button:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px var(--color-primary-alpha);
-    }
+      button[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
 
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
+      /* Variants */
+      button.primary {
+        background: var(--color-primary);
+        color: white;
+      }
 
-    /* Variants */
-    .variant-primary {
-      background: var(--color-primary);
-      color: var(--color-white);
-    }
+      button.primary:hover:not([disabled]) {
+        background: var(--color-primary-dark);
+      }
 
-    .variant-primary:hover:not(:disabled) {
-      background: var(--color-primary-dark);
-    }
+      button.secondary {
+        background: var(--color-secondary);
+        color: white;
+      }
 
-    .variant-secondary {
-      background: var(--color-secondary);
-      color: var(--color-white);
-    }
+      button.text {
+        background: transparent;
+        color: var(--color-text);
+        padding: var(--spacing-xs) var(--spacing-sm);
+      }
 
-    .variant-secondary:hover:not(:disabled) {
-      background: var(--color-secondary-dark);
-    }
+      button.text:hover:not([disabled]) {
+        background: rgba(0, 0, 0, 0.05);
+      }
 
-    .variant-text {
-      background: transparent;
-      color: var(--color-primary);
-      padding: 0;
-    }
+      /* Sizes */
+      button.sm {
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        height: 2rem;
+      }
 
-    .variant-text:hover:not(:disabled) {
-      color: var(--color-primary-dark);
-      text-decoration: underline;
-    }
+      button.md {
+        font-size: var(--font-size-sm);
+      }
 
-    .variant-icon {
-      background: transparent;
-      color: var(--color-text);
-      padding: var(--spacing-xs);
-      border-radius: 50%;
-    }
+      button.lg {
+        font-size: var(--font-size-base);
+        padding: var(--spacing-sm) var(--spacing-lg);
+        height: 3rem;
+      }
 
-    .variant-icon:hover:not(:disabled) {
-      background: var(--color-surface-hover);
-    }
+      /* Loading state */
+      .loading-spinner {
+        width: 1em;
+        height: 1em;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        border-right-color: transparent;
+        animation: spin 0.6s linear infinite;
+      }
 
-    /* Sizes */
-    .size-small {
-      padding: var(--spacing-xs) var(--spacing-sm);
-      font-size: var(--font-size-sm);
-    }
-
-    .size-medium {
-      padding: var(--spacing-sm) var(--spacing-md);
-      font-size: var(--font-size-md);
-    }
-
-    .size-large {
-      padding: var(--spacing-md) var(--spacing-lg);
-      font-size: var(--font-size-lg);
-    }
-
-    /* Loading state */
-    .loading {
-      color: transparent !important;
-    }
-
-    .loading neo-spinner {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    /* Slots */
-    ::slotted([slot="prefix"]) {
-      margin-right: var(--spacing-xs);
-    }
-
-    ::slotted([slot="suffix"]) {
-      margin-left: var(--spacing-xs);
-    }
-  `;
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    `,
+  ];
 
   constructor() {
     super();
     this.variant = "primary";
-    this.size = "medium";
+    this.size = "md";
+    this.type = "button";
     this.disabled = false;
     this.loading = false;
-    this.type = "button";
+  }
+
+  /**
+   * Handle click event
+   * @param {Event} e
+   */
+  _handleClick(e) {
+    if (!this.disabled && !this.loading) {
+      this.dispatchEvent(
+        new CustomEvent("click", {
+          bubbles: true,
+          composed: true,
+          detail: { originalEvent: e },
+        })
+      );
+    }
   }
 
   render() {
-    const classes = {
-      [`variant-${this.variant}`]: true,
-      [`size-${this.size}`]: true,
-      loading: this.loading,
-    };
-
     return html`
       <button
-        class=${classMap(classes)}
+        class="${this.variant} ${this.size}"
+        type="${this.type}"
         ?disabled=${this.disabled || this.loading}
-        type=${this.type}
-        role="button"
-        aria-disabled=${this.disabled || this.loading}
-        aria-busy=${this.loading}
         @click=${this._handleClick}
+        aria-disabled="${this.disabled || this.loading}"
       >
-        <slot name="prefix"></slot>
-        <slot></slot>
-        <slot name="suffix"></slot>
         ${this.loading
-          ? html`
-              <neo-spinner
-                size="small"
-                variant=${this.variant === "text" || this.variant === "icon"
-                  ? "primary"
-                  : "light"}
-              ></neo-spinner>
-            `
-          : null}
+          ? html`<span class="loading-spinner" aria-hidden="true"></span>`
+          : html`<slot></slot>`}
       </button>
     `;
-  }
-
-  _handleClick(e) {
-    if (this.disabled || this.loading) {
-      e.preventDefault();
-      return;
-    }
-    this.dispatchEvent(
-      new CustomEvent("click", {
-        bubbles: true,
-        composed: true,
-        detail: { originalEvent: e },
-      })
-    );
   }
 }
 

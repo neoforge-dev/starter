@@ -2,6 +2,38 @@ import { css } from "lit";
 
 export const baseStyles = css`
   :host {
+    /* Colors */
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
+    --color-background: #ffffff;
+    --color-text: #1f2937;
+    --color-text-secondary: #4b5563;
+    --color-border: #e5e7eb;
+
+    /* Typography */
+    --font-family: system-ui, -apple-system, sans-serif;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+
+    /* Border Radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
     box-sizing: border-box;
   }
 

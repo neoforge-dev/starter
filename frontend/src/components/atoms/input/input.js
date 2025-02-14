@@ -1,120 +1,97 @@
 import { LitElement, html, css } from "lit";
-import { classMap } from "lit/directives/class-map.js";
+import { baseStyles } from "../../styles/base.js";
 
-export class NeoInput extends LitElement {
+/**
+ * Input component with validation and states
+ * @element neo-input
+ *
+ * @prop {string} type - Input type (text, email, password, etc.)
+ * @prop {string} label - Input label
+ * @prop {string} placeholder - Input placeholder
+ * @prop {string} value - Input value
+ * @prop {string} name - Input name
+ * @prop {boolean} required - Required state
+ * @prop {boolean} disabled - Disabled state
+ * @prop {string} error - Error message
+ * @prop {string} helper - Helper text
+ * @prop {string} pattern - Input pattern for validation
+ * @prop {number} minLength - Minimum length
+ * @prop {number} maxLength - Maximum length
+ *
+ * @fires input - Native input event
+ * @fires change - Native change event
+ * @fires focus - Native focus event
+ * @fires blur - Native blur event
+ */
+export class Input extends LitElement {
   static properties = {
-    type: { type: String },
+    type: { type: String, reflect: true },
     label: { type: String },
     placeholder: { type: String },
     value: { type: String },
-    required: { type: Boolean },
-    disabled: { type: Boolean },
+    name: { type: String },
+    required: { type: Boolean, reflect: true },
+    disabled: { type: Boolean, reflect: true },
     error: { type: String },
     helper: { type: String },
     pattern: { type: String },
     minLength: { type: Number },
     maxLength: { type: Number },
+    _focused: { type: Boolean, state: true },
+    _touched: { type: Boolean, state: true },
   };
 
-  static styles = css`
-    :host {
-      display: block;
-    }
+  static styles = [
+    baseStyles,
+    css`
+      :host {
+        display: block;
+      }
 
-    .input-container {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-xs);
-    }
+      .input-group {
+        margin-bottom: var(--spacing-md);
+      }
 
-    label {
-      color: var(--color-text);
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-medium);
-    }
+      label {
+        display: block;
+        margin-bottom: var(--spacing-xs);
+        color: var(--text-secondary);
+        font-size: var(--font-size-sm);
+      }
 
-    .input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
+      input {
+        width: 100%;
+        padding: var(--spacing-sm);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        background: var(--surface-color);
+        color: var(--text-color);
+        font-size: var(--font-size-base);
+        transition: all var(--transition-fast);
+      }
 
-    input {
-      width: 100%;
-      padding: var(--spacing-sm);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-family: var(--font-family-primary);
-      font-size: var(--font-size-md);
-      color: var(--color-text);
-      background: var(--color-surface);
-      transition: all 0.2s ease-in-out;
-    }
+      input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+      }
 
-    input:focus {
-      outline: none;
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px var(--color-primary-alpha);
-    }
+      input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
 
-    input:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+      .error-message {
+        margin-top: var(--spacing-xs);
+        color: var(--error-color);
+        font-size: var(--font-size-sm);
+      }
 
-    input[type="password"] {
-      padding-right: var(--spacing-xl);
-    }
-
-    .error input {
-      border-color: var(--color-error);
-    }
-
-    .error input:focus {
-      box-shadow: 0 0 0 3px var(--color-error-alpha);
-    }
-
-    .helper-text,
-    .error-text {
-      font-size: var(--font-size-sm);
-      margin-top: var(--spacing-xs);
-    }
-
-    .helper-text {
-      color: var(--color-text-secondary);
-    }
-
-    .error-text {
-      color: var(--color-error);
-    }
-
-    .password-toggle {
-      position: absolute;
-      right: var(--spacing-sm);
-      background: none;
-      border: none;
-      color: var(--color-text-secondary);
-      cursor: pointer;
-      padding: var(--spacing-xs);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .password-toggle:hover {
-      color: var(--color-text);
-    }
-
-    /* Slots */
-    ::slotted([slot="prefix"]) {
-      margin-right: var(--spacing-xs);
-    }
-
-    ::slotted([slot="suffix"]) {
-      margin-left: var(--spacing-xs);
-    }
-  `;
+      input.error {
+        border-color: var(--error-color);
+      }
+    `,
+  ];
 
   constructor() {
     super();
@@ -122,6 +99,7 @@ export class NeoInput extends LitElement {
     this.label = "";
     this.placeholder = "";
     this.value = "";
+    this.name = "";
     this.required = false;
     this.disabled = false;
     this.error = "";
@@ -129,65 +107,17 @@ export class NeoInput extends LitElement {
     this.pattern = "";
     this.minLength = null;
     this.maxLength = null;
-    this._showPassword = false;
+    this._focused = false;
+    this._touched = false;
   }
 
-  render() {
-    const classes = {
-      "input-container": true,
-      error: !!this.error,
-    };
-
-    return html`
-      <div class=${classMap(classes)}>
-        ${this.label ? html`<label for="input">${this.label}</label>` : null}
-        <div class="input-wrapper">
-          <slot name="prefix"></slot>
-          <input
-            id="input"
-            type=${this._showPassword ? "text" : this.type}
-            .value=${this.value}
-            placeholder=${this.placeholder}
-            ?required=${this.required}
-            ?disabled=${this.disabled}
-            pattern=${this.pattern}
-            minlength=${this.minLength || ""}
-            maxlength=${this.maxLength || ""}
-            aria-label=${this.label}
-            aria-invalid=${!!this.error}
-            aria-required=${this.required}
-            @input=${this._handleInput}
-            @change=${this._handleChange}
-          />
-          <slot name="suffix"></slot>
-          ${this.type === "password"
-            ? html`
-                <button
-                  type="button"
-                  class="password-toggle"
-                  @click=${this._togglePassword}
-                  aria-label=${this._showPassword
-                    ? "Hide password"
-                    : "Show password"}
-                >
-                  <neo-icon
-                    name=${this._showPassword ? "visibility_off" : "visibility"}
-                    size="small"
-                  ></neo-icon>
-                </button>
-              `
-            : null}
-        </div>
-        ${this.error ? html`<div class="error-text">${this.error}</div>` : null}
-        ${this.helper && !this.error
-          ? html`<div class="helper-text">${this.helper}</div>`
-          : null}
-      </div>
-    `;
-  }
-
+  /**
+   * Handle input event
+   * @param {Event} e
+   */
   _handleInput(e) {
     this.value = e.target.value;
+    this._validate();
     this.dispatchEvent(
       new CustomEvent("input", {
         detail: { value: this.value },
@@ -197,7 +127,13 @@ export class NeoInput extends LitElement {
     );
   }
 
+  /**
+   * Handle change event
+   * @param {Event} e
+   */
   _handleChange(e) {
+    this.value = e.target.value;
+    this._validate();
     this.dispatchEvent(
       new CustomEvent("change", {
         detail: { value: this.value },
@@ -207,24 +143,130 @@ export class NeoInput extends LitElement {
     );
   }
 
-  _togglePassword() {
-    this._showPassword = !this._showPassword;
+  /**
+   * Handle focus event
+   */
+  _handleFocus() {
+    this._focused = true;
+    this.dispatchEvent(
+      new CustomEvent("focus", {
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
-  reportValidity() {
-    const input = this.shadowRoot.querySelector("input");
-    const isValid = input.reportValidity();
-    if (!isValid) {
-      this.error = input.validationMessage;
-      this.dispatchEvent(new CustomEvent("invalid", { bubbles: true }));
+  /**
+   * Handle blur event
+   */
+  _handleBlur() {
+    this._focused = false;
+    this._touched = true;
+    this._validate();
+    this.dispatchEvent(
+      new CustomEvent("blur", {
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  /**
+   * Validate input value
+   */
+  _validate() {
+    if (!this._touched) return;
+
+    if (this.required && !this.value) {
+      this.error = "This field is required";
+      return;
     }
-    return isValid;
+
+    if (this.pattern && !new RegExp(this.pattern).test(this.value)) {
+      this.error = "Please enter a valid value";
+      return;
+    }
+
+    if (this.minLength && this.value.length < this.minLength) {
+      this.error = `Minimum length is ${this.minLength} characters`;
+      return;
+    }
+
+    if (this.maxLength && this.value.length > this.maxLength) {
+      this.error = `Maximum length is ${this.maxLength} characters`;
+      return;
+    }
+
+    if (
+      this.type === "email" &&
+      this.value &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value)
+    ) {
+      this.error = "Please enter a valid email address";
+      return;
+    }
+
+    this.error = "";
   }
 
-  setCustomValidity(message) {
-    const input = this.shadowRoot.querySelector("input");
-    input.setCustomValidity(message);
+  /**
+   * Reset input state
+   */
+  reset() {
+    this.value = "";
+    this.error = "";
+    this._touched = false;
+    this._focused = false;
+  }
+
+  /**
+   * Check if input is valid
+   */
+  checkValidity() {
+    this._touched = true;
+    this._validate();
+    return !this.error;
+  }
+
+  render() {
+    return html`
+      <div class="input-group">
+        ${this.label
+          ? html`
+              <label for="input-${this.name}" data-required=${this.required}>
+                ${this.label}
+              </label>
+            `
+          : null}
+
+        <input
+          id="input-${this.name}"
+          class="neo-input"
+          type=${this.type}
+          .value=${this.value}
+          name=${this.name}
+          placeholder=${this.placeholder}
+          ?required=${this.required}
+          ?disabled=${this.disabled}
+          pattern=${this.pattern}
+          minlength=${this.minLength || ""}
+          maxlength=${this.maxLength || ""}
+          data-error=${!!this.error}
+          data-focused=${this._focused}
+          @input=${this._handleInput}
+          @change=${this._handleChange}
+          @focus=${this._handleFocus}
+          @blur=${this._handleBlur}
+        />
+
+        ${this.error
+          ? html` <div class="error-message">${this.error}</div> `
+          : this.helper
+            ? html` <div class="input-helper">${this.helper}</div> `
+            : null}
+      </div>
+    `;
   }
 }
 
-customElements.define("neo-input", NeoInput);
+customElements.define("neo-input", Input);

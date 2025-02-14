@@ -250,7 +250,8 @@ export class Testimonials extends LitElement {
   }
 
   _startAutoplay() {
-    if (this.autoplay && this.layout === "carousel") {
+    if (this.autoplay && this.layout === "carousel" && this.items.length > 1) {
+      this._stopAutoplay(); // Clear any existing interval first
       this._autoplayInterval = setInterval(() => {
         this._nextSlide();
       }, this.interval);
@@ -261,6 +262,13 @@ export class Testimonials extends LitElement {
     if (this._autoplayInterval) {
       clearInterval(this._autoplayInterval);
       this._autoplayInterval = null;
+    }
+  }
+
+  updated(changedProperties) {
+    super.updated(changedProperties);
+    if (changedProperties.has("autoplay") || changedProperties.has("layout")) {
+      this._startAutoplay();
     }
   }
 
@@ -283,10 +291,15 @@ export class Testimonials extends LitElement {
   _renderStars(rating) {
     return html`
       <div class="testimonial-rating">
-        ${Array.from(
-          { length: 5 },
-          (_, i) => html` <span class="star">${i < rating ? "★" : "☆"}</span> `
-        )}
+        ${Array(5)
+          .fill(0)
+          .map(
+            (_, i) => html`
+              <span class="star ${i < rating ? "star-filled" : "star-empty"}"
+                >★</span
+              >
+            `
+          )}
       </div>
     `;
   }
@@ -296,11 +309,17 @@ export class Testimonials extends LitElement {
       <div class="testimonial variant-${this.variant}">
         <p class="testimonial-content">${item.content}</p>
         <div class="testimonial-author">
-          <img class="author-avatar" src=${item.avatar} alt=${item.author} />
+          ${item.avatar
+            ? html`<img
+                class="author-avatar"
+                src="${item.avatar}"
+                alt="${item.author}"
+              />`
+            : ""}
           <div class="author-info">
-            <h4 class="author-name">${item.author}</h4>
+            <p class="author-name">${item.author}</p>
             <p class="author-meta">${item.role} at ${item.company}</p>
-            ${this._renderStars(item.rating)}
+            ${item.rating ? this._renderStars(item.rating) : ""}
           </div>
         </div>
       </div>
@@ -309,7 +328,10 @@ export class Testimonials extends LitElement {
 
   _renderGrid() {
     return html`
-      <div class="layout-grid" style="--testimonials-columns: ${this.columns}">
+      <div
+        class="testimonials-grid"
+        style="grid-template-columns: repeat(${this.columns}, 1fr)"
+      >
         ${this.items.map((item) => this._renderTestimonial(item))}
       </div>
     `;
@@ -317,28 +339,62 @@ export class Testimonials extends LitElement {
 
   _renderCarousel() {
     return html`
-      <div class="layout-carousel">
+      <div
+        class="testimonials-carousel"
+        role="region"
+        aria-label="Testimonials"
+        tabindex="0"
+        @keydown=${(e) => {
+          if (e.key === "ArrowLeft") this._prevSlide();
+          if (e.key === "ArrowRight") this._nextSlide();
+        }}
+      >
         <div
           class="carousel-container"
           style="transform: translateX(-${this._currentSlide * 100}%)"
+          role="list"
         >
           ${this.items.map(
-            (item) => html`
-              <div class="carousel-item">${this._renderTestimonial(item)}</div>
+            (item, index) => html`
+              <div
+                class="carousel-item"
+                role="listitem"
+                aria-current="${index === this._currentSlide}"
+              >
+                ${this._renderTestimonial(item)}
+              </div>
             `
           )}
         </div>
-        <div class="carousel-controls">
+        <div
+          class="carousel-controls"
+          role="group"
+          aria-label="Carousel Navigation"
+        >
+          <button
+            class="carousel-prev"
+            @click=${this._prevSlide}
+            aria-label="Previous testimonial"
+          >
+            ←
+          </button>
           ${this.items.map(
-            (_, index) => html`
-              <div
-                class="carousel-dot ${index === this._currentSlide
-                  ? "active"
-                  : ""}"
-                @click=${() => this._goToSlide(index)}
-              ></div>
+            (_, i) => html`
+              <button
+                class="carousel-dot ${i === this._currentSlide ? "active" : ""}"
+                @click=${() => this._goToSlide(i)}
+                aria-label="Go to testimonial ${i + 1}"
+                aria-current="${i === this._currentSlide}"
+              ></button>
             `
           )}
+          <button
+            class="carousel-next"
+            @click=${this._nextSlide}
+            aria-label="Next testimonial"
+          >
+            →
+          </button>
         </div>
       </div>
     `;
@@ -346,10 +402,7 @@ export class Testimonials extends LitElement {
 
   _renderMasonry() {
     return html`
-      <div
-        class="layout-masonry"
-        style="--testimonials-columns: ${this.columns}"
-      >
+      <div class="testimonials-masonry">
         ${this.items.map(
           (item) => html`
             <div class="masonry-item">${this._renderTestimonial(item)}</div>
@@ -372,17 +425,19 @@ export class Testimonials extends LitElement {
   }
 
   render() {
-    return html`
-      <div class="testimonials">
-        ${this.layout === "grid"
-          ? this._renderGrid()
-          : this.layout === "carousel"
-            ? this._renderCarousel()
-            : this.layout === "masonry"
-              ? this._renderMasonry()
-              : this._renderFeatured()}
-      </div>
-    `;
+    if (!this.items.length) {
+      return html`<div class="empty-message">No testimonials available</div>`;
+    }
+
+    switch (this.layout) {
+      case "carousel":
+        return this._renderCarousel();
+      case "masonry":
+        return this._renderMasonry();
+      case "grid":
+      default:
+        return this._renderGrid();
+    }
   }
 }
 

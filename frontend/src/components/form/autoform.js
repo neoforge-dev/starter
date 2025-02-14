@@ -243,14 +243,18 @@ export class NeoAutoform extends LitElement {
 
   constructor() {
     super();
-    this.schema = {};
+    this.schema = {
+      title: "",
+      description: "",
+      properties: {},
+    };
     this.value = {};
     this.variant = "default";
     this.layout = "vertical";
     this.columns = 2;
     this.disabled = false;
     this.readonly = false;
-    this.showValidation = true;
+    this.showValidation = false;
     this._errors = {};
     this._touched = new Set();
     this._formData = {};
@@ -263,86 +267,85 @@ export class NeoAutoform extends LitElement {
   updated(changedProperties) {
     if (changedProperties.has("value")) {
       this._formData = { ...this.value };
+      this.requestUpdate();
     }
-  }
-
-  _validateField(field, value) {
-    const schema = this.schema.properties[field];
-    const errors = [];
-
-    // Check required fields first
-    if (this.schema.required?.includes(field) && !value) {
-      errors.push("This field is required");
+    if (changedProperties.has("schema")) {
+      this._formData = { ...this.value };
+      this.requestUpdate();
     }
-
-    if (value) {
-      if (schema.minLength && value.length < schema.minLength) {
-        errors.push(`Minimum length is ${schema.minLength} characters`);
-      }
-
-      if (schema.maxLength && value.length > schema.maxLength) {
-        errors.push(`Maximum length is ${schema.maxLength} characters`);
-      }
-
-      if (schema.pattern && !new RegExp(schema.pattern).test(value)) {
-        errors.push("Invalid format");
-      }
-
-      if (
-        schema.format === "email" &&
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-      ) {
-        errors.push("Invalid email address");
-      }
-
-      if (schema.type === "number") {
-        const num = Number(value);
-        if (isNaN(num)) {
-          errors.push("Must be a number");
-        } else {
-          if (schema.minimum !== undefined && num < schema.minimum) {
-            errors.push(`Minimum value is ${schema.minimum}`);
-          }
-          if (schema.maximum !== undefined && num > schema.maximum) {
-            errors.push(`Maximum value is ${schema.maximum}`);
-          }
-        }
-      }
-
-      if (schema.type === "array") {
-        if (schema.minItems && value.length < schema.minItems) {
-          errors.push(`Minimum ${schema.minItems} items required`);
-        }
-        if (schema.maxItems && value.length > schema.maxItems) {
-          errors.push(`Maximum ${schema.maxItems} items allowed`);
-        }
-      }
-    }
-
-    return errors;
   }
 
   _validateForm() {
     const errors = {};
-    Object.keys(this.schema.properties).forEach((field) => {
-      const value = this._formData[field];
-      const fieldErrors = this._validateField(field, value);
-      if (fieldErrors.length) {
-        errors[field] = fieldErrors;
+    const { properties = {}, required = [] } = this.schema;
+
+    // Validate required fields
+    for (const field of required) {
+      if (!this._formData[field]) {
+        errors[field] = [`${field} is required`];
       }
-    });
+    }
+
+    // Validate field constraints
+    for (const [field, schema] of Object.entries(properties)) {
+      const value = this._formData[field];
+
+      if (schema.type === "string") {
+        if (!value) continue;
+        if (schema.minLength && value.length < schema.minLength) {
+          errors[field] = [
+            `Field must have minimum length of ${schema.minLength}`,
+          ];
+        }
+        if (schema.maxLength && value.length > schema.maxLength) {
+          errors[field] = [
+            `Field must have maximum length of ${schema.maxLength}`,
+          ];
+        }
+        if (schema.pattern && !new RegExp(schema.pattern).test(value)) {
+          errors[field] = ["Invalid format"];
+        }
+        if (
+          schema.format === "email" &&
+          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+        ) {
+          errors[field] = ["Invalid email address"];
+        }
+      }
+
+      if (schema.type === "number") {
+        if (!value) continue;
+        const num = Number(value);
+        if (schema.minimum && num < schema.minimum) {
+          errors[field] = [`Minimum value is ${schema.minimum}`];
+        }
+        if (schema.maximum && num > schema.maximum) {
+          errors[field] = [`Maximum value is ${schema.maximum}`];
+        }
+      }
+
+      if (schema.type === "array") {
+        if (schema.optional && !value) continue;
+        const arrayValue = Array.isArray(value) ? value : [];
+        if (schema.minItems && arrayValue.length < schema.minItems) {
+          errors[field] = [`Minimum ${schema.minItems} items required`];
+        }
+        if (schema.maxItems && arrayValue.length > schema.maxItems) {
+          errors[field] = [`Maximum ${schema.maxItems} items allowed`];
+        }
+      }
+    }
 
     this._errors = errors;
-    const isValid = Object.keys(errors).length === 0;
+    const valid = Object.keys(errors).length === 0;
+
     this.dispatchEvent(
       new CustomEvent("validate", {
-        detail: { valid: isValid, errors },
-        bubbles: true,
-        composed: true,
+        detail: { valid, errors },
       })
     );
 
-    return isValid;
+    return valid;
   }
 
   _handleChange(field, event) {
@@ -350,242 +353,187 @@ export class NeoAutoform extends LitElement {
       event.target.type === "checkbox"
         ? event.target.checked
         : event.target.value;
-    this._formData = { ...this._formData, [field]: value };
-    this._touched.add(field);
-
-    if (this.showValidation) {
-      const fieldErrors = this._validateField(field, value);
-      this._errors = { ...this._errors, [field]: fieldErrors };
-    }
+    this._formData = {
+      ...this._formData,
+      [field]: value,
+    };
 
     this.dispatchEvent(
       new CustomEvent("change", {
-        detail: { field, value, formData: this._formData },
-        bubbles: true,
-        composed: true,
+        detail: {
+          field,
+          value,
+          formData: this._formData,
+        },
       })
     );
   }
 
-  _handleSubmit(e) {
-    e.preventDefault();
-    const isValid = this._validateForm();
-
-    if (isValid) {
-      this.dispatchEvent(
-        new CustomEvent("submit", {
-          detail: { formData: this._formData },
-          bubbles: true,
-          composed: true,
-        })
-      );
+  _handleBlur(field, event) {
+    this._touched.add(field);
+    if (this.showValidation) {
+      this._validateForm();
     }
   }
 
+  _handleSubmit(event) {
+    event.preventDefault();
+    const valid = this._validateForm();
+
+    this.dispatchEvent(
+      new CustomEvent("submit", {
+        detail: {
+          valid,
+          data: this._formData,
+          errors: this._errors,
+        },
+      })
+    );
+  }
+
   _renderField(field, schema) {
-    const value = this._formData[field] || "";
+    const value = this._formData[field] ?? "";
     const errors = this._errors[field] || [];
     const showError =
       this.showValidation && this._touched.has(field) && errors.length > 0;
 
     let input;
-    switch (schema.type) {
-      case "string":
-        switch (schema.format) {
-          case "password":
-            input = html`
-              <input
-                type="password"
-                class="input-default ${showError ? "error" : ""}"
-                .value=${value}
-                ?disabled=${this.disabled}
-                ?readonly=${this.readonly}
-                @input=${(e) => this._handleChange(field, e)}
-              />
-            `;
-            break;
-          case "email":
-            input = html`
-              <input
-                type="email"
-                class="input-default ${showError ? "error" : ""}"
-                .value=${value}
-                ?disabled=${this.disabled}
-                ?readonly=${this.readonly}
-                @input=${(e) => this._handleChange(field, e)}
-              />
-            `;
-            break;
-          case "textarea":
-            input = html`
-              <textarea
-                class="input-default ${showError ? "error" : ""}"
-                .value=${value}
-                ?disabled=${this.disabled}
-                ?readonly=${this.readonly}
-                @input=${(e) => this._handleChange(field, e)}
-              ></textarea>
-            `;
-            break;
-          case "file":
-            input = html`
-              <input
-                type="file"
-                class="input-default ${showError ? "error" : ""}"
-                accept=${schema.accept || ""}
-                ?disabled=${this.disabled}
-                ?readonly=${this.readonly}
-                @change=${(e) => this._handleChange(field, e)}
-              />
-            `;
-            break;
-          case "color":
-            input = html`
-              <ui-color-picker
-                .value=${value}
-                ?disabled=${this.disabled}
-                ?readonly=${this.readonly}
-                @change=${(e) =>
-                  this._handleChange(field, {
-                    target: { value: e.detail.value },
-                  })}
-              ></ui-color-picker>
-            `;
-            break;
-          case "country":
-            input = html`
-              <ui-country-select
-                .value=${value}
-                ?disabled=${this.disabled}
-                ?readonly=${this.readonly}
-                @change=${(e) =>
-                  this._handleChange(field, {
-                    target: { value: e.detail.value },
-                  })}
-              ></ui-country-select>
-            `;
-            break;
-          case "phone":
-            input = html`
-              <ui-phone-input
-                .value=${value}
-                ?disabled=${this.disabled}
-                ?readonly=${this.readonly}
-                @change=${(e) =>
-                  this._handleChange(field, {
-                    target: { value: e.detail.value },
-                  })}
-              ></ui-phone-input>
-            `;
-            break;
-          default:
-            input = html`
-              <input
-                type="text"
-                class="input-default ${showError ? "error" : ""}"
-                .value=${value}
-                ?disabled=${this.disabled}
-                ?readonly=${this.readonly}
-                @input=${(e) => this._handleChange(field, e)}
-              />
-            `;
-        }
-        break;
-
-      case "number":
-        input = html`
-          <input
-            type="number"
-            class="input-default ${showError ? "error" : ""}"
-            .value=${value}
-            min=${schema.minimum}
-            max=${schema.maximum}
-            ?disabled=${this.disabled}
-            ?readonly=${this.readonly}
-            @input=${(e) => this._handleChange(field, e)}
-          />
-        `;
-        break;
-
-      case "boolean":
-        input = html`
-          <input
-            type="checkbox"
-            .checked=${value}
-            ?disabled=${this.disabled}
-            ?readonly=${this.readonly}
-            @change=${(e) => this._handleChange(field, e)}
-          />
-        `;
-        break;
-
-      case "array":
-        if (schema.format === "tags") {
-          input = html`
-            <ui-tags-input
-              .value=${value || []}
-              ?disabled=${this.disabled}
-              ?readonly=${this.readonly}
-              @change=${(e) =>
-                this._handleChange(field, {
-                  target: { value: e.detail.value },
-                })}
-            ></ui-tags-input>
-          `;
-        } else {
-          input = html`
-            <div class="array-inputs">
-              ${(value || []).map(
-                (item, index) => html`
-                  <div class="array-item">
-                    ${this._renderField(`${field}.${index}`, schema.items)}
-                    <button
-                      type="button"
-                      class="button button-secondary"
-                      @click=${() => {
-                        const newValue = [...value];
-                        newValue.splice(index, 1);
-                        this._handleChange(field, {
-                          target: { value: newValue },
-                        });
-                      }}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                `
-              )}
-              <button
-                type="button"
-                class="button button-secondary"
-                @click=${() => {
-                  const newValue = [...(value || []), ""];
-                  this._handleChange(field, { target: { value: newValue } });
-                }}
-              >
-                Add Item
-              </button>
-            </div>
-          `;
-        }
-        break;
-    }
-
     if (schema.enum) {
+      const enumOptions = schema.enum.map((option) => ({
+        value: option,
+        label: option.charAt(0).toUpperCase() + option.slice(1),
+      }));
+
       input = html`
         <select
+          name="${field}"
           class="input-default ${showError ? "error" : ""}"
           .value=${value}
           ?disabled=${this.disabled}
           ?readonly=${this.readonly}
           @change=${(e) => this._handleChange(field, e)}
+          @blur=${(e) => this._handleBlur(field, e)}
         >
           <option value="">Select ${schema.title}</option>
-          ${schema.enum.map(
-            (option) => html` <option value=${option}>${option}</option> `
+          ${enumOptions.map(
+            (option) =>
+              html`<option value=${option.value}>${option.label}</option>`
           )}
         </select>
       `;
+    } else {
+      switch (schema.type) {
+        case "string":
+          switch (schema.format) {
+            case "password":
+              input = html`
+                <input
+                  name="${field}"
+                  type="password"
+                  class="input-default ${showError ? "error" : ""}"
+                  .value=${value}
+                  ?disabled=${this.disabled}
+                  ?readonly=${this.readonly}
+                  @input=${(e) => this._handleChange(field, e)}
+                  @blur=${(e) => this._handleBlur(field, e)}
+                />
+              `;
+              break;
+            case "email":
+              input = html`
+                <input
+                  name="${field}"
+                  type="email"
+                  class="input-default ${showError ? "error" : ""}"
+                  .value=${value}
+                  ?disabled=${this.disabled}
+                  ?readonly=${this.readonly}
+                  @input=${(e) => this._handleChange(field, e)}
+                  @blur=${(e) => this._handleBlur(field, e)}
+                />
+              `;
+              break;
+            case "textarea":
+              input = html`
+                <textarea
+                  name="${field}"
+                  class="input-default ${showError ? "error" : ""}"
+                  .value=${value}
+                  maxlength=${schema.maxLength}
+                  ?disabled=${this.disabled}
+                  ?readonly=${this.readonly}
+                  @input=${(e) => this._handleChange(field, e)}
+                  @blur=${(e) => this._handleBlur(field, e)}
+                ></textarea>
+              `;
+              break;
+            default:
+              input = html`
+                <input
+                  name="${field}"
+                  type="text"
+                  class="input-default ${showError ? "error" : ""}"
+                  .value=${value}
+                  ?disabled=${this.disabled}
+                  ?readonly=${this.readonly}
+                  @input=${(e) => this._handleChange(field, e)}
+                  @blur=${(e) => this._handleBlur(field, e)}
+                />
+              `;
+          }
+          break;
+
+        case "number":
+          input = html`
+            <input
+              name="${field}"
+              type="number"
+              class="input-default ${showError ? "error" : ""}"
+              .value=${value}
+              min=${schema.minimum}
+              max=${schema.maximum}
+              ?disabled=${this.disabled}
+              ?readonly=${this.readonly}
+              @input=${(e) => this._handleChange(field, e)}
+              @blur=${(e) => this._handleBlur(field, e)}
+            />
+          `;
+          break;
+
+        case "boolean":
+          input = html`
+            <input
+              name="${field}"
+              type="checkbox"
+              .checked=${value}
+              ?disabled=${this.disabled}
+              ?readonly=${this.readonly}
+              @change=${(e) => this._handleChange(field, e)}
+              @blur=${(e) => this._handleBlur(field, e)}
+            />
+          `;
+          break;
+
+        case "array":
+          input = html`
+            <input
+              name="${field}"
+              type="text"
+              class="input-default ${showError ? "error" : ""}"
+              .value=${(value || []).join(", ")}
+              ?disabled=${this.disabled}
+              ?readonly=${this.readonly}
+              @input=${(e) =>
+                this._handleChange(field, {
+                  target: {
+                    value: e.target.value.split(",").map((v) => v.trim()),
+                  },
+                })}
+              @blur=${(e) => this._handleBlur(field, e)}
+            />
+          `;
+          break;
+      }
     }
 
     return html`
@@ -613,32 +561,24 @@ export class NeoAutoform extends LitElement {
   }
 
   render() {
-    if (!this.schema || !this.schema.properties) return "";
-
+    const { title = "", description = "", properties = {} } = this.schema;
     return html`
       <form
         class="autoform variant-${this.variant}"
         @submit=${this._handleSubmit}
       >
-        ${this.schema.title
-          ? html` <h2 class="form-title">${this.schema.title}</h2> `
-          : ""}
-        ${this.schema.description
-          ? html` <p class="form-description">${this.schema.description}</p> `
+        ${title ? html`<h2 class="form-title">${title}</h2>` : ""}
+        ${description
+          ? html`<p class="form-description">${description}</p>`
           : ""}
 
         <div
           class="layout-${this.layout}"
           style="--form-columns: ${this.columns}"
         >
-          ${Object.entries(this.schema.properties).map(([field, schema]) =>
+          ${Object.entries(properties).map(([field, schema]) =>
             this._renderField(field, schema)
           )}
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="button button-secondary">Cancel</button>
-          <button type="submit" class="button button-primary">Submit</button>
         </div>
       </form>
     `;

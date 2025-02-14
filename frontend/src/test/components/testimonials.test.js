@@ -1,5 +1,6 @@
 import { fixture, expect, oneEvent } from "@open-wc/testing";
 import { html } from "lit";
+import sinon from "sinon";
 import "../../components/marketing/testimonials.js";
 
 describe("Testimonials", () => {
@@ -23,8 +24,10 @@ describe("Testimonials", () => {
   ];
 
   let element;
+  let clock;
 
   beforeEach(async () => {
+    clock = sinon.useFakeTimers();
     element = await fixture(html`
       <ui-testimonials
         .items=${mockTestimonials}
@@ -33,6 +36,10 @@ describe("Testimonials", () => {
         .columns=${3}
       ></ui-testimonials>
     `);
+  });
+
+  afterEach(() => {
+    clock.restore();
   });
 
   it("renders testimonials in grid layout", () => {
@@ -85,11 +92,12 @@ describe("Testimonials", () => {
   it("handles autoplay in carousel layout", async () => {
     element.layout = "carousel";
     element.autoplay = true;
-    element.interval = 100; // Short interval for testing
+    element.interval = 100;
     await element.updateComplete;
 
     const initialSlide = element._currentSlide;
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    clock.tick(150);
+    await element.updateComplete;
 
     expect(element._currentSlide).to.not.equal(initialSlide);
   });
@@ -157,11 +165,11 @@ describe("Testimonials", () => {
     element.interval = 100;
     await element.updateComplete;
 
-    const spy = sinon.spy(window, "clearInterval");
+    const clearIntervalSpy = sinon.spy(window, "clearInterval");
     element.disconnectedCallback();
 
-    expect(spy.called).to.be.true;
-    spy.restore();
+    expect(clearIntervalSpy.called).to.be.true;
+    clearIntervalSpy.restore();
   });
 
   it("handles keyboard navigation in carousel layout", async () => {
@@ -181,12 +189,25 @@ describe("Testimonials", () => {
     expect(element._currentSlide).to.equal(0);
   });
 
-  it("maintains accessibility attributes", () => {
+  it("maintains accessibility attributes", async () => {
+    element.layout = "carousel";
+    await element.updateComplete;
+
     const carousel = element.shadowRoot.querySelector(".testimonials-carousel");
     expect(carousel.getAttribute("role")).to.equal("region");
     expect(carousel.getAttribute("aria-label")).to.equal("Testimonials");
 
-    const controls = element.shadowRoot.querySelectorAll("[aria-label]");
-    expect(controls.length).to.be.greaterThan(0);
+    const carouselContainer = element.shadowRoot.querySelector(
+      ".carousel-container"
+    );
+    expect(carouselContainer.getAttribute("role")).to.equal("list");
+
+    const carouselItems = element.shadowRoot.querySelectorAll(".carousel-item");
+    expect(carouselItems[0].getAttribute("role")).to.equal("listitem");
+    expect(carouselItems[0].getAttribute("aria-current")).to.equal("true");
+
+    const controls = element.shadowRoot.querySelector(".carousel-controls");
+    expect(controls.getAttribute("role")).to.equal("group");
+    expect(controls.getAttribute("aria-label")).to.equal("Carousel Navigation");
   });
 });

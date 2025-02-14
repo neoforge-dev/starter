@@ -11,10 +11,10 @@
     "preview": "vite preview",
     "lint": "eslint src --ext .js",
     "format": "prettier --write \"src/**/*.js\"",
-    "test": "npm run test:components && npm run test:coverage",
-    "test:components": "web-test-runner \"src/test/components/**/*.test.js\" --node-resolve",
-    "test:coverage": "web-test-runner \"src/test/components/**/*.test.js\" --node-resolve --coverage",
-    "test:coverage:report": "web-test-runner \"src/test/components/**/*.test.js\" --node-resolve --coverage --coverage-reporters html lcov clover",
+    "test": "npm run test:fast",
+    "test:fast": "web-test-runner \"src/test/components/**/*.test.js\" --node-resolve",
+    "test:full": "cross-env NODE_ENV=production web-test-runner \"src/test/components/**/*.test.js\" --node-resolve",
+    "test:coverage": "cross-env NODE_ENV=production web-test-runner \"src/test/components/**/*.test.js\" --node-resolve --coverage",
     "test:watch": "web-test-runner \"src/test/components/**/*.test.js\" --node-resolve --watch",
     "test:e2e": "playwright test tests/e2e",
     "storybook": "storybook dev -p 6006",
@@ -57,12 +57,13 @@
     "sharp": "^0.33.5",
     "start-server-and-test": "^2.0.0",
     "storybook": "^7.0.0",
-    "storybook-addon-designs": "^7.0.0",
+    "storybook-addon-designs": "^6.3.1",
     "wait-on": "^7.0.1",
     "vite": "^4.0.0",
     "c8": "^8.0.1",
     "istanbul-reports": "^3.1.5",
-    "nyc": "^15.1.0"
+    "nyc": "^15.1.0",
+    "cross-env": "^7.0.3"
   },
   "engines": {
     "node": ">=18.0.0"

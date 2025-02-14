@@ -1,191 +1,100 @@
 import { LitElement, html, css } from "lit";
-import { classMap } from "lit/directives/class-map.js";
+import { baseStyles } from "../../styles/base.js";
 
-export class NeoBadge extends LitElement {
+export class BadgeComponent extends LitElement {
   static properties = {
-    variant: { type: String },
-    size: { type: String },
-    rounded: { type: Boolean },
-    outlined: { type: Boolean },
+    variant: { type: String }, // 'primary', 'success', 'warning', 'error', 'info'
+    size: { type: String }, // 'small', 'medium', 'large'
     icon: { type: String },
-    removable: { type: Boolean },
   };
 
-  static styles = css`
-    :host {
-      display: inline-flex;
-      align-items: center;
-    }
+  static styles = [
+    baseStyles,
+    css`
+      :host {
+        display: inline-flex;
+      }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--spacing-xs);
-      padding: var(--spacing-xs) var(--spacing-sm);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-family-primary);
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-medium);
-      line-height: 1;
-      transition: all 0.2s ease-in-out;
-    }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        padding: 0 var(--space-2);
+        border-radius: var(--radius-full);
+        font-size: var(--text-xs);
+        font-weight: var(--weight-medium);
+      }
 
-    .badge.rounded {
-      border-radius: 9999px;
-    }
+      /* Sizes */
+      .badge--small {
+        height: 18px;
+        font-size: var(--text-xs);
+      }
 
-    .badge.outlined {
-      background: transparent;
-      border: 1px solid currentColor;
-    }
+      .badge--medium {
+        height: 22px;
+        font-size: var(--text-sm);
+      }
 
-    /* Variants */
-    .variant-default {
-      background: var(--color-surface);
-      color: var(--color-text);
-    }
+      .badge--large {
+        height: 26px;
+        font-size: var(--text-base);
+        padding: 0 var(--space-3);
+      }
 
-    .variant-primary {
-      background: var(--color-primary);
-      color: var(--color-white);
-    }
+      /* Variants */
+      .badge--primary {
+        background: var(--brand);
+        color: white;
+      }
 
-    .variant-success {
-      background: var(--color-success);
-      color: var(--color-white);
-    }
+      .badge--success {
+        background: var(--success);
+        color: white;
+      }
 
-    .variant-warning {
-      background: var(--color-warning);
-      color: var(--color-text);
-    }
+      .badge--warning {
+        background: var(--warning);
+        color: var(--text-1);
+      }
 
-    .variant-error {
-      background: var(--color-error);
-      color: var(--color-white);
-    }
+      .badge--error {
+        background: var(--error);
+        color: white;
+      }
 
-    .variant-info {
-      background: var(--color-info);
-      color: var(--color-white);
-    }
+      .badge--info {
+        background: var(--info);
+        color: white;
+      }
 
-    /* Outlined variants */
-    .variant-default.outlined {
-      color: var(--color-text);
-    }
-
-    .variant-primary.outlined {
-      color: var(--color-primary);
-    }
-
-    .variant-success.outlined {
-      color: var(--color-success);
-    }
-
-    .variant-warning.outlined {
-      color: var(--color-warning);
-    }
-
-    .variant-error.outlined {
-      color: var(--color-error);
-    }
-
-    .variant-info.outlined {
-      color: var(--color-info);
-    }
-
-    /* Sizes */
-    .size-small {
-      padding: calc(var(--spacing-xs) / 2) var(--spacing-xs);
-      font-size: var(--font-size-xs);
-    }
-
-    .size-medium {
-      padding: var(--spacing-xs) var(--spacing-sm);
-      font-size: var(--font-size-sm);
-    }
-
-    .size-large {
-      padding: var(--spacing-sm) var(--spacing-md);
-      font-size: var(--font-size-md);
-    }
-
-    /* Close button */
-    .close-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2px;
-      margin-left: var(--spacing-xs);
-      border: none;
-      background: none;
-      color: currentColor;
-      cursor: pointer;
-      opacity: 0.7;
-      transition: opacity 0.2s ease-in-out;
-    }
-
-    .close-button:hover {
-      opacity: 1;
-    }
-
-    /* Truncate long content */
-    .truncate {
-      max-width: 200px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  `;
+      .material-icons {
+        font-size: inherit;
+        width: 1em;
+        height: 1em;
+      }
+    `,
+  ];
 
   constructor() {
     super();
-    this.variant = "default";
+    this.variant = "primary";
     this.size = "medium";
-    this.rounded = false;
-    this.outlined = false;
-    this.removable = false;
   }
 
   render() {
-    const classes = {
-      badge: true,
-      [`variant-${this.variant}`]: true,
-      [`size-${this.size}`]: true,
-      rounded: this.rounded,
-      outlined: this.outlined,
-      truncate: true,
-    };
-
     return html`
-      <span class=${classMap(classes)} role="status" title=${this.textContent}>
-        ${this.icon ? html`<neo-icon name=${this.icon}></neo-icon>` : null}
+      <span
+        class="badge badge--${this.variant} badge--${this.size}"
+        role="status"
+      >
+        ${this.icon
+          ? html` <span class="material-icons">${this.icon}</span> `
+          : ""}
         <slot></slot>
-        ${this.removable
-          ? html`
-              <button
-                class="close-button"
-                aria-label="Remove"
-                @click=${this._handleRemove}
-              >
-                <neo-icon name="close" size="small"></neo-icon>
-              </button>
-            `
-          : null}
       </span>
     `;
   }
-
-  _handleRemove(e) {
-    e.stopPropagation();
-    this.dispatchEvent(
-      new CustomEvent("remove", {
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
 }
 
-customElements.define("neo-badge", NeoBadge);
+customElements.define("neo-badge", BadgeComponent);

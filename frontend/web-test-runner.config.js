@@ -1,38 +1,23 @@
 import { playwrightLauncher } from "@web/test-runner-playwright";
 
-export default {
+// Development configuration (faster)
+const devConfig = {
   files: "src/test/components/**/*.test.js",
   nodeResolve: true,
-  browsers: [
-    playwrightLauncher({ product: "chromium" }),
-    // Temporarily disabled for faster development
-    // playwrightLauncher({ product: "firefox" }),
-    // playwrightLauncher({ product: "webkit" }),
-  ],
+  browsers: [playwrightLauncher({ product: "chromium" })],
   testFramework: {
     config: {
-      timeout: "30000",
+      timeout: "10000",
       ui: "bdd",
-      retries: 3,
+      retries: 1,
     },
   },
-  browserStartTimeout: 120000,
-  testsStartTimeout: 120000,
-  testsFinishTimeout: 120000,
+  browserStartTimeout: 30000,
+  testsStartTimeout: 30000,
+  testsFinishTimeout: 60000,
   testRunnerHtml: (testFramework) => `
     <html>
       <head>
-        <script>
-          // Debug logging
-          window.addEventListener('error', function(e) {
-            console.error('Global error:', e.error);
-          });
-          window.addEventListener('unhandledrejection', function(e) {
-            console.error('Unhandled rejection:', e.reason);
-          });
-          // Add performance mark for debugging timeouts
-          performance.mark('test-start');
-        </script>
         <script type="importmap">
           {
             "imports": {
@@ -48,58 +33,44 @@ export default {
           }
         </script>
         <script>
-          // Mock localStorage for tests
-          const localStorageMock = {
-            getItem: (key) => null,
-            setItem: (key, value) => {},
-            removeItem: (key) => {},
-            clear: () => {}
-          };
-          Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+          // Mock APIs
+          window.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {}, clear: () => {} };
+          window.fetch = async () => ({ ok: true, json: async () => ({}) });
+          window.matchMedia = () => ({ matches: false, addListener: () => {}, removeListener: () => {} });
+          window.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+          window.process = { env: { NODE_ENV: 'test' } };
           
-          // Mock fetch for tests
-          window.fetch = async () => ({
-            ok: true,
-            json: async () => ({})
-          });
-
-          // Mock matchMedia for tests
-          window.matchMedia = (query) => ({
-            matches: false,
-            media: query,
-            onchange: null,
-            addListener: () => {},
-            removeListener: () => {},
-            addEventListener: () => {},
-            removeEventListener: () => {},
-            dispatchEvent: () => false
-          });
-
-          // Mock ResizeObserver
-          window.ResizeObserver = class ResizeObserver {
-            observe() {}
-            unobserve() {}
-            disconnect() {}
-          };
-
-          // Disable transitions for tests
-          const style = document.createElement('style');
-          style.textContent = '* { transition: none !important; animation: none !important; }';
-          document.head.appendChild(style);
+          // Disable animations
+          document.head.appendChild(Object.assign(document.createElement('style'), {
+            textContent: '* { transition: none !important; animation: none !important; }'
+          }));
         </script>
       </head>
       <body>
-        <script type="module">
-          // Set up any global test environment here
-          window.process = { env: { NODE_ENV: 'test' } };
-        </script>
         <script type="module" src="${testFramework}"></script>
       </body>
     </html>
   `,
-  concurrency: 1,
-  maxFailures: 2,
-  concurrentBrowsers: 1,
+  concurrency: 4,
+  concurrentBrowsers: 2,
+  coverage: false,
+};
+
+// Production configuration (full coverage)
+const prodConfig = {
+  ...devConfig,
+  browsers: [
+    playwrightLauncher({ product: "chromium" }),
+    playwrightLauncher({ product: "firefox" }),
+    playwrightLauncher({ product: "webkit" }),
+  ],
+  testFramework: {
+    config: {
+      timeout: "30000",
+      ui: "bdd",
+      retries: 3,
+    },
+  },
   coverage: true,
   coverageConfig: {
     include: ["src/components/**/*.js"],
@@ -119,10 +90,8 @@ export default {
     reporters: ["html", "lcov", "clover", "text"],
     reportDir: "coverage",
   },
-  middleware: [
-    function rewriteIndex(context, next) {
-      return next();
-    },
-  ],
-  plugins: [],
+  concurrency: 2,
+  concurrentBrowsers: 1,
 };
+
+export default process.env.NODE_ENV === "production" ? prodConfig : devConfig;

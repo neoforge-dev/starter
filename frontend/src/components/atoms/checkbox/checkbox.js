@@ -1,114 +1,109 @@
-import { LitElement, html, css } from "lit";
-import { classMap } from "lit/directives/class-map.js";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { baseStyles } from "../../styles/base.js";
 
 export class NeoCheckbox extends LitElement {
   static properties = {
-    checked: { type: Boolean },
-    indeterminate: { type: Boolean },
-    disabled: { type: Boolean },
-    required: { type: Boolean },
-    error: { type: String },
-    helper: { type: String },
+    name: { type: String },
     value: { type: String },
+    checked: { type: Boolean, reflect: true },
+    indeterminate: { type: Boolean, reflect: true },
+    disabled: { type: Boolean, reflect: true },
+    required: { type: Boolean, reflect: true },
+    error: { type: String },
+    validationMessage: { type: String },
   };
 
-  static styles = css`
-    :host {
-      display: inline-block;
-    }
+  static styles = [
+    baseStyles,
+    css`
+      :host {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        cursor: pointer;
+        font-family: var(--font-family);
+      }
 
-    .checkbox-container {
-      display: flex;
-      align-items: flex-start;
-      gap: var(--spacing-xs);
-      cursor: pointer;
-    }
+      :host([disabled]) {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
 
-    .checkbox-container.disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
+      .checkbox-wrapper {
+        position: relative;
+      }
 
-    .checkbox {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.25rem;
-      height: 1.25rem;
-      border: 2px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      background: var(--color-surface);
-      transition: all 0.2s ease-in-out;
-      flex-shrink: 0;
-    }
+      .checkbox {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 2px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        outline: none;
+        margin: 0;
+        cursor: inherit;
+        display: grid;
+        place-content: center;
+      }
 
-    .checkbox:focus-within {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px var(--color-primary-alpha);
-    }
+      .checkbox::before {
+        content: "";
+        width: 0.65rem;
+        height: 0.65rem;
+        transform: scale(0);
+        transition: transform var(--transition-fast);
+        box-shadow: inset 1em 1em var(--color-primary);
+        transform-origin: center;
+        clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+      }
 
-    .checkbox.checked {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-    }
+      .checkbox:checked::before {
+        transform: scale(1);
+      }
 
-    .checkbox.indeterminate {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-    }
+      .checkbox:indeterminate::before {
+        transform: scale(1);
+        clip-path: none;
+        border-radius: calc(var(--radius-sm) / 2);
+        background-color: var(--color-primary);
+        width: 0.75rem;
+        height: 0.125rem;
+      }
 
-    .checkbox.error {
-      border-color: var(--color-error);
-    }
+      .checkbox:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+      }
 
-    .checkbox.error:focus-within {
-      box-shadow: 0 0 0 3px var(--color-error-alpha);
-    }
+      :host([disabled]) .checkbox {
+        border-color: var(--color-border);
+      }
 
-    input[type="checkbox"] {
-      position: absolute;
-      opacity: 0;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      margin: 0;
-      cursor: inherit;
-    }
+      :host([disabled]) .checkbox:checked::before,
+      :host([disabled]) .checkbox:indeterminate::before {
+        box-shadow: inset 1em 1em var(--color-secondary);
+        background-color: var(--color-secondary);
+      }
 
-    .check-icon,
-    .indeterminate-icon {
-      color: var(--color-white);
-      width: 1rem;
-      height: 1rem;
-      display: none;
-    }
+      label {
+        cursor: inherit;
+        user-select: none;
+        font-size: var(--font-size-sm);
+        color: var(--color-text);
+      }
 
-    .checkbox.checked .check-icon,
-    .checkbox.indeterminate .indeterminate-icon {
-      display: block;
-    }
-
-    .label {
-      color: var(--color-text);
-      font-family: var(--font-family-primary);
-      font-size: var(--font-size-md);
-      user-select: none;
-    }
-
-    .error-message {
-      color: var(--color-error);
-      font-size: var(--font-size-sm);
-      margin-top: var(--spacing-xs);
-    }
-
-    .helper-text {
-      color: var(--color-text-secondary);
-      font-size: var(--font-size-sm);
-      margin-top: var(--spacing-xs);
-    }
-  `;
+      .error-message {
+        font-size: var(--font-size-xs);
+        color: var(--color-error);
+        margin-top: var(--spacing-xs);
+      }
+    `,
+  ];
 
   constructor() {
     super();
@@ -117,84 +112,84 @@ export class NeoCheckbox extends LitElement {
     this.disabled = false;
     this.required = false;
     this.error = "";
-    this.helper = "";
-    this.value = "";
+    this.validationMessage = "";
+  }
+
+  setCustomValidity(message) {
+    this.validationMessage = message;
+    this.error = message;
+    this.requestUpdate();
+  }
+
+  reportValidity() {
+    if (this.required && !this.checked) {
+      this.error = this.validationMessage || "This field is required";
+      this.dispatchEvent(new Event("invalid", { bubbles: true }));
+      return false;
+    }
+    this.error = "";
+    return true;
   }
 
   render() {
-    const containerClasses = {
-      "checkbox-container": true,
-      disabled: this.disabled,
-    };
-
-    const checkboxClasses = {
-      checkbox: true,
-      checked: this.checked,
-      indeterminate: this.indeterminate,
-      error: !!this.error,
-    };
-
     return html`
-      <div class=${classMap(containerClasses)}>
-        <div class=${classMap(checkboxClasses)}>
+      <label>
+        <div class="checkbox-wrapper">
           <input
             type="checkbox"
+            class="checkbox"
+            .name=${this.name}
+            .value=${this.value}
             .checked=${this.checked}
             .indeterminate=${this.indeterminate}
             ?disabled=${this.disabled}
             ?required=${this.required}
-            .value=${this.value}
             @change=${this._handleChange}
-            role="checkbox"
+            @keydown=${this._handleKeyDown}
             aria-checked=${this.indeterminate ? "mixed" : this.checked}
+            aria-disabled=${this.disabled}
+            aria-required=${this.required}
+            aria-invalid=${Boolean(this.error)}
           />
-          <neo-icon name="check" size="small" class="check-icon"></neo-icon>
-          <neo-icon
-            name="remove"
-            size="small"
-            class="indeterminate-icon"
-          ></neo-icon>
         </div>
-        <label class="label">
-          <slot></slot>
-        </label>
-      </div>
+        <slot></slot>
+      </label>
       ${this.error
-        ? html`<div class="error-message">${this.error}</div>`
-        : null}
-      ${this.helper && !this.error
-        ? html`<div class="helper-text">${this.helper}</div>`
-        : null}
+        ? html`<div class="error-message" role="alert">${this.error}</div>`
+        : ""}
     `;
   }
 
+  updated(changedProperties) {
+    if (changedProperties.has("indeterminate")) {
+      this.renderRoot.querySelector("input").indeterminate = this.indeterminate;
+    }
+  }
+
   _handleChange(e) {
-    if (!this.disabled) {
-      this.checked = e.target.checked;
-      this.indeterminate = false;
-      this.dispatchEvent(
-        new CustomEvent("change", {
-          detail: { checked: this.checked, value: this.value },
-          bubbles: true,
-          composed: true,
-        })
-      );
-    }
+    this.checked = e.target.checked;
+    this.indeterminate = false;
+    this.error = "";
+    this.dispatchEvent(
+      new CustomEvent("change", {
+        detail: {
+          checked: this.checked,
+          indeterminate: this.indeterminate,
+          value: this.value,
+          name: this.name,
+        },
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
-  reportValidity() {
-    const input = this.shadowRoot.querySelector("input");
-    const isValid = input.reportValidity();
-    if (!isValid) {
-      this.error = input.validationMessage;
-      this.dispatchEvent(new CustomEvent("invalid", { bubbles: true }));
+  _handleKeyDown(e) {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      this.checked = !this.checked;
+      this._handleChange({ target: { checked: this.checked } });
     }
-    return isValid;
-  }
-
-  setCustomValidity(message) {
-    const input = this.shadowRoot.querySelector("input");
-    input.setCustomValidity(message);
   }
 }
 
