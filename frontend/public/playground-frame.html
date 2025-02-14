@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Component Preview</title>
+    <link rel="stylesheet" href="/src/styles/base.css" />
+    <style>
+      :root {
+        --preview-padding: 1rem;
+      }
+
+      body {
+        margin: 0;
+        padding: var(--preview-padding);
+        min-height: calc(100vh - var(--preview-padding) * 2);
+        font-family: var(--font-sans);
+        background: transparent;
+      }
+
+      #preview-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100%;
+      }
+
+      .error {
+        color: var(--color-error);
+        background: var(--color-error-bg);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+      }
+
+      /* Theme support */
+      body[data-theme="dark"] {
+        background: var(--color-surface-dark);
+        color: var(--color-text-dark);
+      }
+    </style>
+    <script type="module">
+      // Handle messages from the parent window
+      window.addEventListener("message", async (event) => {
+        if (event.data.type !== "playground-update") return;
+
+        const { component, code, properties, theme } = event.data;
+
+        try {
+          // Update theme
+          document.body.dataset.theme = theme;
+
+          // Clear previous content
+          const container = document.getElementById("preview-container");
+          container.innerHTML = "";
+
+          // Create and mount component
+          const element = document.createElement(component);
+
+          // Set properties
+          Object.entries(properties).forEach(([key, value]) => {
+            if (value != null) {
+              if (typeof value === "boolean") {
+                if (value) {
+                  element.setAttribute(key, "");
+                } else {
+                  element.removeAttribute(key);
+                }
+              } else {
+                element.setAttribute(key, value.toString());
+              }
+            }
+          });
+
+          container.appendChild(element);
+
+          // Evaluate code if provided
+          if (code) {
+            const module = new Blob([code], { type: "text/javascript" });
+            const url = URL.createObjectURL(module);
+            await import(url);
+            URL.revokeObjectURL(url);
+          }
+        } catch (error) {
+          // Report error back to parent
+          window.parent.postMessage(
+            {
+              type: "playground-error",
+              error: error.message,
+            },
+            "*"
+          );
+
+          // Show error in preview
+          const errorElement = document.createElement("div");
+          errorElement.className = "error";
+          errorElement.textContent = error.message;
+          container.appendChild(errorElement);
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <div id="preview-container"></div>
+  </body>
+</html>

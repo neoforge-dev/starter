@@ -2,39 +2,46 @@ import { css } from "lit";
 
 export const baseStyles = css`
   :host {
-    /* Colors */
-    --color-primary: #2563eb;
-    --color-primary-hover: #1d4ed8;
-    --color-background: #ffffff;
+    --color-primary: #3b82f6;
+    --color-primary-hover: #2563eb;
     --color-text: #1f2937;
-    --color-text-secondary: #4b5563;
-    --color-border: #e5e7eb;
+    --color-text-secondary: #6b7280;
+    --color-background: #ffffff;
+    --color-surface: #f3f4f6;
+    --color-surface-hover: #e5e7eb;
+    --color-border: #d1d5db;
+    --color-error: #ef4444;
+    --color-error-bg: #fee2e2;
 
-    /* Typography */
-    --font-family: system-ui, -apple-system, sans-serif;
-    --font-weight-normal: 400;
-    --font-weight-medium: 500;
-    --font-weight-semibold: 600;
-    --font-weight-bold: 700;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
 
-    /* Spacing */
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
 
-    /* Border Radius */
-    --radius-sm: 0.25rem;
-    --radius-md: 0.375rem;
-    --radius-lg: 0.5rem;
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
 
-    /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 
     box-sizing: border-box;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :host {
+      --color-text: #f3f4f6;
+      --color-text-secondary: #9ca3af;
+      --color-background: #111827;
+      --color-surface: #1f2937;
+      --color-surface-hover: #374151;
+      --color-border: #4b5563;
+    }
   }
 
   :host *,
@@ -57,6 +64,35 @@ export const baseStyles = css`
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+  }
+
+  button:hover {
+    background: var(--color-primary-hover);
+  }
+
+  button:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
