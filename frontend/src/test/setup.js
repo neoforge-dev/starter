@@ -1,10 +1,27 @@
-import { beforeAll, afterEach, expect } from "vitest";
+import { beforeAll, afterEach, expect, vi } from "vitest";
 import { LitElement } from "lit";
+import chai from "chai";
+import { assert } from "chai";
 
-// Custom element registry for testing
-const customElementRegistry = new Map();
+// Extend chai with custom matchers
+Object.assign(globalThis, { chai, assert });
+
+// Mock window if it doesn't exist
+if (typeof window === "undefined") {
+  global.window = {
+    process: { env: { NODE_ENV: "test" } },
+    requestAnimationFrame: (cb) => setTimeout(cb, 0),
+    matchMedia: () => ({
+      matches: false,
+      addListener: () => {},
+      removeListener: () => {},
+    }),
+  };
+}
 
 // Mock customElements API
+const customElementRegistry = new Map();
+
 global.customElements = {
   define: (name, constructor) => {
     customElementRegistry.set(name, constructor);
@@ -16,6 +33,7 @@ global.customElements = {
 // Mock window.customElements
 beforeAll(() => {
   window.customElements = global.customElements;
+  window.process = { env: { NODE_ENV: "test" } };
 });
 
 // Clean up after each test
@@ -24,20 +42,31 @@ afterEach(() => {
   customElementRegistry.clear();
   // Clean up the DOM
   document.body.innerHTML = "";
+  // Reset all mocks
+  vi.clearAllMocks();
 });
 
 /**
  * Create a test fixture for a web component
- * @param {typeof LitElement} componentClass - Component class to test
- * @param {string} html - Initial HTML
+ * @param {string} template - Initial HTML template
  * @returns {Promise<HTMLElement>} Component instance
  */
-export async function fixture(componentClass, html = "") {
-  const el = document.createElement("div");
-  el.innerHTML = html;
-  document.body.appendChild(el);
-  await el.updateComplete;
-  return el;
+export async function fixture(template) {
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = template;
+  document.body.appendChild(wrapper);
+  const element = wrapper.firstElementChild;
+
+  // If element is a LitElement, wait for it to be ready
+  if (element instanceof LitElement) {
+    // Ensure shadow root is created
+    if (!element.shadowRoot) {
+      element.attachShadow({ mode: "open" });
+    }
+    await element.updateComplete;
+  }
+
+  return element;
 }
 
 /**
@@ -46,9 +75,19 @@ export async function fixture(componentClass, html = "") {
  * @returns {Promise<void>}
  */
 export async function waitForUpdate(element) {
-  await element.updateComplete;
-  // Additional tick for async operations
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  if (element instanceof LitElement) {
+    // Ensure shadow root is created
+    if (!element.shadowRoot) {
+      element.attachShadow({ mode: "open" });
+    }
+    await element.updateComplete;
+  }
+  // Wait for two animation frames to ensure all updates are complete
+  await new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    });
+  });
 }
 
 /**
@@ -63,9 +102,67 @@ export function createContainer(html = "") {
   return container;
 }
 
-/**
- * Custom matchers for web components
- */
+// Mock IntersectionObserver
+class IntersectionObserver {
+  constructor(callback) {
+    this.callback = callback;
+  }
+
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+// Mock ResizeObserver
+class ResizeObserver {
+  constructor(callback) {
+    this.callback = callback;
+  }
+
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+// Mock fetch
+global.fetch = vi.fn().mockImplementation(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(""),
+  })
+);
+
+global.IntersectionObserver = IntersectionObserver;
+global.ResizeObserver = ResizeObserver;
+
+// Mock window.matchMedia
+window.matchMedia = (query) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addListener: () => {},
+  removeListener: () => {},
+  addEventListener: () => {},
+  removeEventListener: () => {},
+  dispatchEvent: () => {},
+});
+
+// Helper to create a mock response
+export function mockResponse(data, options = {}) {
+  return new Response(JSON.stringify(data), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+}
+
+// Reset fetch mock after each test
+afterEach(() => {
+  global.fetch.mockReset();
+});
+
+// Custom matchers for web components
 expect.extend({
   toHaveProperty(element, prop) {
     const hasProperty = prop in element;
@@ -131,59 +228,4 @@ expect.extend({
         }to have styles:\n${mismatches.join("\n")}`,
     };
   },
-});
-
-// Mock IntersectionObserver
-class IntersectionObserver {
-  constructor(callback) {
-    this.callback = callback;
-  }
-
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-
-global.IntersectionObserver = IntersectionObserver;
-
-// Mock ResizeObserver
-class ResizeObserver {
-  constructor(callback) {
-    this.callback = callback;
-  }
-
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-
-global.ResizeObserver = ResizeObserver;
-
-// Mock window.matchMedia
-window.matchMedia = (query) => ({
-  matches: false,
-  media: query,
-  onchange: null,
-  addListener: () => {},
-  removeListener: () => {},
-  addEventListener: () => {},
-  removeEventListener: () => {},
-  dispatchEvent: () => {},
-});
-
-// Mock fetch API
-global.fetch = vi.fn();
-
-// Helper to create a mock response
-export function mockResponse(data, options = {}) {
-  return new Response(JSON.stringify(data), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
-}
-
-// Reset fetch mock after each test
-afterEach(() => {
-  global.fetch.mockReset();
 });

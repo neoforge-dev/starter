@@ -66,7 +66,29 @@ describe("Examples Page", () => {
     };
 
     element = await fixture(html`<examples-page></examples-page>`);
+
+    // Wait for initial render and data loading
     await element.updateComplete;
+
+    // Wait for initialization with a reasonable timeout
+    const maxWaitTime = 2000; // 2 seconds should be plenty for tests
+    const startTime = Date.now();
+
+    while (!element.initialized && Date.now() - startTime < maxWaitTime) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+
+    if (!element.initialized) {
+      throw new Error("Component failed to initialize within timeout period");
+    }
+  });
+
+  afterEach(() => {
+    // Clean up the element properly
+    if (element && element.parentNode) {
+      element.parentNode.removeChild(element);
+    }
+    element = null;
   });
 
   it("renders examples grid", () => {

@@ -22,14 +22,9 @@ export default defineConfig({
     // Setup files to run before tests
     setupFiles: ["./src/test/setup.js"],
     // Include these extensions in test files
-    include: ["src/**/*.{test,spec}.js"],
+    include: ["src/**/*.test.js"],
     // Exclude node_modules and other non-test files
-    exclude: [
-      "node_modules/**",
-      "dist/**",
-      ".storybook/**",
-      "src/**/*.stories.js",
-    ],
+    exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
     // Global test timeout
     testTimeout: 10000,
     // Retry failed tests
@@ -43,14 +38,38 @@ export default defineConfig({
     },
     // Browser-like globals
     globals: true,
+    // Pool configuration for better async handling
+    pool: "threads",
+    poolOptions: {
+      threads: {
+        singleThread: true,
+      },
+    },
     // Custom resolver for module imports
     resolve: {
       alias: {
-        "@components": resolve(__dirname, "./src/components"),
-        "@services": resolve(__dirname, "./src/services"),
-        "@utils": resolve(__dirname, "./src/utils"),
-        "@styles": resolve(__dirname, "./src/styles"),
+        "@components": "/src/components",
+        "@services": "/src/services",
+        "@utils": "/src/utils",
+        "@styles": "/src/styles",
       },
+    },
+    // Environment variables
+    env: {
+      NODE_ENV: "test",
+    },
+    hookTimeout: 10000,
+    environmentOptions: {
+      happyDOM: {
+        settings: {
+          disableJavaScriptEvaluation: false,
+          disableJavaScriptFileLoading: false,
+          disableCSSFileLoading: false,
+        },
+      },
+    },
+    deps: {
+      inline: [/lit/, /@open-wc\/testing/],
     },
   },
 });

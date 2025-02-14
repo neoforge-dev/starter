@@ -96,9 +96,7 @@ export class ThemeToggleButton extends ThemeToggleMixin(LitElement) {
       left: var(--theme-transition-origin-x, 50%);
       width: 0;
       height: 0;
-      background: ${this.theme === "dark"
-        ? "var(--background-color-light)"
-        : "var(--background-color-dark)"};
+      background: var(--theme-transition-background);
       border-radius: 50%;
       transform: translate(-50%, -50%);
       pointer-events: none;
@@ -147,6 +145,7 @@ export class ThemeToggleButton extends ThemeToggleMixin(LitElement) {
     window
       .matchMedia("(prefers-reduced-motion: reduce)")
       .addListener(this._handleReducedMotionChange.bind(this));
+    this._updateTransitionBackground();
   }
 
   disconnectedCallback() {
@@ -159,6 +158,15 @@ export class ThemeToggleButton extends ThemeToggleMixin(LitElement) {
 
   _handleReducedMotionChange(e) {
     this._prefersReducedMotion = e.matches;
+  }
+
+  _updateTransitionBackground() {
+    this.style.setProperty(
+      "--theme-transition-background",
+      this.theme === "dark"
+        ? "var(--background-color-light)"
+        : "var(--background-color-dark)"
+    );
   }
 
   _handleClick(e) {
@@ -179,6 +187,9 @@ export class ThemeToggleButton extends ThemeToggleMixin(LitElement) {
       "--theme-transition-origin-y",
       `${y}px`
     );
+
+    // Update transition background before animation
+    this._updateTransitionBackground();
 
     // Add transition classes
     document.documentElement.classList.add("theme-transition");
