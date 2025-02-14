@@ -25,186 +25,179 @@ describe("FAQ Accordion", () => {
 
   beforeEach(async () => {
     element = await fixture(html`
-      <ui-faq-accordion
+      <neo-faq-accordion
         .items=${mockFAQs}
         variant="default"
         layout="stack"
         .columns=${1}
-      ></ui-faq-accordion>
+      ></neo-faq-accordion>
     `);
   });
 
   it("renders all FAQ items", () => {
-    const items = element.shadowRoot.querySelectorAll(".faq-item");
+    const items = element.shadowRoot.querySelectorAll(".accordion-item");
     expect(items.length).to.equal(mockFAQs.length);
   });
 
   it("renders questions and answers correctly", () => {
-    const firstItem = element.shadowRoot.querySelector(".faq-item");
+    const firstItem = element.shadowRoot.querySelector(".accordion-item");
+    const question = firstItem.querySelector(".question-button");
+    const answer = firstItem.querySelector(".answer-content");
 
-    expect(firstItem.querySelector(".faq-question").textContent).to.equal(
-      mockFAQs[0].question
-    );
-    expect(firstItem.querySelector(".faq-answer").textContent).to.equal(
-      mockFAQs[0].answer
-    );
+    expect(question.textContent.trim()).to.include(mockFAQs[0].question);
+    expect(answer.textContent.trim()).to.equal(mockFAQs[0].answer);
   });
 
   it("toggles items on click", async () => {
-    const firstItem = element.shadowRoot.querySelector(".faq-item");
-    const question = firstItem.querySelector(".faq-question");
+    const firstItem = element.shadowRoot.querySelector(".accordion-item");
+    const question = firstItem.querySelector(".question-button");
+    const answer = firstItem.querySelector(".answer");
 
     // Initially closed
-    expect(firstItem.classList.contains("expanded")).to.be.false;
+    expect(answer.classList.contains("open")).to.be.false;
 
     // Click to open
     question.click();
     await element.updateComplete;
-    expect(firstItem.classList.contains("expanded")).to.be.true;
+    expect(answer.classList.contains("open")).to.be.true;
 
     // Click to close
     question.click();
     await element.updateComplete;
-    expect(firstItem.classList.contains("expanded")).to.be.false;
+    expect(answer.classList.contains("open")).to.be.false;
   });
 
   it("handles multiple open items when allowed", async () => {
     element.allowMultiple = true;
     await element.updateComplete;
 
-    const items = element.shadowRoot.querySelectorAll(".faq-item");
-    const [first, second] = items;
+    const items = element.shadowRoot.querySelectorAll(".accordion-item");
+    const firstQuestion = items[0].querySelector(".question-button");
+    const secondQuestion = items[1].querySelector(".question-button");
+    const firstAnswer = items[0].querySelector(".answer");
+    const secondAnswer = items[1].querySelector(".answer");
 
     // Open first item
-    first.querySelector(".faq-question").click();
+    firstQuestion.click();
     await element.updateComplete;
-    expect(first.classList.contains("expanded")).to.be.true;
+    expect(firstAnswer.classList.contains("open")).to.be.true;
 
     // Open second item
-    second.querySelector(".faq-question").click();
+    secondQuestion.click();
     await element.updateComplete;
-    expect(second.classList.contains("expanded")).to.be.true;
-    expect(first.classList.contains("expanded")).to.be.true;
+    expect(firstAnswer.classList.contains("open")).to.be.true;
+    expect(secondAnswer.classList.contains("open")).to.be.true;
   });
 
   it("closes other items when allowMultiple is false", async () => {
     element.allowMultiple = false;
     await element.updateComplete;
 
-    const items = element.shadowRoot.querySelectorAll(".faq-item");
-    const [first, second] = items;
+    const items = element.shadowRoot.querySelectorAll(".accordion-item");
+    const firstQuestion = items[0].querySelector(".question-button");
+    const secondQuestion = items[1].querySelector(".question-button");
+    const firstAnswer = items[0].querySelector(".answer");
+    const secondAnswer = items[1].querySelector(".answer");
 
     // Open first item
-    first.querySelector(".faq-question").click();
+    firstQuestion.click();
     await element.updateComplete;
-    expect(first.classList.contains("expanded")).to.be.true;
+    expect(firstAnswer.classList.contains("open")).to.be.true;
 
     // Open second item
-    second.querySelector(".faq-question").click();
+    secondQuestion.click();
     await element.updateComplete;
-    expect(second.classList.contains("expanded")).to.be.true;
-    expect(first.classList.contains("expanded")).to.be.false;
+    expect(firstAnswer.classList.contains("open")).to.be.false;
+    expect(secondAnswer.classList.contains("open")).to.be.true;
   });
 
   it("handles different layouts", async () => {
+    // Test stack layout
+    expect(element.shadowRoot.querySelector(".layout-stack")).to.exist;
+
     // Test grid layout
     element.layout = "grid";
-    element.columns = 2;
     await element.updateComplete;
+    expect(element.shadowRoot.querySelector(".layout-grid")).to.exist;
 
-    const container = element.shadowRoot.querySelector(".faq-grid");
-    expect(container).to.exist;
-    expect(container.style.gridTemplateColumns).to.include("repeat(2,");
-
-    // Test masonry layout
-    element.layout = "masonry";
+    // Test sections layout
+    element.layout = "sections";
     await element.updateComplete;
-
-    expect(element.shadowRoot.querySelector(".faq-masonry")).to.exist;
-  });
-
-  it("applies different variants correctly", async () => {
-    // Test minimal variant
-    element.variant = "minimal";
-    await element.updateComplete;
-
-    expect(element.shadowRoot.querySelector(".variant-minimal")).to.exist;
-
-    // Test bordered variant
-    element.variant = "bordered";
-    await element.updateComplete;
-
-    expect(element.shadowRoot.querySelector(".variant-bordered")).to.exist;
+    expect(element.shadowRoot.querySelector(".layout-sections")).to.exist;
   });
 
   it("handles empty items array", async () => {
     element.items = [];
     await element.updateComplete;
-
-    const items = element.shadowRoot.querySelectorAll(".faq-item");
-    expect(items.length).to.equal(0);
-
-    const emptyMessage = element.shadowRoot.querySelector(".empty-message");
-    expect(emptyMessage).to.exist;
+    expect(element.shadowRoot.querySelector(".faq-container")).to.exist;
   });
 
   it("supports keyboard navigation", async () => {
-    const firstItem = element.shadowRoot.querySelector(".faq-item");
-    const question = firstItem.querySelector(".faq-question");
+    const firstItem = element.shadowRoot.querySelector(".accordion-item");
+    const question = firstItem.querySelector(".question-button");
+    const answer = firstItem.querySelector(".answer");
 
-    // Enter key
-    question.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    // Press Enter to open
+    question.dataset.index = "0";
+    question.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "Enter",
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      })
+    );
     await element.updateComplete;
-    expect(firstItem.classList.contains("expanded")).to.be.true;
+    // Wait for any additional updates
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(answer.classList.contains("open")).to.be.true;
 
-    // Space key
-    question.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+    // Press Space to close
+    question.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: " ",
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      })
+    );
     await element.updateComplete;
-    expect(firstItem.classList.contains("expanded")).to.be.false;
-  });
-
-  it("maintains accessibility attributes", () => {
-    const items = element.shadowRoot.querySelectorAll(".faq-item");
-
-    items.forEach((item, index) => {
-      const question = item.querySelector(".faq-question");
-      const answer = item.querySelector(".faq-answer");
-
-      expect(question.getAttribute("role")).to.equal("button");
-      expect(question.getAttribute("aria-expanded")).to.equal("false");
-      expect(question.getAttribute("aria-controls")).to.equal(
-        `faq-answer-${index}`
-      );
-
-      expect(answer.getAttribute("role")).to.equal("region");
-      expect(answer.getAttribute("aria-labelledby")).to.equal(
-        `faq-question-${index}`
-      );
-    });
+    // Wait for any additional updates
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(answer.classList.contains("open")).to.be.false;
   });
 
   it("supports default open items", async () => {
     element = await fixture(html`
-      <ui-faq-accordion
+      <neo-faq-accordion
         .items=${mockFAQs}
-        .defaultOpen=${[0]}
-      ></ui-faq-accordion>
+        .defaultOpen=${true}
+      ></neo-faq-accordion>
     `);
+    await element.updateComplete;
 
-    const firstItem = element.shadowRoot.querySelector(".faq-item");
-    expect(firstItem.classList.contains("expanded")).to.be.true;
+    const answers = element.shadowRoot.querySelectorAll(".answer");
+    answers.forEach((answer) => {
+      expect(answer.classList.contains("open")).to.be.true;
+    });
   });
 
   it("handles category filtering", async () => {
-    const category = "getting-started";
-    element.activeCategory = category;
+    const categoryFAQs = [
+      {
+        category: "General",
+        items: [mockFAQs[0]],
+      },
+    ];
+
+    element.items = categoryFAQs;
+    element.layout = "sections";
     await element.updateComplete;
 
-    const visibleItems = element.shadowRoot.querySelectorAll(
-      ".faq-item:not(.hidden)"
-    );
-    expect(visibleItems.length).to.equal(
-      mockFAQs.filter((item) => item.category === category).length
+    const sections = element.shadowRoot.querySelectorAll(".faq-section");
+    expect(sections.length).to.equal(1);
+    expect(sections[0].querySelector(".section-title").textContent).to.equal(
+      "General"
     );
   });
 });

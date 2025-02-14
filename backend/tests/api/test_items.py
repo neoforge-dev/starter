@@ -1,8 +1,8 @@
-from fastapi import AsyncClient
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from tests.factories import UserFactory, ItemFactory
-from config import settings
+from app.core.config import settings
 
 async def test_read_items(client: AsyncClient, db: AsyncSession, regular_user_headers: dict) -> None:
     """Test reading item list."""

@@ -7,6 +7,7 @@ export default {
     viewport: { width: 1280, height: 720 },
     screenshot: "only-on-failure",
   },
+  maxFailures: 1,
   webServer: {
     command: "npx serve",
     port: 3000,

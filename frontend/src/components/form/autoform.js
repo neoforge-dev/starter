@@ -4,7 +4,7 @@ import {
   css,
 } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
-export class Autoform extends LitElement {
+export class NeoAutoform extends LitElement {
   static properties = {
     schema: { type: Object },
     value: { type: Object },
@@ -258,14 +258,20 @@ export class Autoform extends LitElement {
 
   firstUpdated() {
     this._formData = { ...this.value };
-    this._validateForm();
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has("value")) {
+      this._formData = { ...this.value };
+    }
   }
 
   _validateField(field, value) {
     const schema = this.schema.properties[field];
     const errors = [];
 
-    if (schema.required && !value) {
+    // Check required fields first
+    if (this.schema.required?.includes(field) && !value) {
       errors.push("This field is required");
     }
 
@@ -327,15 +333,16 @@ export class Autoform extends LitElement {
     });
 
     this._errors = errors;
+    const isValid = Object.keys(errors).length === 0;
     this.dispatchEvent(
       new CustomEvent("validate", {
-        detail: { valid: Object.keys(errors).length === 0, errors },
+        detail: { valid: isValid, errors },
         bubbles: true,
         composed: true,
       })
     );
 
-    return Object.keys(errors).length === 0;
+    return isValid;
   }
 
   _handleChange(field, event) {
@@ -638,4 +645,4 @@ export class Autoform extends LitElement {
   }
 }
 
-customElements.define("ui-autoform", Autoform);
+customElements.define("neo-autoform", NeoAutoform);

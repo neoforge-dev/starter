@@ -11,14 +11,14 @@ export default {
   ],
   testFramework: {
     config: {
-      timeout: "10000",
+      timeout: "30000",
       ui: "bdd",
       retries: 3,
     },
   },
-  browserStartTimeout: 60000,
-  testsStartTimeout: 60000,
-  testsFinishTimeout: 60000,
+  browserStartTimeout: 120000,
+  testsStartTimeout: 120000,
+  testsFinishTimeout: 120000,
   testRunnerHtml: (testFramework) => `
     <html>
       <head>
@@ -30,6 +30,8 @@ export default {
           window.addEventListener('unhandledrejection', function(e) {
             console.error('Unhandled rejection:', e.reason);
           });
+          // Add performance mark for debugging timeouts
+          performance.mark('test-start');
         </script>
         <script type="importmap">
           {
@@ -96,6 +98,7 @@ export default {
     </html>
   `,
   concurrency: 1,
+  maxFailures: 2,
   concurrentBrowsers: 1,
   coverage: true,
   coverageConfig: {

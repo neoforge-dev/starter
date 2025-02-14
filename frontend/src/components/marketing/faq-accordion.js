@@ -4,7 +4,7 @@ import {
   css,
 } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
-export class FAQAccordion extends LitElement {
+export class NeoFaqAccordion extends LitElement {
   static properties = {
     items: { type: Array },
     variant: { type: String },
@@ -216,16 +216,49 @@ export class FAQAccordion extends LitElement {
     this.defaultOpen = false;
     this.allowMultiple = true;
     this._openItems = new Set();
+    this._handleKeyDown = this._handleKeyDown.bind(this);
   }
 
-  firstUpdated() {
+  connectedCallback() {
+    super.connectedCallback();
     if (this.defaultOpen) {
       this.items.forEach((_, index) => this._openItems.add(index));
+      this.requestUpdate();
+    }
+  }
+
+  _handleKeyDown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      const button = event.target;
+      const index = button.dataset.index;
+      if (index !== undefined) {
+        const isOpen = this._openItems.has(index);
+        if (isOpen) {
+          this._openItems.delete(index);
+        } else {
+          if (!this.allowMultiple) {
+            this._openItems.clear();
+          }
+          this._openItems.add(index);
+        }
+        this.requestUpdate();
+        // Force synchronous update
+        this.performUpdate();
+        // Ensure the update is complete
+        this.updateComplete.then(() => {
+          const answer = this.shadowRoot.querySelector(`#answer-${index}`);
+          if (answer) {
+            answer.classList.toggle("open", this._openItems.has(index));
+          }
+        });
+      }
     }
   }
 
   _toggleItem(index) {
-    if (this._openItems.has(index)) {
+    const isOpen = this._openItems.has(index);
+    if (isOpen) {
       this._openItems.delete(index);
     } else {
       if (!this.allowMultiple) {
@@ -262,6 +295,8 @@ export class FAQAccordion extends LitElement {
         <button
           class="question-button"
           @click=${() => this._toggleItem(index)}
+          @keydown=${this._handleKeyDown}
+          data-index=${index}
           aria-expanded=${isOpen}
           aria-controls="answer-${index}"
         >
@@ -301,6 +336,25 @@ export class FAQAccordion extends LitElement {
   }
 
   _renderSections() {
+    if (!this.items || !this.items.length) {
+      return html`<div class="layout-sections"></div>`;
+    }
+
+    // If items don't have categories or items[0] is a direct FAQ item
+    if (!this.items[0].category || !this.items[0].items) {
+      return html`
+        <div class="layout-sections">
+          <div class="faq-section">
+            <div class="section-items">
+              ${this.items.map((item, index) =>
+                this._renderAccordionItem(item, index)
+              )}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     return html`
       <div class="layout-sections">
         ${this.items.map(
@@ -335,4 +389,4 @@ export class FAQAccordion extends LitElement {
   }
 }
 
-customElements.define("ui-faq-accordion", FAQAccordion);
+customElements.define("neo-faq-accordion", NeoFaqAccordion);
