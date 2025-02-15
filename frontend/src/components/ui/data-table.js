@@ -1,171 +1,239 @@
 import { LitElement, html, css } from "lit";
+import { baseStyles } from "../styles/base.js";
 
+/**
+ * A data table component that supports sorting, filtering, and pagination
+ * @customElement neo-data-table
+ */
 export class DataTable extends LitElement {
-  static get properties() {
-    return {
-      data: { type: Array },
-      columns: { type: Array },
-      sortColumn: { type: String },
-      sortDirection: { type: String },
-      pageSize: { type: Number },
-      currentPage: { type: Number },
-    };
-  }
+  static properties = {
+    data: { type: Array },
+    columns: { type: Array },
+    sortField: { type: String },
+    sortDirection: { type: String },
+    filter: { type: String },
+    page: { type: Number },
+    pageSize: { type: Number },
+    selectedRows: { type: Array },
+  };
 
-  static get styles() {
-    return css`
+  static styles = [
+    baseStyles,
+    css`
       :host {
         display: block;
+        width: 100%;
         overflow-x: auto;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        background: var(--color-background);
-        border-radius: 8px;
-        overflow: hidden;
+        border-spacing: 0;
       }
 
       th,
       td {
-        padding: 12px 16px;
+        padding: var(--spacing-md, 1rem);
         text-align: left;
-        border-bottom: 1px solid var(--color-border);
+        border-bottom: 1px solid var(--color-border, #e5e7eb);
       }
 
       th {
-        background: var(--color-surface);
-        font-weight: 600;
+        background: var(--color-surface-hover, #f5f5f5);
+        font-weight: 500;
         cursor: pointer;
         user-select: none;
       }
 
       th:hover {
-        background: var(--color-surface-hover);
+        background: var(--color-surface-hover-dark, #e5e7eb);
       }
 
-      tr:last-child td {
-        border-bottom: none;
+      tr:hover td {
+        background: var(--color-surface-hover, #f5f5f5);
       }
 
-      tr:hover {
-        background: var(--color-surface-hover);
+      .sort-indicator {
+        display: inline-block;
+        margin-left: var(--spacing-sm, 0.5rem);
       }
 
       .pagination {
         display: flex;
-        justify-content: flex-end;
         align-items: center;
-        padding: 16px;
-        gap: 8px;
+        justify-content: space-between;
+        padding: var(--spacing-md, 1rem);
+        background: var(--color-surface, #ffffff);
+        border-top: 1px solid var(--color-border, #e5e7eb);
+      }
+
+      .pagination-info {
+        color: var(--color-text-secondary, #6b7280);
+      }
+
+      .pagination-controls {
+        display: flex;
+        gap: var(--spacing-sm, 0.5rem);
       }
 
       button {
-        padding: 8px 16px;
+        padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
         border: none;
-        background: var(--color-primary);
-        color: white;
-        border-radius: 4px;
+        border-radius: var(--radius-sm, 0.25rem);
+        background: var(--color-surface-hover, #f5f5f5);
         cursor: pointer;
+        transition: background 0.2s ease;
+      }
+
+      button:hover:not(:disabled) {
+        background: var(--color-surface-hover-dark, #e5e7eb);
       }
 
       button:disabled {
-        background: var(--color-disabled);
+        opacity: 0.5;
         cursor: not-allowed;
       }
 
-      .sort-icon::after {
-        content: "↕";
-        margin-left: 4px;
+      .filter-container {
+        margin-bottom: var(--spacing-md, 1rem);
       }
 
-      .sort-icon.asc::after {
-        content: "↑";
+      input {
+        width: 100%;
+        padding: var(--spacing-sm, 0.5rem);
+        border: 1px solid var(--color-border, #e5e7eb);
+        border-radius: var(--radius-sm, 0.25rem);
       }
-
-      .sort-icon.desc::after {
-        content: "↓";
-      }
-    `;
-  }
+    `,
+  ];
 
   constructor() {
     super();
     this.data = [];
     this.columns = [];
-    this.sortColumn = "";
+    this.sortField = "";
     this.sortDirection = "asc";
+    this.filter = "";
+    this.page = 1;
     this.pageSize = 10;
-    this.currentPage = 1;
+    this.selectedRows = [];
   }
 
-  handleSort(column) {
-    if (this.sortColumn === column) {
+  _handleSort(field) {
+    if (this.sortField === field) {
       this.sortDirection = this.sortDirection === "asc" ? "desc" : "asc";
     } else {
-      this.sortColumn = column;
+      this.sortField = field;
       this.sortDirection = "asc";
     }
+    this.requestUpdate();
   }
 
-  handlePageChange(change) {
-    const newPage = this.currentPage + change;
-    const maxPage = Math.ceil(this.data.length / this.pageSize);
+  _handleFilter(e) {
+    this.filter = e.target.value;
+    this.page = 1;
+    this.requestUpdate();
+  }
 
-    if (newPage >= 1 && newPage <= maxPage) {
-      this.currentPage = newPage;
+  _handleRowClick(row) {
+    const index = this.selectedRows.findIndex(
+      (selected) => selected.id === row.id
+    );
+    if (index === -1) {
+      this.selectedRows = [...this.selectedRows, row];
+    } else {
+      this.selectedRows = this.selectedRows.filter(
+        (selected) => selected.id !== row.id
+      );
     }
+    this.dispatchEvent(
+      new CustomEvent("row-select", {
+        detail: { row, selected: index === -1 },
+      })
+    );
   }
 
-  getSortedData() {
-    if (!this.sortColumn) return this.data;
+  _handlePageChange(newPage) {
+    this.page = newPage;
+    this.requestUpdate();
+  }
 
-    return [...this.data].sort((a, b) => {
-      const aVal = a[this.sortColumn];
-      const bVal = b[this.sortColumn];
+  _getFilteredData() {
+    if (!this.filter) return this.data;
+    const lowercaseFilter = this.filter.toLowerCase();
+    return this.data.filter((row) =>
+      Object.values(row).some(
+        (value) =>
+          value && value.toString().toLowerCase().includes(lowercaseFilter)
+      )
+    );
+  }
 
-      if (this.sortDirection === "asc") {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
-      }
+  _getSortedData(filteredData) {
+    if (!this.sortField) return filteredData;
+    return [...filteredData].sort((a, b) => {
+      const aValue = a[this.sortField];
+      const bValue = b[this.sortField];
+      const modifier = this.sortDirection === "asc" ? 1 : -1;
+      if (aValue < bValue) return -1 * modifier;
+      if (aValue > bValue) return 1 * modifier;
+      return 0;
     });
   }
 
-  getPagedData() {
-    const start = (this.currentPage - 1) * this.pageSize;
+  _getPaginatedData(sortedData) {
+    const start = (this.page - 1) * this.pageSize;
     const end = start + this.pageSize;
-    return this.getSortedData().slice(start, end);
+    return sortedData.slice(start, end);
   }
 
   render() {
-    const pagedData = this.getPagedData();
-    const totalPages = Math.ceil(this.data.length / this.pageSize);
+    const filteredData = this._getFilteredData();
+    const sortedData = this._getSortedData(filteredData);
+    const paginatedData = this._getPaginatedData(sortedData);
+    const totalPages = Math.ceil(sortedData.length / this.pageSize);
 
     return html`
+      <div class="filter-container">
+        <input
+          type="text"
+          placeholder="Filter..."
+          .value=${this.filter}
+          @input=${this._handleFilter}
+        />
+      </div>
+
       <table>
         <thead>
           <tr>
             ${this.columns.map(
               (column) => html`
-                <th @click=${() => this.handleSort(column.field)}>
-                  ${column.label}
-                  <span
-                    class="sort-icon ${this.sortColumn === column.field
-                      ? this.sortDirection
-                      : ""}"
-                  >
-                  </span>
+                <th @click=${() => this._handleSort(column.field)}>
+                  ${column.title}
+                  ${this.sortField === column.field
+                    ? html`
+                        <span class="sort-indicator">
+                          ${this.sortDirection === "asc" ? "↑" : "↓"}
+                        </span>
+                      `
+                    : ""}
                 </th>
               `
             )}
           </tr>
         </thead>
         <tbody>
-          ${pagedData.map(
+          ${paginatedData.map(
             (row) => html`
-              <tr>
+              <tr
+                @click=${() => this._handleRowClick(row)}
+                class=${this.selectedRows.some(
+                  (selected) => selected.id === row.id
+                )
+                  ? "selected"
+                  : ""}
+              >
                 ${this.columns.map(
                   (column) => html` <td>${row[column.field]}</td> `
                 )}
@@ -174,20 +242,39 @@ export class DataTable extends LitElement {
           )}
         </tbody>
       </table>
+
       <div class="pagination">
-        <button
-          ?disabled=${this.currentPage === 1}
-          @click=${() => this.handlePageChange(-1)}
-        >
-          Previous
-        </button>
-        <span>Page ${this.currentPage} of ${totalPages}</span>
-        <button
-          ?disabled=${this.currentPage === totalPages}
-          @click=${() => this.handlePageChange(1)}
-        >
-          Next
-        </button>
+        <div class="pagination-info">
+          Showing ${(this.page - 1) * this.pageSize + 1} to
+          ${Math.min(this.page * this.pageSize, sortedData.length)} of
+          ${sortedData.length} entries
+        </div>
+        <div class="pagination-controls">
+          <button
+            @click=${() => this._handlePageChange(1)}
+            ?disabled=${this.page === 1}
+          >
+            First
+          </button>
+          <button
+            @click=${() => this._handlePageChange(this.page - 1)}
+            ?disabled=${this.page === 1}
+          >
+            Previous
+          </button>
+          <button
+            @click=${() => this._handlePageChange(this.page + 1)}
+            ?disabled=${this.page === totalPages}
+          >
+            Next
+          </button>
+          <button
+            @click=${() => this._handlePageChange(totalPages)}
+            ?disabled=${this.page === totalPages}
+          >
+            Last
+          </button>
+        </div>
       </div>
     `;
   }

@@ -7,11 +7,23 @@ import { baseStyles } from "../styles/base.js";
  */
 export class MemoryMonitor extends LitElement {
   static properties = {
-    leaks: { type: Array },
+    leaks: {
+      type: Array,
+      state: true,
+    },
     expanded: { type: Boolean },
     maxLeaks: { type: Number },
     autoHide: { type: Boolean },
   };
+
+  constructor() {
+    super();
+    this.leaks = [];
+    this.expanded = false;
+    this.maxLeaks = 50;
+    this.autoHide = true;
+    this._setupEventListeners();
+  }
 
   static styles = [
     baseStyles,
@@ -181,15 +193,6 @@ export class MemoryMonitor extends LitElement {
       }
     `,
   ];
-
-  constructor() {
-    super();
-    this.leaks = [];
-    this.expanded = false;
-    this.maxLeaks = 50;
-    this.autoHide = true;
-    this._setupEventListeners();
-  }
 
   connectedCallback() {
     super.connectedCallback();

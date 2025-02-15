@@ -44,6 +44,7 @@ export default defineConfig({
     sourcemap: false,
     cssCodeSplit: true,
     cssMinify: "lightningcss",
+    outDir: "dist",
     rollupOptions: {
       input: {
         main: "./index.html",
@@ -62,6 +63,7 @@ export default defineConfig({
           pages: ["/src/pages/**/*.js"],
         },
       },
+      external: [/^node:.*$/],
     },
     css: {
       postcss: {
@@ -98,6 +100,10 @@ export default defineConfig({
       "@services": "/src/services",
       "@utils": "/src/utils",
       "@pages": "/src/pages",
+      "@lit/reactive-element":
+        "/node_modules/@lit/reactive-element/development/reactive-element.js",
+      "lit-html": "/node_modules/lit-html/development/lit-html.js",
+      "lit-element": "/node_modules/lit-element/development/lit-element.js",
     },
   },
   optimizeDeps: {
@@ -123,4 +129,19 @@ export default defineConfig({
       inlineThreshold: 8192, // 8KB
     }),
   ],
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["src/test/setup.js"],
+    include: ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    exclude: ["node_modules", "dist", ".idea", ".git", ".cache"],
+    deps: {
+      inline: [/@esm-bundle\/chai/, /^lit/],
+      optimizer: {
+        web: {
+          include: [/@esm-bundle\/chai/, /^lit/],
+        },
+      },
+    },
+  },
 });

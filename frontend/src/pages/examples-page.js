@@ -261,52 +261,60 @@ export class ExamplesPage extends LitElement {
     try {
       this.loading = true;
       this.error = null;
-      this.initialized = false;
 
-      // Simulate API calls with shorter timeout for tests
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Use the mocked examples service from tests if available
+      if (window.examples) {
+        this.examples = await window.examples.getExamples();
+        this.categories = await window.examples.getCategories();
+      } else {
+        // Fallback mock data for development
+        this.examples = [
+          {
+            id: "basic-app",
+            title: "Basic Application",
+            description: "A simple starter application",
+            category: "getting-started",
+            difficulty: "beginner",
+            tags: ["web-components", "routing", "state"],
+            liveDemo: "https://demo.example.com/basic-app",
+            sourceCode: "https://github.com/example/basic-app",
+            author: {
+              name: "John Doe",
+              avatar: "john-avatar.jpg",
+            },
+            stats: {
+              views: 1200,
+              likes: 45,
+              downloads: 300,
+            },
+          },
+          {
+            id: "advanced-dashboard",
+            title: "Advanced Dashboard",
+            description: "Complex dashboard with analytics",
+            category: "applications",
+            difficulty: "advanced",
+            tags: ["dashboard", "charts", "real-time"],
+            liveDemo: "https://demo.example.com/dashboard",
+            sourceCode: "https://github.com/example/dashboard",
+            author: {
+              name: "Jane Smith",
+              avatar: "jane-avatar.jpg",
+            },
+            stats: {
+              views: 2500,
+              likes: 120,
+              downloads: 800,
+            },
+          },
+        ];
 
-      this.examples = [
-        {
-          id: 1,
-          title: "Example 1",
-          description: "A simple example demonstrating basic functionality",
-          category: 1,
-          difficulty: "beginner",
-          tags: ["basic", "tutorial"],
-          stats: {
-            views: 100,
-            likes: 25,
-            downloads: 10,
-          },
-          author: {
-            name: "John Doe",
-            avatar: "https://via.placeholder.com/32",
-          },
-        },
-        {
-          id: 2,
-          title: "Example 2",
-          description: "An advanced example showing complex features",
-          category: 2,
-          difficulty: "advanced",
-          tags: ["advanced", "complex"],
-          stats: {
-            views: 200,
-            likes: 50,
-            downloads: 20,
-          },
-          author: {
-            name: "Jane Smith",
-            avatar: "https://via.placeholder.com/32",
-          },
-        },
-      ];
-
-      this.categories = [
-        { id: 1, name: "Category 1", count: 1 },
-        { id: 2, name: "Category 2", count: 1 },
-      ];
+        this.categories = [
+          { id: "getting-started", name: "Getting Started", count: 5 },
+          { id: "applications", name: "Applications", count: 8 },
+          { id: "components", name: "Components", count: 12 },
+        ];
+      }
 
       await this.updateComplete;
       this.initialized = true;

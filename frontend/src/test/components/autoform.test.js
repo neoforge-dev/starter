@@ -1,5 +1,5 @@
-import { expect } from "@esm-bundle/chai";
-import { fixture, html, oneEvent } from "@open-wc/testing";
+import { describe, it, expect, beforeEach } from "vitest";
+import { fixture, waitForUpdate } from "../setup.js";
 import "../../components/form/autoform.js";
 
 describe("Autoform", () => {
