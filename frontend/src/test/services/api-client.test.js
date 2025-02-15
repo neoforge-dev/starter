@@ -56,7 +56,9 @@ describe("ApiClient", () => {
       } catch (error) {
         expect(error).to.be.instanceOf(AppError);
         expect(error.type).to.equal(ErrorType.AUTH);
-        expect(error.message).to.equal("Authentication expired");
+        expect(error.message).to.equal(
+          "Your session has expired. Please log in again."
+        );
         expect(localStorage.removeItem).to.have.been.calledWith(
           "neo-auth-token"
         );
