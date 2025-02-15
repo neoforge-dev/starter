@@ -1,203 +1,124 @@
 import { LitElement, html, css } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 
+@customElement("form-validation")
 export class FormValidation extends LitElement {
-  static get properties() {
-    return {
-      rules: { type: Object },
-      messages: { type: Object },
-      errors: { type: Object },
-      touched: { type: Object },
-    };
+  static styles = css`
+    :host {
+      display: block;
+    }
+
+    .error-message {
+      color: var(--color-error, #dc2626);
+      font-size: 0.875rem;
+      margin-top: var(--spacing-xs, 0.25rem);
+      animation: slideIn 0.2s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .validation-icon {
+      display: inline-flex;
+      align-items: center;
+      margin-right: var(--spacing-xs, 0.25rem);
+    }
+
+    .validation-list {
+      margin-top: var(--spacing-sm, 0.5rem);
+      padding-left: var(--spacing-md, 1rem);
+    }
+
+    .validation-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--spacing-xs, 0.25rem);
+      color: var(--color-text-secondary, #6b7280);
+    }
+
+    .validation-item.valid {
+      color: var(--color-success, #16a34a);
+    }
+
+    .validation-item.invalid {
+      color: var(--color-error, #dc2626);
+    }
+  `;
+
+  @property({ type: String }) value = "";
+  @property({ type: Array }) rules = [];
+  @property({ type: Boolean }) showValidation = false;
+
+  @state() validationResults = [];
+  @state() isValid = false;
+
+  updated(changedProperties) {
+    if (changedProperties.has("value") || changedProperties.has("rules")) {
+      this._validateValue();
+    }
   }
 
-  static get styles() {
-    return css`
-      :host {
-        display: block;
-      }
+  _validateValue() {
+    if (!this.rules || !this.rules.length) {
+      this.isValid = true;
+      this.validationResults = [];
+      return;
+    }
 
-      .error-message {
-        color: var(--color-error, #f44336);
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-      }
-
-      .invalid-field {
-        border-color: var(--color-error, #f44336) !important;
-      }
-    `;
-  }
-
-  constructor() {
-    super();
-    this.rules = {};
-    this.messages = {};
-    this.errors = {};
-    this.touched = {};
-  }
-
-  connectedCallback() {
-    super.connectedCallback();
-    this.setupValidation();
-  }
-
-  setupValidation() {
-    const form = this.closest("form");
-    if (!form) return;
-
-    // Handle input events
-    form.addEventListener("input", (e) => {
-      const field = e.target;
-      if (field.name) {
-        this.touched = { ...this.touched, [field.name]: true };
-        this.validateField(field);
-      }
+    this.validationResults = this.rules.map((rule) => {
+      const isValid = rule.test(this.value);
+      return {
+        message: rule.message,
+        isValid,
+      };
     });
 
-    // Handle form submission
-    form.addEventListener("submit", (e) => {
-      const isValid = this.validateForm();
-      if (!isValid) {
-        e.preventDefault();
-        this.markAllFieldsAsTouched();
-      }
-    });
+    this.isValid = this.validationResults.every((result) => result.isValid);
+    this._dispatchValidation();
   }
 
-  validateField(field) {
-    const { name, value } = field;
-    const fieldRules = this.rules[name];
-
-    if (!fieldRules) return true;
-
-    let isValid = true;
-    const errors = [];
-
-    for (const [rule, param] of Object.entries(fieldRules)) {
-      switch (rule) {
-        case "required":
-          if (param && !value.trim()) {
-            isValid = false;
-            errors.push(
-              this.messages[name]?.required || "This field is required"
-            );
-          }
-          break;
-
-        case "minLength":
-          if (value.length < param) {
-            isValid = false;
-            errors.push(
-              this.messages[name]?.minLength ||
-                `Minimum length is ${param} characters`
-            );
-          }
-          break;
-
-        case "maxLength":
-          if (value.length > param) {
-            isValid = false;
-            errors.push(
-              this.messages[name]?.maxLength ||
-                `Maximum length is ${param} characters`
-            );
-          }
-          break;
-
-        case "pattern":
-          if (!new RegExp(param).test(value)) {
-            isValid = false;
-            errors.push(this.messages[name]?.pattern || "Invalid format");
-          }
-          break;
-
-        case "email":
-          if (param && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-            isValid = false;
-            errors.push(this.messages[name]?.email || "Invalid email address");
-          }
-          break;
-
-        case "custom":
-          if (typeof param === "function") {
-            const result = param(value);
-            if (result !== true) {
-              isValid = false;
-              errors.push(
-                result || this.messages[name]?.custom || "Invalid value"
-              );
-            }
-          }
-          break;
-      }
-    }
-
-    this.errors = { ...this.errors, [name]: errors };
-    this.updateFieldValidationUI(field, isValid, errors);
-    return isValid;
-  }
-
-  validateForm() {
-    const form = this.closest("form");
-    if (!form) return true;
-
-    let isValid = true;
-    const formElements = form.elements;
-
-    for (let i = 0; i < formElements.length; i++) {
-      const field = formElements[i];
-      if (field.name && this.rules[field.name]) {
-        if (!this.validateField(field)) {
-          isValid = false;
-        }
-      }
-    }
-
-    return isValid;
-  }
-
-  markAllFieldsAsTouched() {
-    const form = this.closest("form");
-    if (!form) return;
-
-    const formElements = form.elements;
-    const touched = {};
-
-    for (let i = 0; i < formElements.length; i++) {
-      const field = formElements[i];
-      if (field.name) {
-        touched[field.name] = true;
-      }
-    }
-
-    this.touched = touched;
-  }
-
-  updateFieldValidationUI(field, isValid, errors) {
-    // Remove existing error message
-    const existingError = field.parentNode.querySelector(".error-message");
-    if (existingError) {
-      existingError.remove();
-    }
-
-    // Update field styling
-    field.classList.toggle(
-      "invalid-field",
-      !isValid && this.touched[field.name]
+  _dispatchValidation() {
+    this.dispatchEvent(
+      new CustomEvent("validation", {
+        detail: {
+          isValid: this.isValid,
+          results: this.validationResults,
+        },
+        bubbles: true,
+        composed: true,
+      })
     );
-
-    // Add new error message if field is touched
-    if (!isValid && this.touched[field.name] && errors.length > 0) {
-      const errorElement = document.createElement("div");
-      errorElement.className = "error-message";
-      errorElement.textContent = errors[0];
-      field.parentNode.appendChild(errorElement);
-    }
   }
 
   render() {
-    return html`<slot></slot>`;
+    if (!this.showValidation || !this.validationResults.length) {
+      return html`<slot></slot>`;
+    }
+
+    return html`
+      <slot></slot>
+      <div class="validation-list">
+        ${this.validationResults.map(
+          (result) => html`
+            <div
+              class="validation-item ${result.isValid ? "valid" : "invalid"}"
+            >
+              <span class="validation-icon">
+                ${result.isValid ? "✓" : "✗"}
+              </span>
+              <span>${result.message}</span>
+            </div>
+          `
+        )}
+      </div>
+    `;
   }
 }
-
-customElements.define("neo-form-validation", FormValidation);

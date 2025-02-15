@@ -2,14 +2,15 @@ import { LitElement, html, css } from "lit";
 import { baseStyles } from "../../styles/base.js";
 
 /**
- * Button component with multiple variants and states
+ * Button component for user interactions
  * @element neo-button
  *
- * @prop {string} variant - Button variant (primary, secondary, text)
- * @prop {string} size - Button size (sm, md, lg)
- * @prop {string} type - Button type (button, submit, reset)
- * @prop {boolean} disabled - Disabled state
- * @prop {boolean} loading - Loading state
+ * @prop {string} variant - The variant style of the button (primary, secondary, tertiary, danger, ghost)
+ * @prop {string} size - The size of the button (sm, md, lg)
+ * @prop {string} type - The type of the button (button, submit, reset)
+ * @prop {boolean} disabled - Whether the button is disabled
+ * @prop {boolean} loading - Whether the button is in a loading state
+ * @prop {boolean} fullWidth - Whether the button should take full width
  */
 export class NeoButton extends LitElement {
   static properties = {
@@ -18,6 +19,7 @@ export class NeoButton extends LitElement {
     type: { type: String, reflect: true },
     disabled: { type: Boolean, reflect: true },
     loading: { type: Boolean, reflect: true },
+    fullWidth: { type: Boolean, reflect: true },
   };
 
   static styles = [
@@ -25,84 +27,144 @@ export class NeoButton extends LitElement {
     css`
       :host {
         display: inline-block;
+        vertical-align: middle;
+      }
+
+      :host([fullWidth]) {
+        display: block;
+        width: 100%;
       }
 
       button {
-        font-family: var(--font-family);
-        border: none;
-        border-radius: var(--radius-md);
-        cursor: pointer;
-        font-weight: var(--font-weight-medium);
-        transition: all var(--transition-fast);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: var(--spacing-xs);
-        padding: var(--button-padding);
-        height: var(--button-height);
+        width: 100%;
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: var(--font-family);
+        font-weight: var(--font-weight-medium);
+        cursor: pointer;
+        transition: all var(--transition-fast);
       }
 
-      button[disabled] {
-        opacity: 0.5;
-        cursor: not-allowed;
+      /* Sizes */
+      .size-sm {
+        height: 32px;
+        padding: 0 var(--spacing-sm);
+        font-size: var(--font-size-sm);
+      }
+
+      .size-md {
+        height: 40px;
+        padding: 0 var(--spacing-md);
+        font-size: var(--font-size-base);
+      }
+
+      .size-lg {
+        height: 48px;
+        padding: 0 var(--spacing-lg);
+        font-size: var(--font-size-lg);
       }
 
       /* Variants */
-      button.primary {
+      .variant-primary {
         background: var(--color-primary);
         color: white;
       }
 
-      button.primary:hover:not([disabled]) {
+      .variant-primary:hover {
         background: var(--color-primary-dark);
       }
 
-      button.secondary {
+      .variant-secondary {
         background: var(--color-secondary);
         color: white;
       }
 
-      button.text {
+      .variant-secondary:hover {
+        background: var(--color-secondary-dark);
+      }
+
+      .variant-tertiary {
+        background: transparent;
+        color: var(--color-primary);
+        box-shadow: inset 0 0 0 2px var(--color-primary);
+      }
+
+      .variant-tertiary:hover {
+        background: var(--color-primary-light);
+      }
+
+      .variant-danger {
+        background: var(--color-error);
+        color: white;
+      }
+
+      .variant-danger:hover {
+        background: var(--color-error-dark);
+      }
+
+      .variant-ghost {
         background: transparent;
         color: var(--color-text);
-        padding: var(--spacing-xs) var(--spacing-sm);
       }
 
-      button.text:hover:not([disabled]) {
-        background: rgba(0, 0, 0, 0.05);
+      .variant-ghost:hover {
+        background: var(--color-gray-100);
       }
 
-      /* Sizes */
-      button.sm {
-        font-size: var(--font-size-xs);
-        padding: var(--spacing-xs) var(--spacing-sm);
-        height: 2rem;
+      /* States */
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
 
-      button.md {
-        font-size: var(--font-size-sm);
+      button:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px var(--color-primary-light);
       }
 
-      button.lg {
-        font-size: var(--font-size-base);
-        padding: var(--spacing-sm) var(--spacing-lg);
-        height: 3rem;
+      .variant-danger:focus {
+        box-shadow: 0 0 0 3px var(--color-error-light);
       }
 
-      /* Loading state */
-      .loading-spinner {
-        width: 1em;
-        height: 1em;
+      /* Loading State */
+      .loading {
+        position: relative;
+        color: transparent !important;
+      }
+
+      .spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 16px;
+        height: 16px;
         border: 2px solid currentColor;
         border-radius: 50%;
         border-right-color: transparent;
-        animation: spin 0.6s linear infinite;
+        animation: spin 0.75s linear infinite;
       }
 
       @keyframes spin {
-        to {
-          transform: rotate(360deg);
+        from {
+          transform: translate(-50%, -50%) rotate(0deg);
         }
+        to {
+          transform: translate(-50%, -50%) rotate(360deg);
+        }
+      }
+
+      /* Slots */
+      ::slotted([slot="prefix"]) {
+        margin-right: calc(var(--spacing-xs) * -1);
+      }
+
+      ::slotted([slot="suffix"]) {
+        margin-left: calc(var(--spacing-xs) * -1);
       }
     `,
   ];
@@ -114,6 +176,7 @@ export class NeoButton extends LitElement {
     this.type = "button";
     this.disabled = false;
     this.loading = false;
+    this.fullWidth = false;
   }
 
   /**
@@ -133,17 +196,29 @@ export class NeoButton extends LitElement {
   }
 
   render() {
+    const classes = {
+      [`variant-${this.variant}`]: true,
+      [`size-${this.size}`]: true,
+      loading: this.loading,
+      "full-width": this.fullWidth,
+    };
+
     return html`
       <button
-        class="${this.variant} ${this.size}"
         type="${this.type}"
-        ?disabled=${this.disabled || this.loading}
-        @click=${this._handleClick}
+        class="${Object.entries(classes)
+          .filter(([, value]) => value)
+          .map(([key]) => key)
+          .join(" ")}"
+        ?disabled="${this.disabled || this.loading}"
         aria-disabled="${this.disabled || this.loading}"
+        aria-busy="${this.loading}"
+        @click=${this._handleClick}
       >
-        ${this.loading
-          ? html`<span class="loading-spinner" aria-hidden="true"></span>`
-          : html`<slot></slot>`}
+        <slot name="prefix"></slot>
+        <slot></slot>
+        <slot name="suffix"></slot>
+        ${this.loading ? html`<div class="spinner"></div>` : ""}
       </button>
     `;
   }

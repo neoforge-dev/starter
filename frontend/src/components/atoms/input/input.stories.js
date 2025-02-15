@@ -8,7 +8,7 @@ export default {
   argTypes: {
     type: {
       control: 'select',
-      options: ['text', 'password', 'email', 'number', 'tel', 'url', 'search'],
+      options: ['text', 'password', 'email', 'number', 'tel', 'url'],
       description: 'The type of input',
     },
     label: {
@@ -97,55 +97,61 @@ const Template = ({
 \`;
 
 // Stories
-export const Text = Template.bind({});
-Text.args = {
-  type: 'text',
+export const Default = Template.bind({});
+Default.args = {
   label: 'Username',
   placeholder: 'Enter your username',
 };
 
-export const Password = Template.bind({});
-Password.args = {
-  type: 'password',
-  label: 'Password',
-  placeholder: '••••••••',
-};
-
-export const Email = Template.bind({});
-Email.args = {
-  type: 'email',
+export const WithValue = Template.bind({});
+WithValue.args = {
   label: 'Email',
-  placeholder: 'user@example.com',
+  value: 'user@example.com',
+  type: 'email',
 };
 
 export const Required = Template.bind({});
 Required.args = {
-  type: 'text',
-  label: 'Required Field',
+  label: 'Password',
+  type: 'password',
   required: true,
-};
-
-export const WithError = Template.bind({});
-WithError.args = {
-  type: 'email',
-  label: 'Email',
-  value: 'invalid-email',
-  error: 'Please enter a valid email address',
-};
-
-export const WithHelper = Template.bind({});
-WithHelper.args = {
-  type: 'text',
-  label: 'Username',
-  helper: 'Username must be at least 3 characters',
 };
 
 export const Disabled = Template.bind({});
 Disabled.args = {
-  type: 'text',
   label: 'Disabled Input',
   value: 'Cannot edit this',
   disabled: true,
+};
+
+export const WithError = Template.bind({});
+WithError.args = {
+  label: 'Email',
+  type: 'email',
+  value: 'invalid-email',
+  error: 'Please enter a valid email address',
+};
+
+export const WithHelperText = Template.bind({});
+WithHelperText.args = {
+  label: 'Username',
+  placeholder: 'Enter your username',
+  helperText: 'Username must be at least 3 characters',
+};
+
+export const Number = Template.bind({});
+Number.args = {
+  label: 'Age',
+  type: 'number',
+  min: '0',
+  max: '120',
+};
+
+export const Password = Template.bind({});
+Password.args = {
+  label: 'Password',
+  type: 'password',
+  required: true,
 };
 
 // Form Field Example

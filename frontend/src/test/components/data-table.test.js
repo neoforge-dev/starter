@@ -1,6 +1,6 @@
-import { html, fixture, expect } from "@open-wc/testing";
-import { TestRunner, ComponentTester, Assert } from "../test-utils.js";
-import "../../src/components/ui/data-table.js";
+import { expect } from "chai";
+import { fixture, html } from "@open-wc/testing-helpers";
+import { DataTable } from "@ui/data-table";
 
 describe("DataTable Component", () => {
   let element;
@@ -26,24 +26,24 @@ describe("DataTable Component", () => {
 
   it("renders with data", async () => {
     const rows = element.shadowRoot.querySelectorAll("tbody tr");
-    Assert.equal(rows.length, testData.length);
+    expect(rows.length).to.equal(testData.length);
 
     const firstRow = rows[0];
     const cells = firstRow.querySelectorAll("td");
-    Assert.equal(cells[0].textContent, "1");
-    Assert.equal(cells[1].textContent, "John");
-    Assert.equal(cells[2].textContent, "30");
+    expect(cells[0].textContent.trim()).to.equal("1");
+    expect(cells[1].textContent.trim()).to.equal("John");
+    expect(cells[2].textContent.trim()).to.equal("30");
   });
 
   it("sorts data when clicking header", async () => {
     const nameHeader = element.shadowRoot.querySelector(
       'th[data-field="name"]'
     );
-    await ComponentTester.click(nameHeader);
+    nameHeader.click();
     await element.updateComplete;
 
     const cells = element.shadowRoot.querySelectorAll('td[data-field="name"]');
-    Assert.equal(cells[0].textContent, "Alice");
+    expect(cells[0].textContent.trim()).to.equal("Alice");
   });
 
   it("filters data", async () => {
@@ -51,9 +51,9 @@ describe("DataTable Component", () => {
     await element.updateComplete;
 
     const rows = element.shadowRoot.querySelectorAll("tbody tr");
-    Assert.equal(rows.length, 1);
+    expect(rows.length).to.equal(1);
     const nameCell = rows[0].querySelector('td[data-field="name"]');
-    Assert.equal(nameCell.textContent, "John");
+    expect(nameCell.textContent.trim()).to.equal("John");
   });
 
   it("handles row selection", async () => {
@@ -61,10 +61,11 @@ describe("DataTable Component", () => {
     element.addEventListener("row-select", (e) => (selectedRow = e.detail));
 
     const firstRow = element.shadowRoot.querySelector("tbody tr");
-    await ComponentTester.click(firstRow);
+    firstRow.click();
+    await element.updateComplete;
 
-    Assert.notNull(selectedRow);
-    Assert.equal(selectedRow.id, 1);
+    expect(selectedRow).to.not.be.null;
+    expect(selectedRow.id).to.equal(1);
   });
 
   it("handles pagination", async () => {
@@ -72,13 +73,13 @@ describe("DataTable Component", () => {
     await element.updateComplete;
 
     let rows = element.shadowRoot.querySelectorAll("tbody tr");
-    Assert.equal(rows.length, 2);
+    expect(rows.length).to.equal(2);
 
     const nextButton = element.shadowRoot.querySelector(".pagination-next");
-    await ComponentTester.click(nextButton);
+    nextButton.click();
     await element.updateComplete;
 
     rows = element.shadowRoot.querySelectorAll("tbody tr");
-    Assert.equal(rows.length, 1);
+    expect(rows.length).to.equal(1);
   });
 });

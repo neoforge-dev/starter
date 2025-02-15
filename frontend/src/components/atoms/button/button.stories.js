@@ -1,6 +1,7 @@
 import { html } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import './button.js';
+import '../icon/icon.js';
 
 export default {
   title: 'Atoms/Button',
@@ -8,13 +9,18 @@ export default {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'text', 'icon'],
-      description: 'The visual style of the button',
+      options: ['primary', 'secondary', 'tertiary', 'danger', 'ghost'],
+      description: 'The variant style of the button',
     },
     size: {
       control: 'select',
-      options: ['small', 'medium', 'large'],
+      options: ['sm', 'md', 'lg'],
       description: 'The size of the button',
+    },
+    type: {
+      control: 'select',
+      options: ['button', 'submit', 'reset'],
+      description: 'The type of the button',
     },
     disabled: {
       control: 'boolean',
@@ -23,6 +29,10 @@ export default {
     loading: {
       control: 'boolean',
       description: 'Whether the button is in a loading state',
+    },
+    fullWidth: {
+      control: 'boolean',
+      description: 'Whether the button should take full width',
     },
     onClick: { action: 'clicked' },
   },
@@ -33,7 +43,7 @@ export default {
     },
     docs: {
       description: {
-        component: 'A versatile button component that follows atomic design principles.',
+        component: 'A versatile button component that supports various styles, states, and sizes.',
       },
     },
     a11y: {
@@ -43,108 +53,165 @@ export default {
             id: 'button-name',
             enabled: true,
           },
+          {
+            id: 'color-contrast',
+            enabled: true,
+          },
         ],
       },
     },
   },
 };
 
-// Base Template
-const Template = ({ label, variant, size, disabled, loading }) => html\`
+const Template = (args) => html\`
   <neo-button
-    variant=\${ifDefined(variant)}
-    size=\${ifDefined(size)}
-    ?disabled=\${disabled}
-    ?loading=\${loading}
-    @click=\${() => console.log('Button clicked')}
+    variant=\${ifDefined(args.variant)}
+    size=\${ifDefined(args.size)}
+    type=\${ifDefined(args.type)}
+    ?disabled=\${args.disabled}
+    ?loading=\${args.loading}
+    ?fullWidth=\${args.fullWidth}
+    @click=\${args.onClick}
   >
-    \${label}
+    \${args.prefix ? html\`<neo-icon slot="prefix" name="\${args.prefix}"></neo-icon>\` : ""}
+    \${args.label || "Button"}
+    \${args.suffix ? html\`<neo-icon slot="suffix" name="\${args.suffix}"></neo-icon>\` : ""}
   </neo-button>
 \`;
 
-// Stories
+// Basic Variants
 export const Primary = Template.bind({});
 Primary.args = {
   label: 'Primary Button',
   variant: 'primary',
-  size: 'medium',
 };
 
 export const Secondary = Template.bind({});
 Secondary.args = {
   label: 'Secondary Button',
   variant: 'secondary',
-  size: 'medium',
 };
 
-export const Text = Template.bind({});
-Text.args = {
-  label: 'Text Button',
-  variant: 'text',
-  size: 'medium',
+export const Tertiary = Template.bind({});
+Tertiary.args = {
+  label: 'Tertiary Button',
+  variant: 'tertiary',
 };
 
-export const Small = Template.bind({});
-Small.args = {
-  label: 'Small Button',
-  variant: 'primary',
-  size: 'small',
+export const Danger = Template.bind({});
+Danger.args = {
+  label: 'Danger Button',
+  variant: 'danger',
 };
 
-export const Large = Template.bind({});
-Large.args = {
-  label: 'Large Button',
-  variant: 'primary',
-  size: 'large',
+export const Ghost = Template.bind({});
+Ghost.args = {
+  label: 'Ghost Button',
+  variant: 'ghost',
 };
 
+// States
 export const Disabled = Template.bind({});
 Disabled.args = {
   label: 'Disabled Button',
-  variant: 'primary',
   disabled: true,
 };
 
 export const Loading = Template.bind({});
 Loading.args = {
   label: 'Loading Button',
-  variant: 'primary',
   loading: true,
 };
 
-// Button Group Example
+// Sizes
+export const Small = Template.bind({});
+Small.args = {
+  label: 'Small Button',
+  size: 'sm',
+};
+
+export const Large = Template.bind({});
+Large.args = {
+  label: 'Large Button',
+  size: 'lg',
+};
+
+// With Icons
+export const WithPrefixIcon = Template.bind({});
+WithPrefixIcon.args = {
+  label: 'Settings',
+  prefix: 'settings',
+};
+
+export const WithSuffixIcon = Template.bind({});
+WithSuffixIcon.args = {
+  label: 'Next',
+  suffix: 'chevronRight',
+};
+
+// Full Width
+export const FullWidth = Template.bind({});
+FullWidth.args = {
+  label: 'Full Width Button',
+  fullWidth: true,
+};
+
+// Button Groups Example
 export const ButtonGroup = () => html\`
   <div style="display: flex; gap: 8px;">
-    <neo-button variant="primary">Primary</neo-button>
-    <neo-button variant="secondary">Secondary</neo-button>
-    <neo-button variant="text">Text</neo-button>
+    <neo-button variant="primary">Save</neo-button>
+    <neo-button variant="secondary">Cancel</neo-button>
   </div>
 \`;
 
 // Icon Button Example
 export const IconButton = () => html\`
-  <neo-button variant="icon">
-    <neo-icon name="settings"></neo-icon>
-  </neo-button>
+  <div style="display: flex; gap: 8px;">
+    <neo-button variant="ghost" size="sm">
+      <neo-icon slot="prefix" name="edit"></neo-icon>
+    </neo-button>
+    <neo-button variant="ghost" size="sm">
+      <neo-icon slot="prefix" name="delete"></neo-icon>
+    </neo-button>
+    <neo-button variant="ghost" size="sm">
+      <neo-icon slot="prefix" name="settings"></neo-icon>
+    </neo-button>
+  </div>
 \`;
 
-// Responsive Button Example
-export const ResponsiveButton = () => html\`
-  <neo-button class="responsive-button">
-    <span class="desktop-text">Desktop Label</span>
-    <span class="mobile-text">Mobile</span>
-  </neo-button>
-  <style>
-    .responsive-button .mobile-text {
-      display: none;
-    }
-    @media (max-width: 768px) {
-      .responsive-button .desktop-text {
-        display: none;
-      }
-      .responsive-button .mobile-text {
-        display: inline;
-      }
-    }
-  </style>
+// Call to Action Example
+export const CallToAction = () => html\`
+  <div style="display: grid; gap: 16px; max-width: 300px;">
+    <neo-button variant="primary" fullWidth>
+      Get Started
+      <neo-icon slot="suffix" name="arrowForward"></neo-icon>
+    </neo-button>
+    <neo-button variant="secondary" fullWidth>
+      Learn More
+    </neo-button>
+  </div>
+\`;
+
+// Form Submit Example
+export const FormSubmit = () => html\`
+  <form onsubmit="event.preventDefault(); alert('Form submitted!');">
+    <div style="display: flex; gap: 8px;">
+      <neo-button type="submit" variant="primary">
+        Submit
+        <neo-icon slot="suffix" name="check"></neo-icon>
+      </neo-button>
+      <neo-button type="reset" variant="secondary">
+        Reset
+      </neo-button>
+    </div>
+  </form>
+\`;
+
+// Loading States Example
+export const LoadingStates = () => html\`
+  <div style="display: flex; gap: 8px;">
+    <neo-button variant="primary" loading>Loading</neo-button>
+    <neo-button variant="secondary" loading>Processing</neo-button>
+    <neo-button variant="tertiary" loading>Saving</neo-button>
+  </div>
 \`; 

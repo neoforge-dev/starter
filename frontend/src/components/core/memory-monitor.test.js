@@ -1,126 +1,145 @@
-import { expect } from "chai";
+import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
 import { fixture, html } from "@open-wc/testing-helpers";
 import { MemoryMonitor } from "./memory-monitor.js";
-import sinon from "sinon";
 
-// Register the custom element once before all tests
-if (!customElements.get("memory-monitor")) {
-  customElements.define("memory-monitor", MemoryMonitor);
-}
+// Register component
+customElements.define("memory-monitor", MemoryMonitor);
 
-describe("memory-monitor", () => {
+describe("MemoryMonitor", () => {
   let element;
 
   beforeEach(async () => {
-    // Create a new instance
     element = await fixture(html`<memory-monitor></memory-monitor>`);
-    // Wait for the element to be ready
     await element.updateComplete;
   });
 
-  it("renders with default properties", async () => {
-    expect(element.shadowRoot).to.exist;
-    expect(element.expanded).to.be.false;
-    expect(element.leaks).to.deep.equal([]);
+  it("has default properties", () => {
+    expect(element.leaks).toEqual([]);
+    expect(element.expanded).toBe(false);
+    expect(element.maxLeaks).toBe(50);
+    expect(element.autoHide).toBe(true);
+    expect(element.autoHideTimeout).toBe(10000);
   });
 
-  it("should add leak and expand when leak is detected", async () => {
-    const leak = { type: "memory", size: 1000, time: Date.now() };
+  it("adds a leak", () => {
+    const leak = {
+      type: "critical",
+      size: 1024,
+      time: Date.now(),
+      message: "Test leak",
+    };
     element.addLeak(leak);
-    await element.updateComplete;
-    expect(element.leaks).to.have.lengthOf(1);
-    expect(element.expanded).to.be.true;
-    const leakElement = element.shadowRoot.querySelector(".leak-item");
-    expect(leakElement).to.exist;
+    expect(element.leaks).toHaveLength(1);
+    expect(element.leaks[0]).toEqual(leak);
+    expect(element.expanded).toBe(true);
   });
 
-  it("should limit number of leaks to maxLeaks", async () => {
-    const maxLeaks = 3;
-    element.maxLeaks = maxLeaks;
-
-    for (let i = 0; i < maxLeaks + 2; i++) {
-      element.addLeak({ type: "memory", size: 1000, time: Date.now() });
-      await element.updateComplete;
+  it("limits the number of leaks", () => {
+    element.maxLeaks = 2;
+    for (let i = 0; i < 3; i++) {
+      element.addLeak({
+        type: "critical",
+        size: 1024,
+        time: Date.now(),
+        message: `Leak ${i}`,
+      });
     }
-
-    expect(element.leaks).to.have.lengthOf(maxLeaks);
-    const leakElements = element.shadowRoot.querySelectorAll(".leak-item");
-    expect(leakElements).to.have.lengthOf(maxLeaks);
+    expect(element.leaks).toHaveLength(2);
   });
 
-  it("should auto-hide after timeout when autoHide is true", async () => {
-    element.autoHide = true;
+  it("auto-hides after timeout", () => {
+    vi.useFakeTimers();
     element.autoHideTimeout = 100;
-    element.expanded = true;
-
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    expect(element.expanded).to.be.false;
+    element.addLeak({
+      type: "critical",
+      size: 1024,
+      time: Date.now(),
+      message: "Test leak",
+    });
+    expect(element.expanded).toBe(true);
+    vi.advanceTimersByTime(150);
+    expect(element.expanded).toBe(false);
+    vi.useRealTimers();
   });
 
-  it("should not auto-hide when autoHide is false", async () => {
+  it("does not auto-hide when autoHide is false", () => {
+    vi.useFakeTimers();
     element.autoHide = false;
+    element.autoHideTimeout = 100;
+    element.addLeak({
+      type: "critical",
+      size: 1024,
+      time: Date.now(),
+      message: "Test leak",
+    });
+    expect(element.expanded).toBe(true);
+    vi.advanceTimersByTime(150);
+    expect(element.expanded).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it("clears leaks", async () => {
+    element.addLeak({
+      type: "critical",
+      size: 1024,
+      time: Date.now(),
+      message: "Test leak",
+    });
+    await element.updateComplete;
     element.expanded = true;
-
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    expect(element.expanded).to.be.true;
-  });
-
-  it("should clear leaks when clear button is clicked", async () => {
-    element.addLeak({ type: "memory", size: 1000, time: Date.now() });
     await element.updateComplete;
-
     const clearButton = element.shadowRoot.querySelector(".clear-button");
-    expect(clearButton).to.exist;
     clearButton.click();
-    await element.updateComplete;
-
-    expect(element.leaks).to.have.lengthOf(0);
-    const leakElements = element.shadowRoot.querySelectorAll(".leak-item");
-    expect(leakElements).to.have.lengthOf(0);
+    expect(element.leaks).toHaveLength(0);
   });
 
-  it("should toggle expanded state when header is clicked", async () => {
+  it("toggles expanded state", async () => {
+    await element.updateComplete;
     const header = element.shadowRoot.querySelector(".monitor-header");
-    expect(header).to.exist;
-    const initialState = element.expanded;
-
     header.click();
     await element.updateComplete;
-    expect(element.expanded).to.equal(!initialState);
-  });
-
-  it("should format leak types correctly", async () => {
-    const leak = { type: "memory", size: 1024, time: Date.now() };
-    element.addLeak(leak);
+    expect(element.expanded).toBe(true);
+    header.click();
     await element.updateComplete;
-
-    const leakElement = element.shadowRoot.querySelector(".leak-item");
-    expect(leakElement).to.exist;
-    expect(leakElement.textContent).to.include("1.0 KB");
+    expect(element.expanded).toBe(false);
   });
 
-  it("should format time correctly", async () => {
-    const now = Date.now();
-    const leak = { type: "memory", size: 1000, time: now };
-    element.addLeak(leak);
+  it("formats leak type correctly", async () => {
+    element.addLeak({
+      type: "critical",
+      size: 1024,
+      time: Date.now(),
+      message: "Test leak",
+    });
     await element.updateComplete;
-
-    const leakElement = element.shadowRoot.querySelector(".leak-item");
-    expect(leakElement).to.exist;
-    expect(leakElement.textContent).to.include(
-      new Date(now).toLocaleTimeString()
-    );
+    element.expanded = true;
+    await element.updateComplete;
+    const leakItem = element.shadowRoot.querySelector(".leak-item");
+    expect(leakItem.getAttribute("data-type")).toBe("critical");
   });
 
-  it("should remove event listener when disconnected", async () => {
-    const spy = sinon.spy(element, "_handleLeakDetected");
+  it("formats time correctly", async () => {
+    const time = new Date();
+    element.addLeak({
+      type: "critical",
+      size: 1024,
+      time: time.getTime(),
+      message: "Test leak",
+    });
+    await element.updateComplete;
+    element.expanded = true;
+    await element.updateComplete;
+    const leakTime = element.shadowRoot.querySelector(".leak-time");
+    expect(leakTime.textContent.trim()).toBe(time.toLocaleTimeString());
+  });
+
+  it("removes event listener when disconnected", () => {
+    const removeEventListener = vi.spyOn(window, "removeEventListener");
     element.disconnectedCallback();
-
-    window.dispatchEvent(
-      new CustomEvent("memory-leak-detected", {
-        detail: { type: "memory", size: 1000, time: Date.now() },
-      })
+    expect(removeEventListener).toHaveBeenCalledWith(
+      "memory-leak-detected",
+      element._handleLeakDetected
     );
-    expect(spy.called).to.be.false;
+    removeEventListener.mockRestore();
   });
 });

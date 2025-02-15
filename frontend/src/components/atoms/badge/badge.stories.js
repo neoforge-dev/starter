@@ -1,6 +1,7 @@
 import { html } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import './badge.js';
+import '../icon/icon.js';
 
 export default {
   title: 'Atoms/Badge',
@@ -8,21 +9,21 @@ export default {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'primary', 'success', 'warning', 'error', 'info'],
-      description: 'The visual style of the badge',
+      options: ['default', 'primary', 'secondary', 'success', 'error', 'warning', 'info'],
+      description: 'The variant style of the badge',
     },
     size: {
       control: 'select',
-      options: ['small', 'medium', 'large'],
+      options: ['sm', 'md', 'lg'],
       description: 'The size of the badge',
     },
     rounded: {
       control: 'boolean',
-      description: 'Whether the badge has rounded corners',
+      description: 'Whether the badge has fully rounded corners',
     },
     outlined: {
       control: 'boolean',
-      description: 'Whether the badge has an outline style',
+      description: 'Whether the badge has an outlined style',
     },
     icon: {
       control: 'text',
@@ -37,7 +38,7 @@ export default {
     },
     docs: {
       description: {
-        component: 'A badge component for displaying status, labels, or counts.',
+        component: 'A badge component that supports various styles and states.',
       },
     },
     a11y: {
@@ -53,67 +54,57 @@ export default {
   },
 };
 
-// Base Template
-const Template = ({ label, variant, size, rounded, outlined, icon }) => html\`
+const Template = (args) => html\`
   <neo-badge
-    variant=\${ifDefined(variant)}
-    size=\${ifDefined(size)}
-    ?rounded=\${rounded}
-    ?outlined=\${outlined}
-    icon=\${ifDefined(icon)}
+    variant="${args.variant || 'default'}"
+    size="${args.size || 'md'}"
+    ?rounded="${args.rounded}"
+    ?outlined="${args.outlined}"
   >
-    \${label}
+    ${args.prefix ? html\`<neo-icon slot="prefix" name="${args.prefix}"></neo-icon>` : ""}
+    ${args.label || "Badge"}
+    ${args.suffix ? html\`<neo-icon slot="suffix" name="${args.suffix}"></neo-icon>` : ""}
   </neo-badge>
 \`;
 
 // Stories
 export const Default = Template.bind({});
 Default.args = {
-  label: 'Default Badge',
-  variant: 'default',
-  size: 'medium',
+  label: 'Default',
 };
 
 export const Primary = Template.bind({});
 Primary.args = {
   label: 'Primary',
   variant: 'primary',
-  size: 'medium',
 };
 
 export const Success = Template.bind({});
 Success.args = {
   label: 'Success',
   variant: 'success',
-  size: 'medium',
-};
-
-export const Warning = Template.bind({});
-Warning.args = {
-  label: 'Warning',
-  variant: 'warning',
-  size: 'medium',
+  prefix: 'check',
 };
 
 export const Error = Template.bind({});
 Error.args = {
   label: 'Error',
   variant: 'error',
-  size: 'medium',
+  prefix: 'error',
 };
 
-export const Small = Template.bind({});
-Small.args = {
-  label: 'Small',
-  variant: 'default',
-  size: 'small',
+export const Warning = Template.bind({});
+Warning.args = {
+  label: 'Warning',
+  variant: 'warning',
+  prefix: 'warning',
 };
 
-export const Large = Template.bind({});
-Large.args = {
-  label: 'Large',
-  variant: 'default',
-  size: 'large',
+export const Info = Template.bind({});
+Info.args = {
+  label: 'Info',
+  variant: 'info',
+  prefix: 'info',
 };
 
 export const Rounded = Template.bind({});
@@ -130,44 +121,114 @@ Outlined.args = {
   outlined: true,
 };
 
-// Badge with Icon
-export const WithIcon = Template.bind({});
-WithIcon.args = {
-  label: 'New',
-  variant: 'primary',
-  icon: 'star',
+export const Small = Template.bind({});
+Small.args = {
+  label: 'Small',
+  size: 'sm',
+};
+
+export const Large = Template.bind({});
+Large.args = {
+  label: 'Large',
+  size: 'lg',
 };
 
 // Badge Group Example
 export const BadgeGroup = () => html\`
   <div style="display: flex; gap: 8px; align-items: center;">
-    <neo-badge variant="success" icon="check">Completed</neo-badge>
-    <neo-badge variant="warning" icon="warning">Pending</neo-badge>
-    <neo-badge variant="error" icon="error">Failed</neo-badge>
+    <neo-badge variant="primary">New</neo-badge>
+    <neo-badge variant="success">
+      <neo-icon slot="prefix" name="check"></neo-icon>
+      Active
+    </neo-badge>
+    <neo-badge variant="warning" rounded>
+      <neo-icon slot="prefix" name="warning"></neo-icon>
+      Warning
+    </neo-badge>
+    <neo-badge variant="error">
+      <neo-icon slot="prefix" name="error"></neo-icon>
+      Error
+    </neo-badge>
   </div>
 \`;
 
-// Status Indicator Example
-export const StatusIndicator = () => html\`
-  <div style="display: flex; gap: 16px; align-items: center;">
-    <neo-badge variant="success" size="small" rounded></neo-badge>
-    <span>Online</span>
+// Status Badges Example
+export const StatusBadges = () => html\`
+  <div style="display: grid; gap: 16px;">
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <neo-badge variant="success" size="sm" rounded>Active</neo-badge>
+      <span>User is currently active</span>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <neo-badge variant="warning" size="sm" rounded>Away</neo-badge>
+      <span>User is away</span>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <neo-badge variant="error" size="sm" rounded>Offline</neo-badge>
+      <span>User is offline</span>
+    </div>
   </div>
 \`;
 
-// Counter Example
-export const Counter = () => html\`
-  <div style="position: relative; display: inline-block;">
-    <neo-button variant="primary">
-      Notifications
-      <neo-badge 
-        variant="error" 
-        size="small" 
-        rounded 
-        style="position: absolute; top: -8px; right: -8px;"
+// Notification Badges Example
+export const NotificationBadges = () => html\`
+  <div style="display: flex; gap: 24px;">
+    <div style="position: relative; display: inline-block;">
+      <neo-icon name="notification" size="lg"></neo-icon>
+      <neo-badge
+        variant="error"
+        size="sm"
+        rounded
+        style="position: absolute; top: -4px; right: -4px;"
+      >
+        3
+      </neo-badge>
+    </div>
+    <div style="position: relative; display: inline-block;">
+      <neo-icon name="mail" size="lg"></neo-icon>
+      <neo-badge
+        variant="primary"
+        size="sm"
+        rounded
+        style="position: absolute; top: -4px; right: -4px;"
+      >
+        12
+      </neo-badge>
+    </div>
+    <div style="position: relative; display: inline-block;">
+      <neo-icon name="chat" size="lg"></neo-icon>
+      <neo-badge
+        variant="success"
+        size="sm"
+        rounded
+        style="position: absolute; top: -4px; right: -4px;"
       >
         5
       </neo-badge>
-    </neo-button>
+    </div>
+  </div>
+\`;
+
+// Custom Styled Badges Example
+export const CustomStyledBadges = () => html\`
+  <div style="display: flex; gap: 8px;">
+    <neo-badge
+      style="--badge-bg-color: #8B5CF6; --badge-text-color: white;"
+      rounded
+    >
+      Custom
+    </neo-badge>
+    <neo-badge
+      style="--badge-bg-color: #EC4899; --badge-text-color: white;"
+      rounded
+    >
+      Styled
+    </neo-badge>
+    <neo-badge
+      style="--badge-bg-color: #F59E0B; --badge-text-color: white;"
+      rounded
+    >
+      Badges
+    </neo-badge>
   </div>
 \`; 

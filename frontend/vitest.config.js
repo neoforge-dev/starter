@@ -46,45 +46,25 @@ export default defineConfig({
       },
     },
     // Custom resolver for module imports
-    alias: {
-      "@components": "/src/components",
-      "@services": "/src/services",
-      "@utils": "/src/utils",
-      "@styles": "/src/styles",
-    },
-    // Environment variables
-    env: {
-      NODE_ENV: "test",
-    },
-    hookTimeout: 10000,
-    environmentOptions: {
-      happyDOM: {
-        settings: {
-          disableJavaScriptEvaluation: false,
-          disableJavaScriptFileLoading: false,
-          disableCSSFileLoading: false,
-        },
-      },
-    },
     deps: {
-      inline: [/lit/, /@open-wc\/testing/],
       optimizer: {
         web: {
-          include: [],
+          include: [/lit/, /@lit/, /@open-wc/],
         },
       },
+    },
+    alias: {
+      "@": resolve(__dirname, "./src"),
+      test: resolve(__dirname, "./src/test"),
     },
   },
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
-      "@components": resolve(__dirname, "./src/components"),
-      "@pages": resolve(__dirname, "./src/pages"),
-      "@services": resolve(__dirname, "./src/services"),
-      "@styles": resolve(__dirname, "./src/styles"),
-      "@utils": resolve(__dirname, "./src/utils"),
-      "@test": resolve(__dirname, "./src/test"),
-      chai: "chai",
+      test: resolve(__dirname, "./src/test"),
     },
+  },
+  optimizeDeps: {
+    include: ["lit", "chai", "@open-wc/testing-helpers"],
   },
 });

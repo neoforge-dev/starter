@@ -58,7 +58,7 @@ export default {
             enabled: true,
           },
           {
-            id: 'radiogroup',
+            id: 'aria-allowed-attr',
             enabled: true,
           },
         ],
@@ -96,56 +96,124 @@ const Template = ({
 export const Default = Template.bind({});
 Default.args = {
   label: 'Default Radio',
-  name: 'group1',
-  value: 'option1',
+  name: 'default',
+  value: 'default',
 };
 
 export const Checked = Template.bind({});
 Checked.args = {
   label: 'Checked Radio',
-  name: 'group1',
-  value: 'option1',
+  name: 'checked',
+  value: 'checked',
   checked: true,
 };
 
 export const Disabled = Template.bind({});
 Disabled.args = {
   label: 'Disabled Radio',
-  name: 'group1',
-  value: 'option1',
+  name: 'disabled',
+  value: 'disabled',
   disabled: true,
 };
 
 export const Required = Template.bind({});
 Required.args = {
   label: 'Required Radio',
-  name: 'group1',
-  value: 'option1',
+  name: 'required',
+  value: 'required',
   required: true,
 };
 
 export const WithError = Template.bind({});
 WithError.args = {
   label: 'Radio with Error',
-  name: 'group1',
-  value: 'option1',
+  name: 'error',
+  value: 'error',
   error: 'Please select an option',
 };
 
-export const WithHelper = Template.bind({});
-WithHelper.args = {
-  label: 'Radio with Helper',
-  name: 'group1',
-  value: 'option1',
-  helper: 'Additional information about this option',
+export const DisabledChecked = Template.bind({});
+DisabledChecked.args = {
+  label: 'Disabled Checked Radio',
+  name: 'disabled-checked',
+  value: 'disabled-checked',
+  disabled: true,
+  checked: true,
 };
 
 // Radio Group Example
 export const RadioGroup = () => html\`
-  <div role="radiogroup" aria-label="Select an option" style="display: grid; gap: 8px;">
-    <neo-radio name="group2" value="option1" checked>Option 1</neo-radio>
-    <neo-radio name="group2" value="option2">Option 2</neo-radio>
-    <neo-radio name="group2" value="option3">Option 3</neo-radio>
+  <div style="display: grid; gap: 8px;">
+    <neo-radio name="group" value="1" label="Option 1" checked></neo-radio>
+    <neo-radio name="group" value="2" label="Option 2"></neo-radio>
+    <neo-radio name="group" value="3" label="Option 3"></neo-radio>
+  </div>
+\`;
+
+// Radio Group with Description
+export const RadioGroupWithDescription = () => html\`
+  <div style="display: grid; gap: 16px;">
+    <neo-radio 
+      name="plan" 
+      value="basic" 
+      label="Basic Plan"
+      checked
+    >
+      <div slot="description" style="color: var(--color-text-light); font-size: 14px; margin-top: 4px;">
+        Perfect for personal use
+      </div>
+    </neo-radio>
+    <neo-radio 
+      name="plan" 
+      value="pro" 
+      label="Pro Plan"
+    >
+      <div slot="description" style="color: var(--color-text-light); font-size: 14px; margin-top: 4px;">
+        Ideal for professionals
+      </div>
+    </neo-radio>
+    <neo-radio 
+      name="plan" 
+      value="enterprise" 
+      label="Enterprise Plan"
+    >
+      <div slot="description" style="color: var(--color-text-light); font-size: 14px; margin-top: 4px;">
+        For large organizations
+      </div>
+    </neo-radio>
+  </div>
+\`;
+
+// Inline Radio Group
+export const InlineRadioGroup = () => html\`
+  <div style="display: flex; gap: 16px; align-items: center;">
+    <neo-radio name="inline" value="small" label="Small"></neo-radio>
+    <neo-radio name="inline" value="medium" label="Medium" checked></neo-radio>
+    <neo-radio name="inline" value="large" label="Large"></neo-radio>
+  </div>
+\`;
+
+// Custom Styled Radio Group
+export const CustomStyledRadioGroup = () => html\`
+  <div style="display: grid; gap: 8px;">
+    <neo-radio 
+      name="custom" 
+      value="success" 
+      label="Success Option"
+      style="--radio-color: var(--color-success);"
+    ></neo-radio>
+    <neo-radio 
+      name="custom" 
+      value="warning" 
+      label="Warning Option"
+      style="--radio-color: var(--color-warning);"
+    ></neo-radio>
+    <neo-radio 
+      name="custom" 
+      value="error" 
+      label="Error Option"
+      style="--radio-color: var(--color-error);"
+    ></neo-radio>
   </div>
 \`;
 

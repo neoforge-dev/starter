@@ -63,30 +63,17 @@ export default {
   },
 };
 
-// Base Template
-const Template = ({ 
-  label, 
-  checked, 
-  indeterminate, 
-  disabled, 
-  required, 
-  error, 
-  helper 
-}) => html\`
+const Template = (args) => html`
   <neo-checkbox
-    ?checked=\${checked}
-    ?indeterminate=\${indeterminate}
-    ?disabled=\${disabled}
-    ?required=\${required}
-    error=\${ifDefined(error)}
-    helper=\${ifDefined(helper)}
-    @change=\${(e) => console.log('Checkbox changed:', e.target.checked)}
-  >
-    \${label}
-  </neo-checkbox>
-\`;
+    label="${args.label || ''}"
+    ?checked="${args.checked}"
+    ?disabled="${args.disabled}"
+    ?required="${args.required}"
+    ?indeterminate="${args.indeterminate}"
+    error="${args.error || ''}"
+  ></neo-checkbox>
+`;
 
-// Stories
 export const Default = Template.bind({});
 Default.args = {
   label: 'Default Checkbox',
@@ -96,12 +83,6 @@ export const Checked = Template.bind({});
 Checked.args = {
   label: 'Checked Checkbox',
   checked: true,
-};
-
-export const Indeterminate = Template.bind({});
-Indeterminate.args = {
-  label: 'Indeterminate Checkbox',
-  indeterminate: true,
 };
 
 export const Disabled = Template.bind({});
@@ -122,10 +103,22 @@ WithError.args = {
   error: 'This field is required',
 };
 
-export const WithHelper = Template.bind({});
-WithHelper.args = {
-  label: 'Checkbox with Helper',
-  helper: 'Additional information about this option',
+export const Indeterminate = Template.bind({});
+Indeterminate.args = {
+  label: 'Indeterminate Checkbox',
+  indeterminate: true,
+};
+
+export const DisabledChecked = Template.bind({});
+DisabledChecked.args = {
+  label: 'Disabled Checked Checkbox',
+  disabled: true,
+  checked: true,
+};
+
+export const WithLongLabel = Template.bind({});
+WithLongLabel.args = {
+  label: 'This is a very long label that demonstrates how the checkbox handles wrapping text in a clean and readable way',
 };
 
 // Checkbox Group Example

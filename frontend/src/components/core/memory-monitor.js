@@ -191,12 +191,10 @@ export class MemoryMonitor extends LitElement {
     this.autoHide = true;
     this.autoHideTimeout = 10000;
     this._handleLeakDetected = this._handleLeakDetected.bind(this);
-    this.addLeak = this.addLeak.bind(this);
   }
 
   createRenderRoot() {
-    const root = super.createRenderRoot();
-    return root;
+    return this.attachShadow({ mode: "open" });
   }
 
   connectedCallback() {

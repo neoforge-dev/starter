@@ -4,323 +4,195 @@ import {
   css,
   unsafeCSS,
 } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { baseStyles } from "../../styles/base.js";
 
+/**
+ * Radio button component for single selection
+ * @element neo-radio
+ *
+ * @prop {string} label - Radio button label
+ * @prop {string} name - Radio button group name
+ * @prop {string} value - Radio button value
+ * @prop {boolean} checked - Whether the radio is checked
+ * @prop {boolean} disabled - Whether the radio is disabled
+ * @prop {boolean} required - Whether the radio is required
+ * @prop {string} error - Error message to display
+ */
 export class NeoRadio extends LitElement {
   static properties = {
-    name: { type: String },
-    value: { type: String },
     label: { type: String },
+    name: { type: String, reflect: true },
+    value: { type: String, reflect: true },
     checked: { type: Boolean, reflect: true },
     disabled: { type: Boolean, reflect: true },
     required: { type: Boolean, reflect: true },
-    validationMessage: { type: String },
+    error: { type: String },
   };
 
-  static styles = css`
-    :host {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      font-family: system-ui, sans-serif;
-    }
+  static styles = [
+    baseStyles,
+    css`
+      :host {
+        display: block;
+        margin-bottom: var(--spacing-sm);
+      }
 
-    :host([disabled]) {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
+      .radio-wrapper {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+        cursor: pointer;
+      }
 
-    .radio {
-      appearance: none;
-      -webkit-appearance: none;
-      width: var(--radio-size, 1.25rem);
-      height: var(--radio-size, 1.25rem);
-      border: 2px solid var(--radio-border-color, #6b7280);
-      border-radius: 50%;
-      outline: none;
-      margin: 0;
-      cursor: inherit;
-      display: grid;
-      place-content: center;
-      background-color: var(--radio-color, transparent);
-      transition: all 0.2s ease-in-out;
-    }
+      .radio-wrapper.disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
 
-    .radio::before {
-      content: "";
-      width: calc(var(--radio-size, 1.25rem) * 0.5);
-      height: calc(var(--radio-size, 1.25rem) * 0.5);
-      border-radius: 50%;
-      transform: scale(0);
-      transition: transform 0.15s ease-in-out;
-      background-color: var(--radio-checked-color, #2563eb);
-    }
+      .radio-container {
+        position: relative;
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
 
-    .radio:checked::before {
-      transform: scale(1);
-    }
+      input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        cursor: inherit;
+      }
 
-    .radio:focus-visible {
-      outline: 2px solid var(--radio-focus-color, #60a5fa);
-      outline-offset: 2px;
-    }
+      .radio-custom {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        border: 2px solid var(--radio-color, var(--color-border));
+        border-radius: 50%;
+        transition: all var(--transition-fast);
+      }
 
-    :host([disabled]) .radio {
-      border-color: var(--radio-disabled-color, #9ca3af);
-    }
+      input[type="radio"]:focus + .radio-custom {
+        border-color: var(--radio-color, var(--color-primary));
+        box-shadow: 0 0 0 2px var(--color-primary-light);
+      }
 
-    :host([disabled]) .radio:checked::before {
-      background-color: var(--radio-disabled-color, #9ca3af);
-    }
+      input[type="radio"]:checked + .radio-custom {
+        border-color: var(--radio-color, var(--color-primary));
+      }
 
-    label {
-      cursor: inherit;
-      user-select: none;
-    }
+      input[type="radio"]:checked + .radio-custom::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 8px;
+        height: 8px;
+        background: var(--radio-color, var(--color-primary));
+        border-radius: 50%;
+      }
 
-    .error-message {
-      color: var(--radio-error-color, #dc2626);
-      font-size: 0.875rem;
-      margin-top: 0.25rem;
-    }
+      label {
+        font-size: var(--font-size-sm);
+        line-height: 1.4;
+        color: var(--color-text);
+        user-select: none;
+      }
 
-    .radio.checked {
-      border-color: var(--radio-checked-color, #2563eb);
-    }
+      .error-message {
+        margin-top: var(--spacing-xs);
+        color: var(--color-error);
+        font-size: var(--font-size-sm);
+      }
 
-    .radio.disabled {
-      border-color: var(--radio-disabled-color, #9ca3af);
-    }
-  `;
+      .radio-wrapper.error .radio-custom {
+        border-color: var(--color-error);
+      }
+
+      .radio-wrapper.error input[type="radio"]:focus + .radio-custom {
+        box-shadow: 0 0 0 2px var(--color-error-light);
+      }
+
+      ::slotted([slot="description"]) {
+        margin-top: var(--spacing-xs);
+        color: var(--color-text-light);
+        font-size: var(--font-size-sm);
+      }
+    `,
+  ];
 
   constructor() {
     super();
     this.checked = false;
     this.disabled = false;
     this.required = false;
-    this.validationMessage = "";
-    this.label = "";
+    this.error = "";
+    this._id = `neo-radio-${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    if (this.form) {
-      this.form.addEventListener("formdata", this._handleFormData);
-    }
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    if (this.form) {
-      this.form.removeEventListener("formdata", this._handleFormData);
-    }
-  }
-
-  _handleFormData = (e) => {
-    if (this.checked) {
-      e.formData.set(this.name, this.value);
-    }
-  };
-
-  _handleChange = (e) => {
-    if (this.disabled) return;
-
-    const wasChecked = this.checked;
-    this.checked = e.target.checked;
-
-    if (this.checked && !wasChecked) {
-      // Uncheck other radios in the same group
-      const group = this._getRadioGroup();
-      group.forEach((radio) => {
-        if (radio !== this && radio.name === this.name) {
-          radio.checked = false;
-          radio.dispatchEvent(
-            new CustomEvent("change", {
-              detail: {
-                checked: false,
-                value: radio.value,
-                name: radio.name,
-              },
-              bubbles: true,
-              composed: true,
-            })
-          );
-        }
-      });
-
-      // Update form data if in a form
-      if (this.form) {
-        const formData = new FormData(this.form);
-        formData.set(this.name, this.value);
-      }
-
-      // Dispatch change event after updating group state
+  _handleChange(e) {
+    if (!this.disabled) {
+      this.checked = e.target.checked;
       this.dispatchEvent(
-        new CustomEvent("change", {
+        new CustomEvent("neo-change", {
           detail: {
             checked: this.checked,
             value: this.value,
-            name: this.name,
           },
           bubbles: true,
           composed: true,
         })
       );
-    }
-  };
-
-  _handleKeydown = (e) => {
-    if (this.disabled) return;
-
-    switch (e.key) {
-      case " ":
-      case "Space":
-        e.preventDefault();
-        if (!this.checked) {
-          this.checked = true;
-          this.dispatchEvent(
-            new CustomEvent("change", {
-              detail: {
-                checked: true,
-                value: this.value,
-                name: this.name,
-              },
-              bubbles: true,
-              composed: true,
-            })
-          );
-        }
-        break;
-      case "ArrowRight":
-      case "ArrowDown":
-        e.preventDefault();
-        this._focusNextRadio();
-        break;
-      case "ArrowLeft":
-      case "ArrowUp":
-        e.preventDefault();
-        this._focusPreviousRadio();
-        break;
-    }
-  };
-
-  _focusNextRadio() {
-    const group = Array.from(this._getRadioGroup());
-    const currentIndex = group.indexOf(this);
-    const nextRadio = group[currentIndex + 1] || group[0];
-    if (nextRadio) {
-      nextRadio.focus();
-      nextRadio.checked = true;
-      this.checked = false;
-      nextRadio.dispatchEvent(
-        new CustomEvent("change", {
-          detail: {
-            checked: true,
-            value: nextRadio.value,
-            name: nextRadio.name,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
-    }
-  }
-
-  _focusPreviousRadio() {
-    const group = Array.from(this._getRadioGroup());
-    const currentIndex = group.indexOf(this);
-    const previousRadio = group[currentIndex - 1] || group[group.length - 1];
-    if (previousRadio) {
-      previousRadio.focus();
-      previousRadio.checked = true;
-      this.checked = false;
-      previousRadio.dispatchEvent(
-        new CustomEvent("change", {
-          detail: {
-            checked: true,
-            value: previousRadio.value,
-            name: previousRadio.name,
-          },
-          bubbles: true,
-          composed: true,
-        })
-      );
-    }
-  }
-
-  _getRadioGroup() {
-    const group = this.closest('[role="radiogroup"]');
-    if (group) {
-      return group.querySelectorAll(`neo-radio[name="${this.name}"]`);
-    }
-    return document.querySelectorAll(`neo-radio[name="${this.name}"]`);
-  }
-
-  setCustomValidity(message) {
-    this.validationMessage = message;
-  }
-
-  reportValidity() {
-    if (this.required && !this.checked) {
-      this.validationMessage =
-        this.validationMessage || "This field is required";
-      this.dispatchEvent(new Event("invalid", { bubbles: true }));
-      return false;
-    }
-    this.validationMessage = "";
-    return true;
-  }
-
-  focus() {
-    this.shadowRoot?.querySelector("input")?.focus();
-  }
-
-  blur() {
-    this.shadowRoot?.querySelector("input")?.blur();
-  }
-
-  get form() {
-    return this.closest("form");
-  }
-
-  updated(changedProperties) {
-    super.updated(changedProperties);
-    if (changedProperties.has("checked") && this.checked) {
-      // Uncheck other radios in the same group
-      const group = this._getRadioGroup();
-      group.forEach((radio) => {
-        if (radio !== this && radio.name === this.name) {
-          radio.checked = false;
-        }
-      });
     }
   }
 
   render() {
+    const wrapperClasses = {
+      "radio-wrapper": true,
+      disabled: this.disabled,
+      error: !!this.error,
+      checked: this.checked,
+    };
+
     return html`
-      <label>
-        <input
-          type="radio"
-          class="radio ${this.checked ? "checked" : ""} ${this.disabled
-            ? "disabled"
-            : ""}"
-          name=${this.name}
-          value=${this.value}
-          ?checked=${this.checked}
-          ?disabled=${this.disabled}
-          ?required=${this.required}
-          @change=${this._handleChange}
-          @keydown=${this._handleKeydown}
-          role="radio"
-          aria-checked=${this.checked}
-          aria-disabled=${this.disabled}
-        />
-        ${this.label}
-        <slot></slot>
-        ${this.validationMessage
-          ? html` <div class="error-message">${this.validationMessage}</div> `
+      <div
+        class="${Object.entries(wrapperClasses)
+          .filter(([, value]) => value)
+          .map(([key]) => key)
+          .join(" ")}"
+      >
+        <div class="radio-container">
+          <input
+            type="radio"
+            id="${this._id}"
+            name="${this.name}"
+            .value="${this.value}"
+            .checked="${this.checked}"
+            ?disabled="${this.disabled}"
+            ?required="${this.required}"
+            @change="${this._handleChange}"
+            aria-label="${this.label}"
+            aria-invalid="${Boolean(this.error)}"
+            aria-errormessage="${this.error ? `${this._id}-error` : ""}"
+          />
+          <div class="radio-custom"></div>
+        </div>
+        ${this.label
+          ? html`<label for="${this._id}">${this.label}</label>`
           : ""}
-      </label>
+      </div>
+      ${this.error
+        ? html`<div id="${this._id}-error" class="error-message">
+            ${this.error}
+          </div>`
+        : ""}
+      <slot name="description"></slot>
     `;
   }
 }
