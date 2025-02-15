@@ -4,6 +4,7 @@ import chai from "chai";
 import { assert } from "chai";
 import { JSDOM } from "jsdom";
 import { MemoryMonitor } from "../components/core/memory-monitor.js";
+import { fixture } from "@open-wc/testing-helpers";
 
 // Initialize DOM environment with jsdom
 const dom = new JSDOM(
@@ -27,11 +28,79 @@ global.Element = dom.window.Element;
 global.Node = dom.window.Node;
 global.CustomEvent = dom.window.CustomEvent;
 
-// Set up Lit environment
-global.HTMLElement.prototype.attachShadow = function () {
+// Store original HTMLElement
+const originalHTMLElement = global.HTMLElement;
+
+// Create a proper custom element base class
+class CustomElement extends originalHTMLElement {
+  constructor() {
+    super();
+    if (new.target === CustomElement) {
+      return Reflect.construct(originalHTMLElement, [], new.target);
+    }
+    return this;
+  }
+}
+
+// Create a proper wrapper for LitElement
+class WrappedLitElement extends LitElement {
+  constructor() {
+    super();
+    if (new.target === WrappedLitElement) {
+      return Reflect.construct(LitElement, [], new.target);
+    }
+    return this;
+  }
+}
+
+// Helper to wrap custom elements
+function wrapCustomElement(constructor) {
+  return class extends constructor {
+    constructor() {
+      super();
+      if (new.target === constructor) {
+        return Reflect.construct(constructor, [], new.target);
+      }
+      return this;
+    }
+  };
+}
+
+// Setup custom element registry
+const originalDefine = global.customElements.define;
+global.customElements.define = (name, constructor, options) => {
+  if (!global.customElements.get(name)) {
+    const wrappedConstructor = wrapCustomElement(constructor);
+    originalDefine.call(
+      global.customElements,
+      name,
+      wrappedConstructor,
+      options
+    );
+  }
+};
+
+// Setup test environment
+global.HTMLElement = CustomElement;
+global.LitElement = WrappedLitElement;
+
+// Setup chai
+global.expect = expect;
+
+// Setup fixture helper
+global.fixture = fixture;
+
+// Setup Lit environment
+HTMLElement.prototype.attachShadow = function (options) {
   const shadowRoot = document.createElement("div");
   shadowRoot.host = this;
-  this.shadowRoot = shadowRoot;
+  Object.defineProperty(this, "shadowRoot", {
+    get() {
+      return shadowRoot;
+    },
+    enumerable: true,
+    configurable: true,
+  });
   return shadowRoot;
 };
 
@@ -41,82 +110,25 @@ LitElement.prototype.requestUpdate = function () {
 };
 
 LitElement.prototype.createRenderRoot = function () {
-  const root = this.attachShadow({ mode: "open" });
-  root.host = this;
-  return root;
+  if (!this.shadowRoot) {
+    this.attachShadow({ mode: "open" });
+  }
+  return this.shadowRoot;
 };
 
-LitElement.prototype.connectedCallback = function () {
-  this.isConnected = true;
-  this.requestUpdate();
-};
-
-LitElement.prototype.disconnectedCallback = function () {
-  this.isConnected = false;
-};
-
-Object.defineProperty(LitElement.prototype, "updateComplete", {
-  get() {
-    return Promise.resolve(true);
-  },
-});
-
-// Store original HTMLElement
-const originalHTMLElement = global.HTMLElement;
-
-// Create new HTMLElement constructor
-global.HTMLElement = function HTMLElement() {
-  const newTarget = new.target || HTMLElement;
-  const element = Reflect.construct(originalHTMLElement, [], newTarget);
-  return element;
-};
-
-// Set up prototype chain for HTMLElement
-Object.setPrototypeOf(global.HTMLElement, originalHTMLElement);
-Object.setPrototypeOf(
-  global.HTMLElement.prototype,
-  originalHTMLElement.prototype
-);
-
-// Set up custom elements registry
-const customElementRegistry = new Map();
-
-global.customElements = {
-  define: (name, constructor) => {
-    if (customElementRegistry.has(name)) {
-      return; // Skip if already registered
+LitElement.prototype.update = function (changedProperties) {
+  if (this.render) {
+    const result = this.render();
+    if (this.shadowRoot) {
+      this.shadowRoot.innerHTML = "";
+      if (typeof result === "string") {
+        this.shadowRoot.innerHTML = result;
+      } else if (result && result.strings) {
+        // Handle lit-html TemplateResult
+        this.shadowRoot.innerHTML = result.strings.join("<!-- lit-part -->");
+      }
     }
-
-    // Create a wrapper constructor that properly extends HTMLElement
-    function CustomElementConstructor(...args) {
-      // Create the element instance
-      const element = Reflect.construct(
-        HTMLElement,
-        [],
-        CustomElementConstructor
-      );
-
-      // Initialize the element with the original constructor
-      Object.setPrototypeOf(element, constructor.prototype);
-      constructor.call(element, ...args);
-
-      return element;
-    }
-
-    // Set up prototype chain
-    CustomElementConstructor.prototype = Object.create(constructor.prototype);
-    CustomElementConstructor.prototype.constructor = CustomElementConstructor;
-    Object.setPrototypeOf(CustomElementConstructor, constructor);
-    Object.setPrototypeOf(
-      CustomElementConstructor.prototype,
-      HTMLElement.prototype
-    );
-
-    // Store the constructor in the registry
-    customElementRegistry.set(name, CustomElementConstructor);
-  },
-  get: (name) => customElementRegistry.get(name),
-  clear: () => customElementRegistry.clear(),
+  }
 };
 
 // Register the MemoryMonitor component
@@ -144,7 +156,9 @@ export async function fixture(template) {
     }
     const element = new Constructor();
     document.body.appendChild(element);
-    await element.updateComplete;
+    if (element.updateComplete) {
+      await element.updateComplete;
+    }
     return element;
   }
 
@@ -152,29 +166,11 @@ export async function fixture(template) {
   const templateElement = document.createElement("template");
   templateElement.innerHTML = template;
   const element = templateElement.content.firstElementChild;
-
-  if (!element) {
-    throw new Error("Template must contain a single element");
+  document.body.appendChild(element);
+  if (element.updateComplete) {
+    await element.updateComplete;
   }
-
-  const tagName = element.tagName.toLowerCase();
-  const Constructor = customElements.get(tagName);
-
-  if (!Constructor) {
-    throw new Error(`Custom element ${tagName} not registered`);
-  }
-
-  const instance = new Constructor();
-
-  // Copy attributes
-  Array.from(element.attributes).forEach((attr) => {
-    instance.setAttribute(attr.name, attr.value);
-  });
-
-  document.body.appendChild(instance);
-  await instance.updateComplete;
-
-  return instance;
+  return element;
 }
 
 /**
@@ -183,7 +179,7 @@ export async function fixture(template) {
  * @returns {Promise<void>}
  */
 export async function waitForUpdate(element) {
-  if (element instanceof LitElement) {
+  if (element.updateComplete) {
     await element.updateComplete;
   }
   return element;

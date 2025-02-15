@@ -46,14 +46,11 @@ export default defineConfig({
       },
     },
     // Custom resolver for module imports
-    resolve: {
-      alias: {
-        "@components": "/src/components",
-        "@services": "/src/services",
-        "@utils": "/src/utils",
-        "@styles": "/src/styles",
-        chai: "@esm-bundle/chai",
-      },
+    alias: {
+      "@components": "/src/components",
+      "@services": "/src/services",
+      "@utils": "/src/utils",
+      "@styles": "/src/styles",
     },
     // Environment variables
     env: {
@@ -70,12 +67,24 @@ export default defineConfig({
       },
     },
     deps: {
-      inline: [/lit/, /@open-wc\/testing/, /@esm-bundle\/chai/],
+      inline: [/lit/, /@open-wc\/testing/],
       optimizer: {
         web: {
-          include: [/@esm-bundle\/chai/],
+          include: [],
         },
       },
+    },
+  },
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "./src"),
+      "@components": resolve(__dirname, "./src/components"),
+      "@pages": resolve(__dirname, "./src/pages"),
+      "@services": resolve(__dirname, "./src/services"),
+      "@styles": resolve(__dirname, "./src/styles"),
+      "@utils": resolve(__dirname, "./src/utils"),
+      "@test": resolve(__dirname, "./src/test"),
+      chai: "chai",
     },
   },
 });

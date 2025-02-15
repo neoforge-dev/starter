@@ -11,6 +11,7 @@ export class MemoryMonitor extends LitElement {
     expanded: { type: Boolean },
     maxLeaks: { type: Number },
     autoHide: { type: Boolean },
+    autoHideTimeout: { type: Number },
   };
 
   static styles = [
@@ -188,11 +189,14 @@ export class MemoryMonitor extends LitElement {
     this.expanded = false;
     this.maxLeaks = 50;
     this.autoHide = true;
+    this.autoHideTimeout = 10000;
     this._handleLeakDetected = this._handleLeakDetected.bind(this);
+    this.addLeak = this.addLeak.bind(this);
   }
 
   createRenderRoot() {
-    return super.createRenderRoot();
+    const root = super.createRenderRoot();
+    return root;
   }
 
   connectedCallback() {
@@ -214,51 +218,56 @@ export class MemoryMonitor extends LitElement {
       return;
     }
 
-    const { type, message, timestamp } = event.detail;
-    if (!type || !message || !timestamp) {
+    const { type, size, time } = event.detail;
+    if (!type || !size || !time) {
       console.warn("Memory leak event missing required fields", event.detail);
       return;
     }
 
-    this._addLeak(event.detail);
+    this.addLeak(event.detail);
   }
 
-  _addLeak(leak) {
+  addLeak(leak) {
     this.leaks = [...this.leaks, leak];
     if (this.leaks.length > this.maxLeaks) {
       this.leaks = this.leaks.slice(-this.maxLeaks);
     }
     this.expanded = true;
     if (this.autoHide) {
-      const timeout = window.process?.env?.NODE_ENV === "test" ? 1000 : 10000;
       setTimeout(() => {
         this.expanded = false;
-      }, timeout);
+        this.requestUpdate();
+      }, this.autoHideTimeout);
     }
+    this.requestUpdate();
   }
 
-  _formatTime(timestamp) {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString();
+  _formatTime(time) {
+    return new Date(time).toLocaleTimeString();
   }
 
-  _formatLeakType(type) {
-    const types = {
-      memory: "Memory Leak",
-      performance: "Performance Issue",
-      error: "Error",
-      warning: "Warning",
-    };
-    return types[type] || type;
+  _formatSize(size) {
+    const units = ["B", "KB", "MB", "GB"];
+    let value = size;
+    let unitIndex = 0;
+
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value /= 1024;
+      unitIndex++;
+    }
+
+    return `${value.toFixed(1)} ${units[unitIndex]}`;
   }
 
   _clearLeaks() {
     this.leaks = [];
     this.expanded = false;
+    this.requestUpdate();
   }
 
   _toggleExpanded() {
     this.expanded = !this.expanded;
+    this.requestUpdate();
   }
 
   render() {
@@ -286,21 +295,14 @@ export class MemoryMonitor extends LitElement {
                           (leak) => html`
                             <div class="leak-item" data-type=${leak.type}>
                               <div class="leak-header">
-                                <span class="leak-type">
-                                  ${this._formatLeakType(leak.type)}
-                                </span>
+                                <span class="leak-type"> ${leak.type} </span>
                                 <span class="leak-time">
-                                  ${this._formatTime(leak.timestamp)}
+                                  ${this._formatTime(leak.time)}
                                 </span>
                               </div>
-                              <div class="leak-message">${leak.message}</div>
-                              ${leak.details
-                                ? html`
-                                    <div class="leak-details">
-                                      ${leak.details}
-                                    </div>
-                                  `
-                                : null}
+                              <div class="leak-message">
+                                ${this._formatSize(leak.size)}
+                              </div>
                             </div>
                           `
                         )}
