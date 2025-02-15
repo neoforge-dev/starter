@@ -1,4 +1,4 @@
-import { showToast } from "../components/ui/toast.js";
+import { showToast } from "../components/ui/toast/index.js";
 import { Logger } from "../utils/logger.js";
 import { apiClient } from "./api-client.js";
 

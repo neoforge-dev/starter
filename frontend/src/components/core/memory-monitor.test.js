@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { fixture, waitForUpdate } from "../test/setup.js";
+import { fixture, waitForUpdate } from "../../test/setup.js";
 import { MemoryMonitor } from "./memory-monitor.js";
 
 describe("memory-monitor", () => {
