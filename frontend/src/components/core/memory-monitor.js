@@ -1,5 +1,4 @@
 import { LitElement, html, css } from "lit";
-import { property } from "lit/decorators.js";
 import { baseStyles } from "../styles/base.js";
 
 /**
@@ -7,10 +6,12 @@ import { baseStyles } from "../styles/base.js";
  * @customElement memory-monitor
  */
 export class MemoryMonitor extends LitElement {
-  @property({ type: Array }) leaks = [];
-  @property({ type: Boolean }) expanded = false;
-  @property({ type: Number }) maxLeaks = 50;
-  @property({ type: Boolean }) autoHide = true;
+  static properties = {
+    leaks: { type: Array },
+    expanded: { type: Boolean },
+    maxLeaks: { type: Number },
+    autoHide: { type: Boolean },
+  };
 
   static styles = [
     baseStyles,
@@ -183,6 +184,10 @@ export class MemoryMonitor extends LitElement {
 
   constructor() {
     super();
+    this.leaks = [];
+    this.expanded = false;
+    this.maxLeaks = 50;
+    this.autoHide = true;
     this._setupEventListeners();
   }
 
