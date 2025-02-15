@@ -132,16 +132,39 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
-    setupFiles: ["src/test/setup.js"],
-    include: ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    exclude: ["node_modules", "dist", ".idea", ".git", ".cache"],
+    setupFiles: ["./src/test/setup.js"],
+    include: ["**/*.test.js"],
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.{idea,git,cache,output,temp}/**",
+    ],
+    alias: {
+      "@components": "/src/components",
+      "@services": "/src/services",
+      "@utils": "/src/utils",
+      "@styles": "/src/styles",
+      "@pages": "/src/pages",
+      chai: "@esm-bundle/chai/esm/chai.js",
+    },
     deps: {
-      inline: [/@esm-bundle\/chai/, /^lit/],
+      inline: [/lit/, /@open-wc\/testing/, /@esm-bundle\/chai/],
       optimizer: {
         web: {
-          include: [/@esm-bundle\/chai/, /^lit/],
+          include: [/@esm-bundle\/chai/],
+          entries: [
+            {
+              find: "@esm-bundle/chai",
+              replacement: "@esm-bundle/chai/esm/chai.js",
+            },
+          ],
         },
       },
+    },
+    browser: {
+      enabled: true,
+      name: "chromium",
+      provider: "playwright",
     },
   },
 });

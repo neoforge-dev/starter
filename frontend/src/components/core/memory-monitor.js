@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { baseStyles } from "../styles/base.js";
+import { baseStyles } from "../../styles/base.js";
 
 /**
  * Component to display memory leak reports and alerts
@@ -192,9 +192,7 @@ export class MemoryMonitor extends LitElement {
   }
 
   createRenderRoot() {
-    const root = super.createRenderRoot();
-    root.host = this;
-    return root;
+    return super.createRenderRoot();
   }
 
   connectedCallback() {
@@ -211,6 +209,17 @@ export class MemoryMonitor extends LitElement {
   }
 
   _handleLeakDetected(event) {
+    if (!event.detail) {
+      console.warn("Memory leak event missing detail");
+      return;
+    }
+
+    const { type, message, timestamp } = event.detail;
+    if (!type || !message || !timestamp) {
+      console.warn("Memory leak event missing required fields", event.detail);
+      return;
+    }
+
     this._addLeak(event.detail);
   }
 

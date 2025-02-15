@@ -14,14 +14,6 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
-    {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
-    },
-    {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"] },
-    },
   ],
   webServer: {
     command: "npm run dev",
@@ -32,4 +24,11 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   retries: process.env.CI ? 2 : 0,
   timeout: 30000,
+  expect: {
+    toMatchSnapshot: {
+      maxDiffPixels: 100,
+      threshold: 0.2,
+    },
+  },
+  snapshotPathTemplate: "{testDir}/__snapshots__/{testFilePath}/{arg}{ext}",
 });

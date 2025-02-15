@@ -61,12 +61,17 @@ Object.defineProperty(LitElement.prototype, "updateComplete", {
   },
 });
 
-// Ensure HTMLElement constructor is properly set up
+// Store original HTMLElement
 const originalHTMLElement = global.HTMLElement;
+
+// Create new HTMLElement constructor
 global.HTMLElement = function HTMLElement() {
   const newTarget = new.target || HTMLElement;
-  return Reflect.construct(originalHTMLElement, [], newTarget);
+  const element = Reflect.construct(originalHTMLElement, [], newTarget);
+  return element;
 };
+
+// Set up prototype chain for HTMLElement
 Object.setPrototypeOf(global.HTMLElement, originalHTMLElement);
 Object.setPrototypeOf(
   global.HTMLElement.prototype,
@@ -75,6 +80,7 @@ Object.setPrototypeOf(
 
 // Set up custom elements registry
 const customElementRegistry = new Map();
+
 global.customElements = {
   define: (name, constructor) => {
     if (customElementRegistry.has(name)) {
@@ -83,46 +89,33 @@ global.customElements = {
 
     // Create a wrapper constructor that properly extends HTMLElement
     function CustomElementConstructor(...args) {
+      // Create the element instance
       const element = Reflect.construct(
         HTMLElement,
         [],
         CustomElementConstructor
       );
 
-      // Set up prototype chain
+      // Initialize the element with the original constructor
       Object.setPrototypeOf(element, constructor.prototype);
-      Object.setPrototypeOf(
-        CustomElementConstructor.prototype,
-        constructor.prototype
-      );
-      Object.setPrototypeOf(CustomElementConstructor, constructor);
-
-      // Call original constructor with proper this binding
-      if (constructor.prototype.constructor) {
-        constructor.apply(element, args);
-      }
+      constructor.call(element, ...args);
 
       return element;
     }
 
-    // Ensure prototype chain is set up correctly
+    // Set up prototype chain
     CustomElementConstructor.prototype = Object.create(constructor.prototype);
+    CustomElementConstructor.prototype.constructor = CustomElementConstructor;
+    Object.setPrototypeOf(CustomElementConstructor, constructor);
     Object.setPrototypeOf(
       CustomElementConstructor.prototype,
       HTMLElement.prototype
     );
-    Object.setPrototypeOf(CustomElementConstructor, HTMLElement);
 
-    // Store both the wrapper and original constructor
-    customElementRegistry.set(name, {
-      constructor: CustomElementConstructor,
-      original: constructor,
-    });
+    // Store the constructor in the registry
+    customElementRegistry.set(name, CustomElementConstructor);
   },
-  get: (name) => {
-    const entry = customElementRegistry.get(name);
-    return entry ? entry.constructor : undefined;
-  },
+  get: (name) => customElementRegistry.get(name),
   clear: () => customElementRegistry.clear(),
 };
 
@@ -145,54 +138,41 @@ afterEach(() => {
 export async function fixture(template) {
   // If template is just a tag name
   if (template.indexOf("<") === -1) {
-    const constructor = customElements.get(template);
-    if (!constructor) {
+    const Constructor = customElements.get(template);
+    if (!Constructor) {
       throw new Error(`Custom element ${template} not registered`);
     }
-    const instance = new constructor();
-    document.body.appendChild(instance);
-    if ("updateComplete" in instance) {
-      await instance.updateComplete;
-    }
-    return instance;
+    const element = new Constructor();
+    document.body.appendChild(element);
+    await element.updateComplete;
+    return element;
   }
 
   // Handle full HTML template
   const templateElement = document.createElement("template");
-  const templateString =
-    typeof template === "string" ? template : template.join("");
-  templateElement.innerHTML = templateString;
-
-  // Get the first element from the template
+  templateElement.innerHTML = template;
   const element = templateElement.content.firstElementChild;
+
   if (!element) {
     throw new Error("Template must contain a single element");
   }
 
-  // Get the element's tag name
   const tagName = element.tagName.toLowerCase();
+  const Constructor = customElements.get(tagName);
 
-  // Get the constructor from the registry
-  const constructor = customElements.get(tagName);
-  if (!constructor) {
+  if (!Constructor) {
     throw new Error(`Custom element ${tagName} not registered`);
   }
 
-  // Create a new instance of the element
-  const instance = new constructor();
+  const instance = new Constructor();
 
-  // Copy attributes from template element to instance
-  for (const attr of element.attributes) {
+  // Copy attributes
+  Array.from(element.attributes).forEach((attr) => {
     instance.setAttribute(attr.name, attr.value);
-  }
+  });
 
-  // Append to document
   document.body.appendChild(instance);
-
-  // Wait for element to be ready
-  if ("updateComplete" in instance) {
-    await instance.updateComplete;
-  }
+  await instance.updateComplete;
 
   return instance;
 }
