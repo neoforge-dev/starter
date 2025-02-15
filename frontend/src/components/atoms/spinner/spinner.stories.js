@@ -8,18 +8,18 @@ export default {
   argTypes: {
     size: {
       control: 'select',
-      options: ['small', 'medium', 'large'],
-      description: 'The size of the spinner',
+      options: ['sm', 'md', 'lg'],
+      description: 'Size of the spinner',
+    },
+    color: {
+      control: 'select',
+      options: ['primary', 'secondary', 'success', 'error'],
+      description: 'Color of the spinner',
     },
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'light', 'dark'],
-      description: 'The color variant of the spinner',
-    },
-    speed: {
-      control: 'select',
-      options: ['slow', 'normal', 'fast'],
-      description: 'The animation speed of the spinner',
+      options: ['border', 'dots', 'pulse'],
+      description: 'Visual style of the spinner',
     },
     label: {
       control: 'text',
@@ -49,109 +49,127 @@ export default {
   },
 };
 
-// Base Template
-const Template = ({ size, variant, speed, label }) => html\`
+const Template = (args) => html\`
   <neo-spinner
-    size=\${ifDefined(size)}
-    variant=\${ifDefined(variant)}
-    speed=\${ifDefined(speed)}
-    label=\${ifDefined(label)}
+    size="${args.size || "md"}"
+    color="${args.color || "primary"}"
+    variant="${args.variant || "border"}"
+    label="${args.label || "Loading..."}"
   ></neo-spinner>
 \`;
 
-// Stories
+// Basic examples
 export const Default = Template.bind({});
-Default.args = {
-  size: 'medium',
-  variant: 'primary',
-  speed: 'normal',
-  label: 'Loading...',
+Default.args = {};
+
+export const Large = Template.bind({});
+Large.args = {
+  size: 'lg',
 };
 
 export const Small = Template.bind({});
 Small.args = {
-  size: 'small',
-  variant: 'primary',
-  speed: 'normal',
-  label: 'Loading...',
+  size: 'sm',
 };
 
-export const Large = Template.bind({});
-Large.args = {
-  size: 'large',
-  variant: 'primary',
-  speed: 'normal',
-  label: 'Loading...',
+// Variants
+export const Border = Template.bind({});
+Border.args = {
+  variant: 'border',
+};
+
+export const Dots = Template.bind({});
+Dots.args = {
+  variant: 'dots',
+};
+
+export const Pulse = Template.bind({});
+Pulse.args = {
+  variant: 'pulse',
+};
+
+// Colors
+export const Primary = Template.bind({});
+Primary.args = {
+  color: 'primary',
 };
 
 export const Secondary = Template.bind({});
 Secondary.args = {
-  size: 'medium',
-  variant: 'secondary',
-  speed: 'normal',
-  label: 'Loading...',
+  color: 'secondary',
 };
 
-export const FastSpeed = Template.bind({});
-FastSpeed.args = {
-  size: 'medium',
-  variant: 'primary',
-  speed: 'fast',
-  label: 'Processing...',
+export const Success = Template.bind({});
+Success.args = {
+  color: 'success',
 };
 
-export const SlowSpeed = Template.bind({});
-SlowSpeed.args = {
-  size: 'medium',
-  variant: 'primary',
-  speed: 'slow',
-  label: 'Please wait...',
+export const Error = Template.bind({});
+Error.args = {
+  color: 'error',
 };
 
-// Spinner with Text
-export const WithText = () => html\`
-  <div style="display: flex; align-items: center; gap: 8px;">
-    <neo-spinner size="small"></neo-spinner>
-    <span>Loading content...</span>
-  </div>
-\`;
-
-// Button with Spinner
-export const ButtonSpinner = () => html\`
-  <neo-button variant="primary" disabled>
-    <neo-spinner size="small" variant="light"></neo-spinner>
-    Saving...
-  </neo-button>
-\`;
-
-// Card Loading State
-export const CardLoading = () => html\`
-  <neo-card style="min-height: 200px; display: flex; justify-content: center; align-items: center;">
-    <neo-spinner size="large" variant="primary"></neo-spinner>
-  </neo-card>
-\`;
-
-// Multiple Sizes Example
-export const SpinnerSizes = () => html\`
-  <div style="display: flex; gap: 16px; align-items: center;">
-    <neo-spinner size="small" label="Small spinner"></neo-spinner>
-    <neo-spinner size="medium" label="Medium spinner"></neo-spinner>
-    <neo-spinner size="large" label="Large spinner"></neo-spinner>
-  </div>
-\`;
-
-// Overlay Example
-export const LoadingOverlay = () => html\`
-  <div style="position: relative; width: 300px; height: 200px; background: var(--color-surface); border-radius: var(--radius-md);">
-    <div style="
-      position: absolute;
-      inset: 0;
-      display: flex;
-      justify-content: center;
+// Use cases
+export const LoadingButton = () => html\`
+  <button
+    style="
+      display: inline-flex;
       align-items: center;
-      background: rgba(255, 255, 255, 0.9);
-    ">
-      <neo-spinner size="large" variant="primary"></neo-spinner>
+      gap: 8px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background: var(--color-primary);
+      color: white;
+      cursor: pointer;
+    "
+  >
+    <neo-spinner size="sm" color="secondary"></neo-spinner>
+    Loading...
+  </button>
+\`;
+
+export const LoadingCard = () => html\`
+  <div
+    style="
+      padding: 16px;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    "
+  >
+    <neo-spinner size="lg"></neo-spinner>
+    <p style="margin-top: 16px; color: var(--color-text-secondary);">
+      Loading content...
+    </p>
+  </div>
+\`;
+
+export const LoadingTable = () => html\`
+  <div
+    style="
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    "
+  >
+    <div style="text-align: center;">
+      <neo-spinner variant="dots" size="lg"></neo-spinner>
+      <p style="margin-top: 16px; color: var(--color-text-secondary);">
+        Loading table data...
+      </p>
     </div>
+  </div>
+\`;
+
+export const InlineSpinners = () => html\`
+  <div style="display: flex; gap: 16px; align-items: center;">
+    <neo-spinner size="sm" variant="border"></neo-spinner>
+    <neo-spinner size="sm" variant="dots"></neo-spinner>
+    <neo-spinner size="sm" variant="pulse"></neo-spinner>
   </div>
 \`; 
