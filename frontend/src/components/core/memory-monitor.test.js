@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { html } from "lit";
 import { fixture, waitForUpdate } from "../../test/setup.js";
 import { MemoryMonitor } from "./memory-monitor.js";
 
@@ -7,9 +6,7 @@ describe("memory-monitor", () => {
   let element;
 
   beforeEach(async () => {
-    // Always register the component before each test
-    customElements.define("memory-monitor", MemoryMonitor);
-    element = await fixture(`<memory-monitor></memory-monitor>`);
+    element = await fixture("memory-monitor");
     await element.updateComplete;
   });
 
@@ -34,7 +31,7 @@ describe("memory-monitor", () => {
       bubbles: true,
       composed: true,
     });
-    element.dispatchEvent(event);
+    window.dispatchEvent(event);
     await element.updateComplete;
 
     expect(element.leaks).toHaveLength(1);
@@ -56,7 +53,7 @@ describe("memory-monitor", () => {
         bubbles: true,
         composed: true,
       });
-      element.dispatchEvent(event);
+      window.dispatchEvent(event);
       await element.updateComplete;
     }
 
@@ -76,12 +73,12 @@ describe("memory-monitor", () => {
       bubbles: true,
       composed: true,
     });
-    element.dispatchEvent(event);
+    window.dispatchEvent(event);
     await element.updateComplete;
 
     expect(element.expanded).toBe(true);
 
-    vi.advanceTimersByTime(5000); // Advance 5 seconds
+    vi.advanceTimersByTime(1000); // Advance 1 second (test environment)
     await element.updateComplete;
     expect(element.expanded).toBe(false);
 
@@ -101,12 +98,12 @@ describe("memory-monitor", () => {
       bubbles: true,
       composed: true,
     });
-    element.dispatchEvent(event);
+    window.dispatchEvent(event);
     await element.updateComplete;
 
     expect(element.expanded).toBe(true);
 
-    vi.advanceTimersByTime(5000); // Advance 5 seconds
+    vi.advanceTimersByTime(1000); // Advance 1 second
     await element.updateComplete;
     expect(element.expanded).toBe(true);
 
@@ -124,30 +121,36 @@ describe("memory-monitor", () => {
       bubbles: true,
       composed: true,
     });
-    element.dispatchEvent(event);
+    window.dispatchEvent(event);
     await element.updateComplete;
 
     expect(element.leaks).toHaveLength(1);
 
-    // Simulate clicking the clear button
-    element.clearLeaks();
+    // Expand the monitor to show the clear button
+    element.expanded = true;
+    await element.updateComplete;
+
+    // Find and click the clear button
+    const clearButton = element.shadowRoot.querySelector(".clear-button");
+    clearButton.click();
     await element.updateComplete;
 
     expect(element.leaks).toHaveLength(0);
     expect(element.expanded).toBe(false);
   });
 
-  it("should toggle expanded state", async () => {
+  it("should toggle expanded state when header is clicked", async () => {
     // Initially not expanded
     expect(element.expanded).toBe(false);
 
-    // Toggle expanded state
-    element.expanded = true;
+    // Click header to expand
+    const header = element.shadowRoot.querySelector(".monitor-header");
+    header.click();
     await element.updateComplete;
     expect(element.expanded).toBe(true);
 
-    // Toggle back
-    element.expanded = false;
+    // Click header again to collapse
+    header.click();
     await element.updateComplete;
     expect(element.expanded).toBe(false);
   });
@@ -171,10 +174,15 @@ describe("memory-monitor", () => {
         bubbles: true,
         composed: true,
       });
-      element.dispatchEvent(event);
+      window.dispatchEvent(event);
       await element.updateComplete;
 
-      expect(element.leaks[0].type).toBe(type);
+      // Expand the monitor to show the leak type
+      element.expanded = true;
+      await element.updateComplete;
+
+      const leakType = element.shadowRoot.querySelector(".leak-type");
+      expect(leakType.textContent.trim()).toBe(expected);
     }
   });
 
@@ -189,9 +197,43 @@ describe("memory-monitor", () => {
       bubbles: true,
       composed: true,
     });
-    element.dispatchEvent(event);
+    window.dispatchEvent(event);
     await element.updateComplete;
 
-    expect(element.leaks[0].timestamp).toBe(timestamp);
+    // Expand the monitor to show the time
+    element.expanded = true;
+    await element.updateComplete;
+
+    const timeElement = element.shadowRoot.querySelector(".leak-time");
+    expect(timeElement.textContent.trim()).toBe(
+      new Date(timestamp).toLocaleTimeString()
+    );
+  });
+
+  it("should remove event listener when disconnected", async () => {
+    const addEventListenerSpy = vi.spyOn(window, "addEventListener");
+    const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
+
+    // Create and connect element
+    const newElement = document.createElement("memory-monitor");
+    document.body.appendChild(newElement);
+    await newElement.updateComplete;
+
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      "memory-leak-detected",
+      expect.any(Function)
+    );
+
+    // Disconnect element
+    document.body.removeChild(newElement);
+    await newElement.updateComplete;
+
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      "memory-leak-detected",
+      expect.any(Function)
+    );
+
+    addEventListenerSpy.mockRestore();
+    removeEventListenerSpy.mockRestore();
   });
 });

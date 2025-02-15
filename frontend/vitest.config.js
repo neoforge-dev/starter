@@ -52,6 +52,7 @@ export default defineConfig({
         "@services": "/src/services",
         "@utils": "/src/utils",
         "@styles": "/src/styles",
+        chai: "@esm-bundle/chai",
       },
     },
     // Environment variables
@@ -69,7 +70,12 @@ export default defineConfig({
       },
     },
     deps: {
-      inline: [/lit/, /@open-wc\/testing/],
+      inline: [/lit/, /@open-wc\/testing/, /@esm-bundle\/chai/],
+      optimizer: {
+        web: {
+          include: [/@esm-bundle\/chai/],
+        },
+      },
     },
   },
 });

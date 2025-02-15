@@ -30,14 +30,48 @@ global.CustomEvent = dom.window.CustomEvent;
 // Set up Lit environment
 global.HTMLElement.prototype.attachShadow = function () {
   const shadowRoot = document.createElement("div");
+  shadowRoot.host = this;
   this.shadowRoot = shadowRoot;
   return shadowRoot;
 };
 
-// Mock requestUpdate for Lit elements
+// Mock Lit element lifecycle methods
 LitElement.prototype.requestUpdate = function () {
   return Promise.resolve();
 };
+
+LitElement.prototype.createRenderRoot = function () {
+  const root = this.attachShadow({ mode: "open" });
+  root.host = this;
+  return root;
+};
+
+LitElement.prototype.connectedCallback = function () {
+  this.isConnected = true;
+  this.requestUpdate();
+};
+
+LitElement.prototype.disconnectedCallback = function () {
+  this.isConnected = false;
+};
+
+Object.defineProperty(LitElement.prototype, "updateComplete", {
+  get() {
+    return Promise.resolve(true);
+  },
+});
+
+// Ensure HTMLElement constructor is properly set up
+const originalHTMLElement = global.HTMLElement;
+global.HTMLElement = function HTMLElement() {
+  const newTarget = new.target || HTMLElement;
+  return Reflect.construct(originalHTMLElement, [], newTarget);
+};
+Object.setPrototypeOf(global.HTMLElement, originalHTMLElement);
+Object.setPrototypeOf(
+  global.HTMLElement.prototype,
+  originalHTMLElement.prototype
+);
 
 // Set up custom elements registry
 const customElementRegistry = new Map();
@@ -46,16 +80,54 @@ global.customElements = {
     if (customElementRegistry.has(name)) {
       return; // Skip if already registered
     }
-    // Ensure constructor extends HTMLElement
-    if (!(constructor.prototype instanceof HTMLElement)) {
-      Object.setPrototypeOf(constructor.prototype, HTMLElement.prototype);
-      Object.setPrototypeOf(constructor, HTMLElement);
+
+    // Create a wrapper constructor that properly extends HTMLElement
+    function CustomElementConstructor(...args) {
+      const element = Reflect.construct(
+        HTMLElement,
+        [],
+        CustomElementConstructor
+      );
+
+      // Set up prototype chain
+      Object.setPrototypeOf(element, constructor.prototype);
+      Object.setPrototypeOf(
+        CustomElementConstructor.prototype,
+        constructor.prototype
+      );
+      Object.setPrototypeOf(CustomElementConstructor, constructor);
+
+      // Call original constructor with proper this binding
+      if (constructor.prototype.constructor) {
+        constructor.apply(element, args);
+      }
+
+      return element;
     }
-    customElementRegistry.set(name, constructor);
+
+    // Ensure prototype chain is set up correctly
+    CustomElementConstructor.prototype = Object.create(constructor.prototype);
+    Object.setPrototypeOf(
+      CustomElementConstructor.prototype,
+      HTMLElement.prototype
+    );
+    Object.setPrototypeOf(CustomElementConstructor, HTMLElement);
+
+    // Store both the wrapper and original constructor
+    customElementRegistry.set(name, {
+      constructor: CustomElementConstructor,
+      original: constructor,
+    });
   },
-  get: (name) => customElementRegistry.get(name),
-  whenDefined: (name) => Promise.resolve(customElementRegistry.get(name)),
+  get: (name) => {
+    const entry = customElementRegistry.get(name);
+    return entry ? entry.constructor : undefined;
+  },
+  clear: () => customElementRegistry.clear(),
 };
+
+// Register the MemoryMonitor component
+customElements.define("memory-monitor", MemoryMonitor);
 
 // Clean up after each test
 afterEach(() => {
@@ -63,17 +135,29 @@ afterEach(() => {
   document.body.innerHTML = "";
   // Reset all mocks
   vi.clearAllMocks();
-  // Reset custom elements registry
-  customElementRegistry.clear();
 });
 
 /**
  * Creates a fixture element in the DOM for testing
- * @param {string} template - The template string or element to create a fixture from
+ * @param {string} template - The template string or tag name to create a fixture from
  * @returns {Promise<Element>} The created element
  */
 export async function fixture(template) {
-  // Create a template element and set its content
+  // If template is just a tag name
+  if (template.indexOf("<") === -1) {
+    const constructor = customElements.get(template);
+    if (!constructor) {
+      throw new Error(`Custom element ${template} not registered`);
+    }
+    const instance = new constructor();
+    document.body.appendChild(instance);
+    if ("updateComplete" in instance) {
+      await instance.updateComplete;
+    }
+    return instance;
+  }
+
+  // Handle full HTML template
   const templateElement = document.createElement("template");
   const templateString =
     typeof template === "string" ? template : template.join("");
@@ -88,19 +172,28 @@ export async function fixture(template) {
   // Get the element's tag name
   const tagName = element.tagName.toLowerCase();
 
-  // Create the element directly if it's registered
-  const instance = document.createElement(tagName);
+  // Get the constructor from the registry
+  const constructor = customElements.get(tagName);
+  if (!constructor) {
+    throw new Error(`Custom element ${tagName} not registered`);
+  }
+
+  // Create a new instance of the element
+  const instance = new constructor();
 
   // Copy attributes from template element to instance
   for (const attr of element.attributes) {
     instance.setAttribute(attr.name, attr.value);
   }
 
-  // Append to document and return
+  // Append to document
   document.body.appendChild(instance);
+
+  // Wait for element to be ready
   if ("updateComplete" in instance) {
     await instance.updateComplete;
   }
+
   return instance;
 }
 

@@ -7,23 +7,11 @@ import { baseStyles } from "../styles/base.js";
  */
 export class MemoryMonitor extends LitElement {
   static properties = {
-    leaks: {
-      type: Array,
-      state: true,
-    },
+    leaks: { type: Array },
     expanded: { type: Boolean },
     maxLeaks: { type: Number },
     autoHide: { type: Boolean },
   };
-
-  constructor() {
-    super();
-    this.leaks = [];
-    this.expanded = false;
-    this.maxLeaks = 50;
-    this.autoHide = true;
-    this._setupEventListeners();
-  }
 
   static styles = [
     baseStyles,
@@ -194,9 +182,24 @@ export class MemoryMonitor extends LitElement {
     `,
   ];
 
+  constructor() {
+    super();
+    this.leaks = [];
+    this.expanded = false;
+    this.maxLeaks = 50;
+    this.autoHide = true;
+    this._handleLeakDetected = this._handleLeakDetected.bind(this);
+  }
+
+  createRenderRoot() {
+    const root = super.createRenderRoot();
+    root.host = this;
+    return root;
+  }
+
   connectedCallback() {
     super.connectedCallback();
-    this._setupEventListeners();
+    window.addEventListener("memory-leak-detected", this._handleLeakDetected);
   }
 
   disconnectedCallback() {
@@ -207,9 +210,8 @@ export class MemoryMonitor extends LitElement {
     );
   }
 
-  _setupEventListeners() {
-    this._handleLeakDetected = (event) => this._addLeak(event.detail);
-    window.addEventListener("memory-leak-detected", this._handleLeakDetected);
+  _handleLeakDetected(event) {
+    this._addLeak(event.detail);
   }
 
   _addLeak(leak) {
@@ -222,10 +224,8 @@ export class MemoryMonitor extends LitElement {
       const timeout = window.process?.env?.NODE_ENV === "test" ? 1000 : 10000;
       setTimeout(() => {
         this.expanded = false;
-        this.requestUpdate();
       }, timeout);
     }
-    this.requestUpdate();
   }
 
   _formatTime(timestamp) {
@@ -246,12 +246,10 @@ export class MemoryMonitor extends LitElement {
   _clearLeaks() {
     this.leaks = [];
     this.expanded = false;
-    this.requestUpdate();
   }
 
   _toggleExpanded() {
     this.expanded = !this.expanded;
-    this.requestUpdate();
   }
 
   render() {
