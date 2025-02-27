@@ -1,0 +1,91 @@
+# NeoForge Project Rules and Patterns
+
+## Frontend Development Patterns
+
+### Web Component Events
+- **Event Naming Convention**: Use `neo-` prefix for all custom events (e.g., `neo-dismiss`, `neo-select`)
+- **Event Detail Object**: Always include a `detail` object with relevant data when dispatching events
+- **Event Propagation**: Set `bubbles: true` and `composed: true` for events that need to cross shadow DOM boundaries
+
+### Animation Handling
+- **Pattern**: When animating elements out, wait for animation to complete before changing state:
+  ```javascript
+  // Pattern for animating out elements
+  close() {
+    if (!this._visible) return;
+    this._clearDismissTimeout();
+    this.classList.remove('animating-in');
+    this.classList.add('animating-out');
+    
+    // Wait for animation to complete before changing state
+    setTimeout(() => {
+      this.dispatchEvent(
+        new CustomEvent('neo-dismiss', {
+          bubbles: true,
+          composed: true,
+          detail: { id: this.id }
+        })
+      );
+      this._visible = false;
+      this.requestUpdate();
+    }, 200); // Match animation duration
+  }
+  ```
+
+### Component Testing
+- **Test Coverage**: Every web component needs tests for:
+  1. Rendering with default properties
+  2. Attribute/property reflection
+  3. Event dispatching
+  4. Animation/transition behavior
+  5. Accessibility compliance
+
+## Backend Development Patterns
+
+### API Endpoint Structure
+- **Path Format**: `/api/v1/<resource>/<action>`
+- **HTTP Methods**: Use appropriate HTTP methods (GET, POST, PUT, DELETE)
+- **Response Format**: Always return consistent JSON structure with status, data, and error fields
+
+### Error Handling
+- **Error Codes**: Use standard HTTP status codes
+- **Error Messages**: Include human-readable error messages
+- **Validation Errors**: Return detailed validation errors for each field
+
+## Project Workflow
+
+### Testing Strategy
+- **Fix One Issue at a Time**: Address test failures individually, commit after each fix
+- **Test Filtering**: Use `--testNamePattern` to run specific tests while debugging
+- **Test First Development**: Write tests before implementing new features
+
+### Documentation Requirements
+- **Memory Bank Updates**: Update Memory Bank files after significant changes
+- **Component Documentation**: Document component properties, events, and examples
+- **API Documentation**: Ensure OpenAPI documentation stays current
+
+## Known Issues and Solutions
+
+### Event Timing Issues
+- **Issue**: Event dispatching before animation completes
+- **Solution**: Use setTimeout to wait for animation to complete before dispatching events
+
+### Test Environment Setup
+- **Issue**: Tests failing due to environment setup
+- **Solution**: Ensure proper setup and teardown in test files
+
+### Component Reactivity
+- **Issue**: Component not updating after property changes
+- **Solution**: Call `requestUpdate()` after manual property changes
+
+## User Preferences
+
+### Code Organization
+- Prefer small, focused components with clear responsibilities
+- Use consistent naming conventions across the codebase
+- Keep CSS modular and scoped to components
+
+### Development Workflow
+- Prioritize fixing failing tests before adding new features
+- Maintain comprehensive documentation in Memory Bank
+- Regularly update progress tracking 
