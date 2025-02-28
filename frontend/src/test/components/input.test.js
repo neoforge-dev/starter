@@ -24,20 +24,26 @@ describe("NeoInput", () => {
     element.required = true;
     element.disabled = true;
     element.error = "Error message";
-    element.helper = "Helper text";
-
+    element.helperText = "Helper text";
     await element.updateComplete;
 
     const input = element.shadowRoot.querySelector("input");
     expect(input.value).to.equal("test value");
     expect(input).to.have.attribute("required");
     expect(input).to.have.attribute("disabled");
-    expect(element.shadowRoot.querySelector(".error-text")).to.have.text(
-      "Error message"
-    );
-    expect(element.shadowRoot.querySelector(".helper-text")).to.have.text(
-      "Helper text"
-    );
+    expect(
+      element.shadowRoot.querySelector(".error-text").textContent.trim()
+    ).to.equal("Error message");
+
+    // Helper text should not be rendered when there's an error
+    expect(element.shadowRoot.querySelector(".helper-text")).to.be.null;
+
+    // Now clear the error to test helper text
+    element.error = "";
+    await element.updateComplete;
+    expect(
+      element.shadowRoot.querySelector(".helper-text").textContent.trim()
+    ).to.equal("Helper text");
   });
 
   it("handles input events", async () => {

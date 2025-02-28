@@ -1,5 +1,10 @@
-import { LitElement, html, css } from "lit";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
+import "../../atoms/icon/icon.js";
 
 /**
  * Badge component for displaying status, labels, or counts
@@ -9,6 +14,8 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {string} size - The size of the badge
  * @prop {boolean} rounded - Whether the badge has fully rounded corners
  * @prop {boolean} outlined - Whether the badge has an outlined style
+ * @prop {string} icon - Optional icon name to display before the content
+ * @prop {boolean} removable - Whether the badge can be removed
  */
 export class NeoBadge extends LitElement {
   static properties = {
@@ -16,7 +23,76 @@ export class NeoBadge extends LitElement {
     size: { type: String, reflect: true },
     rounded: { type: Boolean, reflect: true },
     outlined: { type: Boolean, reflect: true },
+    icon: { type: String, reflect: true },
+    removable: { type: Boolean, reflect: true },
+    title: { type: String, reflect: true },
   };
+
+  constructor() {
+    super();
+    this.variant = "default";
+    this.size = "medium";
+    this.rounded = false;
+    this.outlined = false;
+    this.icon = null;
+    this.removable = false;
+    this.title = "Default";
+  }
+
+  _handleRemove() {
+    this.dispatchEvent(new CustomEvent("remove", { bubbles: true }));
+  }
+
+  updated(changedProperties) {
+    super.updated(changedProperties);
+    // Wait for the next microtask to ensure content is updated
+    Promise.resolve().then(() => {
+      // Try to get content from direct text content first
+      let content = this.textContent.trim();
+
+      // If no direct content, try to get it from slot
+      if (!content) {
+        const slot = this.shadowRoot.querySelector("slot");
+        const nodes = slot.assignedNodes();
+        content = nodes
+          .map((node) => node.textContent)
+          .join("")
+          .trim();
+      }
+
+      if (content) {
+        this.title = content;
+        // Force a re-render to update the title attribute in the template
+        this.requestUpdate();
+      }
+    });
+  }
+
+  render() {
+    return html`
+      <div
+        class="badge ${this.variant ? `variant-${this.variant}` : ""} ${this
+          .size
+          ? `size-${this.size}`
+          : ""} ${this.rounded ? "rounded" : ""} ${this.outlined
+          ? "outlined"
+          : ""} truncate"
+        title="${this.title}"
+      >
+        ${this.icon ? html`<neo-icon name="${this.icon}"></neo-icon>` : ""}
+        <slot></slot>
+        ${this.removable
+          ? html`<button
+              class="close-button"
+              aria-label="Remove"
+              @click="${this._handleRemove}"
+            >
+              <neo-icon name="close"></neo-icon>
+            </button>`
+          : ""}
+      </div>
+    `;
+  }
 
   static styles = [
     baseStyles,
@@ -37,18 +113,47 @@ export class NeoBadge extends LitElement {
         transition: all var(--transition-fast);
       }
 
+      .truncate {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .close-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        margin-left: var(--spacing-xs);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: inherit;
+        opacity: 0.7;
+        transition: opacity var(--transition-fast);
+      }
+
+      .close-button:hover {
+        opacity: 1;
+      }
+
+      .close-button neo-icon {
+        font-size: 0.85em;
+      }
+
       /* Sizes */
-      .size-sm {
+      .size-small {
         padding: 0.125rem 0.5rem;
         font-size: var(--font-size-xs);
       }
 
-      .size-md {
+      .size-medium {
         padding: 0.25rem 0.75rem;
         font-size: var(--font-size-sm);
       }
 
-      .size-lg {
+      .size-large {
         padding: 0.375rem 1rem;
         font-size: var(--font-size-base);
       }
@@ -147,37 +252,8 @@ export class NeoBadge extends LitElement {
       }
     `,
   ];
-
-  constructor() {
-    super();
-    this.variant = "default";
-    this.size = "md";
-    this.rounded = false;
-    this.outlined = false;
-  }
-
-  render() {
-    const classes = {
-      badge: true,
-      [`variant-${this.variant}`]: true,
-      [`size-${this.size}`]: true,
-      rounded: this.rounded,
-      outlined: this.outlined,
-    };
-
-    return html`
-      <span
-        class="${Object.entries(classes)
-          .filter(([, value]) => value)
-          .map(([key]) => key)
-          .join(" ")}"
-      >
-        <slot name="prefix"></slot>
-        <slot></slot>
-        <slot name="suffix"></slot>
-      </span>
-    `;
-  }
 }
 
-customElements.define("neo-badge", NeoBadge);
+if (!customElements.get("neo-badge")) {
+  customElements.define("neo-badge", NeoBadge);
+}

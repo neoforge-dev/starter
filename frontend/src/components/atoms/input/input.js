@@ -1,4 +1,8 @@
-import { LitElement, html, css } from "lit";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 
 /**
@@ -13,6 +17,7 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {boolean} required - Whether the input is required
  * @prop {string} error - Error message to display
  * @prop {string} helperText - Helper text to display below input
+ * @prop {string} helper - Additional helper text
  */
 export class NeoInput extends LitElement {
   static properties = {
@@ -24,6 +29,7 @@ export class NeoInput extends LitElement {
     required: { type: Boolean, reflect: true },
     error: { type: String },
     helperText: { type: String },
+    helper: { type: String },
   };
 
   static styles = [
@@ -68,7 +74,7 @@ export class NeoInput extends LitElement {
         cursor: not-allowed;
       }
 
-      .error-message {
+      .error-text {
         color: var(--color-error);
         font-size: var(--font-size-sm);
         margin-top: var(--spacing-xs);
@@ -96,7 +102,6 @@ export class NeoInput extends LitElement {
     this.value = "";
     this.disabled = false;
     this.required = false;
-    this.error = "";
     this._id = `neo-input-${Math.random().toString(36).substr(2, 9)}`;
   }
 
@@ -140,15 +145,20 @@ export class NeoInput extends LitElement {
         />
       </div>
       ${this.error
-        ? html`<div id="${this._id}-error" class="error-message">
+        ? html`<div id="${this._id}-error" class="error-text">
             ${this.error}
           </div>`
         : ""}
       ${this.helperText && !this.error
         ? html`<div class="helper-text">${this.helperText}</div>`
         : ""}
+      ${this.helper && !this.error && !this.helperText
+        ? html`<div class="helper-text">${this.helper}</div>`
+        : ""}
     `;
   }
 }
 
-customElements.define("neo-input", NeoInput);
+if (!customElements.get("neo-input")) {
+  customElements.define("neo-input", NeoInput);
+}

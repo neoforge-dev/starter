@@ -74,8 +74,8 @@ describe("NeoInput", () => {
     const wrapper = element.shadowRoot.querySelector(".input-wrapper");
     expect(wrapper.classList.contains("error")).to.be.true;
 
-    const errorMessage = element.shadowRoot.querySelector(".error-message");
-    expect(errorMessage.textContent).to.equal("Error message");
+    const errorMessage = element.shadowRoot.querySelector(".error-text");
+    expect(errorMessage.textContent.trim()).to.equal("Error message");
   });
 
   it("handles error states appropriately", async () => {

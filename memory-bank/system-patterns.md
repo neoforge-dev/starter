@@ -103,6 +103,66 @@ NeoForge follows a modern full-stack architecture with clear separation of conce
    }
    ```
 
+4. **Conditional Rendering**:
+   ```javascript
+   render() {
+     return html`
+       <div class="container">
+         ${this.label ? html`<label for="input">${this.label}</label>` : ''}
+         <input id="input" .value=${this.value} ?disabled=${this.disabled}>
+         ${this.error ? html`<div class="error-text">${this.error}</div>` : ''}
+         ${!this.error && this.helperText ? html`<div class="helper-text">${this.helperText}</div>` : ''}
+       </div>
+     `;
+   }
+   ```
+
+### Testing Patterns
+1. **Component Property Testing**:
+   ```javascript
+   it('reflects property changes', async () => {
+     const element = await fixture(html`<neo-input></neo-input>`);
+     element.value = 'test';
+     element.required = true;
+     element.disabled = true;
+     element.error = 'Error message';
+     element.helperText = 'Helper text';
+     
+     await element.updateComplete;
+     
+     const input = element.shadowRoot.querySelector('input');
+     expect(input.value).to.equal('test');
+     expect(input.hasAttribute('required')).to.be.true;
+     expect(input.hasAttribute('disabled')).to.be.true;
+     expect(element.shadowRoot.querySelector('.error-text').textContent.trim()).to.equal('Error message');
+     
+     // Helper text is not rendered when error is present
+     expect(element.shadowRoot.querySelector('.helper-text')).to.be.null;
+     
+     // Clear error to check helper text
+     element.error = '';
+     await element.updateComplete;
+     expect(element.shadowRoot.querySelector('.helper-text').textContent.trim()).to.equal('Helper text');
+   });
+   ```
+
+2. **Event Testing**:
+   ```javascript
+   it('handles input events', async () => {
+     const element = await fixture(html`<neo-input></neo-input>`);
+     const input = element.shadowRoot.querySelector('input');
+     
+     const changeHandler = sinon.spy();
+     element.addEventListener('change', changeHandler);
+     
+     input.value = 'new value';
+     input.dispatchEvent(new Event('input'));
+     
+     expect(changeHandler).to.have.been.calledOnce;
+     expect(element.value).to.equal('new value');
+   });
+   ```
+
 ### Backend Patterns
 1. **Dependency Injection**:
    ```python
