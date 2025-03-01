@@ -44,12 +44,18 @@ We are currently working on modernizing the frontend components by replacing dec
   - Implemented keyboard navigation for accessibility
   - Updated class names to match test expectations
   - Ensured all tests pass
+- Successfully refactored the data-table component to use standard class syntax
+  - Fixed filtering functionality to properly filter by field and value
+  - Improved sorting mechanism with proper data attributes
+  - Enhanced pagination controls with proper class names
+  - Added proper data attributes for testing
+  - Fixed row selection event handling
+  - Ensured all tests pass
 
 ## Next Steps
 
 1. Continue refactoring other components that use decorator syntax:
    - file-upload component
-   - data-table component
 
 2. Address deprecation warnings for @open-wc/semantic-dom-diff in the test environment
 

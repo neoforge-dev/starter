@@ -1,4 +1,8 @@
-import { LitElement, html, css } from "lit";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../styles/base.js";
 
 /**
@@ -11,7 +15,7 @@ export class DataTable extends LitElement {
     columns: { type: Array },
     sortField: { type: String },
     sortDirection: { type: String },
-    filter: { type: String },
+    filter: { type: Object },
     page: { type: Number },
     pageSize: { type: Number },
     selectedRows: { type: Array },
@@ -114,7 +118,7 @@ export class DataTable extends LitElement {
     this.columns = [];
     this.sortField = "";
     this.sortDirection = "asc";
-    this.filter = "";
+    this.filter = null;
     this.page = 1;
     this.pageSize = 10;
     this.selectedRows = [];
@@ -137,19 +141,11 @@ export class DataTable extends LitElement {
   }
 
   _handleRowClick(row) {
-    const index = this.selectedRows.findIndex(
-      (selected) => selected.id === row.id
-    );
-    if (index === -1) {
-      this.selectedRows = [...this.selectedRows, row];
-    } else {
-      this.selectedRows = this.selectedRows.filter(
-        (selected) => selected.id !== row.id
-      );
-    }
     this.dispatchEvent(
       new CustomEvent("row-select", {
-        detail: { row, selected: index === -1 },
+        detail: row,
+        bubbles: true,
+        composed: true,
       })
     );
   }
@@ -161,21 +157,30 @@ export class DataTable extends LitElement {
 
   _getFilteredData() {
     if (!this.filter) return this.data;
-    const lowercaseFilter = this.filter.toLowerCase();
-    return this.data.filter((row) =>
-      Object.values(row).some(
-        (value) =>
-          value && value.toString().toLowerCase().includes(lowercaseFilter)
-      )
-    );
+
+    return this.data.filter((row) => {
+      if (this.filter.field && this.filter.value) {
+        const fieldValue = row[this.filter.field];
+        return (
+          fieldValue &&
+          fieldValue
+            .toString()
+            .toLowerCase()
+            .includes(this.filter.value.toLowerCase())
+        );
+      }
+      return false;
+    });
   }
 
   _getSortedData(filteredData) {
     if (!this.sortField) return filteredData;
+
     return [...filteredData].sort((a, b) => {
       const aValue = a[this.sortField];
       const bValue = b[this.sortField];
       const modifier = this.sortDirection === "asc" ? 1 : -1;
+
       if (aValue < bValue) return -1 * modifier;
       if (aValue > bValue) return 1 * modifier;
       return 0;
@@ -209,8 +214,11 @@ export class DataTable extends LitElement {
           <tr>
             ${this.columns.map(
               (column) => html`
-                <th @click=${() => this._handleSort(column.field)}>
-                  ${column.title}
+                <th
+                  @click=${() => this._handleSort(column.field)}
+                  data-field=${column.field}
+                >
+                  ${column.header || column.title}
                   ${this.sortField === column.field
                     ? html`
                         <span class="sort-indicator">
@@ -226,16 +234,11 @@ export class DataTable extends LitElement {
         <tbody>
           ${paginatedData.map(
             (row) => html`
-              <tr
-                @click=${() => this._handleRowClick(row)}
-                class=${this.selectedRows.some(
-                  (selected) => selected.id === row.id
-                )
-                  ? "selected"
-                  : ""}
-              >
+              <tr @click=${() => this._handleRowClick(row)}>
                 ${this.columns.map(
-                  (column) => html` <td>${row[column.field]}</td> `
+                  (column) => html`
+                    <td data-field=${column.field}>${row[column.field]}</td>
+                  `
                 )}
               </tr>
             `
@@ -245,8 +248,11 @@ export class DataTable extends LitElement {
 
       <div class="pagination">
         <div class="pagination-info">
-          Showing ${(this.page - 1) * this.pageSize + 1} to
-          ${Math.min(this.page * this.pageSize, sortedData.length)} of
+          Showing
+          ${Math.min(sortedData.length, 1) > 0
+            ? (this.page - 1) * this.pageSize + 1
+            : 0}
+          to ${Math.min(this.page * this.pageSize, sortedData.length)} of
           ${sortedData.length} entries
         </div>
         <div class="pagination-controls">
@@ -259,18 +265,20 @@ export class DataTable extends LitElement {
           <button
             @click=${() => this._handlePageChange(this.page - 1)}
             ?disabled=${this.page === 1}
+            class="pagination-prev"
           >
             Previous
           </button>
           <button
             @click=${() => this._handlePageChange(this.page + 1)}
-            ?disabled=${this.page === totalPages}
+            ?disabled=${this.page === totalPages || totalPages === 0}
+            class="pagination-next"
           >
             Next
           </button>
           <button
             @click=${() => this._handlePageChange(totalPages)}
-            ?disabled=${this.page === totalPages}
+            ?disabled=${this.page === totalPages || totalPages === 0}
           >
             Last
           </button>

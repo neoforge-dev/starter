@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { fixture, html } from "@open-wc/testing-helpers";
-import { DataTable } from "@ui/data-table";
+import { DataTable } from "../../components/ui/data-table";
 
 describe("DataTable Component", () => {
   let element;
