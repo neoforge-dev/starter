@@ -1,4 +1,8 @@
-import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 import { icons } from "./icons.js";
 
@@ -15,84 +19,88 @@ import { icons } from "./icons.js";
  * @prop {boolean} loading - Whether to show loading animation
  */
 export class NeoIcon extends LitElement {
-  static properties = {
-    name: { type: String, reflect: true },
-    size: { type: String, reflect: true },
-    color: { type: String, reflect: true },
-    customSize: { type: String },
-    label: { type: String },
-    decorative: { type: Boolean, reflect: true },
-    loading: { type: Boolean, reflect: true },
-  };
+  static get properties() {
+    return {
+      name: { type: String, reflect: true },
+      size: { type: String, reflect: true },
+      color: { type: String, reflect: true },
+      customSize: { type: String },
+      label: { type: String },
+      decorative: { type: Boolean, reflect: true },
+      loading: { type: Boolean, reflect: true },
+    };
+  }
 
-  static styles = [
-    baseStyles,
-    css`
-      :host {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      svg {
-        display: block;
-        transition: all var(--transition-fast);
-      }
-
-      /* Sizes */
-      .size-sm {
-        width: var(--icon-size-sm, 16px);
-        height: var(--icon-size-sm, 16px);
-      }
-
-      .size-md {
-        width: var(--icon-size-md, 24px);
-        height: var(--icon-size-md, 24px);
-      }
-
-      .size-lg {
-        width: var(--icon-size-lg, 32px);
-        height: var(--icon-size-lg, 32px);
-      }
-
-      .size-xl {
-        width: var(--icon-size-xl, 48px);
-        height: var(--icon-size-xl, 48px);
-      }
-
-      /* Colors */
-      .color-primary {
-        fill: var(--color-primary);
-      }
-
-      .color-secondary {
-        fill: var(--color-secondary);
-      }
-
-      .color-success {
-        fill: var(--color-success);
-      }
-
-      .color-error {
-        fill: var(--color-error);
-      }
-
-      .color-warning {
-        fill: var(--color-warning);
-      }
-
-      /* Loading Animation */
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
+  static get styles() {
+    return [
+      baseStyles,
+      css`
+        :host {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
         }
-      }
 
-      .loading {
-        animation: spin 1s linear infinite;
-      }
-    `,
-  ];
+        svg {
+          display: block;
+          transition: all var(--transition-fast);
+        }
+
+        /* Sizes */
+        .size-sm {
+          width: var(--icon-size-sm, 16px);
+          height: var(--icon-size-sm, 16px);
+        }
+
+        .size-md {
+          width: var(--icon-size-md, 24px);
+          height: var(--icon-size-md, 24px);
+        }
+
+        .size-lg {
+          width: var(--icon-size-lg, 32px);
+          height: var(--icon-size-lg, 32px);
+        }
+
+        .size-xl {
+          width: var(--icon-size-xl, 48px);
+          height: var(--icon-size-xl, 48px);
+        }
+
+        /* Colors */
+        .color-primary {
+          fill: var(--color-primary);
+        }
+
+        .color-secondary {
+          fill: var(--color-secondary);
+        }
+
+        .color-success {
+          fill: var(--color-success);
+        }
+
+        .color-error {
+          fill: var(--color-error);
+        }
+
+        .color-warning {
+          fill: var(--color-warning);
+        }
+
+        /* Loading Animation */
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .loading {
+          animation: spin 1s linear infinite;
+        }
+      `,
+    ];
+  }
 
   constructor() {
     super();

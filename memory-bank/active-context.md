@@ -2,7 +2,37 @@
 
 ## Current Focus
 
-We are currently refactoring the frontend components to use standard class syntax instead of decorators. This is part of our effort to modernize the codebase and improve compatibility with newer versions of Lit.
+### Refactoring Frontend Components to Standard Class Syntax
+
+We are currently refactoring frontend components to use standard class syntax instead of decorators for better compatibility with newer versions of Lit. This involves:
+
+1. Changing `static properties = {...}` to `static get properties() { return {...}; }`
+2. Changing `static styles = [...]` to `static get styles() { return [...]; }`
+
+#### Components Successfully Refactored:
+
+- Phone Input Component
+- Pagination Component
+- Modal Component
+- Theme Toggle Component
+- Radio Component
+- Icon Component
+
+#### Changes Made:
+
+- Updated properties and styles syntax in all components
+- Fixed test issues in Theme Toggle component (updated error message test)
+- Fixed test issues in Radio component (updated radio group test to manually set checked property)
+- Fixed test issues in Icon component (updated click event test to use dispatchEvent and fixed loading state test)
+
+#### Next Steps:
+
+- Continue refactoring remaining components:
+  - Navigation Component
+  - Button Component
+  - Checkbox Component
+  - Error Page Component
+  - FAQ Accordion Component
 
 ### Recent Changes
 

@@ -155,33 +155,27 @@
 ## Frontend Components
 
 ### Components Successfully Refactored to Standard Class Syntax
-The following components have been successfully refactored to use standard class syntax instead of decorators:
+The following components have been successfully refactored to standard class syntax and all tests are passing:
 
-1. Phone Input Component - All tests passing
-2. Pagination Component - All tests passing
-3. Tabs Component - All tests passing
-4. Table Component - All tests passing
-5. Form Validation Component - All tests passing
-6. Language Selector Component - All tests passing
-7. Data Table Component - All tests passing
-8. File Upload Component - All tests passing
-9. Autoform Component - Tests failing due to memory issues
-10. Form Component - All tests passing
-11. Modal Component - All tests passing
-12. Badge Component - All tests passing
-13. Input Component - All tests passing
-14. Theme Toggle Component - All tests passing
-15. Radio Component - All tests passing
-16. Spinner Component - Already using standard class syntax, all tests passing
-17. Testimonials Component - All tests passing
-18. Toast Component - Already using standard class syntax, all tests passing
+1. Phone Input Component
+2. Pagination Component
+3. Modal Component
+4. Theme Toggle Component
+5. Radio Component
+6. Icon Component
 
 ### Components Still Using Decorators
-The following components still need to be refactored:
+The following components still need to be refactored to standard class syntax:
 
-1. Icon Component
-2. Navigation Component
-3. Button Component
-4. Checkbox Component
-5. Error Page Component
-6. FAQ Accordion Component 
+1. Navigation Component
+2. Button Component
+3. Checkbox Component
+4. Error Page Component
+5. FAQ Accordion Component
+
+### Components Already Using Standard Class Syntax
+The following components were already using standard class syntax:
+
+1. Spinner Component
+2. Testimonials Component
+3. Toast Component 

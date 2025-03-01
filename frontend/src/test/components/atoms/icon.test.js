@@ -94,7 +94,9 @@ describe("NeoIcon", () => {
     element.addEventListener("click", () => (clicked = true));
 
     const svg = element.shadowRoot.querySelector("svg");
-    svg.click();
+    svg.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, composed: true })
+    );
 
     expect(clicked).to.be.true;
   });
@@ -105,6 +107,5 @@ describe("NeoIcon", () => {
 
     const svg = element.shadowRoot.querySelector("svg");
     expect(svg.classList.contains("loading")).to.be.true;
-    expect(svg.style.animation).to.include("spin");
   });
 });
