@@ -16,11 +16,11 @@ We are modernizing the frontend components by replacing decorator syntax with st
 8. **File Upload Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
 9. **Autoform Component**: Refactored to use standard class syntax instead of decorators. Tests are failing due to memory issues.
 10. **Form Component**: Refactored to use standard class syntax instead of decorators. Tests passing with simplified test cases.
+11. **Modal Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
 
 ### Next Steps
 
 1. Continue refactoring the remaining components:
-   - Modal Component
    - Badge Component
    - Input Component
    - Theme Toggle Component
