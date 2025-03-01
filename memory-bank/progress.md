@@ -83,8 +83,10 @@
 - ✅ Enhanced drag and drop functionality
 
 ### Autoform Component
-- ✅ Decorator syntax issues fixed in component implementation
+- ✅ Decorator syntax replaced with standard class syntax
 - ❌ Tests still failing due to memory issues
+- ⚠️ Component is complex with many test cases, causing memory overflow
+- ⚠️ Need to optimize test execution or increase memory allocation
 
 ### Dashboard Page Component
 - ✅ All tests passing (29/29)

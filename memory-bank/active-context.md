@@ -56,11 +56,18 @@ We are currently working on modernizing the frontend components by replacing dec
   - Improved file validation for size and type
   - Enhanced drag and drop functionality
   - Ensured all tests pass
+- Refactored the autoform component to use standard class syntax
+  - Replaced decorator syntax with standard class syntax
+  - Maintained all functionality and properties
+  - Tests are still failing due to memory issues
+  - Component is complex with many test cases, causing memory overflow
 
 ## Next Steps
 
-1. Continue refactoring other components that use decorator syntax:
-   - autoform component
+1. Address memory issues with autoform component tests:
+   - Optimize test execution
+   - Increase memory allocation for tests
+   - Consider splitting tests into smaller chunks
 
 2. Address deprecation warnings for @open-wc/semantic-dom-diff in the test environment
 

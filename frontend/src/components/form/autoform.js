@@ -18,131 +18,135 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {boolean} readonly - Whether the form is readonly
  */
 export class NeoAutoform extends BaseComponent {
-  static properties = {
-    schema: { type: Object },
-    value: { type: Object },
-    layout: { type: String },
-    variant: { type: String },
-    disabled: { type: Boolean },
-    readonly: { type: Boolean },
-    _errors: { type: Object, state: true },
-  };
+  static get properties() {
+    return {
+      schema: { type: Object },
+      value: { type: Object },
+      layout: { type: String },
+      variant: { type: String },
+      disabled: { type: Boolean },
+      readonly: { type: Boolean },
+      _errors: { type: Object, state: true },
+    };
+  }
 
-  static styles = [
-    baseStyles,
-    css`
-      :host {
-        display: block;
-      }
+  static get styles() {
+    return [
+      baseStyles,
+      css`
+        :host {
+          display: block;
+        }
 
-      .form {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-md);
-      }
+        .form {
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-md);
+        }
 
-      /* Layouts */
-      .layout-vertical {
-        flex-direction: column;
-      }
+        /* Layouts */
+        .layout-vertical {
+          flex-direction: column;
+        }
 
-      .layout-horizontal {
-        flex-direction: row;
-        flex-wrap: wrap;
-      }
+        .layout-horizontal {
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
 
-      .layout-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      }
+        .layout-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
 
-      /* Variants */
-      .variant-default {
-        /* Default styles */
-      }
+        /* Variants */
+        .variant-default {
+          /* Default styles */
+        }
 
-      .variant-compact .form-field {
-        margin-bottom: var(--spacing-sm);
-      }
+        .variant-compact .form-field {
+          margin-bottom: var(--spacing-sm);
+        }
 
-      .variant-compact label {
-        font-size: 0.9rem;
-      }
+        .variant-compact label {
+          font-size: 0.9rem;
+        }
 
-      .variant-floating label {
-        position: absolute;
-        top: -0.5rem;
-        left: 0.5rem;
-        background: var(--color-background);
-        padding: 0 0.25rem;
-        font-size: 0.8rem;
-        transition: all 0.2s ease;
-      }
+        .variant-floating label {
+          position: absolute;
+          top: -0.5rem;
+          left: 0.5rem;
+          background: var(--color-background);
+          padding: 0 0.25rem;
+          font-size: 0.8rem;
+          transition: all 0.2s ease;
+        }
 
-      .variant-floating .form-field {
-        position: relative;
-        padding-top: 0.5rem;
-      }
+        .variant-floating .form-field {
+          position: relative;
+          padding-top: 0.5rem;
+        }
 
-      /* Form elements */
-      .form-field {
-        margin-bottom: var(--spacing-md);
-      }
+        /* Form elements */
+        .form-field {
+          margin-bottom: var(--spacing-md);
+        }
 
-      label {
-        display: block;
-        margin-bottom: var(--spacing-xs);
-        font-weight: 500;
-      }
+        label {
+          display: block;
+          margin-bottom: var(--spacing-xs);
+          font-weight: 500;
+        }
 
-      input,
-      select,
-      textarea {
-        width: 100%;
-        padding: var(--spacing-sm);
-        border: 1px solid var(--color-border);
-        border-radius: var(--border-radius-sm);
-        font-family: inherit;
-        font-size: inherit;
-        background-color: var(--color-input-bg);
-        color: var(--color-text);
-      }
+        input,
+        select,
+        textarea {
+          width: 100%;
+          padding: var(--spacing-sm);
+          border: 1px solid var(--color-border);
+          border-radius: var(--border-radius-sm);
+          font-family: inherit;
+          font-size: inherit;
+          background-color: var(--color-input-bg);
+          color: var(--color-text);
+        }
 
-      input:focus,
-      select:focus,
-      textarea:focus {
-        outline: none;
-        border-color: var(--color-primary);
-        box-shadow: 0 0 0 2px var(--color-primary-alpha);
-      }
+        input:focus,
+        select:focus,
+        textarea:focus {
+          outline: none;
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 2px var(--color-primary-alpha);
+        }
 
-      .error-message {
-        color: var(--color-error);
-        font-size: 0.85rem;
-        margin-top: var(--spacing-xs);
-      }
+        .error-message {
+          color: var(--color-error);
+          font-size: 0.85rem;
+          margin-top: var(--spacing-xs);
+        }
 
-      button[type="submit"] {
-        padding: var(--spacing-sm) var(--spacing-md);
-        background-color: var(--color-primary);
-        color: white;
-        border: none;
-        border-radius: var(--border-radius-sm);
-        cursor: pointer;
-        font-weight: 500;
-        align-self: flex-start;
-      }
+        button[type="submit"] {
+          padding: var(--spacing-sm) var(--spacing-md);
+          background-color: var(--color-primary);
+          color: white;
+          border: none;
+          border-radius: var(--border-radius-sm);
+          cursor: pointer;
+          font-weight: 500;
+          align-self: flex-start;
+        }
 
-      button[type="submit"]:hover {
-        background-color: var(--color-primary-dark);
-      }
+        button[type="submit"]:hover {
+          background-color: var(--color-primary-dark);
+        }
 
-      button[type="submit"]:disabled {
-        background-color: var(--color-disabled);
-        cursor: not-allowed;
-      }
-    `,
-  ];
+        button[type="submit"]:disabled {
+          background-color: var(--color-disabled);
+          cursor: not-allowed;
+        }
+      `,
+    ];
+  }
 
   constructor() {
     super();
