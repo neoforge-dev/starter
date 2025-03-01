@@ -24,7 +24,9 @@ We are currently refactoring the frontend components to use standard class synta
    - Radio Component
    - Testimonials Component
 
-2. Discovered that the Spinner Component is already using standard class syntax with all tests passing.
+2. Discovered that the following components are already using standard class syntax with all tests passing:
+   - Spinner Component
+   - Toast Component
 
 3. For each component, we've made the following changes:
    - Changed `static properties = {...}` to `static get properties() { return {...}; }`
@@ -40,7 +42,6 @@ We are currently refactoring the frontend components to use standard class synta
 ### Next Steps
 
 1. Continue refactoring the remaining components:
-   - Toast Component
    - Icon Component
    - Navigation Component
    - Button Component
