@@ -32,6 +32,35 @@
   }
   ```
 
+### Component Content Handling
+- **Pattern**: When handling component content that could come from either direct text content or slotted content, use this pattern:
+  ```javascript
+  updated(changedProperties) {
+    super.updated(changedProperties);
+    // Wait for the next microtask to ensure content is updated
+    Promise.resolve().then(() => {
+      // Try to get content from direct text content first
+      let content = this.textContent.trim();
+
+      // If no direct content, try to get it from slot
+      if (!content) {
+        const slot = this.shadowRoot.querySelector("slot");
+        const nodes = slot.assignedNodes();
+        content = nodes
+          .map((node) => node.textContent)
+          .join("")
+          .trim();
+      }
+
+      if (content) {
+        this.title = content;
+        // Force a re-render to update the title attribute in the template
+        this.requestUpdate();
+      }
+    });
+  }
+  ```
+
 ### Component Testing
 - **Test Coverage**: Every web component needs tests for:
   1. Rendering with default properties
@@ -39,6 +68,16 @@
   3. Event dispatching
   4. Animation/transition behavior
   5. Accessibility compliance
+- **Test Timeouts**: Consider adding timeouts for tests that might hang:
+  ```javascript
+  it('should handle complex operations', function(done) {
+    this.timeout(5000); // Set timeout to 5 seconds
+    
+    // Test logic here
+    
+    done();
+  });
+  ```
 
 ## Backend Development Patterns
 
@@ -58,6 +97,11 @@
 - **Fix One Issue at a Time**: Address test failures individually, commit after each fix
 - **Test Filtering**: Use `--testNamePattern` to run specific tests while debugging
 - **Test First Development**: Write tests before implementing new features
+- **Handling Hanging Tests**: If a test consistently hangs, consider:
+  1. Adding explicit timeouts
+  2. Breaking the test into smaller, more focused tests
+  3. Checking for infinite loops or unresolved promises
+  4. Using `--bail` flag to stop after first failure
 
 ### Documentation Requirements
 - **Memory Bank Updates**: Update Memory Bank files after significant changes
@@ -77,6 +121,14 @@
 ### Component Reactivity
 - **Issue**: Component not updating after property changes
 - **Solution**: Call `requestUpdate()` after manual property changes
+
+### Test Execution Hanging
+- **Issue**: Tests hanging indefinitely, particularly with badge.test.js
+- **Solution**: 
+  1. Add explicit timeouts to tests
+  2. Check for infinite loops in component lifecycle methods
+  3. Ensure all promises are properly resolved
+  4. Consider using `--bail` flag to stop after first failure
 
 ## User Preferences
 

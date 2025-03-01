@@ -1,37 +1,43 @@
 # Active Context
 
 ## Current Focus
+- Addressing test execution hanging issues, particularly with badge.test.js
 - Fixing failing frontend unit tests
-- Addressing component test failures related to whitespace handling
+- Investigating modal component test failures
 - Resolving conditional rendering issues in components
-- Investigating test assertions that don't match component behavior
 
 ## Recent Changes
+- Updated badge component to handle both direct text content and slotted content for the title attribute
+- Improved content detection in badge component's updated() lifecycle method
 - Fixed atoms/input.test.js by adding .trim() to error message text content comparison
 - Fixed input.test.js by updating test to handle conditional rendering of helper text
 - Identified that helper text is not rendered when error is present in NeoInput component
-- Discovered inconsistencies between test expectations and component implementation
 
 ## Next Steps
-1. Continue addressing remaining NeoInput test failures
-2. Fix implementation issues in the NeoInput component (aria-required, reportValidity, etc.)
-3. Review other components for similar whitespace and conditional rendering issues
-4. Address test worker memory limitations
-5. Review and enable skipped test files
+1. Investigate and fix test execution hanging issues, particularly with badge.test.js
+2. Fix modal component "applies size classes correctly" test failure
+3. Continue addressing remaining NeoInput test failures
+4. Fix implementation issues in the NeoInput component (aria-required, reportValidity, etc.)
+5. Review other components for similar whitespace and conditional rendering issues
+6. Address test worker memory limitations
 
 ## Active Decisions
 - Need to standardize component property naming conventions
 - Tests should account for conditional rendering in components
 - Consider adding whitespace trimming in components rather than tests
 - Should establish consistent test setup patterns
+- Consider adding timeout mechanisms for tests that might hang
 
 ## Current Challenges
+- Test execution sometimes hangs, particularly with badge.test.js
+- Modal component test failing with "Cannot read properties of null (reading 'classList')"
 - Test workers hitting memory limits
 - Inconsistent property naming across components
 - Multiple skipped test suites
 - Tests expecting behavior that doesn't match component implementation
 
 ## Notes
+- Badge component has been updated to handle both direct text content and slotted content
 - Toast component tests now passing after fixing animation timing
 - Input component atoms/input.test.js now passing after fixing whitespace issue
 - Main input.test.js still has multiple failures beyond whitespace issues
@@ -39,7 +45,8 @@
 - NeoInput component missing implementation for reportValidity, aria-required, etc.
 
 ## Current Work Focus
-- Fixing failing frontend tests, particularly focusing on the input components
+- Investigating test execution hanging issues
+- Fixing failing frontend tests, particularly focusing on the modal component
 - Ensuring tests match component behavior or updating components to match expected behavior
 - Addressing whitespace handling in component tests
 - Fixing conditional rendering issues in components
@@ -56,6 +63,7 @@
    - Fix failures one at a time before moving to the next issue
    - Update tests to match component behavior when appropriate
    - Focus on event handling and component lifecycle tests
+   - Consider adding timeout mechanisms for tests that might hang
 
 3. **Performance Optimization**:
    - Monitoring bundle size during development

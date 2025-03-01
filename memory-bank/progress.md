@@ -6,6 +6,7 @@
   - Some test files are being skipped
   - A few tests are failing with specific issues
   - Memory issues in test workers need investigation
+  - Test execution sometimes hangs, particularly with badge.test.js
 
 ## What Works
 - Core Components:
@@ -23,6 +24,9 @@
 - Main Input Component:
   - Updated test to handle conditional rendering of helper text
   - Fixed "reflects property changes" test to account for helper text not showing when error is present
+- Badge Component:
+  - Updated to handle both direct text content and slotted content for the title attribute
+  - Improved content detection in updated() lifecycle method
 
 ## Known Issues
 - Main Input Component Tests:
@@ -35,6 +39,9 @@
   - maxlength/minlength attributes not being set
 - Badge Component Tests:
   - Default size property mismatch ('md' vs 'medium')
+  - Test execution sometimes hangs
+- Modal Component Tests:
+  - "applies size classes correctly" test failing with "Cannot read properties of null (reading 'classList')"
 - API Client Tests:
   - Session expiration handling in tests needs review
   - Authentication token clearing test needs investigation
@@ -53,7 +60,9 @@
   - tabs.test.js
 
 ## Next Steps
-1. Implement missing features in the main NeoInput component:
+1. Investigate and fix test execution hanging issues, particularly with badge.test.js
+2. Fix modal component "applies size classes correctly" test
+3. Implement missing features in the main NeoInput component:
    - Add reportValidity method
    - Add aria-required attribute
    - Implement password visibility toggle
@@ -61,21 +70,22 @@
    - Fix form integration
    - Implement pattern validation
    - Add maxlength/minlength attributes
-2. Fix Badge component size property to match test expectations
-3. Investigate and resolve test worker memory issues
-4. Review and enable skipped test files
-5. Address API client authentication test failures
-6. Document test setup requirements for new components
+4. Investigate and resolve test worker memory issues
+5. Review and enable skipped test files
+6. Address API client authentication test failures
+7. Document test setup requirements for new components
 
 ## Recent Achievements
 - Fixed toast component dismiss test by properly handling animation timing
 - Fixed atoms input component tests by addressing whitespace issues
 - Updated main input component test to handle conditional rendering
+- Improved badge component to handle both direct text content and slotted content
 - Identified core issues in test setup and execution
 - Successfully running multiple component test suites
 
 ## Blockers
 - Test worker memory limitations
+- Test execution hanging issues
 - Inconsistent component property conventions (e.g., size values)
 - Multiple skipped test suites need investigation
 - Missing implementations in NeoInput component
@@ -85,3 +95,4 @@
 - Consider implementing test setup documentation
 - May need to optimize test execution to prevent memory issues
 - Tests should be updated to match component behavior or components should be updated to match test expectations 
+- Consider adding a timeout mechanism for tests that might hang 
