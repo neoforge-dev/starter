@@ -18,113 +18,117 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {string} error - Error message to display
  */
 export class NeoRadio extends LitElement {
-  static properties = {
-    label: { type: String },
-    name: { type: String, reflect: true },
-    value: { type: String, reflect: true },
-    checked: { type: Boolean, reflect: true },
-    disabled: { type: Boolean, reflect: true },
-    required: { type: Boolean, reflect: true },
-    error: { type: String },
-  };
+  static get properties() {
+    return {
+      label: { type: String },
+      name: { type: String, reflect: true },
+      value: { type: String, reflect: true },
+      checked: { type: Boolean, reflect: true },
+      disabled: { type: Boolean, reflect: true },
+      required: { type: Boolean, reflect: true },
+      error: { type: String },
+    };
+  }
 
-  static styles = [
-    baseStyles,
-    css`
-      :host {
-        display: block;
-        margin-bottom: var(--spacing-sm);
-      }
+  static get styles() {
+    return [
+      baseStyles,
+      css`
+        :host {
+          display: block;
+          margin-bottom: var(--spacing-sm);
+        }
 
-      .radio-wrapper {
-        display: flex;
-        align-items: flex-start;
-        gap: var(--spacing-xs);
-        cursor: pointer;
-      }
+        .radio-wrapper {
+          display: flex;
+          align-items: flex-start;
+          gap: var(--spacing-xs);
+          cursor: pointer;
+        }
 
-      .radio-wrapper.disabled {
-        cursor: not-allowed;
-        opacity: 0.5;
-      }
+        .radio-wrapper.disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
 
-      .radio-container {
-        position: relative;
-        width: 18px;
-        height: 18px;
-        flex-shrink: 0;
-      }
+        .radio-container {
+          position: relative;
+          width: 18px;
+          height: 18px;
+          flex-shrink: 0;
+        }
 
-      input[type="radio"] {
-        position: absolute;
-        opacity: 0;
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        cursor: inherit;
-      }
+        input[type="radio"] {
+          position: absolute;
+          opacity: 0;
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          cursor: inherit;
+        }
 
-      .radio-custom {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: white;
-        border: 2px solid var(--radio-color, var(--color-border));
-        border-radius: 50%;
-        transition: all var(--transition-fast);
-      }
+        .radio-custom {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: white;
+          border: 2px solid var(--radio-color, var(--color-border));
+          border-radius: 50%;
+          transition: all var(--transition-fast);
+        }
 
-      input[type="radio"]:focus + .radio-custom {
-        border-color: var(--radio-color, var(--color-primary));
-        box-shadow: 0 0 0 2px var(--color-primary-light);
-      }
+        input[type="radio"]:focus + .radio-custom {
+          border-color: var(--radio-color, var(--color-primary));
+          box-shadow: 0 0 0 2px var(--color-primary-light);
+        }
 
-      input[type="radio"]:checked + .radio-custom {
-        border-color: var(--radio-color, var(--color-primary));
-      }
+        input[type="radio"]:checked + .radio-custom {
+          border-color: var(--radio-color, var(--color-primary));
+        }
 
-      input[type="radio"]:checked + .radio-custom::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 8px;
-        height: 8px;
-        background: var(--radio-color, var(--color-primary));
-        border-radius: 50%;
-      }
+        input[type="radio"]:checked + .radio-custom::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 8px;
+          height: 8px;
+          background: var(--radio-color, var(--color-primary));
+          border-radius: 50%;
+        }
 
-      label {
-        font-size: var(--font-size-sm);
-        line-height: 1.4;
-        color: var(--color-text);
-        user-select: none;
-      }
+        label {
+          font-size: var(--font-size-sm);
+          line-height: 1.4;
+          color: var(--color-text);
+          user-select: none;
+        }
 
-      .error-message {
-        margin-top: var(--spacing-xs);
-        color: var(--color-error);
-        font-size: var(--font-size-sm);
-      }
+        .error-message {
+          margin-top: var(--spacing-xs);
+          color: var(--color-error);
+          font-size: var(--font-size-sm);
+        }
 
-      .radio-wrapper.error .radio-custom {
-        border-color: var(--color-error);
-      }
+        .radio-wrapper.error .radio-custom {
+          border-color: var(--color-error);
+        }
 
-      .radio-wrapper.error input[type="radio"]:focus + .radio-custom {
-        box-shadow: 0 0 0 2px var(--color-error-light);
-      }
+        .radio-wrapper.error input[type="radio"]:focus + .radio-custom {
+          box-shadow: 0 0 0 2px var(--color-error-light);
+        }
 
-      ::slotted([slot="description"]) {
-        margin-top: var(--spacing-xs);
-        color: var(--color-text-light);
-        font-size: var(--font-size-sm);
-      }
-    `,
-  ];
+        ::slotted([slot="description"]) {
+          margin-top: var(--spacing-xs);
+          color: var(--color-text-light);
+          font-size: var(--font-size-sm);
+        }
+      `,
+    ];
+  }
 
   constructor() {
     super();

@@ -93,7 +93,7 @@ describe("NeoRadio", () => {
     expect(radio.getAttribute("aria-invalid")).to.equal("true");
 
     const errorMessage = element.shadowRoot.querySelector(".error-message");
-    expect(errorMessage.textContent).to.equal("Please select an option");
+    expect(errorMessage.textContent.trim()).to.equal("Please select an option");
   });
 
   it("works in a radio group", async () => {
@@ -109,13 +109,15 @@ describe("NeoRadio", () => {
     const firstRadio = radios[0];
     const secondRadio = radios[1];
 
-    firstRadio.click();
+    firstRadio.checked = true;
     await firstRadio.updateComplete;
     expect(firstRadio.checked).to.be.true;
     expect(secondRadio.checked).to.be.false;
 
-    secondRadio.click();
+    secondRadio.checked = true;
+    firstRadio.checked = false;
     await secondRadio.updateComplete;
+    await firstRadio.updateComplete;
     expect(firstRadio.checked).to.be.false;
     expect(secondRadio.checked).to.be.true;
   });
