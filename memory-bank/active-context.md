@@ -23,21 +23,22 @@ We are currently refactoring the frontend components to use standard class synta
    - Theme Toggle Component
    - Radio Component
 
-2. For each component, we've made the following changes:
+2. Discovered that the Spinner Component is already using standard class syntax with all tests passing.
+
+3. For each component, we've made the following changes:
    - Changed `static properties = {...}` to `static get properties() { return {...}; }`
    - Changed `static styles = [...]` to `static get styles() { return [...]; }`
    - Ensured all tests are passing (except for Autoform component)
 
-3. Fixed test issues in the Theme Toggle component tests related to mocking localStorage and matchMedia.
+4. Fixed test issues in the Theme Toggle component tests related to mocking localStorage and matchMedia.
 
-4. Fixed test issues in the Radio component tests:
+5. Fixed test issues in the Radio component tests:
    - Modified the error message test to trim whitespace before comparing
    - Updated the radio group test to manually set the checked property instead of relying on click events
 
 ### Next Steps
 
 1. Continue refactoring the remaining components:
-   - Spinner Component
    - Testimonials Component
    - Toast Component
    - Icon Component

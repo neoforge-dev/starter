@@ -172,16 +172,16 @@ The following components have been successfully refactored to use standard class
 13. Input Component - All tests passing
 14. Theme Toggle Component - All tests passing
 15. Radio Component - All tests passing
+16. Spinner Component - Already using standard class syntax, all tests passing
 
 ### Components Still Using Decorators
 The following components still need to be refactored:
 
-1. Spinner Component
-2. Testimonials Component
-3. Toast Component
-4. Icon Component
-5. Navigation Component
-6. Button Component
-7. Checkbox Component
-8. Error Page Component
-9. FAQ Accordion Component 
+1. Testimonials Component
+2. Toast Component
+3. Icon Component
+4. Navigation Component
+5. Button Component
+6. Checkbox Component
+7. Error Page Component
+8. FAQ Accordion Component 
