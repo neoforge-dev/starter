@@ -1,5 +1,5 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
+import { expect, oneEvent, TestUtils } from "../setup.mjs";
+import { html } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import "../../pages/dashboard-page.js";
 
 describe("Dashboard Page", () => {
@@ -18,6 +18,35 @@ describe("Dashboard Page", () => {
     activeUsers: 3,
   };
 
+  const mockTasks = [
+    {
+      id: "1",
+      title: "Complete Project Setup",
+      description: "Set up development environment",
+      status: "in_progress",
+      priority: "high",
+      dueDate: "2024-03-20",
+      assignee: {
+        id: "user1",
+        name: "John Doe",
+        avatar: "john.jpg",
+      },
+    },
+    {
+      id: "2",
+      title: "Write Documentation",
+      description: "Document API endpoints",
+      status: "todo",
+      priority: "medium",
+      dueDate: "2024-03-25",
+      assignee: {
+        id: "user2",
+        name: "Jane Smith",
+        avatar: "jane.jpg",
+      },
+    },
+  ];
+
   beforeEach(async () => {
     // Mock auth state
     window.auth = {
@@ -25,7 +54,15 @@ describe("Dashboard Page", () => {
       isAuthenticated: true,
     };
 
-    element = await fixture(html`<dashboard-page></dashboard-page>`);
+    // Mock API client
+    window.api = {
+      getTasks: async () => ({ tasks: mockTasks }),
+      updateTask: async (taskId, updates) => ({
+        task: { ...mockTasks.find((t) => t.id === taskId), ...updates },
+      }),
+    };
+
+    element = await TestUtils.fixture(html`<dashboard-page></dashboard-page>`);
     // Mock API response
     element.stats = mockStats;
     await element.updateComplete;
@@ -80,22 +117,36 @@ describe("Dashboard Page", () => {
     expect(chart.data).to.exist;
   });
 
-  it("displays task list", () => {
-    const tasks = element.shadowRoot.querySelector(".task-list");
-    const items = tasks.querySelectorAll(".task-item");
+  it("displays task list", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const taskCards = shadowRoot.querySelectorAll(".task-card");
+    expect(taskCards.length).to.equal(mockTasks.length);
+  });
 
-    expect(tasks).to.exist;
-    expect(items.length).to.be.greaterThan(0);
+  it("shows task details", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const firstTask = shadowRoot.querySelector(".task-card");
+    const title = firstTask.querySelector(".task-title");
+    const description = firstTask.querySelector(".task-description");
+    const status = firstTask.querySelector(".task-status");
+
+    expect(title.textContent).to.include(mockTasks[0].title);
+    expect(description.textContent).to.include(mockTasks[0].description);
+    expect(status.textContent.toLowerCase()).to.include(mockTasks[0].status);
   });
 
   it("handles task status updates", async () => {
-    const taskCheckbox = element.shadowRoot.querySelector(".task-checkbox");
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const firstTask = shadowRoot.querySelector(".task-card");
+    const statusSelect = firstTask.querySelector(".status-select");
 
-    setTimeout(() => taskCheckbox.click());
+    statusSelect.value = "completed";
+    statusSelect.dispatchEvent(new Event("change"));
+    await element.updateComplete;
+
     const { detail } = await oneEvent(element, "task-update");
-
-    expect(detail.taskId).to.exist;
-    expect(detail.completed).to.be.true;
+    expect(detail.taskId).to.equal(mockTasks[0].id);
+    expect(detail.updates.status).to.equal("completed");
   });
 
   it("shows notifications panel", async () => {
@@ -194,5 +245,146 @@ describe("Dashboard Page", () => {
     );
 
     expect(element.chartData).to.not.deep.equal(originalData);
+  });
+
+  it("renders dashboard layout", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const header = shadowRoot.querySelector(".dashboard-header");
+    const sidebar = shadowRoot.querySelector(".dashboard-sidebar");
+    const content = shadowRoot.querySelector(".dashboard-content");
+
+    expect(header).to.exist;
+    expect(sidebar).to.exist;
+    expect(content).to.exist;
+  });
+
+  it("supports task filtering", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const filterSelect = shadowRoot.querySelector(".filter-select");
+
+    filterSelect.value = "in_progress";
+    filterSelect.dispatchEvent(new Event("change"));
+    await element.updateComplete;
+
+    const visibleTasks = shadowRoot.querySelectorAll(".task-card:not(.hidden)");
+    expect(visibleTasks.length).to.equal(1);
+    expect(visibleTasks[0].textContent).to.include(mockTasks[0].title);
+  });
+
+  it("handles task sorting", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const sortSelect = shadowRoot.querySelector(".sort-select");
+
+    sortSelect.value = "priority";
+    sortSelect.dispatchEvent(new Event("change"));
+    await element.updateComplete;
+
+    const taskCards = shadowRoot.querySelectorAll(".task-card");
+    const firstTaskPriority =
+      taskCards[0].querySelector(".task-priority").textContent;
+    expect(firstTaskPriority.toLowerCase()).to.include("high");
+  });
+
+  it("displays user profile", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const profile = shadowRoot.querySelector(".user-profile");
+    const avatar = profile.querySelector(".user-avatar");
+    const name = profile.querySelector(".user-name");
+
+    expect(avatar).to.exist;
+    expect(name).to.exist;
+  });
+
+  it("shows task statistics", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const stats = shadowRoot.querySelector(".task-stats");
+    const totalTasks = stats.querySelector(".total-tasks");
+    const completedTasks = stats.querySelector(".completed-tasks");
+
+    expect(totalTasks).to.exist;
+    expect(completedTasks).to.exist;
+  });
+
+  it("handles task search", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const searchInput = shadowRoot.querySelector(".search-input");
+
+    searchInput.value = "documentation";
+    searchInput.dispatchEvent(new Event("input"));
+    await element.updateComplete;
+
+    const visibleTasks = shadowRoot.querySelectorAll(".task-card:not(.hidden)");
+    expect(visibleTasks.length).to.equal(1);
+    expect(visibleTasks[0].textContent).to.include("Documentation");
+  });
+
+  it("supports task assignment", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const firstTask = shadowRoot.querySelector(".task-card");
+    const assigneeSelect = firstTask.querySelector(".assignee-select");
+
+    assigneeSelect.value = "user2";
+    assigneeSelect.dispatchEvent(new Event("change"));
+    await element.updateComplete;
+
+    const { detail } = await oneEvent(element, "task-update");
+    expect(detail.updates.assignee.id).to.equal("user2");
+  });
+
+  it("displays task due dates", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const taskCards = shadowRoot.querySelectorAll(".task-card");
+
+    taskCards.forEach((card, index) => {
+      const dueDate = card.querySelector(".due-date");
+      expect(dueDate.textContent).to.include(mockTasks[index].dueDate);
+    });
+  });
+
+  it("handles mobile responsive layout", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const menuToggle = shadowRoot.querySelector(".menu-toggle");
+    const sidebar = shadowRoot.querySelector(".dashboard-sidebar");
+
+    menuToggle.click();
+    await element.updateComplete;
+
+    expect(sidebar.classList.contains("visible")).to.be.true;
+  });
+
+  it("maintains accessibility attributes", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const taskList = shadowRoot.querySelector(".task-list");
+    expect(taskList.getAttribute("role")).to.equal("list");
+
+    const taskCards = shadowRoot.querySelectorAll(".task-card");
+    taskCards.forEach((card) => {
+      expect(card.getAttribute("role")).to.equal("listitem");
+    });
+  });
+
+  it("supports keyboard navigation", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const taskCards = shadowRoot.querySelectorAll(".task-card");
+    const firstCard = taskCards[0];
+
+    firstCard.focus();
+    firstCard.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    await element.updateComplete;
+
+    expect(firstCard.classList.contains("selected")).to.be.true;
+  });
+
+  it("handles task priority updates", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const firstTask = shadowRoot.querySelector(".task-card");
+    const prioritySelect = firstTask.querySelector(".priority-select");
+
+    prioritySelect.value = "low";
+    prioritySelect.dispatchEvent(new Event("change"));
+    await element.updateComplete;
+
+    const { detail } = await oneEvent(element, "task-update");
+    expect(detail.updates.priority).to.equal("low");
   });
 });
