@@ -1,73 +1,103 @@
-import { expect } from "@esm-bundle/chai";
-import { fixture, html } from "@open-wc/testing";
-import "../../../src/components/atoms/icon/icon.js";
+import { fixture, expect, TestUtils } from "../setup.mjs";
+import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import "../../components/atoms/icon/icon.js";
 
 describe("NeoIcon", () => {
   let element;
 
   beforeEach(async () => {
-    element = await fixture(html`<neo-icon name="check"></neo-icon>`);
-  });
-
-  it("renders with default properties", () => {
-    expect(element.name).to.equal("check");
-    expect(element.size).to.equal("medium");
-    expect(element.color).to.equal("");
-  });
-
-  it("renders SVG element", () => {
-    const svg = element.shadowRoot.querySelector("svg");
-    expect(svg).to.exist;
-    expect(svg).to.have.attribute("viewBox", "0 0 24 24");
-    expect(svg).to.have.attribute("aria-hidden", "true");
+    element = await fixture(html`<neo-icon name="user"></neo-icon>`);
+    await element.updateComplete;
   });
 
   it("renders icon path based on name", async () => {
-    const icons = ["close", "check", "star", "warning", "error", "info"];
-
-    for (const name of icons) {
-      element.name = name;
-      await element.updateComplete;
-      const path = element.shadowRoot.querySelector("path");
-      expect(path).to.exist;
-    }
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const svg = shadowRoot.querySelector("svg");
+    expect(svg).to.exist;
+    expect(svg.innerHTML).to.include('d="M12 12c2.21');
   });
 
-  it("applies size classes", async () => {
-    const sizes = ["small", "medium", "large"];
-
-    for (const size of sizes) {
-      element.size = size;
-      await element.updateComplete;
-      expect(element).to.have.attribute("size", size);
-    }
-  });
-
-  it("applies custom color", async () => {
-    element.color = "red";
+  it("updates icon when name changes", async () => {
+    element.name = "settings";
     await element.updateComplete;
-    expect(element.style.getPropertyValue("--icon-color")).to.equal("red");
+
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const svg = shadowRoot.querySelector("svg");
+    expect(svg.innerHTML).to.include('d="M19.14 12.94');
   });
 
   it("handles unknown icon names", async () => {
     element.name = "unknown-icon";
     await element.updateComplete;
-    const path = element.shadowRoot.querySelector("path");
-    expect(path).to.not.exist;
+
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const svg = shadowRoot.querySelector("svg");
+    expect(svg.innerHTML).to.include("<!-- Icon not found -->");
   });
 
-  it("maintains proper ARIA attributes", () => {
-    const svg = element.shadowRoot.querySelector("svg");
-    expect(svg).to.have.attribute("aria-hidden", "true");
+  it("applies size attribute", async () => {
+    element.size = "sm";
+    await element.updateComplete;
+
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const svg = shadowRoot.querySelector("svg");
+    expect(svg.classList.contains("size-sm")).to.be.true;
   });
 
-  it("updates color when property changes", async () => {
-    element.color = "blue";
+  it("applies color attribute", async () => {
+    element.color = "primary";
     await element.updateComplete;
-    expect(element.style.getPropertyValue("--icon-color")).to.equal("blue");
 
-    element.color = "green";
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const svg = shadowRoot.querySelector("svg");
+    expect(svg.classList.contains("color-primary")).to.be.true;
+  });
+
+  it("applies custom size", async () => {
+    element.customSize = "64px";
     await element.updateComplete;
-    expect(element.style.getPropertyValue("--icon-color")).to.equal("green");
+
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const svg = shadowRoot.querySelector("svg");
+    expect(svg.style.width).to.equal("64px");
+    expect(svg.style.height).to.equal("64px");
+  });
+
+  it("handles loading state", async () => {
+    element.loading = true;
+    await element.updateComplete;
+
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const svg = shadowRoot.querySelector("svg");
+    expect(svg.classList.contains("loading")).to.be.true;
+  });
+
+  it("handles decorative icons", async () => {
+    element.decorative = true;
+    await element.updateComplete;
+
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const svg = shadowRoot.querySelector("svg");
+    expect(svg.getAttribute("aria-hidden")).to.equal("true");
+    expect(svg.hasAttribute("role")).to.be.false;
+  });
+
+  it("handles non-decorative icons with labels", async () => {
+    element.label = "User icon";
+    await element.updateComplete;
+
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const svg = shadowRoot.querySelector("svg");
+    expect(svg.getAttribute("role")).to.equal("img");
+    expect(svg.getAttribute("aria-label")).to.equal("User icon");
+  });
+
+  it("handles non-decorative icons without labels", async () => {
+    await element.updateComplete;
+
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const svg = shadowRoot.querySelector("svg");
+    expect(svg.getAttribute("role")).to.equal("img");
+    expect(svg.getAttribute("aria-label")).to.equal("user");
   });
 });

@@ -1,4 +1,4 @@
-import { LitElement, html } from "lit";
+import {  LitElement, html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 import { authStyles } from "../../styles/auth.js";
 import { authService } from "../../services/auth-service.js";
@@ -11,6 +11,8 @@ export class LoginPage extends LitElement {
   static properties = {
     loading: { type: Boolean },
     error: { type: String },
+    emailError: { type: String },
+    passwordError: { type: String },
   };
 
   static styles = [baseStyles, authStyles];
@@ -19,6 +21,29 @@ export class LoginPage extends LitElement {
     super();
     this.loading = false;
     this.error = "";
+    this.emailError = "";
+    this.passwordError = "";
+  }
+
+  validateForm(email, password) {
+    let isValid = true;
+    this.emailError = "";
+    this.passwordError = "";
+
+    if (!email) {
+      this.emailError = "Email is required";
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.emailError = "Please enter a valid email address";
+      isValid = false;
+    }
+
+    if (!password) {
+      this.passwordError = "Password is required";
+      isValid = false;
+    }
+
+    return isValid;
   }
 
   async _handleSubmit(e) {
@@ -27,8 +52,7 @@ export class LoginPage extends LitElement {
     const email = formData.get("email");
     const password = formData.get("password");
 
-    if (!email || !password) {
-      this.error = "Please fill in all fields";
+    if (!this.validateForm(email, password)) {
       return;
     }
 
@@ -66,7 +90,11 @@ export class LoginPage extends LitElement {
                 placeholder="Enter your email"
                 required
                 autocomplete="email"
+                ?disabled=${this.loading}
               ></neo-input>
+              ${this.emailError
+                ? html`<div class="field-error">${this.emailError}</div>`
+                : ""}
             </div>
 
             <div class="form-group">
@@ -77,7 +105,11 @@ export class LoginPage extends LitElement {
                 placeholder="Enter your password"
                 required
                 autocomplete="current-password"
+                ?disabled=${this.loading}
               ></neo-input>
+              ${this.passwordError
+                ? html`<div class="field-error">${this.passwordError}</div>`
+                : ""}
             </div>
 
             <div class="form-actions">
@@ -94,6 +126,7 @@ export class LoginPage extends LitElement {
               type="submit"
               variant="primary"
               ?loading=${this.loading}
+              ?disabled=${this.loading}
               style="width: 100%"
             >
               ${this.loading ? "Signing in..." : "Sign In"}

@@ -14,7 +14,7 @@ from sqlmodel import SQLModel
 from typing import Any, Type, Coroutine
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
-from app.core.security import get_password_hash
+from app.core.auth import get_password_hash
 
 class AsyncModelFactory(factory.Factory):
     """
@@ -49,8 +49,7 @@ class AsyncModelFactory(factory.Factory):
         obj = model_class(**kwargs)
         try:
             session.add(obj)
-            await session.commit()
-            await session.refresh(obj)
+            await session.flush()
             return obj
         except Exception as e:
             await session.rollback()
@@ -103,6 +102,8 @@ class UserFactory:
         email: str | None = None,
         full_name: str | None = None,
         password: str | None = None,
+        is_superuser: bool = False,
+        is_active: bool = True,
         **kwargs
     ) -> User:
         """Create and persist a User with required fields."""
@@ -114,10 +115,13 @@ class UserFactory:
             email=email,
             full_name=full_name,
             hashed_password=get_password_hash(password),
+            is_superuser=is_superuser,
+            is_active=is_active,
             **kwargs
         )
         session.add(user)
-        await session.commit()
+        await session.commit()  # Ensure the user is committed to the database
+        await session.refresh(user)  # Refresh to get the latest state
         return user
 
 class UserCreateFactory(ModelFactory):
@@ -143,11 +147,14 @@ class ItemFactory:
         cls,
         session: AsyncSession,
         user: User | None = None,
+        owner: User | None = None,
         **kwargs: Any
     ) -> Item:
         """Create an Item instance."""
         if user:
             kwargs["owner_id"] = user.id
+        if owner:
+            kwargs["owner_id"] = owner.id
         
         if "title" not in kwargs:
             kwargs["title"] = fuzzy.FuzzyText(length=10).fuzz()
@@ -156,6 +163,6 @@ class ItemFactory:
         
         item = Item(**kwargs)
         session.add(item)
-        await session.commit()
-        await session.refresh(item)
+        await session.commit()  # Ensure the item is committed
+        await session.refresh(item)  # Refresh to get the latest state
         return item 

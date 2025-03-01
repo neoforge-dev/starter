@@ -206,4 +206,6 @@ export class NeoCheckbox extends LitElement {
   }
 }
 
-customElements.define("neo-checkbox", NeoCheckbox);
+if (!customElements.get("neo-checkbox")) {
+  customElements.define("neo-checkbox", NeoCheckbox);
+}

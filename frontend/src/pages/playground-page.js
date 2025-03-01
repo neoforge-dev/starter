@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit";
+import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../styles/base.js";
 import "../components/playground/component-playground.js";
 
@@ -78,7 +78,7 @@ export class PlaygroundPage extends LitElement {
         name: "memory-monitor",
         description: "Monitor and display memory leaks in the application",
         code: `
-import { LitElement, html, css } from "lit";
+import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 class CustomMemoryMonitor extends LitElement {
   static properties = {

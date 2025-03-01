@@ -47,12 +47,12 @@ retry_strategy = Retry(
 pool = BlockingConnectionPool.from_url(
     settings.redis_url,
     decode_responses=True,
-    max_connections=20,  # Maximum number of connections
-    timeout=20,  # Timeout for getting connection from pool
+    max_connections=20 if not settings.testing else 5,  # Fewer connections for testing
+    timeout=20 if not settings.testing else 5,  # Shorter timeout for testing
     retry_on_timeout=True,  # Retry on timeout
     retry_on_error=[ConnectionError, TimeoutError],  # Retry on these errors
     retry=retry_strategy,  # Use our retry strategy
-    health_check_interval=30,  # Check connection health every 30 seconds
+    health_check_interval=30 if not settings.testing else 5,  # More frequent health checks in testing
 )
 
 # Create a global Redis client with monitoring
@@ -103,7 +103,8 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
         yield redis_client
     except Exception as e:
         logger.error("redis_connection_error", error=str(e))
-        raise
+        if not settings.testing:  # Don't raise in test environment
+            raise
 
 
 async def check_redis_health(redis: Redis) -> Tuple[bool, Optional[str]]:

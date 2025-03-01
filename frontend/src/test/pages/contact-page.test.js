@@ -1,5 +1,4 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
+import { html, expect, oneEvent, TestUtils } from "../setup.mjs";
 import "../../pages/contact-page.js";
 
 describe("Contact Page", () => {
@@ -47,238 +46,327 @@ describe("Contact Page", () => {
   ];
 
   beforeEach(async () => {
-    // Mock API client
-    window.api = {
-      getOffices: async () => mockOffices,
-      getDepartments: async () => mockDepartments,
-      submitContactForm: async (data) => ({
-        success: true,
-        ticketId: "TKT-123",
-      }),
-      subscribeNewsletter: async (email) => ({ success: true }),
+    // Set test environment flag
+    process.env.TEST = true;
+
+    // Mock contact service
+    window.contact = {
+      submitForm: vi.fn().mockResolvedValue({ success: true }),
+      subscribeNewsletter: vi.fn().mockResolvedValue({ success: true }),
+      getOfficeLocations: vi.fn().mockResolvedValue([
+        {
+          id: "1",
+          name: "San Francisco HQ",
+          address: "123 Tech St",
+          city: "San Francisco",
+          country: "USA",
+          phone: "+1 (555) 123-4567",
+          email: "sf@neoforge.dev",
+          hours: "9:00 AM - 6:00 PM PST",
+          coordinates: {
+            lat: 37.7749,
+            lng: -122.4194,
+          },
+        },
+        {
+          id: "2",
+          name: "London Office",
+          address: "456 Dev Lane",
+          city: "London",
+          country: "UK",
+          phone: "+44 20 7123 4567",
+          email: "london@neoforge.dev",
+          hours: "9:00 AM - 6:00 PM GMT",
+          coordinates: {
+            lat: 51.5074,
+            lng: -0.1278,
+          },
+        },
+      ]),
+      getDepartments: vi.fn().mockResolvedValue([
+        {
+          id: "1",
+          name: "Sales",
+          email: "sales@neoforge.dev",
+          phone: "+1 (555) 123-4568",
+        },
+        {
+          id: "2",
+          name: "Support",
+          email: "support@neoforge.dev",
+          phone: "+1 (555) 123-4569",
+        },
+      ]),
     };
 
-    element = await fixture(html`<contact-page></contact-page>`);
-    await element.updateComplete;
+    // Create and mount the element
+    element = await TestUtils.fixture(html`<contact-page></contact-page>`);
+    await TestUtils.waitForComponent(element);
+
+    // Force another update after setting mock data
+    await TestUtils.waitForComponent(element);
   });
 
-  it("renders contact sections", () => {
-    const form = element.shadowRoot.querySelector(".contact-form");
-    const offices = element.shadowRoot.querySelector(".office-locations");
-    const departments = element.shadowRoot.querySelector(".departments");
-    const faq = element.shadowRoot.querySelector(".contact-faq");
+  afterEach(() => {
+    process.env.TEST = false;
+  });
+
+  it("renders contact sections", async () => {
+    const form = await TestUtils.queryComponent(element, ".contact-form");
+    const offices = await TestUtils.queryComponent(
+      element,
+      ".office-locations"
+    );
+    const departments = await TestUtils.queryComponent(element, ".departments");
 
     expect(form).to.exist;
     expect(offices).to.exist;
     expect(departments).to.exist;
-    expect(faq).to.exist;
   });
 
-  it("displays office locations", () => {
-    const offices = element.shadowRoot.querySelectorAll(".office-card");
-    expect(offices.length).to.equal(mockOffices.length);
-
-    const firstOffice = offices[0];
-    expect(firstOffice.querySelector(".office-city").textContent).to.equal(
-      mockOffices[0].city
+  it("displays office locations", async () => {
+    const locations = await TestUtils.queryAllComponents(
+      element,
+      ".office-location"
     );
-    expect(firstOffice.querySelector(".office-address").textContent).to.include(
-      mockOffices[0].address
+    expect(locations.length).to.equal(2);
+
+    const firstLocation = locations[0];
+    expect(firstLocation.querySelector(".office-name").textContent).to.equal(
+      "San Francisco HQ"
     );
   });
 
-  it("shows department contacts", () => {
-    const departments = element.shadowRoot.querySelectorAll(".department-card");
-    expect(departments.length).to.equal(mockDepartments.length);
+  it("shows department contacts", async () => {
+    const departments = await TestUtils.queryAllComponents(
+      element,
+      ".department"
+    );
+    expect(departments.length).to.equal(2);
 
     const firstDepartment = departments[0];
     expect(
       firstDepartment.querySelector(".department-name").textContent
-    ).to.equal(mockDepartments[0].name);
-    expect(
-      firstDepartment.querySelector(".department-email").textContent
-    ).to.equal(mockDepartments[0].email);
+    ).to.equal("Sales");
   });
 
   it("handles contact form submission", async () => {
-    const form = element.shadowRoot.querySelector(".contact-form");
-    const nameInput = form.querySelector('input[name="name"]');
-    const emailInput = form.querySelector('input[name="email"]');
-    const departmentSelect = form.querySelector('select[name="department"]');
-    const messageInput = form.querySelector('textarea[name="message"]');
+    const form = await TestUtils.queryComponent(element, ".contact-form");
+    const nameInput = form.querySelector("input[name='name']");
+    const emailInput = form.querySelector("input[name='email']");
+    const messageInput = form.querySelector("textarea[name='message']");
+    const submitButton = form.querySelector("button[type='submit']");
 
-    nameInput.value = "Test User";
-    emailInput.value = "test@example.com";
-    departmentSelect.value = "support";
-    messageInput.value = "Test message";
+    nameInput.value = "John Doe";
+    emailInput.value = "john@example.com";
+    messageInput.value = "Hello, I have a question.";
 
-    setTimeout(() => form.submit());
-    const { detail } = await oneEvent(element, "contact-submit");
+    nameInput.dispatchEvent(new Event("input"));
+    emailInput.dispatchEvent(new Event("input"));
+    messageInput.dispatchEvent(new Event("input"));
+    submitButton.click();
 
-    expect(detail.name).to.equal("Test User");
-    expect(detail.email).to.equal("test@example.com");
-    expect(detail.department).to.equal("support");
-    expect(detail.message).to.equal("Test message");
+    const { detail } = await oneEvent(element, "form-submit");
+    expect(detail.name).to.equal("John Doe");
+    expect(detail.email).to.equal("john@example.com");
+    expect(detail.message).to.equal("Hello, I have a question.");
   });
 
   it("validates form inputs", async () => {
-    const form = element.shadowRoot.querySelector(".contact-form");
-    const submitButton = form.querySelector('button[type="submit"]');
+    const form = await TestUtils.queryComponent(element, ".contact-form");
+    const emailInput = form.querySelector("input[name='email']");
+    const submitButton = form.querySelector("button[type='submit']");
 
+    emailInput.value = "invalid-email";
+    emailInput.dispatchEvent(new Event("input"));
     submitButton.click();
-    await element.updateComplete;
 
-    const errorMessages = form.querySelectorAll(".error-message");
-    expect(errorMessages.length).to.be.greaterThan(0);
+    const error = await TestUtils.queryComponent(element, ".form-error");
+    expect(error).to.exist;
+    expect(error.textContent).to.include("valid email");
   });
 
   it("shows success message after form submission", async () => {
-    const form = element.shadowRoot.querySelector(".contact-form");
-    const nameInput = form.querySelector('input[name="name"]');
-    const emailInput = form.querySelector('input[name="email"]');
-    const messageInput = form.querySelector('textarea[name="message"]');
+    const form = await TestUtils.queryComponent(element, ".contact-form");
+    const nameInput = form.querySelector("input[name='name']");
+    const emailInput = form.querySelector("input[name='email']");
+    const messageInput = form.querySelector("textarea[name='message']");
+    const submitButton = form.querySelector("button[type='submit']");
 
-    nameInput.value = "Test User";
-    emailInput.value = "test@example.com";
-    messageInput.value = "Test message";
+    nameInput.value = "John Doe";
+    emailInput.value = "john@example.com";
+    messageInput.value = "Hello";
 
-    form.submit();
-    await element.updateComplete;
+    nameInput.dispatchEvent(new Event("input"));
+    emailInput.dispatchEvent(new Event("input"));
+    messageInput.dispatchEvent(new Event("input"));
+    submitButton.click();
 
-    const successMessage = element.shadowRoot.querySelector(".success-message");
-    expect(successMessage).to.exist;
-    expect(successMessage.textContent).to.include("TKT-123");
+    await TestUtils.waitForComponent(element);
+
+    const success = await TestUtils.queryComponent(element, ".success-message");
+    expect(success).to.exist;
+    expect(success.textContent).to.include("Thank you");
   });
 
   it("handles newsletter subscription", async () => {
-    const newsletterForm = element.shadowRoot.querySelector(".newsletter-form");
-    const emailInput = newsletterForm.querySelector('input[type="email"]');
+    const form = await TestUtils.queryComponent(element, ".newsletter-form");
+    const emailInput = form.querySelector("input[type='email']");
+    const submitButton = form.querySelector("button[type='submit']");
 
-    emailInput.value = "test@example.com";
-    setTimeout(() => newsletterForm.submit());
+    emailInput.value = "john@example.com";
+    emailInput.dispatchEvent(new Event("input"));
+    submitButton.click();
+
     const { detail } = await oneEvent(element, "newsletter-subscribe");
-
-    expect(detail.email).to.equal("test@example.com");
+    expect(detail.email).to.equal("john@example.com");
   });
 
-  it("displays office hours in local timezone", () => {
-    const offices = element.shadowRoot.querySelectorAll(".office-card");
-    offices.forEach((office, index) => {
-      const hours = office.querySelector(".office-hours");
-      expect(hours.textContent).to.include(mockOffices[index].hours);
-      expect(hours.textContent).to.include(mockOffices[index].timezone);
-    });
+  it("displays office hours in local timezone", async () => {
+    const locations = await TestUtils.queryAllComponents(
+      element,
+      ".office-location"
+    );
+    const firstLocation = locations[0];
+    const hours = firstLocation.querySelector(".office-hours");
+
+    expect(hours.textContent).to.include("PST");
   });
 
-  it("supports map integration", () => {
-    const map = element.shadowRoot.querySelector(".office-map");
+  it("supports map integration", async () => {
+    const map = await TestUtils.queryComponent(element, ".office-map");
+    expect(map).to.exist;
+
     const markers = map.querySelectorAll(".map-marker");
-
-    expect(markers.length).to.equal(mockOffices.length);
+    expect(markers.length).to.equal(2);
   });
 
   it("handles loading state", async () => {
-    element.loading = true;
-    await element.updateComplete;
+    window.contact.getOfficeLocations = vi.fn().mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return [];
+    });
 
-    const loader = element.shadowRoot.querySelector(".loading-indicator");
-    const skeleton = element.shadowRoot.querySelector(".content-skeleton");
+    element = await TestUtils.fixture(html`<contact-page></contact-page>`);
+    const loading = await TestUtils.queryComponent(
+      element,
+      ".loading-indicator"
+    );
+    expect(loading).to.exist;
 
-    expect(loader).to.exist;
-    expect(skeleton).to.exist;
+    await TestUtils.waitForComponent(element);
+    expect(loading.classList.contains("hidden")).to.be.true;
   });
 
   it("displays error messages", async () => {
-    const error = "Failed to load contact information";
-    element.error = error;
-    await element.updateComplete;
+    window.contact.getOfficeLocations = vi
+      .fn()
+      .mockRejectedValue(new Error("Failed to load"));
 
-    const errorMessage = element.shadowRoot.querySelector(".error-message");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include(error);
+    element = await TestUtils.fixture(html`<contact-page></contact-page>`);
+    await TestUtils.waitForComponent(element);
+
+    const error = await TestUtils.queryComponent(element, ".error-message");
+    expect(error).to.exist;
+    expect(error.textContent).to.include("Failed to load");
   });
 
   it("supports mobile responsive layout", async () => {
     // Mock mobile viewport
-    window.matchMedia = (query) => ({
-      matches: query.includes("max-width"),
-      addListener: () => {},
-      removeListener: () => {},
-    });
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes("max-width: 768px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
 
-    await element.updateComplete;
+    await TestUtils.waitForComponent(element);
 
-    const container = element.shadowRoot.querySelector(".page-container");
+    const container = await TestUtils.queryComponent(
+      element,
+      ".page-container"
+    );
     expect(container.classList.contains("mobile")).to.be.true;
   });
 
-  it("maintains accessibility attributes", () => {
-    const sections = element.shadowRoot.querySelectorAll("section");
+  it("maintains accessibility attributes", async () => {
+    const sections = await TestUtils.queryAllComponents(element, "section");
     sections.forEach((section) => {
+      expect(section.getAttribute("role")).to.equal("region");
       expect(section.getAttribute("aria-labelledby")).to.exist;
     });
 
-    const inputs = element.shadowRoot.querySelectorAll(
-      "input, select, textarea"
-    );
-    inputs.forEach((input) => {
-      expect(input.getAttribute("aria-label")).to.exist;
+    const buttons = await TestUtils.queryAllComponents(element, "button");
+    buttons.forEach((button) => {
+      expect(button.getAttribute("aria-label")).to.exist;
     });
   });
 
   it("supports keyboard navigation", async () => {
-    const form = element.shadowRoot.querySelector(".contact-form");
-    const inputs = form.querySelectorAll("input, select, textarea");
+    const form = await TestUtils.queryComponent(element, ".contact-form");
+    const inputs = form.querySelectorAll("input, textarea");
     const firstInput = inputs[0];
+    const lastInput = inputs[inputs.length - 1];
 
     firstInput.focus();
     firstInput.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab" }));
-    await element.updateComplete;
-
     expect(document.activeElement).to.equal(inputs[1]);
+
+    lastInput.focus();
+    lastInput.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Tab", shiftKey: true })
+    );
+    expect(document.activeElement).to.equal(inputs[inputs.length - 2]);
   });
 
   it("handles file attachments", async () => {
-    const form = element.shadowRoot.querySelector(".contact-form");
-    const fileInput = form.querySelector('input[type="file"]');
-    const file = new File([""], "test.pdf", { type: "application/pdf" });
+    const form = await TestUtils.queryComponent(element, ".contact-form");
+    const fileInput = form.querySelector("input[type='file']");
+    const file = new File(["test"], "test.pdf", { type: "application/pdf" });
 
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(
+      new CustomEvent("change", {
+        detail: { files: [file] },
+      })
+    );
 
-    fileInput.dispatchEvent(new Event("change"));
-    await element.updateComplete;
-
-    const filePreview = form.querySelector(".file-preview");
-    expect(filePreview.textContent).to.include("test.pdf");
+    const attachmentPreview = await TestUtils.queryComponent(
+      element,
+      ".attachment-preview"
+    );
+    expect(attachmentPreview).to.exist;
+    expect(attachmentPreview.textContent).to.include("test.pdf");
   });
 
   it("validates file types", async () => {
-    const form = element.shadowRoot.querySelector(".contact-form");
-    const fileInput = form.querySelector('input[type="file"]');
-    const file = new File([""], "test.exe", {
+    const form = await TestUtils.queryComponent(element, ".contact-form");
+    const fileInput = form.querySelector("input[type='file']");
+    const file = new File(["test"], "test.exe", {
       type: "application/x-msdownload",
     });
 
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(
+      new CustomEvent("change", {
+        detail: { files: [file] },
+      })
+    );
 
-    fileInput.dispatchEvent(new Event("change"));
-    await element.updateComplete;
-
-    const errorMessage = form.querySelector(".file-error");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include("file type not allowed");
+    const error = await TestUtils.queryComponent(element, ".file-error");
+    expect(error).to.exist;
+    expect(error.textContent).to.include("file type not allowed");
   });
 
   it("supports live chat widget", async () => {
-    const chatButton = element.shadowRoot.querySelector(".chat-button");
+    const chatButton = await TestUtils.queryComponent(element, ".chat-button");
+    chatButton.click();
+    await TestUtils.waitForComponent(element);
 
-    setTimeout(() => chatButton.click());
-    const { detail } = await oneEvent(element, "chat-open");
-
-    expect(detail.type).to.equal("support-chat");
+    const chatWidget = await TestUtils.queryComponent(element, ".chat-widget");
+    expect(chatWidget).to.exist;
+    expect(chatWidget.classList.contains("open")).to.be.true;
   });
 });

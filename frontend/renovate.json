@@ -1,0 +1,73 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":semanticPrefixFix",
+    ":ignoreUnstable",
+    ":prNotPending",
+    ":updateNotScheduled",
+    ":automergeMinor",
+    ":automergePatch",
+    ":automergeTesters",
+    ":automergeTypes",
+    "group:allNonMajor"
+  ],
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["^@lit/", "^lit-", "^lit$"],
+      "groupName": "lit packages",
+      "groupSlug": "lit"
+    },
+    {
+      "matchPackagePatterns": ["^@storybook/"],
+      "groupName": "storybook packages",
+      "groupSlug": "storybook"
+    },
+    {
+      "matchPackagePatterns": ["^@web/"],
+      "groupName": "web packages",
+      "groupSlug": "web"
+    },
+    {
+      "matchPackagePatterns": ["^@vitest/", "^vitest$"],
+      "groupName": "vitest packages",
+      "groupSlug": "vitest"
+    },
+    {
+      "matchPackagePatterns": ["^@playwright/", "^playwright$"],
+      "groupName": "playwright packages",
+      "groupSlug": "playwright"
+    }
+  ],
+  "schedule": ["after 10pm and before 5am every weekday", "every weekend"],
+  "timezone": "America/Los_Angeles",
+  "labels": ["dependencies"],
+  "assignees": ["@team/frontend"],
+  "reviewers": ["@team/frontend-leads"],
+  "commitMessagePrefix": "chore(deps):",
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 2,
+  "separateMajorMinor": true,
+  "separateMultipleMajor": true,
+  "masterIssue": true,
+  "masterIssueTitle": "Dependencies Dashboard 📦",
+  "dependencyDashboardTitle": "Dependencies Dashboard 📦",
+  "dependencyDashboardLabels": ["dependencies"],
+  "major": {
+    "dependencyDashboardApproval": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 5am on monday"]
+  },
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "assignees": ["@team/security"]
+  },
+  "rangeStrategy": "bump",
+  "npm": {
+    "stabilityDays": 3
+  }
+}

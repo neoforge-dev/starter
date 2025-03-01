@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit";
+import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 
 /**
@@ -33,6 +33,11 @@ export class NeoButton extends LitElement {
       :host([fullWidth]) {
         display: block;
         width: 100%;
+      }
+
+      :host([disabled]) {
+        pointer-events: none;
+        opacity: 0.5;
       }
 
       button {
@@ -74,7 +79,7 @@ export class NeoButton extends LitElement {
         color: white;
       }
 
-      .variant-primary:hover {
+      .variant-primary:hover:not(:disabled) {
         background: var(--color-primary-dark);
       }
 
@@ -83,7 +88,7 @@ export class NeoButton extends LitElement {
         color: white;
       }
 
-      .variant-secondary:hover {
+      .variant-secondary:hover:not(:disabled) {
         background: var(--color-secondary-dark);
       }
 
@@ -93,7 +98,7 @@ export class NeoButton extends LitElement {
         box-shadow: inset 0 0 0 2px var(--color-primary);
       }
 
-      .variant-tertiary:hover {
+      .variant-tertiary:hover:not(:disabled) {
         background: var(--color-primary-light);
       }
 
@@ -102,7 +107,7 @@ export class NeoButton extends LitElement {
         color: white;
       }
 
-      .variant-danger:hover {
+      .variant-danger:hover:not(:disabled) {
         background: var(--color-error-dark);
       }
 
@@ -111,22 +116,36 @@ export class NeoButton extends LitElement {
         color: var(--color-text);
       }
 
-      .variant-ghost:hover {
+      .variant-ghost:hover:not(:disabled) {
         background: var(--color-gray-100);
+      }
+
+      .variant-text {
+        background: transparent;
+        color: var(--color-primary);
+        padding: 0;
+      }
+
+      .variant-text:hover:not(:disabled) {
+        text-decoration: underline;
       }
 
       /* States */
       button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+        pointer-events: none;
+        background: var(--color-gray-300) !important;
+        color: var(--color-gray-600) !important;
+        border-color: var(--color-gray-300) !important;
       }
 
-      button:focus {
+      button:focus-visible {
         outline: none;
         box-shadow: 0 0 0 3px var(--color-primary-light);
       }
 
-      .variant-danger:focus {
+      .variant-danger:focus-visible {
         box-shadow: 0 0 0 3px var(--color-error-light);
       }
 
@@ -184,24 +203,39 @@ export class NeoButton extends LitElement {
    * @param {Event} e
    */
   _handleClick(e) {
-    if (!this.disabled && !this.loading) {
-      this.dispatchEvent(
-        new CustomEvent("click", {
-          bubbles: true,
-          composed: true,
-          detail: { originalEvent: e },
-        })
-      );
+    if (this.disabled || this.loading) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
     }
+
+    this.dispatchEvent(
+      new CustomEvent("click", {
+        bubbles: true,
+        composed: true,
+        detail: { originalEvent: e },
+      })
+    );
   }
 
   render() {
+    const isDisabled = this.disabled || this.loading;
     const classes = {
       [`variant-${this.variant}`]: true,
       [`size-${this.size}`]: true,
       loading: this.loading,
       "full-width": this.fullWidth,
+      disabled: isDisabled,
     };
+
+    // Set host element attributes
+    if (isDisabled) {
+      this.setAttribute("disabled", "");
+      this.setAttribute("aria-disabled", "true");
+    } else {
+      this.removeAttribute("disabled");
+      this.removeAttribute("aria-disabled");
+    }
 
     return html`
       <button
@@ -210,9 +244,9 @@ export class NeoButton extends LitElement {
           .filter(([, value]) => value)
           .map(([key]) => key)
           .join(" ")}"
-        ?disabled="${this.disabled || this.loading}"
-        aria-disabled="${this.disabled || this.loading}"
-        aria-busy="${this.loading}"
+        ?disabled="${isDisabled}"
+        aria-disabled="${isDisabled ? "true" : "false"}"
+        aria-busy="${this.loading ? "true" : "false"}"
         @click=${this._handleClick}
       >
         <slot name="prefix"></slot>
@@ -224,4 +258,6 @@ export class NeoButton extends LitElement {
   }
 }
 
-customElements.define("neo-button", NeoButton);
+if (!customElements.get("neo-button")) {
+  customElements.define("neo-button", NeoButton);
+}

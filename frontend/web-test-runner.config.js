@@ -1,5 +1,6 @@
 import { playwrightLauncher } from "@web/test-runner-playwright";
 import { visualRegressionPlugin } from "@web/test-runner-visual-regression/plugin";
+import { esbuildPlugin } from "@web/dev-server-esbuild";
 
 // Development configuration (faster)
 const devConfig = {
@@ -20,6 +21,13 @@ const devConfig = {
       diffDir: "src/test/visual/diff",
       failureThreshold: 0.05,
     }),
+    esbuildPlugin({
+      ts: true,
+      target: "es2020",
+      define: {
+        "process.env.NODE_ENV": "'test'",
+      },
+    }),
   ],
   browserStartTimeout: 30000,
   testsStartTimeout: 30000,
@@ -34,19 +42,50 @@ const devConfig = {
               "@lit/reactive-element": "/node_modules/@lit/reactive-element/reactive-element.js",
               "lit-html": "/node_modules/lit-html/lit-html.js",
               "lit-element": "/node_modules/lit-element/lit-element.js",
+              "lit/decorators.js": "/node_modules/lit/decorators.js",
               "@services": "/src/services",
               "@components": "/src/components",
               "@utils": "/src/utils",
-              "@pages": "/src/pages"
+              "@pages": "/src/pages",
+              "chai": "/node_modules/chai/chai.js",
+              "@open-wc/testing": "/node_modules/@open-wc/testing/index.js",
+              "@open-wc/testing-helpers": "/node_modules/@open-wc/testing-helpers/index.js"
             }
           }
         </script>
         <script>
           // Mock APIs
-          window.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {}, clear: () => {} };
+          const storedValues = new Map();
+          window.localStorage = {
+            getItem: (key) => storedValues.get(key) || null,
+            setItem: (key, value) => storedValues.set(key, value),
+            removeItem: (key) => storedValues.delete(key),
+            clear: () => storedValues.clear(),
+            length: 0,
+            key: () => null
+          };
+          
           window.fetch = async () => ({ ok: true, json: async () => ({}) });
-          window.matchMedia = () => ({ matches: false, addListener: () => {}, removeListener: () => {} });
-          window.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+          window.matchMedia = () => ({ 
+            matches: false, 
+            addListener: () => {}, 
+            removeListener: () => {},
+            addEventListener: () => {},
+            removeEventListener: () => {} 
+          });
+          
+          window.ResizeObserver = class { 
+            observe() {} 
+            unobserve() {} 
+            disconnect() {} 
+          };
+          
+          window.IntersectionObserver = class {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+          };
+          
           window.process = { env: { NODE_ENV: 'test' } };
           
           // Disable animations

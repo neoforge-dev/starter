@@ -55,13 +55,14 @@ describe("PaginationComponent", () => {
     expect(element.currentPage).to.equal(2);
   });
 
-  it("disables previous button on first page", () => {
+  it("disables previous button on first page", async () => {
     const prevButton = element.shadowRoot.querySelector(
       '.page-item[aria-label="Previous page"]'
     );
     expect(prevButton.classList.contains("disabled")).to.be.true;
 
     element.currentPage = 2;
+    await element.updateComplete;
     expect(prevButton.classList.contains("disabled")).to.be.false;
   });
 

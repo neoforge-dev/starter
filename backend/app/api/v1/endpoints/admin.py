@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
 from app.api import deps
-from app.core.security import get_password_hash
+from app.core.auth import get_password_hash
 from app.models.admin import Admin, AdminRole
 from app.schemas import admin as schemas
 

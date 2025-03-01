@@ -1,13 +1,14 @@
 """Admin model for role-based access control."""
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, String, Enum as SQLEnum
 import enum
 
 from app.db.base_class import Base
-from app.models.user import User
+from app.db.types import TZDateTime
+from app.utils.datetime import utc_now
 
 
 class AdminRole(str, enum.Enum):
@@ -22,45 +23,37 @@ class AdminPermission(Base):
     """Admin permission model."""
     __tablename__ = "admin_permissions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    role = Column(Enum(AdminRole), nullable=False)
-    resource = Column(String, nullable=False)  # e.g., "users", "content", "settings"
-    can_create = Column(Boolean, default=False)
-    can_read = Column(Boolean, default=True)
-    can_update = Column(Boolean, default=False)
-    can_delete = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    role: Mapped[AdminRole] = mapped_column(SQLEnum(AdminRole), nullable=False)
+    resource: Mapped[str] = mapped_column(String, nullable=False)  # e.g., "users", "content", "settings"
+    can_create: Mapped[bool] = mapped_column(default=False)
+    can_read: Mapped[bool] = mapped_column(default=True)
+    can_update: Mapped[bool] = mapped_column(default=False)
+    can_delete: Mapped[bool] = mapped_column(default=False)
 
 
 class Admin(Base):
     """Admin model extending the base user model."""
     __tablename__ = "admins"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
-    role = Column(Enum(AdminRole), nullable=False)
-    is_active = Column(Boolean, default=True)
-    last_login = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, nullable=False)
+    role: Mapped[AdminRole] = mapped_column(SQLEnum(AdminRole), nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    last_login: Mapped[Optional[datetime]] = mapped_column(TZDateTime, nullable=True)
 
     # Relationships
-    user = relationship("User", back_populates="admin")
-    audit_logs = relationship("AdminAuditLog", back_populates="admin")
+    user: Mapped["User"] = relationship("User", back_populates="admin")
+    audit_logs: Mapped[List["AdminAuditLog"]] = relationship("AdminAuditLog", back_populates="admin")
 
 
 class AdminAuditLog(Base):
     """Admin audit log for tracking admin actions."""
     __tablename__ = "admin_audit_logs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    admin_id = Column(Integer, ForeignKey("admins.id"), nullable=False)
-    action = Column(String, nullable=False)  # e.g., "create", "update", "delete"
-    resource = Column(String, nullable=False)  # e.g., "users", "content"
-    resource_id = Column(String, nullable=True)  # ID of the affected resource
-    details = Column(String, nullable=True)  # Additional action details
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    admin_id: Mapped[int] = mapped_column(ForeignKey("admins.id"), nullable=False)
+    action: Mapped[str] = mapped_column(String, nullable=False)  # e.g., "create", "update", "delete"
+    resource: Mapped[str] = mapped_column(String, nullable=False)  # e.g., "users", "content"
+    resource_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # ID of the affected resource
+    details: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Additional action details
 
     # Relationships
-    admin = relationship("Admin", back_populates="audit_logs") 
+    admin: Mapped["Admin"] = relationship("Admin", back_populates="audit_logs") 

@@ -137,6 +137,30 @@ export class ThemeToggleButton extends ThemeToggleMixin(LitElement) {
     this._prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
+
+    // Initialize theme-related DOM attributes
+    if (!document.documentElement.hasAttribute("data-theme")) {
+      document.documentElement.setAttribute(
+        "data-theme",
+        this.darkMode ? "dark" : "light"
+      );
+    }
+
+    // Ensure theme property is synced with darkMode
+    if (this.darkMode) {
+      this.theme = "dark";
+    } else {
+      this.theme = "light";
+    }
+  }
+
+  // Force the theme property to stay in sync with darkMode
+  updated(changedProperties) {
+    super.updated?.(changedProperties);
+
+    if (changedProperties.has("darkMode")) {
+      this.theme = this.darkMode ? "dark" : "light";
+    }
   }
 
   connectedCallback() {
@@ -191,15 +215,17 @@ export class ThemeToggleButton extends ThemeToggleMixin(LitElement) {
     // Update transition background before animation
     this._updateTransitionBackground();
 
-    // Add transition classes
+    // Add transition classes - ensure this happens synchronously
     document.documentElement.classList.add("theme-transition");
     this.classList.add("transitioning");
 
     // Toggle theme
-    this.toggleTheme();
+    setTimeout(() => {
+      this.toggleTheme();
 
-    // Announce theme change to screen readers
-    this._announceThemeChange();
+      // Announce theme change to screen readers
+      this._announceThemeChange();
+    }, 0);
 
     // Fallback cleanup in case transition event doesn't fire
     this._themeTransitionTimeout = setTimeout(() => {
@@ -208,13 +234,13 @@ export class ThemeToggleButton extends ThemeToggleMixin(LitElement) {
   }
 
   _handleTransitionEnd(e) {
-    if (!e || e.propertyName === "opacity") {
-      document.documentElement.classList.remove("theme-transition");
-      this.classList.remove("transitioning");
-      if (this._themeTransitionTimeout) {
-        clearTimeout(this._themeTransitionTimeout);
-        this._themeTransitionTimeout = null;
-      }
+    // Always remove the classes regardless of which event triggered this
+    document.documentElement.classList.remove("theme-transition");
+    this.classList.remove("transitioning");
+
+    if (this._themeTransitionTimeout) {
+      clearTimeout(this._themeTransitionTimeout);
+      this._themeTransitionTimeout = null;
     }
   }
 
@@ -260,4 +286,6 @@ export class ThemeToggleButton extends ThemeToggleMixin(LitElement) {
   }
 }
 
-customElements.define("theme-toggle-button", ThemeToggleButton);
+if (!customElements.get("theme-toggle-button")) {
+  customElements.define("theme-toggle-button", ThemeToggleButton);
+}

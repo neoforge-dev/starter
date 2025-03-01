@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit";
+import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 
 /**
@@ -172,27 +172,50 @@ export class NeoToast extends LitElement {
   constructor() {
     super();
     this.variant = "info";
-    this.position = "top-right";
+    this.position = "bottom-right";
     this.message = "";
     this.duration = 5000;
     this.dismissible = true;
     this.icon = true;
-    this._visible = false;
+    this._visible = true;
     this._timeout = null;
   }
 
   connectedCallback() {
     super.connectedCallback();
     this._visible = true;
-    if (this.duration > 0) {
-      this._timeout = setTimeout(() => this.close(), this.duration);
-    }
+    this._setupAutoDismiss();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this._timeout) {
       clearTimeout(this._timeout);
+      this._timeout = null;
+    }
+    // Remove any event listeners
+    const toast = this.shadowRoot?.querySelector(".toast");
+    if (toast) {
+      const clone = toast.cloneNode(true);
+      toast.replaceWith(clone);
+    }
+  }
+
+  _setupAutoDismiss() {
+    if (this._timeout) {
+      clearTimeout(this._timeout);
+      this._timeout = null;
+    }
+    if (this.duration > 0) {
+      this._timeout = setTimeout(() => {
+        this.close();
+      }, this.duration);
+    }
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has("duration")) {
+      this._setupAutoDismiss();
     }
   }
 
@@ -207,22 +230,36 @@ export class NeoToast extends LitElement {
   }
 
   close() {
-    const toast = this.shadowRoot.querySelector(".toast");
+    if (!this._visible) return;
+
+    // Clear any existing timeout
+    if (this._timeout) {
+      clearTimeout(this._timeout);
+      this._timeout = null;
+    }
+
+    // Add the animating-out class to trigger the animation
+    const toast = this.shadowRoot?.querySelector(".toast");
+    if (!toast) return;
+
+    toast.classList.remove("animating-in");
     toast.classList.add("animating-out");
 
-    toast.addEventListener(
-      "animationend",
-      () => {
-        this._visible = false;
-        this.dispatchEvent(
-          new CustomEvent("neo-dismiss", {
-            bubbles: true,
-            composed: true,
-          })
-        );
-      },
-      { once: true }
-    );
+    // Wait for animation to complete before setting _visible to false
+    setTimeout(() => {
+      // Dispatch event before setting _visible to false
+      this.dispatchEvent(
+        new CustomEvent("neo-dismiss", {
+          bubbles: true,
+          composed: true,
+          detail: { id: this.id },
+        })
+      );
+
+      // Now set visibility to false
+      this._visible = false;
+      this.requestUpdate();
+    }, 200); // Match the animation duration from CSS
   }
 
   render() {
@@ -236,6 +273,8 @@ export class NeoToast extends LitElement {
       ${this._visible ? "animating-in" : ""}
     `;
 
+    const content = this.message || this.textContent || "";
+
     return html`
       <div class=${containerClasses}>
         <div class=${toastClasses.trim()} role="alert" aria-live="polite">
@@ -246,7 +285,7 @@ export class NeoToast extends LitElement {
                 </span>
               `
             : ""}
-          <div class="toast-content">${this.message}</div>
+          <div class="toast-content">${content}</div>
           ${this.dismissible
             ? html`
                 <button

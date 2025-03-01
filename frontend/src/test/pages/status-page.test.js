@@ -1,94 +1,86 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
+import { html, expect, oneEvent, TestUtils } from "../setup.mjs";
 import "../../pages/status-page.js";
 
 describe("Status Page", () => {
   let element;
-  const mockServices = [
-    {
-      id: "api",
-      name: "API Service",
-      status: "operational",
-      uptime: "99.99%",
-      lastIncident: "2024-01-01T00:00:00Z",
-      metrics: {
-        responseTime: 150,
-        requestsPerMinute: 1000,
-        errorRate: 0.01,
+  const mockStatus = {
+    overall: "operational",
+    lastUpdated: "2024-03-15T12:00:00Z",
+    uptime: 99.99,
+    services: [
+      {
+        id: "api",
+        name: "API",
+        status: "operational",
+        uptime: 99.98,
+        incidents: [],
       },
-    },
-    {
-      id: "database",
-      name: "Database",
-      status: "degraded",
-      uptime: "99.95%",
-      lastIncident: "2024-02-01T00:00:00Z",
-      metrics: {
-        responseTime: 200,
-        connections: 500,
-        errorRate: 0.05,
+      {
+        id: "web",
+        name: "Web Interface",
+        status: "operational",
+        uptime: 99.99,
+        incidents: [],
       },
-    },
-  ];
-
-  const mockIncidents = [
-    {
-      id: "1",
-      title: "API Performance Degradation",
-      status: "resolved",
-      severity: "minor",
-      startTime: "2024-01-01T10:00:00Z",
-      endTime: "2024-01-01T11:00:00Z",
-      updates: [
-        {
-          timestamp: "2024-01-01T10:00:00Z",
-          message: "Investigating increased latency",
-          status: "investigating",
-        },
-        {
-          timestamp: "2024-01-01T11:00:00Z",
-          message: "Issue resolved",
-          status: "resolved",
-        },
-      ],
-    },
-  ];
+    ],
+    incidents: [
+      {
+        id: "inc-1",
+        title: "API Latency Issues",
+        status: "resolved",
+        createdAt: "2024-03-14T10:00:00Z",
+        resolvedAt: "2024-03-14T11:00:00Z",
+        updates: [
+          {
+            id: "upd-1",
+            message: "Issue resolved",
+            timestamp: "2024-03-14T11:00:00Z",
+          },
+        ],
+      },
+    ],
+  };
 
   beforeEach(async () => {
     // Mock status service
     window.status = {
-      getServices: async () => mockServices,
-      getIncidents: async () => mockIncidents,
-      subscribeToUpdates: async () => ({ success: true }),
-      getMetrics: async (serviceId) =>
-        mockServices.find((s) => s.id === serviceId).metrics,
+      getStatus: vi.fn().mockResolvedValue(mockStatus),
+      getServiceStatus: vi.fn((id) =>
+        Promise.resolve(mockStatus.services.find((s) => s.id === id))
+      ),
+      getIncidents: vi.fn().mockResolvedValue(mockStatus.incidents),
+      subscribeToUpdates: vi.fn().mockResolvedValue({ success: true }),
+      unsubscribeFromUpdates: vi.fn().mockResolvedValue({ success: true }),
     };
 
-    element = await fixture(html`<status-page></status-page>`);
-    await element.updateComplete;
+    element = await TestUtils.fixture(html`<status-page></status-page>`);
+    await TestUtils.waitForComponent(element);
   });
 
-  it("renders status overview", () => {
-    const overview = element.shadowRoot.querySelector(".status-overview");
+  it("renders status overview", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const overview = shadowRoot.querySelector(".status-overview");
     const systemStatus = overview.querySelector(".system-status");
     const uptimeDisplay = overview.querySelector(".uptime-display");
 
     expect(overview).to.exist;
     expect(systemStatus).to.exist;
     expect(uptimeDisplay).to.exist;
+    expect(systemStatus.textContent).to.include("operational");
+    expect(uptimeDisplay.textContent).to.include("99.99");
   });
 
   it("displays service statuses", () => {
     const services = element.shadowRoot.querySelectorAll(".service-status");
-    expect(services.length).to.equal(mockServices.length);
+    expect(services.length).to.equal(mockStatus.services.length);
 
     const firstService = services[0];
     expect(firstService.querySelector(".service-name").textContent).to.equal(
-      mockServices[0].name
+      mockStatus.services[0].name
     );
     expect(
       firstService.querySelector(".status-indicator").textContent
-    ).to.include(mockServices[0].status);
+    ).to.include(mockStatus.services[0].status);
   });
 
   it("shows incident history", () => {
@@ -96,7 +88,7 @@ describe("Status Page", () => {
     const incidentItems = incidents.querySelectorAll(".incident-item");
 
     expect(incidents).to.exist;
-    expect(incidentItems.length).to.equal(mockIncidents.length);
+    expect(incidentItems.length).to.equal(mockStatus.incidents.length);
   });
 
   it("displays incident details", async () => {
@@ -109,7 +101,7 @@ describe("Status Page", () => {
     const updates = details.querySelectorAll(".incident-update");
 
     expect(details).to.exist;
-    expect(updates.length).to.equal(mockIncidents[0].updates.length);
+    expect(updates.length).to.equal(mockStatus.incidents[0].updates.length);
   });
 
   it("shows service metrics", () => {
@@ -118,7 +110,7 @@ describe("Status Page", () => {
     metrics.forEach((metric, index) => {
       const responseTime = metric.querySelector(".response-time");
       expect(responseTime.textContent).to.include(
-        mockServices[index].metrics.responseTime.toString()
+        mockStatus.services[index].uptime.toString()
       );
     });
   });

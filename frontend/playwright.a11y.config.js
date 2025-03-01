@@ -1,38 +1,21 @@
-import { defineConfig } from "@playwright/test";
+// @ts-check
+import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./src/test/accessibility",
-  timeout: 30000,
-  expect: {
-    timeout: 5000,
-  },
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? "dot" : "list",
+  testDir: "./src/test/a11y",
+  testMatch: ["**/accessibility/*.test.js"],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:5173",
     trace: "on-first-retry",
-    screenshot: "only-on-failure",
   },
   projects: [
     {
       name: "chromium",
       use: {
-        browserName: "chromium",
-      },
-    },
-    {
-      name: "firefox",
-      use: {
-        browserName: "firefox",
-      },
-    },
-    {
-      name: "webkit",
-      use: {
-        browserName: "webkit",
+        ...devices["Desktop Chrome"],
+        contextOptions: {
+          strictSelectors: true,
+        },
       },
     },
   ],
@@ -41,4 +24,8 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
   },
+  reporter: [["html"], ["list"]],
+  workers: process.env.CI ? 1 : undefined,
+  retries: process.env.CI ? 2 : 0,
+  timeout: 30000,
 });

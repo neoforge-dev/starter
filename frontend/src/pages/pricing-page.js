@@ -1,9 +1,16 @@
-import { LitElement, html, css } from "lit";
-import { customElement } from "lit/decorators.js";
+import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  BaseComponent,
+  defineComponent,
+} from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
 
-@customElement("pricing-page")
-export class PricingPage extends LitElement {
+/**
+ * @element pricing-page
+ * @description Pricing page component with plans and features
+ */
+@defineComponent("pricing-page")
+export class PricingPage extends BaseComponent {
   static styles = [
     baseStyles,
     css`

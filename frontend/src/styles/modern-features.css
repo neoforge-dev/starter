@@ -1,0 +1,201 @@
+/* Modern CSS Features with Fallbacks */
+
+/* Container Queries */
+.container {
+  /* Default styles for non-supporting browsers */
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+@supports (container-type: inline-size) {
+  .container {
+    container-type: inline-size;
+    container-name: main;
+  }
+
+  /* Small container variant */
+  @container main (max-width: 30em) {
+    .responsive-element {
+      font-size: 0.875rem;
+      flex-direction: column;
+    }
+  }
+
+  /* Medium container variant */
+  @container main (min-width: 30em) and (max-width: 50em) {
+    .responsive-element {
+      font-size: 1rem;
+      flex-direction: row;
+      gap: 1rem;
+    }
+  }
+
+  /* Large container variant */
+  @container main (min-width: 50em) {
+    .responsive-element {
+      font-size: 1.125rem;
+      flex-direction: row;
+      gap: 2rem;
+    }
+  }
+}
+
+/* Fallback for non-supporting browsers using media queries */
+@media (max-width: 480px) {
+  .container:not(:has([container-type])) .responsive-element {
+    font-size: 0.875rem;
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 800px) {
+  .container:not(:has([container-type])) .responsive-element {
+    font-size: 1rem;
+    flex-direction: row;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 801px) {
+  .container:not(:has([container-type])) .responsive-element {
+    font-size: 1.125rem;
+    flex-direction: row;
+    gap: 2rem;
+  }
+}
+
+/* Subgrid */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@supports (grid-template-columns: subgrid) {
+  .nested-grid {
+    display: grid;
+    grid-column: span 4;
+    grid-template-columns: subgrid;
+  }
+}
+
+/* Fallback for browsers without subgrid support */
+@supports not (grid-template-columns: subgrid) {
+  .nested-grid {
+    display: grid;
+    grid-column: span 4;
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* View Transitions */
+@supports (view-transition-name: any) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.3s;
+  }
+
+  .page {
+    view-transition-name: page;
+  }
+
+  .header {
+    view-transition-name: header;
+  }
+
+  .footer {
+    view-transition-name: footer;
+  }
+}
+
+/* Fallback for browsers without view transitions */
+@supports not (view-transition-name: any) {
+  .page-transition {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .page-transition.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* :has() selector */
+@supports selector(:has(*)) {
+  /* Form validation styles */
+  .form-group:has(input:invalid) {
+    border-color: #ff4444;
+  }
+
+  .form-group:has(input:focus) {
+    background-color: #f0f9ff;
+  }
+
+  /* Card with image styles */
+  .card:has(img) {
+    padding-top: 0;
+  }
+
+  /* Empty state styles */
+  .container:has(:empty) {
+    display: none;
+  }
+
+  /* Interactive navigation */
+  .nav-item:has(.dropdown:hover) {
+    background-color: #f0f0f0;
+  }
+}
+
+/* Fallback for browsers without :has() support */
+/* Using classes and data attributes instead */
+.form-group.has-invalid {
+  border-color: #ff4444;
+}
+
+.form-group.has-focus {
+  background-color: #f0f9ff;
+}
+
+.card.has-image {
+  padding-top: 0;
+}
+
+.container.is-empty {
+  display: none;
+}
+
+.nav-item.has-dropdown-hover {
+  background-color: #f0f0f0;
+}
+
+/* Utility classes for feature detection */
+.supports-container-queries .container-query-only {
+  display: block;
+}
+
+.supports-subgrid .subgrid-only {
+  display: block;
+}
+
+.supports-view-transitions .view-transition-only {
+  display: block;
+}
+
+.supports-has-selector .has-selector-only {
+  display: block;
+}
+
+/* Hide feature-specific elements when not supported */
+.container-query-only,
+.subgrid-only,
+.view-transition-only,
+.has-selector-only {
+  display: none;
+}
+
+/* Feature detection classes are added via JavaScript */ 

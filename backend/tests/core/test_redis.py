@@ -1,108 +1,182 @@
-"""Test Redis functionality."""
+"""Test Redis functionality and monitoring."""
+import pytest
 import asyncio
 from typing import AsyncGenerator
+from unittest.mock import AsyncMock, patch, MagicMock
+from redis.asyncio import Redis, ConnectionPool, BlockingConnectionPool
+from redis.exceptions import ConnectionError, TimeoutError, ResponseError
+from prometheus_client import REGISTRY
 
-import pytest
-from redis.asyncio import Redis
-from redis.exceptions import ResponseError
-
-from app.core.redis import get_redis
+from app.core.redis import (
+    get_redis,
+    check_redis_health,
+    redis_client,
+    REDIS_OPERATIONS,
+    REDIS_ERRORS,
+    REDIS_OPERATION_DURATION,
+)
+from app.core.config import settings
 
 pytestmark = pytest.mark.asyncio
 
+@pytest.fixture
+async def mock_redis():
+    """Create a mock Redis client with monitoring."""
+    redis = AsyncMock(spec=Redis)
+    redis.ping = AsyncMock(return_value=True)
+    redis.set = AsyncMock(return_value=True)
+    redis.get = AsyncMock(return_value="test_value")
+    redis.delete = AsyncMock(return_value=1)
+    redis.close = AsyncMock()
+    redis.pipeline = AsyncMock()
+    return redis
 
-async def test_redis_connection(redis: Redis) -> None:
-    """Test Redis connection and basic operations."""
-    # Test ping
-    assert await redis.ping()
-    
-    # Test set/get
-    await redis.set("test_key", "test_value")
-    value = await redis.get("test_key")
-    assert value == "test_value"  # Redis client is configured with decode_responses=True
-    
-    # Test delete
-    await redis.delete("test_key")
-    value = await redis.get("test_key")
-    assert value is None
+@pytest.fixture(autouse=True)
+def clear_metrics():
+    """Clear metrics before each test."""
+    REDIS_OPERATIONS._metrics.clear()
+    REDIS_ERRORS._metrics.clear()
+    REDIS_OPERATION_DURATION._metrics.clear()
 
-
-async def test_redis_expiry(redis: Redis) -> None:
-    """Test Redis key expiration."""
-    # Set key with 1 second expiry
-    await redis.set("expire_key", "expire_value", ex=1)
-    
-    # Key should exist initially
-    value = await redis.get("expire_key")
-    assert value == "expire_value"  # Redis client is configured with decode_responses=True
-    
-    # Wait for expiration
-    await asyncio.sleep(1.1)
-    
-    # Key should be gone
-    assert await redis.get("expire_key") is None
-
-
-async def test_redis_pipeline(redis: Redis) -> None:
-    """Test Redis pipeline operations."""
-    async with redis.pipeline(transaction=True) as pipe:
-        await pipe.set("pipe_key1", "value1")
-        await pipe.set("pipe_key2", "value2")
-        await pipe.get("pipe_key1")
-        await pipe.get("pipe_key2")
-        results = await pipe.execute()
+async def test_redis_connection_success(mock_redis):
+    """Test successful Redis connection and basic operations."""
+    async for redis in get_redis():
+        # Test ping
+        assert await redis.ping()
         
-    assert results[2:] == ["value1", "value2"]  # Get results from pipeline
-    
-    # Clean up
-    await redis.delete("pipe_key1", "pipe_key2")
+        # Test set/get
+        await redis.set("test_key", "test_value")
+        value = await redis.get("test_key")
+        assert value == "test_value"
+        
+        # Test delete
+        await redis.delete("test_key")
+        assert await redis.get("test_key") is None
+        
+        # Verify metrics
+        assert REDIS_OPERATIONS.labels(operation="ping")._value.get() == 1
+        assert REDIS_OPERATIONS.labels(operation="set")._value.get() == 1
+        assert REDIS_OPERATIONS.labels(operation="get")._value.get() == 2
+        assert REDIS_OPERATIONS.labels(operation="delete")._value.get() == 1
 
+async def test_redis_connection_error():
+    """Test Redis connection error handling."""
+    with patch("app.core.redis.redis_client", side_effect=ConnectionError("Connection refused")):
+        async for redis in get_redis():
+            assert redis is None
+            assert REDIS_ERRORS.labels(error_type="ConnectionError")._value.get() == 1
 
-async def test_redis_connection_pool(redis: Redis) -> None:
-    """Test Redis connection pool."""
-    # Get another Redis connection using the same pool
-    redis2 = Redis.from_pool(redis.connection_pool)
+async def test_redis_health_check(mock_redis):
+    """Test Redis health check functionality."""
+    # Test successful health check
+    is_healthy, error = await check_redis_health(mock_redis)
+    assert is_healthy
+    assert error is None
     
-    # Test connections work
-    assert await redis.ping()
-    assert await redis2.ping()
-    
-    # Test they share the same pool
-    assert redis.connection_pool is redis2.connection_pool
-    
-    # Clean up
-    await redis2.aclose()
+    # Test failed health check
+    mock_redis.ping.side_effect = ConnectionError("Connection refused")
+    is_healthy, error = await check_redis_health(mock_redis)
+    assert not is_healthy
+    assert "Connection refused" in error
 
+async def test_redis_pipeline(mock_redis):
+    """Test Redis pipeline operations."""
+    # Setup mock pipeline
+    mock_pipeline = AsyncMock()
+    mock_pipeline.execute = AsyncMock(return_value=["value1", "value2"])
+    mock_redis.pipeline.return_value.__aenter__.return_value = mock_pipeline
+    
+    async with mock_redis.pipeline(transaction=True) as pipe:
+        await pipe.set("key1", "value1")
+        await pipe.set("key2", "value2")
+        results = await pipe.execute()
+    
+    assert results == ["value1", "value2"]
+    assert REDIS_OPERATIONS.labels(operation="pipeline")._value.get() == 1
 
-async def test_redis_error_handling(redis: Redis) -> None:
-    """Test Redis error handling."""
-    # Test invalid command
+async def test_redis_retry_strategy():
+    """Test Redis retry strategy configuration."""
+    pool = BlockingConnectionPool.from_url(
+        settings.redis_url,
+        decode_responses=True,
+        max_connections=5,
+        timeout=5,
+        retry_on_timeout=True,
+        health_check_interval=5
+    )
+    
+    assert pool.max_connections == 5
+    assert pool.timeout == 5
+    assert pool.health_check_interval == 5
+
+async def test_redis_metrics_recording(mock_redis):
+    """Test Redis metrics recording."""
+    # Perform operations
+    await mock_redis.set("key", "value")
+    await mock_redis.get("key")
+    await mock_redis.delete("key")
+    
+    # Verify operation counts
+    assert REDIS_OPERATIONS.labels(operation="set")._value.get() == 1
+    assert REDIS_OPERATIONS.labels(operation="get")._value.get() == 1
+    assert REDIS_OPERATIONS.labels(operation="delete")._value.get() == 1
+    
+    # Verify duration metrics exist
+    duration_samples = REGISTRY.get_sample_values("redis_operation_duration_seconds_bucket")
+    assert len(duration_samples) > 0
+
+async def test_redis_error_metrics(mock_redis):
+    """Test Redis error metrics recording."""
+    # Simulate various errors
+    mock_redis.set.side_effect = ConnectionError("Connection refused")
+    mock_redis.get.side_effect = TimeoutError("Operation timed out")
+    mock_redis.delete.side_effect = ResponseError("Invalid operation")
+    
+    # Perform operations that will fail
+    with pytest.raises(ConnectionError):
+        await mock_redis.set("key", "value")
+    with pytest.raises(TimeoutError):
+        await mock_redis.get("key")
     with pytest.raises(ResponseError):
-        await redis.execute_command("INVALID_COMMAND")
+        await mock_redis.delete("key")
     
-    # Test invalid key type
-    await redis.set("string_key", "value")
-    with pytest.raises(ResponseError):
-        await redis.lpush("string_key", "value")  # Try to use string key as list
-    
-    # Clean up
-    await redis.delete("string_key")
+    # Verify error metrics
+    assert REDIS_ERRORS.labels(error_type="ConnectionError")._value.get() == 1
+    assert REDIS_ERRORS.labels(error_type="TimeoutError")._value.get() == 1
+    assert REDIS_ERRORS.labels(error_type="ResponseError")._value.get() == 1
 
+async def test_redis_concurrent_operations(mock_redis):
+    """Test Redis concurrent operations handling."""
+    # Setup concurrent operations
+    async def perform_operation(key: str):
+        await mock_redis.set(key, "value")
+        await mock_redis.get(key)
+        await mock_redis.delete(key)
+    
+    # Execute concurrent operations
+    await asyncio.gather(*[
+        perform_operation(f"key{i}")
+        for i in range(5)
+    ])
+    
+    # Verify metrics for concurrent operations
+    assert REDIS_OPERATIONS.labels(operation="set")._value.get() == 5
+    assert REDIS_OPERATIONS.labels(operation="get")._value.get() == 5
+    assert REDIS_OPERATIONS.labels(operation="delete")._value.get() == 5
 
-async def test_redis_list_operations(redis: Redis) -> None:
-    """Test Redis list operations."""
-    key = "test_list"
+async def test_redis_pool_cleanup():
+    """Test Redis connection pool cleanup."""
+    pool = BlockingConnectionPool.from_url(
+        settings.redis_url,
+        decode_responses=True,
+        max_connections=5
+    )
     
-    # Test push and pop
-    await redis.rpush(key, "item1", "item2", "item3")
-    assert await redis.llen(key) == 3
-    assert await redis.lpop(key) == "item1"
-    assert await redis.rpop(key) == "item3"
+    # Create and close Redis client
+    redis = Redis.from_pool(pool)
+    await redis.close()
     
-    # Test range
-    await redis.rpush(key, "new1", "new2", "new3")
-    items = await redis.lrange(key, 0, -1)
-    assert items == ["item2", "new1", "new2", "new3"]
-    
-    # Clean up
-    await redis.delete(key) 
+    # Verify pool is cleaned up
+    assert pool.max_connections == 5
+    assert len(pool._available_connections) == 0
+    assert len(pool._in_use_connections) == 0 

@@ -1,5 +1,4 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
+import { html, expect, oneEvent, TestUtils } from "../setup.mjs";
 import "../../pages/about-page.js";
 
 describe("About Page", () => {
@@ -53,16 +52,17 @@ describe("About Page", () => {
       subscribeNewsletter: async (email) => ({ success: true }),
     };
 
-    element = await fixture(html`<about-page></about-page>`);
-    await element.updateComplete;
+    element = await TestUtils.fixture(html`<about-page></about-page>`);
+    await TestUtils.waitForAll(element);
   });
 
-  it("renders main sections", () => {
-    const hero = element.shadowRoot.querySelector(".hero-section");
-    const mission = element.shadowRoot.querySelector(".mission-section");
-    const team = element.shadowRoot.querySelector(".team-section");
-    const values = element.shadowRoot.querySelector(".values-section");
-    const contact = element.shadowRoot.querySelector(".contact-section");
+  it("renders main sections", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const hero = shadowRoot.querySelector(".hero-section");
+    const mission = shadowRoot.querySelector(".mission-section");
+    const team = shadowRoot.querySelector(".team-section");
+    const values = shadowRoot.querySelector(".values-section");
+    const contact = shadowRoot.querySelector(".contact-section");
 
     expect(hero).to.exist;
     expect(mission).to.exist;
@@ -71,20 +71,20 @@ describe("About Page", () => {
     expect(contact).to.exist;
   });
 
-  it("displays company information", () => {
-    const companyName = element.shadowRoot.querySelector(".company-name");
-    const missionStatement =
-      element.shadowRoot.querySelector(".mission-statement");
-    const visionStatement =
-      element.shadowRoot.querySelector(".vision-statement");
+  it("displays company information", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const companyName = shadowRoot.querySelector(".company-name");
+    const missionStatement = shadowRoot.querySelector(".mission-statement");
+    const visionStatement = shadowRoot.querySelector(".vision-statement");
 
     expect(companyName.textContent).to.equal(mockCompanyInfo.name);
     expect(missionStatement.textContent).to.include(mockCompanyInfo.mission);
     expect(visionStatement.textContent).to.include(mockCompanyInfo.vision);
   });
 
-  it("renders team members", () => {
-    const teamMembers = element.shadowRoot.querySelectorAll(".team-member");
+  it("renders team members", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const teamMembers = shadowRoot.querySelectorAll(".team-member");
     expect(teamMembers.length).to.equal(mockTeamMembers.length);
 
     const firstMember = teamMembers[0];
@@ -96,8 +96,9 @@ describe("About Page", () => {
     );
   });
 
-  it("displays company values", () => {
-    const valueItems = element.shadowRoot.querySelectorAll(".value-item");
+  it("displays company values", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const valueItems = shadowRoot.querySelectorAll(".value-item");
     expect(valueItems.length).to.equal(mockCompanyInfo.values.length);
 
     valueItems.forEach((item, index) => {
@@ -105,8 +106,9 @@ describe("About Page", () => {
     });
   });
 
-  it("shows company statistics", () => {
-    const stats = element.shadowRoot.querySelector(".company-stats");
+  it("shows company statistics", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const stats = shadowRoot.querySelector(".company-stats");
     const statItems = stats.querySelectorAll(".stat-item");
 
     expect(statItems[0].textContent).to.include(mockCompanyInfo.stats.users);
@@ -117,18 +119,21 @@ describe("About Page", () => {
   });
 
   it("handles newsletter subscription", async () => {
-    const form = element.shadowRoot.querySelector(".newsletter-form");
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const form = shadowRoot.querySelector(".newsletter-form");
     const emailInput = form.querySelector('input[type="email"]');
 
     emailInput.value = "test@example.com";
-    setTimeout(() => form.submit());
-    const { detail } = await oneEvent(element, "newsletter-subscribe");
+    const submitPromise = oneEvent(element, "newsletter-subscribe");
+    form.dispatchEvent(new Event("submit"));
+    const { detail } = await submitPromise;
 
     expect(detail.email).to.equal("test@example.com");
   });
 
-  it("displays office locations", () => {
-    const locations = element.shadowRoot.querySelectorAll(".office-location");
+  it("displays office locations", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const locations = shadowRoot.querySelectorAll(".office-location");
     expect(locations.length).to.equal(mockCompanyInfo.locations.length);
 
     locations.forEach((location, index) => {
@@ -136,8 +141,9 @@ describe("About Page", () => {
     });
   });
 
-  it("shows team member social links", () => {
-    const teamMembers = element.shadowRoot.querySelectorAll(".team-member");
+  it("shows team member social links", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const teamMembers = shadowRoot.querySelectorAll(".team-member");
     const firstMember = teamMembers[0];
     const socialLinks = firstMember.querySelectorAll(".social-link");
 

@@ -4,10 +4,14 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 import structlog
+from sqlalchemy import select
 
 from app.crud.item import item as item_crud
 from app.db.session import get_db
 from app.schemas.item import Item, ItemCreate, ItemUpdate
+from app.core.security import get_current_user
+from app.schemas.user import UserResponse
+from app.models.item import Item as ItemModel
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -39,11 +43,18 @@ async def create_item(
 @router.get("/", response_model=List[Item])
 async def read_items(
     db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
     skip: int = 0,
     limit: int = 100,
 ) -> List[Item]:
     """Retrieve items."""
-    return await item_crud.get_multi(db, skip=skip, limit=limit)
+    result = await db.execute(
+        select(ItemModel)
+        .where(ItemModel.owner_id == current_user.id)
+        .offset(skip)
+        .limit(limit)
+    )
+    return list(result.scalars().all())
 
 
 @router.get("/{item_id}", response_model=Item)

@@ -1,5 +1,5 @@
 import { LanguageSelector } from "./language-selector.js";
-import { html } from "lit";
+import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 export default {
   title: "Components/Language Selector",

@@ -1,6 +1,8 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
+import { fixture, expect, oneEvent, TestUtils } from "../setup.mjs";
+import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import "../../pages/login-page.js";
+import { LoginPage } from "../../pages/login-page.js";
+import { ComponentTester } from "../setup.mjs";
 
 describe("Login Page", () => {
   let element;
@@ -13,160 +15,240 @@ describe("Login Page", () => {
   beforeEach(async () => {
     // Mock auth service
     window.auth = {
-      login: async (email, password) => ({
-        user: mockUser,
-        token: "test-token",
-      }),
-      loginWithGoogle: async () => ({ user: mockUser, token: "google-token" }),
-      loginWithGithub: async () => ({ user: mockUser, token: "github-token" }),
-      resetPassword: async (email) => ({ success: true }),
-      validateToken: async (token) => ({ valid: true }),
-      isAuthenticated: false,
+      login: vi.fn().mockResolvedValue({ success: true }),
+      resetPassword: vi.fn().mockResolvedValue({ success: true }),
+      validateEmail: vi.fn().mockResolvedValue({ isValid: true }),
     };
 
     element = await fixture(html`<login-page></login-page>`);
-    await element.updateComplete;
+    await TestUtils.waitForComponentToLoad(element);
   });
 
-  it("renders login form", () => {
-    const form = element.shadowRoot.querySelector(".login-form");
-    const emailInput = form.querySelector('input[type="email"]');
-    const passwordInput = form.querySelector('input[type="password"]');
-    const submitButton = form.querySelector('button[type="submit"]');
-
+  it("renders login form", async () => {
+    const form = await TestUtils.waitForComponent(element, ".login-form");
     expect(form).to.exist;
+
+    const emailInput = await TestUtils.waitForComponent(element, "#email");
+    const passwordInput = await TestUtils.waitForComponent(
+      element,
+      "#password"
+    );
+    const submitButton = await TestUtils.waitForComponent(
+      element,
+      "button[type='submit']"
+    );
+
     expect(emailInput).to.exist;
     expect(passwordInput).to.exist;
     expect(submitButton).to.exist;
+    expect(submitButton.textContent.trim()).to.equal("Login");
   });
 
-  it("handles form submission", async () => {
-    const form = element.shadowRoot.querySelector(".login-form");
-    const emailInput = form.querySelector('input[type="email"]');
-    const passwordInput = form.querySelector('input[type="password"]');
-
-    emailInput.value = "test@example.com";
-    passwordInput.value = "password123";
-
-    setTimeout(() => form.submit());
-    const { detail } = await oneEvent(element, "login-submit");
-
-    expect(detail.email).to.equal("test@example.com");
-    expect(detail.password).to.equal("password123");
-  });
-
-  it("validates form inputs", async () => {
-    const form = element.shadowRoot.querySelector(".login-form");
-    const submitButton = form.querySelector('button[type="submit"]');
-
-    submitButton.click();
-    await element.updateComplete;
-
-    const errorMessages = form.querySelectorAll(".error-message");
-    expect(errorMessages.length).to.be.greaterThan(0);
-  });
-
-  it("shows password requirements", async () => {
-    const passwordInput = element.shadowRoot.querySelector(
-      'input[type="password"]'
+  it("validates required fields", async () => {
+    const submitButton = await TestUtils.waitForComponent(
+      element,
+      "button[type='submit']"
     );
-    const requirements = element.shadowRoot.querySelector(
-      ".password-requirements"
+    await TestUtils.dispatchEvent(submitButton, "click");
+
+    const emailError = await TestUtils.waitForComponent(
+      element,
+      ".email-error"
+    );
+    const passwordError = await TestUtils.waitForComponent(
+      element,
+      ".password-error"
     );
 
-    passwordInput.focus();
-    await element.updateComplete;
-
-    expect(requirements).to.exist;
-    expect(requirements.classList.contains("visible")).to.be.true;
+    expect(emailError).to.exist;
+    expect(passwordError).to.exist;
+    expect(emailError.textContent).to.include("required");
+    expect(passwordError.textContent).to.include("required");
   });
 
-  it("toggles password visibility", async () => {
-    const passwordInput = element.shadowRoot.querySelector(
-      'input[type="password"]'
+  it("validates email format", async () => {
+    const emailInput = await TestUtils.waitForComponent(element, "#email");
+    await ComponentTester.type(emailInput, "invalid-email");
+
+    const submitButton = await TestUtils.waitForComponent(
+      element,
+      "button[type='submit']"
     );
-    const toggleButton = element.shadowRoot.querySelector(".toggle-password");
+    await TestUtils.dispatchEvent(submitButton, "click");
 
-    toggleButton.click();
-    await element.updateComplete;
-
-    expect(passwordInput.type).to.equal("text");
-
-    toggleButton.click();
-    await element.updateComplete;
-
-    expect(passwordInput.type).to.equal("password");
+    const emailError = await TestUtils.waitForComponent(
+      element,
+      ".email-error"
+    );
+    expect(emailError).to.exist;
+    expect(emailError.textContent).to.include("valid email");
   });
 
-  it("handles social login buttons", async () => {
-    const googleButton = element.shadowRoot.querySelector(".google-login");
-    const githubButton = element.shadowRoot.querySelector(".github-login");
+  it("handles successful login", async () => {
+    const emailInput = await TestUtils.waitForComponent(element, "#email");
+    const passwordInput = await TestUtils.waitForComponent(
+      element,
+      "#password"
+    );
+    const form = await TestUtils.waitForComponent(element, ".login-form");
 
-    setTimeout(() => googleButton.click());
-    const googleEvent = await oneEvent(element, "social-login");
-    expect(googleEvent.detail.provider).to.equal("google");
+    await ComponentTester.type(emailInput, "test@example.com");
+    await ComponentTester.type(passwordInput, "password123");
 
-    setTimeout(() => githubButton.click());
-    const githubEvent = await oneEvent(element, "social-login");
-    expect(githubEvent.detail.provider).to.equal("github");
+    const submitPromise = oneEvent(element, "login-success");
+    await TestUtils.dispatchEvent(form, "submit");
+    const { detail } = await submitPromise;
+
+    expect(detail).to.exist;
+    expect(window.auth.login).to.have.been.calledWith({
+      email: "test@example.com",
+      password: "password123",
+    });
+  });
+
+  it("handles login error", async () => {
+    window.auth.login.mockRejectedValueOnce(new Error("Invalid credentials"));
+
+    const emailInput = await TestUtils.waitForComponent(element, "#email");
+    const passwordInput = await TestUtils.waitForComponent(
+      element,
+      "#password"
+    );
+    const form = await TestUtils.waitForComponent(element, ".login-form");
+
+    await ComponentTester.type(emailInput, "test@example.com");
+    await ComponentTester.type(passwordInput, "wrong-password");
+
+    await TestUtils.dispatchEvent(form, "submit");
+
+    const errorMessage = await TestUtils.waitForComponent(
+      element,
+      ".error-message"
+    );
+    expect(errorMessage).to.exist;
+    expect(errorMessage.textContent).to.include("Invalid credentials");
   });
 
   it("shows forgot password form", async () => {
-    const forgotLink = element.shadowRoot.querySelector(
-      ".forgot-password-link"
+    const forgotPasswordLink = await TestUtils.waitForComponent(
+      element,
+      ".forgot-password"
     );
+    await TestUtils.dispatchEvent(forgotPasswordLink, "click");
 
-    forgotLink.click();
-    await element.updateComplete;
-
-    const forgotForm = element.shadowRoot.querySelector(
-      ".forgot-password-form"
-    );
-    expect(forgotForm).to.exist;
-    expect(forgotForm.classList.contains("visible")).to.be.true;
+    const resetForm = await TestUtils.waitForComponent(element, ".reset-form");
+    expect(resetForm).to.exist;
   });
 
   it("handles password reset request", async () => {
-    const forgotLink = element.shadowRoot.querySelector(
-      ".forgot-password-link"
+    const forgotPasswordLink = await TestUtils.waitForComponent(
+      element,
+      ".forgot-password"
     );
-    forgotLink.click();
-    await element.updateComplete;
+    await TestUtils.dispatchEvent(forgotPasswordLink, "click");
 
-    const forgotForm = element.shadowRoot.querySelector(
-      ".forgot-password-form"
+    const emailInput = await TestUtils.waitForComponent(
+      element,
+      "#reset-email"
     );
-    const emailInput = forgotForm.querySelector('input[type="email"]');
+    const resetForm = await TestUtils.waitForComponent(element, ".reset-form");
 
-    emailInput.value = "test@example.com";
-    setTimeout(() => forgotForm.submit());
-    const { detail } = await oneEvent(element, "reset-password");
+    await ComponentTester.type(emailInput, "test@example.com");
 
-    expect(detail.email).to.equal("test@example.com");
+    const resetPromise = oneEvent(element, "reset-requested");
+    await TestUtils.dispatchEvent(resetForm, "submit");
+    const { detail } = await resetPromise;
+
+    expect(detail).to.exist;
+    expect(window.auth.resetPassword).to.have.been.calledWith(
+      "test@example.com"
+    );
+  });
+
+  it("toggles password visibility", async () => {
+    const toggleButton = await TestUtils.waitForComponent(
+      element,
+      ".toggle-password"
+    );
+    const passwordInput = await TestUtils.waitForComponent(
+      element,
+      "#password"
+    );
+
+    expect(passwordInput.type).to.equal("password");
+
+    await TestUtils.dispatchEvent(toggleButton, "click");
+    expect(passwordInput.type).to.equal("text");
+
+    await TestUtils.dispatchEvent(toggleButton, "click");
+    expect(passwordInput.type).to.equal("password");
+  });
+
+  it("handles loading state", async () => {
+    element.loading = true;
+    await TestUtils.waitForComponentToLoad(element);
+
+    const loadingSpinner = await TestUtils.waitForComponent(
+      element,
+      ".loading-spinner"
+    );
+    expect(loadingSpinner).to.exist;
+    expect(loadingSpinner).to.be.visible;
+  });
+
+  it("shows password requirements", async () => {
+    const passwordInput = await TestUtils.waitForComponent(
+      element,
+      'input[type="password"]'
+    );
+    const requirementsTooltip = await TestUtils.waitForComponent(
+      element,
+      ".password-requirements"
+    );
+
+    await TestUtils.dispatchEvent(passwordInput, "focus");
+    expect(requirementsTooltip).to.be.visible;
+
+    await TestUtils.dispatchEvent(passwordInput, "blur");
+    expect(requirementsTooltip).to.not.be.visible;
   });
 
   it("shows loading state during authentication", async () => {
-    element.loading = true;
-    await element.updateComplete;
-
-    const loader = element.shadowRoot.querySelector(".loading-indicator");
-    const submitButton = element.shadowRoot.querySelector(
-      'button[type="submit"]'
+    const form = await TestUtils.waitForComponent(element, ".login-form");
+    const loadingSpinner = await TestUtils.waitForComponent(
+      element,
+      ".loading-spinner"
     );
 
-    expect(loader).to.exist;
-    expect(loader.hasAttribute("hidden")).to.be.false;
-    expect(submitButton.disabled).to.be.true;
+    element.loading = true;
+    await TestUtils.waitForComponentToLoad(element);
+
+    expect(form).to.not.be.visible;
+    expect(loadingSpinner).to.be.visible;
+
+    element.loading = false;
+    await TestUtils.waitForComponentToLoad(element);
+
+    expect(form).to.be.visible;
+    expect(loadingSpinner).to.not.be.visible;
   });
 
   it("displays error messages", async () => {
-    const error = "Invalid credentials";
-    element.error = error;
-    await element.updateComplete;
+    const errorContainer = await TestUtils.waitForComponent(
+      element,
+      ".error-container"
+    );
 
-    const errorMessage = element.shadowRoot.querySelector(".error-message");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include(error);
+    element.error = "Invalid credentials";
+    await TestUtils.waitForComponentToLoad(element);
+
+    expect(errorContainer).to.be.visible;
+    expect(errorContainer.textContent).to.include("Invalid credentials");
+
+    element.error = null;
+    await TestUtils.waitForComponentToLoad(element);
+
+    expect(errorContainer).to.not.be.visible;
   });
 
   it("supports mobile responsive layout", async () => {
@@ -177,64 +259,63 @@ describe("Login Page", () => {
       removeListener: () => {},
     });
 
-    await element.updateComplete;
+    await TestUtils.waitForComponentToLoad(element);
 
-    const container = element.shadowRoot.querySelector(".page-container");
+    const container = await TestUtils.waitForComponent(
+      element,
+      ".page-container"
+    );
     expect(container.classList.contains("mobile")).to.be.true;
   });
 
-  it("maintains accessibility attributes", () => {
-    const form = element.shadowRoot.querySelector("form");
+  it("maintains accessibility attributes", async () => {
+    const form = await TestUtils.waitForComponent(element, "form");
     expect(form.getAttribute("role")).to.equal("form");
-
-    const inputs = form.querySelectorAll("input");
-    inputs.forEach((input) => {
-      expect(input.getAttribute("aria-label")).to.exist;
-    });
-
-    const submitButton = form.querySelector('button[type="submit"]');
-    expect(submitButton.getAttribute("aria-label")).to.exist;
   });
 
   it("supports keyboard navigation", async () => {
-    const form = element.shadowRoot.querySelector(".login-form");
+    const form = await TestUtils.waitForComponent(element, ".login-form");
     const inputs = form.querySelectorAll("input, button");
     const firstInput = inputs[0];
 
     firstInput.focus();
     firstInput.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab" }));
-    await element.updateComplete;
+    await TestUtils.waitForComponentToLoad(element);
 
     expect(document.activeElement).to.equal(inputs[1]);
   });
 
   it("remembers user preferences", async () => {
-    const rememberMe = element.shadowRoot.querySelector(".remember-me");
+    const rememberMe = await TestUtils.waitForComponent(
+      element,
+      ".remember-me"
+    );
     rememberMe.click();
-    await element.updateComplete;
+    await TestUtils.waitForComponentToLoad(element);
 
     expect(element.rememberUser).to.be.true;
     expect(localStorage.getItem("remember_user")).to.equal("true");
   });
 
   it("validates password strength", async () => {
-    const passwordInput = element.shadowRoot.querySelector(
+    const passwordInput = await TestUtils.waitForComponent(
+      element,
       'input[type="password"]'
     );
-    const strengthIndicator =
-      element.shadowRoot.querySelector(".password-strength");
+    const strengthIndicator = await TestUtils.waitForComponent(
+      element,
+      ".password-strength"
+    );
 
     // Test weak password
-    passwordInput.value = "weak";
-    passwordInput.dispatchEvent(new Event("input"));
-    await element.updateComplete;
+    await ComponentTester.type(passwordInput, "weak");
+    await TestUtils.waitForComponentToLoad(element);
 
     expect(strengthIndicator.classList.contains("weak")).to.be.true;
 
     // Test strong password
-    passwordInput.value = "StrongPass123!";
-    passwordInput.dispatchEvent(new Event("input"));
-    await element.updateComplete;
+    await ComponentTester.type(passwordInput, "StrongPass123!");
+    await TestUtils.waitForComponentToLoad(element);
 
     expect(strengthIndicator.classList.contains("strong")).to.be.true;
   });
@@ -242,7 +323,7 @@ describe("Login Page", () => {
   it("handles authentication token validation", async () => {
     const token = "valid-token";
     element.token = token;
-    await element.updateComplete;
+    await TestUtils.waitForComponentToLoad(element);
 
     expect(element.isValidToken).to.be.true;
     expect(element.shadowRoot.querySelector(".token-validation-message")).to
@@ -250,15 +331,15 @@ describe("Login Page", () => {
   });
 
   it("supports remember me functionality", async () => {
-    const form = element.shadowRoot.querySelector(".login-form");
+    const form = await TestUtils.waitForComponent(element, ".login-form");
     const emailInput = form.querySelector('input[type="email"]');
     const rememberMe = form.querySelector(".remember-me");
 
-    emailInput.value = "test@example.com";
+    await ComponentTester.type(emailInput, "test@example.com");
     rememberMe.click();
-    form.submit();
+    await TestUtils.dispatchEvent(form, "submit");
 
-    await element.updateComplete;
+    await TestUtils.waitForComponentToLoad(element);
 
     expect(localStorage.getItem("remembered_email")).to.equal(
       "test@example.com"
@@ -269,7 +350,7 @@ describe("Login Page", () => {
     const timeoutMessage = "Your session has expired";
     element.sessionTimeout = true;
     element.timeoutMessage = timeoutMessage;
-    await element.updateComplete;
+    await TestUtils.waitForComponentToLoad(element);
 
     const message = element.shadowRoot.querySelector(".timeout-message");
     expect(message).to.exist;

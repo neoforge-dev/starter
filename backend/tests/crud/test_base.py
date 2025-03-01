@@ -1,110 +1,209 @@
-"""Test CRUD base class."""
+"""Test CRUD base functionality."""
 import pytest
-import pytest_asyncio
-from typing import AsyncGenerator
+from typing import Optional
 from pydantic import BaseModel
+from sqlalchemy import Column, Integer, String, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql.expression import func
 
-from app.crud.base import CRUDBase
-from app.models.item import Item
-from tests.factories import ItemFactory, UserFactory
 from app.db.base_class import Base
+from app.crud.base import CRUDBase
+from app.schemas.common import PaginationParams
 
-# Mark these classes to be ignored by pytest collection
-pytestmark = pytest.mark.usefixtures("db")
+pytestmark = pytest.mark.asyncio
 
-class _TestItemCreate(BaseModel):
-    """Test item creation schema."""
-    title: str
-    description: str | None = None
-    owner_id: int
-
-class _TestItemUpdate(BaseModel):
-    """Test item update schema."""
-    title: str | None = None
-    description: str | None = None
-    owner_id: int | None = None
-
-class _Item(Base):
+# Test models
+class TestItem(Base):
     """Test item model."""
     __tablename__ = "test_items"
     
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     description = Column(String)
+    owner_id = Column(Integer, index=True)
 
-class _TestCRUD(CRUDBase[Item, _TestItemCreate, _TestItemUpdate]):
+class TestItemCreate(BaseModel):
+    """Test item create schema."""
+    title: str
+    description: Optional[str] = None
+    owner_id: int
+
+class TestItemUpdate(BaseModel):
+    """Test item update schema."""
+    title: Optional[str] = None
+    description: Optional[str] = None
+
+class TestCRUD(CRUDBase[TestItem, TestItemCreate, TestItemUpdate]):
     """Test CRUD operations."""
     pass
 
-@pytest_asyncio.fixture
-async def crud() -> AsyncGenerator[_TestCRUD, None]:
-    """Get test CRUD instance."""
-    yield _TestCRUD(Item)
+@pytest.fixture
+def crud() -> TestCRUD:
+    """Create CRUD instance."""
+    return TestCRUD(TestItem)
 
-async def test_crud_create(db: AsyncSession, crud: _TestCRUD) -> None:
-    """Test CRUD create operation."""
-    user = await UserFactory.create(session=db)
-    item_in = _TestItemCreate(
+async def test_create(test_session: AsyncSession, crud: TestCRUD):
+    """Test item creation."""
+    item_in = TestItemCreate(
         title="Test Item",
         description="Test Description",
-        owner_id=user.id,
+        owner_id=1
     )
+    item = await crud.create(test_session, obj_in=item_in)
     
-    item = await crud.create(db, obj_in=item_in)
-    assert item.title == item_in.title
-    assert item.description == item_in.description
-    assert item.owner_id == user.id
+    assert item.id is not None
+    assert item.title == "Test Item"
+    assert item.description == "Test Description"
+    assert item.owner_id == 1
 
-
-async def test_crud_update(db: AsyncSession, crud: _TestCRUD) -> None:
-    """Test CRUD update operation."""
-    user = await UserFactory.create(session=db)
-    item = await ItemFactory.create(session=db, user=user)
+async def test_get(test_session: AsyncSession, crud: TestCRUD):
+    """Test getting a single item."""
+    # Create test item
+    item_in = TestItemCreate(title="Test Item", owner_id=1)
+    item = await crud.create(test_session, obj_in=item_in)
     
-    # Test update with model
-    update_data = _TestItemUpdate(title="Updated Title")
-    updated_item = await crud.update(db, db_obj=item, obj_in=update_data)
-    assert updated_item.title == "Updated Title"
-    assert updated_item.owner_id == user.id
+    # Get item
+    retrieved = await crud.get(test_session, id=item.id)
+    assert retrieved is not None
+    assert retrieved.id == item.id
+    assert retrieved.title == item.title
     
-    # Test update with dict
-    dict_update = {"description": "Updated Description"}
-    updated_item = await crud.update(db, db_obj=item, obj_in=dict_update)
-    assert updated_item.description == "Updated Description"
-    assert updated_item.title == "Updated Title"
+    # Test non-existent item
+    non_existent = await crud.get(test_session, id=999999)
+    assert non_existent is None
 
-
-async def test_crud_get_multi(db: AsyncSession, crud: _TestCRUD):
-    """Test CRUD get_multi operation."""
-    user = await UserFactory.create(session=db)
-    items = [
-        await ItemFactory.create(session=db, user=user),
-        await ItemFactory.create(session=db, user=user),
-        await ItemFactory.create(session=db, user=user),
-    ]
+async def test_get_multi(test_session: AsyncSession, crud: TestCRUD):
+    """Test getting multiple items with pagination."""
+    # Create test items
+    items = []
+    for i in range(15):  # Create 15 items
+        item_in = TestItemCreate(
+            title=f"Test Item {i}",
+            owner_id=1
+        )
+        item = await crud.create(test_session, obj_in=item_in)
+        items.append(item)
     
     # Test default pagination
-    result = await crud.get_multi(db)
-    assert len(result) == 3
+    pagination = PaginationParams()
+    result = await crud.get_multi(test_session, pagination=pagination)
+    assert len(result.items) == 10  # Default page size
+    assert result.total == 15
+    assert result.page == 1
     
-    # Test with skip and limit
-    result = await crud.get_multi(db, skip=1, limit=1)
-    assert len(result) == 1
-    assert result[0].id == items[1].id
+    # Test custom pagination
+    pagination = PaginationParams(page=2, page_size=5)
+    result = await crud.get_multi(test_session, pagination=pagination)
+    assert len(result.items) == 5
+    assert result.total == 15
+    assert result.page == 2
 
+async def test_get_multi_by_owner(test_session: AsyncSession, crud: TestCRUD):
+    """Test getting items by owner."""
+    # Create items for different owners
+    owner_ids = [1, 1, 2, 2, 2]
+    for owner_id in owner_ids:
+        item_in = TestItemCreate(
+            title=f"Test Item for owner {owner_id}",
+            owner_id=owner_id
+        )
+        await crud.create(test_session, obj_in=item_in)
+    
+    # Get items for owner 1
+    items = await crud.get_multi_by_owner(test_session, owner_id=1)
+    assert len(items) == 2
+    assert all(item.owner_id == 1 for item in items)
+    
+    # Get items for owner 2
+    items = await crud.get_multi_by_owner(test_session, owner_id=2)
+    assert len(items) == 3
+    assert all(item.owner_id == 2 for item in items)
 
-async def test_crud_remove(db: AsyncSession, crud: _TestCRUD):
-    """Test CRUD remove operation."""
-    user = await UserFactory.create(session=db)
-    item = await ItemFactory.create(session=db, user=user)
+async def test_update(test_session: AsyncSession, crud: TestCRUD):
+    """Test item update."""
+    # Create test item
+    item_in = TestItemCreate(
+        title="Original Title",
+        description="Original Description",
+        owner_id=1
+    )
+    item = await crud.create(test_session, obj_in=item_in)
     
-    # Remove item
-    removed_item = await crud.remove(db, id=item.id)
-    assert removed_item.id == item.id
+    # Update item
+    item_update = TestItemUpdate(
+        title="Updated Title",
+        description="Updated Description"
+    )
+    updated_item = await crud.update(
+        test_session,
+        db_obj=item,
+        obj_in=item_update
+    )
     
-    # Verify item is removed
-    result = await crud.get(db, id=item.id)
-    assert result is None 
+    assert updated_item.id == item.id
+    assert updated_item.title == "Updated Title"
+    assert updated_item.description == "Updated Description"
+    assert updated_item.owner_id == 1  # Should not change
+
+async def test_delete(test_session: AsyncSession, crud: TestCRUD):
+    """Test item deletion."""
+    # Create test item
+    item_in = TestItemCreate(title="Test Item", owner_id=1)
+    item = await crud.create(test_session, obj_in=item_in)
+    
+    # Delete item
+    deleted_item = await crud.remove(test_session, id=item.id)
+    assert deleted_item.id == item.id
+    
+    # Verify item is deleted
+    retrieved = await crud.get(test_session, id=item.id)
+    assert retrieved is None
+
+async def test_count(test_session: AsyncSession, crud: TestCRUD):
+    """Test counting items."""
+    # Create test items
+    for i in range(5):
+        item_in = TestItemCreate(title=f"Test Item {i}", owner_id=1)
+        await crud.create(test_session, obj_in=item_in)
+    
+    # Count all items
+    count = await crud.count(test_session)
+    assert count == 5
+    
+    # Count items by owner
+    count = await crud.count(test_session, owner_id=1)
+    assert count == 5
+    count = await crud.count(test_session, owner_id=2)
+    assert count == 0
+
+async def test_exists(test_session: AsyncSession, crud: TestCRUD):
+    """Test checking item existence."""
+    # Create test item
+    item_in = TestItemCreate(title="Test Item", owner_id=1)
+    item = await crud.create(test_session, obj_in=item_in)
+    
+    # Check existence
+    assert await crud.exists(test_session, id=item.id)
+    assert not await crud.exists(test_session, id=999999)
+
+async def test_get_by_title(test_session: AsyncSession, crud: TestCRUD):
+    """Test getting items by title."""
+    # Create test items
+    titles = ["Unique Title", "Common Title", "Common Title"]
+    for title in titles:
+        item_in = TestItemCreate(title=title, owner_id=1)
+        await crud.create(test_session, obj_in=item_in)
+    
+    # Get by unique title
+    items = await crud.get_by_title(test_session, title="Unique Title")
+    assert len(items) == 1
+    assert items[0].title == "Unique Title"
+    
+    # Get by common title
+    items = await crud.get_by_title(test_session, title="Common Title")
+    assert len(items) == 2
+    assert all(item.title == "Common Title" for item in items)
+    
+    # Get by non-existent title
+    items = await crud.get_by_title(test_session, title="Non-existent")
+    assert len(items) == 0 

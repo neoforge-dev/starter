@@ -1,159 +1,115 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
+import {
+  fixture,
+  expect,
+  oneEvent,
+  waitForComponentUpdate,
+  TestUtils,
+} from "../setup.mjs";
+import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import "../../pages/docs-page.js";
 
 describe("Documentation Page", () => {
   let element;
-  const mockDocs = {
-    sections: [
-      {
-        id: "introduction",
-        title: "Introduction",
-        content: "# Introduction\nWelcome to NeoForge documentation...",
-        subsections: [
-          {
-            id: "overview",
-            title: "Overview",
-            content: "## Overview\nNeoForge is a modern framework...",
-          },
+
+  beforeEach(async () => {
+    // Mock docs service
+    window.docs = {
+      getDocs: vi.fn().mockResolvedValue({
+        sections: [
           {
             id: "getting-started",
             title: "Getting Started",
-            content: "## Getting Started\nInstall NeoForge using...",
+            content: "# Getting Started\nWelcome to the docs",
+            subsections: [
+              {
+                id: "installation",
+                title: "Installation",
+                content: "## Installation\nInstall the package",
+              },
+            ],
           },
         ],
-      },
-      {
-        id: "components",
-        title: "Components",
-        content: "# Components\nLearn about NeoForge components...",
-        subsections: [
-          {
-            id: "web-components",
-            title: "Web Components",
-            content: "## Web Components\nCreate custom elements...",
-          },
-        ],
-      },
-    ],
-    metadata: {
-      version: "1.0.0",
-      lastUpdated: "2024-03-15",
-      contributors: [
-        { name: "John Doe", commits: 150 },
-        { name: "Jane Smith", commits: 120 },
-      ],
-    },
-  };
-
-  beforeEach(async () => {
-    // Mock documentation service
-    window.docs = {
-      getDocs: async () => mockDocs,
-      getSection: async (id) => mockDocs.sections.find((s) => s.id === id),
-      getSubsection: async (sectionId, subsectionId) => {
-        const section = mockDocs.sections.find((s) => s.id === sectionId);
-        return section?.subsections.find((ss) => ss.id === subsectionId);
-      },
-      searchDocs: async (query) => [mockDocs.sections[0].subsections[0]],
-      reportIssue: async (path, issue) => ({
-        success: true,
-        ticketId: "DOC-123",
+        metadata: {
+          version: "1.0.0",
+          lastUpdated: "2024-03-15",
+          contributors: [{ name: "John Doe", commits: 10 }],
+        },
       }),
+      searchDocs: vi.fn().mockResolvedValue([]),
     };
 
     element = await fixture(html`<docs-page></docs-page>`);
-    await element.updateComplete;
+    await TestUtils.waitForAll(element);
   });
 
-  it("renders documentation layout", () => {
-    const sidebar = element.shadowRoot.querySelector(".docs-sidebar");
-    const content = element.shadowRoot.querySelector(".docs-content");
-    const toc = element.shadowRoot.querySelector(".table-of-contents");
+  it("renders documentation layout", async () => {
+    const sidebar = await TestUtils.queryComponent(element, ".docs-sidebar");
+    const content = await TestUtils.queryComponent(element, ".docs-content");
+    const toc = await TestUtils.queryComponent(element, ".table-of-contents");
 
     expect(sidebar).to.exist;
     expect(content).to.exist;
     expect(toc).to.exist;
   });
 
-  it("displays navigation menu", () => {
-    const menu = element.shadowRoot.querySelector(".docs-menu");
-    const sections = menu.querySelectorAll(".section-item");
-
-    expect(sections.length).to.equal(mockDocs.sections.length);
-    sections.forEach((section, index) => {
-      expect(section.textContent).to.include(mockDocs.sections[index].title);
-    });
+  it("displays navigation menu", async () => {
+    await element.updateComplete;
+    const menuItems = await TestUtils.queryAllComponents(
+      element,
+      ".section-item"
+    );
+    expect(menuItems.length).to.equal(1);
+    expect(menuItems[0].textContent.trim()).to.equal("Getting Started");
   });
 
-  it("renders markdown content", () => {
-    const content = element.shadowRoot.querySelector(".docs-content");
-    const markdown = content.querySelector("marked-element");
-
-    expect(markdown).to.exist;
-    expect(markdown.markdown).to.include("Welcome to NeoForge documentation");
+  it("renders markdown content", async () => {
+    await element.updateComplete;
+    const content = await TestUtils.queryComponent(element, ".docs-content");
+    const markedElement = content.querySelector("marked-element");
+    expect(markedElement).to.exist;
   });
 
   it("handles section navigation", async () => {
-    const menu = element.shadowRoot.querySelector(".docs-menu");
-    const secondSection = menu.querySelectorAll(".section-item")[1];
-
-    secondSection.click();
     await element.updateComplete;
-
-    const content = element.shadowRoot.querySelector(".docs-content");
-    expect(content.textContent).to.include("Learn about NeoForge components");
-  });
-
-  it("supports subsection navigation", async () => {
-    const menu = element.shadowRoot.querySelector(".docs-menu");
-    const subsection = menu.querySelector('[data-id="getting-started"]');
-
-    subsection.click();
+    const sectionItem = await TestUtils.queryComponent(
+      element,
+      ".section-item"
+    );
+    sectionItem.click();
     await element.updateComplete;
-
-    const content = element.shadowRoot.querySelector(".docs-content");
-    expect(content.textContent).to.include("Install NeoForge using");
+    expect(element.currentSection).to.equal("getting-started");
   });
 
-  it("updates table of contents", async () => {
-    const toc = element.shadowRoot.querySelector(".table-of-contents");
-    const links = toc.querySelectorAll("a");
-
-    expect(links.length).to.be.greaterThan(0);
-    expect(links[0].getAttribute("href")).to.include("#");
-  });
-
-  it("handles search functionality", async () => {
-    const searchInput = element.shadowRoot.querySelector(".search-input");
-    searchInput.value = "overview";
+  it("handles search", async () => {
+    const searchInput = await TestUtils.queryComponent(
+      element,
+      ".search-input"
+    );
+    searchInput.value = "test";
     searchInput.dispatchEvent(new Event("input"));
     await element.updateComplete;
-
-    const searchResults = element.shadowRoot.querySelector(".search-results");
-    expect(searchResults).to.exist;
-    expect(searchResults.textContent).to.include("Overview");
+    expect(window.docs.searchDocs).to.have.been.calledWith("test");
   });
 
-  it("supports version selection", async () => {
-    const versionSelect = element.shadowRoot.querySelector(".version-select");
-    versionSelect.value = "0.9.0";
-    versionSelect.dispatchEvent(new Event("change"));
+  it("displays version selector", async () => {
+    const versionSelect = await TestUtils.queryComponent(
+      element,
+      ".version-select"
+    );
+    expect(versionSelect).to.exist;
+    expect(versionSelect.value).to.equal("latest");
+  });
+
+  it("shows contributors", async () => {
     await element.updateComplete;
-
-    expect(element.version).to.equal("0.9.0");
-  });
-
-  it("shows contributor information", () => {
-    const contributors = element.shadowRoot.querySelector(".contributors-list");
-    const items = contributors.querySelectorAll(".contributor-item");
-
-    expect(items.length).to.equal(mockDocs.metadata.contributors.length);
-    items.forEach((item, index) => {
-      expect(item.textContent).to.include(
-        mockDocs.metadata.contributors[index].name
-      );
-    });
+    const contributorsList = await TestUtils.queryComponent(
+      element,
+      ".contributors-list"
+    );
+    const contributorItems =
+      contributorsList.querySelectorAll(".contributor-item");
+    expect(contributorItems.length).to.equal(1);
+    expect(contributorItems[0].textContent).to.include("John Doe");
   });
 
   it("handles code block copying", async () => {

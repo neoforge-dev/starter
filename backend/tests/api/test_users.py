@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 
 from app import crud
 from app.schemas.user import UserCreate
-from app.core.security import get_password_hash
+from app.core.auth import get_password_hash
 from app.core.config import settings
 from tests.factories import UserFactory
 

@@ -48,8 +48,7 @@ services:
       - database_url=postgresql://postgres:postgres@db:5432/test_db
       - redis_url=redis://redis:6379/0
     volumes:
-      - ./alembic:/app/alembic
-      - ./alembic.ini:/app/alembic.ini
+      - .:/app
 
   db:
     image: postgres:15-alpine
@@ -100,6 +99,8 @@ services:
       - database_url=postgresql+asyncpg://postgres:postgres@db:5432/test_db
       - redis_url=redis://redis:6379/1
       - COVERAGE_FILE=/tmp/.coverage
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     depends_on:
       db:
         condition: service_healthy
@@ -107,9 +108,9 @@ services:
         condition: service_healthy
     command: >
       bash -c "
-        psql -h db -U postgres -c 'DROP DATABASE IF EXISTS test_db;' &&
-        psql -h db -U postgres -c 'CREATE DATABASE test_db;' &&
-        python -m alembic upgrade head &&
+        PGPASSWORD=postgres psql -h db -U postgres -c 'DROP DATABASE IF EXISTS test_db;' &&
+        PGPASSWORD=postgres psql -h db -U postgres -c 'CREATE DATABASE test_db;' &&
+        python -m app.db.init_db &&
         rm -f /tmp/.coverage &&
         python -m pytest -v --cov=app --cov-report=term-missing
       "

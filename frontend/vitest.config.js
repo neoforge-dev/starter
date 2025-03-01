@@ -1,32 +1,37 @@
 import { defineConfig } from "vitest/config";
-import { resolve } from "path";
+import { fileURLToPath } from "url";
+import path from "path";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
-    // Use happy-dom for DOM simulation
-    environment: "happy-dom",
-    // Enable multi-threading
-    threads: true,
+    // Use jsdom for DOM simulation
+    environment: "jsdom",
+    // Disable threading to avoid memory issues
+    threads: false,
+    // Stop after 5 failures
+    maxFailures: 5,
     // Include source files in coverage
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
-      include: ["src/**/*.js"],
-      exclude: [
-        "src/**/*.test.js",
-        "src/**/*.spec.js",
-        "src/test/**",
-        "src/**/*.stories.js",
-      ],
+      reporter: ["text", "html"],
+      exclude: ["node_modules/", "src/test/"],
     },
     // Setup files to run before tests
-    setupFiles: ["./src/test/setup.js"],
+    setupFiles: [path.resolve(__dirname, "./src/test/test-setup.js")],
     // Include these extensions in test files
-    include: ["src/**/*.test.js"],
+    include: ["src/test/**/*.test.js"],
     // Exclude node_modules and other non-test files
-    exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/e2e/**",
+      "src/test/accessibility/**/*.test.js",
+      "src/test/e2e/**/*.test.js",
+    ],
     // Global test timeout
-    testTimeout: 10000,
+    testTimeout: 5000,
     // Retry failed tests
     retry: 2,
     // Watch mode configuration
@@ -38,33 +43,75 @@ export default defineConfig({
     },
     // Browser-like globals
     globals: true,
-    // Pool configuration for better async handling
-    pool: "threads",
+    // DOM environment configuration
+    environmentOptions: {
+      jsdom: {
+        customElements: true,
+        resources: "usable",
+      },
+    },
+    // Alias configuration for imports
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      lit: path.resolve(__dirname, "node_modules/lit"),
+      "lit/decorators.js": path.resolve(
+        __dirname,
+        "node_modules/lit/decorators.js"
+      ),
+      "lit/directives/": path.resolve(
+        __dirname,
+        "node_modules/lit/directives/"
+      ),
+      "lit-html": path.resolve(__dirname, "node_modules/lit-html"),
+      "@lit/reactive-element": path.resolve(
+        __dirname,
+        "node_modules/@lit/reactive-element"
+      ),
+    },
+    // Fix for deprecated deps.inline
+    optimizeDeps: {
+      include: [
+        "@open-wc/testing",
+        "@open-wc/testing-helpers",
+        "@open-wc/semantic-dom-diff",
+        /^lit/,
+        /@lit\/.*/,
+      ],
+    },
+    define: {
+      "process.env.NODE_ENV": '"test"',
+      "globalThis.DEV_MODE": "false",
+      "process.env.NODE_NO_WARNINGS": "1",
+    },
+    bail: 1, // Stop after first failure
+    // Disable workers to avoid memory issues
+    maxWorkers: 1,
+    minWorkers: 1,
     poolOptions: {
       threads: {
-        singleThread: true,
+        singleThread: true, // Use a single thread
+      },
+      forks: {
+        isolate: false, // Disable isolation to avoid memory issues
       },
     },
-    // Custom resolver for module imports
-    deps: {
-      optimizer: {
-        web: {
-          include: [/lit/, /@lit/, /@open-wc/],
-        },
-      },
-    },
-    alias: {
-      "@": resolve(__dirname, "./src"),
-      test: resolve(__dirname, "./src/test"),
-    },
+    // Enable experimental features for decorator support
+    experimentalBabelParserPlugins: ["decorators-legacy", "classProperties"],
   },
   resolve: {
-    alias: {
-      "@": resolve(__dirname, "./src"),
-      test: resolve(__dirname, "./src/test"),
-    },
+    conditions: ["browser", "development", "default"],
+    mainFields: ["module", "browser", "main"],
   },
   optimizeDeps: {
-    include: ["lit", "chai", "@open-wc/testing-helpers"],
+    include: ["lit", "lit-html", "@lit/reactive-element"],
+    exclude: ["@web/test-runner"],
+    esbuildOptions: {
+      target: "es2022",
+      platform: "browser",
+      define: {
+        "process.env.NODE_ENV": '"test"',
+        "globalThis.DEV_MODE": "false",
+      },
+    },
   },
 });

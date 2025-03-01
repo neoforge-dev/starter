@@ -1,8 +1,8 @@
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
-from redis import Redis
+from redis.asyncio import Redis
 import os
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from app.core.config import settings
 
 class EmailContent(BaseModel):
@@ -14,32 +14,34 @@ class EmailContent(BaseModel):
 
 class EmailService:
     def __init__(self):
-        self.redis = Redis.from_url(os.getenv("REDIS_URL"))
+        self.redis = Redis.from_url(settings.redis_url)
         self.conf = ConnectionConfig(
-            MAIL_USERNAME=os.getenv("MAIL_USERNAME"),
-            MAIL_PASSWORD=os.getenv("MAIL_PASSWORD"),
-            MAIL_FROM=os.getenv("MAIL_FROM"),
+            MAIL_USERNAME=settings.smtp_user,
+            MAIL_PASSWORD=settings.smtp_password.get_secret_value() if settings.smtp_password else None,
+            MAIL_FROM=settings.smtp_user,
             MAIL_PORT=587,
             MAIL_SERVER="smtp.gmail.com",
             MAIL_TLS=True,
-            MAIL_SSL=False
+            MAIL_SSL=False,
+            MAIL_FROM_NAME=settings.app_name
         )
+        self.fastmail = FastMail(self.conf)
 
     async def send_queued_email(self, message: MessageSchema):
         """Add email to Redis queue"""
         if not message.template_body:
             raise ValueError("Email template required")
             
-        self.redis.rpush("email_queue", message.json())
+        await self.redis.rpush("email_queue", message.json())
 
-async def send_email(*, db, email_id, email_content):
+async def send_email(*, db, email_id: str, email_content: EmailContent) -> None:
     """Send an email using the queued email service."""
-    from fastapi_mail import MessageSchema
     service = EmailService()
     message = MessageSchema(
         subject=email_content.subject,
         recipients=[email_content.to],
-        template_body=email_content.template_data
+        template_body=email_content.template_data,
+        template_name=email_content.template_name
     )
     await service.send_queued_email(message)
 
@@ -54,7 +56,8 @@ async def send_test_email(
     message = MessageSchema(
         subject=subject,
         recipients=[email_to],
-        template_body=template_data or {"message": "This is a test email"}
+        template_body=template_data or {"message": "This is a test email"},
+        template_name=template_name
     )
     await service.send_queued_email(message)
 
@@ -73,7 +76,8 @@ async def send_reset_password_email(
             "username": username,
             "reset_link": reset_link,
             "valid_hours": 24
-        }
+        },
+        template_name="reset_password.html"
     )
     await service.send_queued_email(message)
 
@@ -92,7 +96,8 @@ async def send_new_account_email(
             "username": username,
             "verify_link": verify_link,
             "valid_hours": 24
-        }
+        },
+        template_name="welcome.html"
     )
     await service.send_queued_email(message)
 
@@ -111,6 +116,7 @@ async def send_admin_alert_email(
             "alert_type": alert_type,
             "details": details,
             "environment": settings.environment
-        }
+        },
+        template_name="admin_alert.html"
     )
     await service.send_queued_email(message) 

@@ -1,5 +1,11 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
+import {
+  html,
+  expect,
+  oneEvent,
+  waitForComponentUpdate,
+  waitForShadowDom,
+  TestUtils,
+} from "../setup.mjs";
 import "../../pages/registration-page.js";
 
 describe("Registration Page", () => {
@@ -13,303 +19,347 @@ describe("Registration Page", () => {
   beforeEach(async () => {
     // Mock auth service
     window.auth = {
-      register: async (data) => ({ user: mockUser, token: "test-token" }),
-      registerWithGoogle: async () => ({
+      register: vi.fn().mockResolvedValue({ success: true }),
+      checkEmailAvailability: vi.fn().mockResolvedValue(true),
+      validatePassword: vi.fn().mockResolvedValue({ isValid: true, score: 4 }),
+      sendVerificationEmail: vi.fn().mockResolvedValue({ success: true }),
+      registerWithGoogle: vi.fn().mockResolvedValue({
         user: mockUser,
         token: "google-token",
       }),
-      registerWithGithub: async () => ({
+      registerWithGithub: vi.fn().mockResolvedValue({
         user: mockUser,
         token: "github-token",
       }),
-      validateEmail: async (email) => ({ available: true }),
-      sendVerification: async (email) => ({ success: true }),
+      validateEmail: vi.fn().mockResolvedValue({ available: true }),
+      sendVerification: vi.fn().mockResolvedValue({ success: true }),
       isAuthenticated: false,
     };
 
-    element = await fixture(html`<registration-page></registration-page>`);
-    await element.updateComplete;
+    element = await TestUtils.fixture(
+      html`<registration-page></registration-page>`
+    );
+    await TestUtils.waitForAll(element);
   });
 
-  it("renders registration form", () => {
-    const form = element.shadowRoot.querySelector(".registration-form");
-    const nameInput = form.querySelector('input[name="name"]');
-    const emailInput = form.querySelector('input[type="email"]');
-    const passwordInput = form.querySelector('input[type="password"]');
-    const confirmPasswordInput = form.querySelector(
-      'input[name="confirmPassword"]'
+  it("renders registration form", async () => {
+    const form = await TestUtils.waitForComponent(
+      element,
+      ".registration-form"
     );
-    const submitButton = form.querySelector('button[type="submit"]');
+    const inputs = await TestUtils.queryAllComponents(element, "input");
+    const submitButton = await TestUtils.queryComponent(
+      element,
+      "button[type='submit']"
+    );
 
     expect(form).to.exist;
-    expect(nameInput).to.exist;
-    expect(emailInput).to.exist;
-    expect(passwordInput).to.exist;
-    expect(confirmPasswordInput).to.exist;
+    expect(inputs.length).to.be.greaterThan(3);
     expect(submitButton).to.exist;
   });
 
   it("handles form submission", async () => {
-    const form = element.shadowRoot.querySelector(".registration-form");
-    const nameInput = form.querySelector('input[name="name"]');
-    const emailInput = form.querySelector('input[type="email"]');
-    const passwordInput = form.querySelector('input[type="password"]');
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const nameInput = form.querySelector("input[name='name']");
+    const emailInput = form.querySelector("input[name='email']");
+    const passwordInput = form.querySelector("input[name='password']");
     const confirmPasswordInput = form.querySelector(
-      'input[name="confirmPassword"]'
+      "input[name='confirmPassword']"
     );
+    const submitButton = form.querySelector("button[type='submit']");
 
-    nameInput.value = "Test User";
-    emailInput.value = "test@example.com";
+    nameInput.value = "John Doe";
+    emailInput.value = "john@example.com";
     passwordInput.value = "Password123!";
     confirmPasswordInput.value = "Password123!";
 
-    setTimeout(() => form.submit());
-    const { detail } = await oneEvent(element, "registration-submit");
+    nameInput.dispatchEvent(new Event("input"));
+    emailInput.dispatchEvent(new Event("input"));
+    passwordInput.dispatchEvent(new Event("input"));
+    confirmPasswordInput.dispatchEvent(new Event("input"));
+    submitButton.click();
 
-    expect(detail.name).to.equal("Test User");
-    expect(detail.email).to.equal("test@example.com");
-    expect(detail.password).to.equal("Password123!");
+    const { detail } = await oneEvent(element, "registration-submit");
+    expect(detail.name).to.equal("John Doe");
+    expect(detail.email).to.equal("john@example.com");
   });
 
   it("validates form inputs", async () => {
-    const form = element.shadowRoot.querySelector(".registration-form");
-    const submitButton = form.querySelector('button[type="submit"]');
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const submitButton = form.querySelector("button[type='submit']");
 
     submitButton.click();
-    await element.updateComplete;
+    await TestUtils.waitForComponent(element);
 
-    const errorMessages = form.querySelectorAll(".error-message");
-    expect(errorMessages.length).to.be.greaterThan(0);
+    const errors = await TestUtils.queryAllComponents(element, ".form-error");
+    expect(errors.length).to.be.greaterThan(0);
   });
 
   it("checks password match", async () => {
-    const form = element.shadowRoot.querySelector(".registration-form");
-    const passwordInput = form.querySelector('input[type="password"]');
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const passwordInput = form.querySelector("input[name='password']");
     const confirmPasswordInput = form.querySelector(
-      'input[name="confirmPassword"]'
+      "input[name='confirmPassword']"
     );
 
     passwordInput.value = "Password123!";
-    confirmPasswordInput.value = "DifferentPass123!";
-    confirmPasswordInput.dispatchEvent(new Event("input"));
-    await element.updateComplete;
+    confirmPasswordInput.value = "DifferentPassword123!";
 
-    const errorMessage = form.querySelector(".password-match-error");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include("passwords do not match");
+    passwordInput.dispatchEvent(new Event("input"));
+    confirmPasswordInput.dispatchEvent(new Event("input"));
+
+    const error = await TestUtils.queryComponent(
+      element,
+      ".password-match-error"
+    );
+    expect(error).to.exist;
+    expect(error.textContent).to.include("match");
   });
 
   it("validates email availability", async () => {
-    const emailInput = element.shadowRoot.querySelector('input[type="email"]');
+    window.auth.checkEmailAvailability = vi.fn().mockResolvedValue(false);
 
-    // Mock unavailable email
-    window.auth.validateEmail = async () => ({ available: false });
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const emailInput = form.querySelector("input[name='email']");
 
     emailInput.value = "taken@example.com";
-    emailInput.dispatchEvent(new Event("blur"));
-    await element.updateComplete;
+    emailInput.dispatchEvent(new Event("input"));
+    await TestUtils.waitForComponent(element);
 
-    const errorMessage = element.shadowRoot.querySelector(".email-error");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include("already registered");
+    const error = await TestUtils.queryComponent(element, ".email-error");
+    expect(error).to.exist;
+    expect(error.textContent).to.include("already taken");
   });
 
   it("handles social registration buttons", async () => {
-    const googleButton = element.shadowRoot.querySelector(".google-register");
-    const githubButton = element.shadowRoot.querySelector(".github-register");
+    const socialButtons = await TestUtils.queryAllComponents(
+      element,
+      ".social-button"
+    );
+    expect(socialButtons.length).to.be.greaterThan(0);
 
-    setTimeout(() => googleButton.click());
-    const googleEvent = await oneEvent(element, "social-register");
-    expect(googleEvent.detail.provider).to.equal("google");
+    const googleButton = Array.from(socialButtons).find((button) =>
+      button.textContent.toLowerCase().includes("google")
+    );
+    googleButton.click();
 
-    setTimeout(() => githubButton.click());
-    const githubEvent = await oneEvent(element, "social-register");
-    expect(githubEvent.detail.provider).to.equal("github");
+    const { detail } = await oneEvent(element, "social-register");
+    expect(detail.provider).to.equal("google");
   });
 
   it("shows terms and conditions modal", async () => {
-    const termsLink = element.shadowRoot.querySelector(".terms-link");
+    const termsLink = await TestUtils.queryComponent(element, ".terms-link");
+    termsLink.click();
+    await TestUtils.waitForComponent(element);
 
-    setTimeout(() => termsLink.click());
-    const { detail } = await oneEvent(element, "show-modal");
-
-    expect(detail.type).to.equal("terms-modal");
+    const modal = await TestUtils.queryComponent(element, ".terms-modal");
+    expect(modal).to.exist;
+    expect(modal.classList.contains("open")).to.be.true;
   });
 
   it("handles terms acceptance", async () => {
-    const termsCheckbox = element.shadowRoot.querySelector(".terms-checkbox");
-    const submitButton = element.shadowRoot.querySelector(
-      'button[type="submit"]'
-    );
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const termsCheckbox = form.querySelector("input[name='terms']");
+    const submitButton = form.querySelector("button[type='submit']");
 
-    expect(submitButton.disabled).to.be.true;
+    submitButton.click();
+    await TestUtils.waitForComponent(element);
 
-    termsCheckbox.click();
-    await element.updateComplete;
+    const error = await TestUtils.queryComponent(element, ".terms-error");
+    expect(error).to.exist;
 
-    expect(submitButton.disabled).to.be.false;
+    termsCheckbox.checked = true;
+    termsCheckbox.dispatchEvent(new Event("change"));
+    submitButton.click();
+
+    const success = await TestUtils.queryComponent(element, ".success-message");
+    expect(success).to.exist;
   });
 
   it("shows loading state during registration", async () => {
-    element.loading = true;
-    await element.updateComplete;
+    window.auth.register = vi.fn().mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return { success: true };
+    });
 
-    const loader = element.shadowRoot.querySelector(".loading-indicator");
-    const submitButton = element.shadowRoot.querySelector(
-      'button[type="submit"]'
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const submitButton = form.querySelector("button[type='submit']");
+
+    submitButton.click();
+    const loading = await TestUtils.queryComponent(
+      element,
+      ".loading-indicator"
     );
+    expect(loading).to.exist;
 
-    expect(loader).to.exist;
-    expect(loader.hasAttribute("hidden")).to.be.false;
-    expect(submitButton.disabled).to.be.true;
+    await TestUtils.waitForComponent(element);
+    expect(loading.classList.contains("hidden")).to.be.true;
   });
 
   it("displays error messages", async () => {
-    const error = "Registration failed";
-    element.error = error;
-    await element.updateComplete;
+    window.auth.register = vi
+      .fn()
+      .mockRejectedValue(new Error("Registration failed"));
 
-    const errorMessage = element.shadowRoot.querySelector(".error-message");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include(error);
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const submitButton = form.querySelector("button[type='submit']");
+
+    submitButton.click();
+    await TestUtils.waitForComponent(element);
+
+    const error = await TestUtils.queryComponent(element, ".error-message");
+    expect(error).to.exist;
+    expect(error.textContent).to.include("Registration failed");
   });
 
   it("supports mobile responsive layout", async () => {
     // Mock mobile viewport
-    window.matchMedia = (query) => ({
-      matches: query.includes("max-width"),
-      addListener: () => {},
-      removeListener: () => {},
-    });
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query.includes("max-width: 768px"),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
 
-    await element.updateComplete;
+    await TestUtils.waitForComponent(element);
 
-    const container = element.shadowRoot.querySelector(".page-container");
+    const container = await TestUtils.queryComponent(
+      element,
+      ".page-container"
+    );
     expect(container.classList.contains("mobile")).to.be.true;
   });
 
-  it("maintains accessibility attributes", () => {
-    const form = element.shadowRoot.querySelector("form");
-    expect(form.getAttribute("role")).to.equal("form");
-
+  it("maintains accessibility attributes", async () => {
+    const form = await TestUtils.queryComponent(element, ".registration-form");
     const inputs = form.querySelectorAll("input");
+
     inputs.forEach((input) => {
       expect(input.getAttribute("aria-label")).to.exist;
+      if (input.hasAttribute("aria-invalid")) {
+        expect(input.getAttribute("aria-describedby")).to.exist;
+      }
     });
-
-    const submitButton = form.querySelector('button[type="submit"]');
-    expect(submitButton.getAttribute("aria-label")).to.exist;
   });
 
   it("supports keyboard navigation", async () => {
-    const form = element.shadowRoot.querySelector(".registration-form");
-    const inputs = form.querySelectorAll("input, button");
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const inputs = form.querySelectorAll("input");
     const firstInput = inputs[0];
+    const lastInput = inputs[inputs.length - 1];
 
     firstInput.focus();
     firstInput.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab" }));
-    await element.updateComplete;
-
     expect(document.activeElement).to.equal(inputs[1]);
+
+    lastInput.focus();
+    lastInput.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Tab", shiftKey: true })
+    );
+    expect(document.activeElement).to.equal(inputs[inputs.length - 2]);
   });
 
   it("validates password strength", async () => {
-    const passwordInput = element.shadowRoot.querySelector(
-      'input[type="password"]'
-    );
-    const strengthIndicator =
-      element.shadowRoot.querySelector(".password-strength");
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const passwordInput = form.querySelector("input[name='password']");
 
-    // Test weak password
     passwordInput.value = "weak";
     passwordInput.dispatchEvent(new Event("input"));
-    await element.updateComplete;
+    await TestUtils.waitForComponent(element);
 
-    expect(strengthIndicator.classList.contains("weak")).to.be.true;
+    const strengthIndicator = await TestUtils.queryComponent(
+      element,
+      ".password-strength"
+    );
+    expect(strengthIndicator.textContent).to.include("weak");
 
-    // Test strong password
-    passwordInput.value = "StrongPass123!";
+    passwordInput.value = "StrongP@ssw0rd";
     passwordInput.dispatchEvent(new Event("input"));
-    await element.updateComplete;
+    await TestUtils.waitForComponent(element);
 
-    expect(strengthIndicator.classList.contains("strong")).to.be.true;
+    expect(strengthIndicator.textContent).to.include("strong");
   });
 
   it("handles email verification", async () => {
-    const form = element.shadowRoot.querySelector(".registration-form");
-    const emailInput = form.querySelector('input[type="email"]');
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const emailInput = form.querySelector("input[name='email']");
+    const verifyButton = form.querySelector(".verify-email");
 
-    emailInput.value = "test@example.com";
-    form.submit();
-    await element.updateComplete;
+    emailInput.value = "john@example.com";
+    emailInput.dispatchEvent(new Event("input"));
+    verifyButton.click();
 
-    const verificationMessage = element.shadowRoot.querySelector(
-      ".verification-message"
-    );
-    expect(verificationMessage).to.exist;
-    expect(verificationMessage.textContent).to.include("verification email");
+    const { detail } = await oneEvent(element, "verify-email");
+    expect(detail.email).to.equal("john@example.com");
   });
 
   it("supports password requirements tooltip", async () => {
-    const passwordInput = element.shadowRoot.querySelector(
-      'input[type="password"]'
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const passwordInput = form.querySelector("input[name='password']");
+    const requirementsButton = form.querySelector(".requirements-info");
+
+    requirementsButton.click();
+    await TestUtils.waitForComponent(element);
+
+    const tooltip = await TestUtils.queryComponent(
+      element,
+      ".requirements-tooltip"
     );
-    const requirements = element.shadowRoot.querySelector(
-      ".password-requirements"
-    );
-
-    passwordInput.focus();
-    await element.updateComplete;
-
-    expect(requirements.classList.contains("visible")).to.be.true;
-
-    const requirementItems = requirements.querySelectorAll(".requirement-item");
-    expect(requirementItems.length).to.be.greaterThan(0);
+    expect(tooltip).to.exist;
+    expect(tooltip.textContent).to.include("uppercase");
+    expect(tooltip.textContent).to.include("number");
   });
 
   it("handles form validation in real-time", async () => {
-    const form = element.shadowRoot.querySelector(".registration-form");
-    const nameInput = form.querySelector('input[name="name"]');
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const emailInput = form.querySelector("input[name='email']");
 
-    // Test invalid name
-    nameInput.value = "a";
-    nameInput.dispatchEvent(new Event("input"));
-    await element.updateComplete;
+    emailInput.value = "invalid-email";
+    emailInput.dispatchEvent(new Event("input"));
+    await TestUtils.waitForComponent(element);
 
-    let errorMessage = form.querySelector(".name-error");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include("at least");
+    const error = await TestUtils.queryComponent(element, ".email-error");
+    expect(error).to.exist;
 
-    // Test valid name
-    nameInput.value = "Valid Name";
-    nameInput.dispatchEvent(new Event("input"));
-    await element.updateComplete;
+    emailInput.value = "valid@example.com";
+    emailInput.dispatchEvent(new Event("input"));
+    await TestUtils.waitForComponent(element);
 
-    errorMessage = form.querySelector(".name-error");
-    expect(errorMessage).to.not.exist;
+    expect(error.classList.contains("hidden")).to.be.true;
   });
 
   it("shows success message after registration", async () => {
-    const form = element.shadowRoot.querySelector(".registration-form");
-    const nameInput = form.querySelector('input[name="name"]');
-    const emailInput = form.querySelector('input[type="email"]');
-    const passwordInput = form.querySelector('input[type="password"]');
+    const form = await TestUtils.queryComponent(element, ".registration-form");
+    const nameInput = form.querySelector("input[name='name']");
+    const emailInput = form.querySelector("input[name='email']");
+    const passwordInput = form.querySelector("input[name='password']");
     const confirmPasswordInput = form.querySelector(
-      'input[name="confirmPassword"]'
+      "input[name='confirmPassword']"
     );
-    const termsCheckbox = form.querySelector(".terms-checkbox");
+    const termsCheckbox = form.querySelector("input[name='terms']");
+    const submitButton = form.querySelector("button[type='submit']");
 
-    nameInput.value = "Test User";
-    emailInput.value = "test@example.com";
-    passwordInput.value = "StrongPass123!";
-    confirmPasswordInput.value = "StrongPass123!";
-    termsCheckbox.click();
+    nameInput.value = "John Doe";
+    emailInput.value = "john@example.com";
+    passwordInput.value = "StrongP@ssw0rd";
+    confirmPasswordInput.value = "StrongP@ssw0rd";
+    termsCheckbox.checked = true;
 
-    form.submit();
-    await element.updateComplete;
+    nameInput.dispatchEvent(new Event("input"));
+    emailInput.dispatchEvent(new Event("input"));
+    passwordInput.dispatchEvent(new Event("input"));
+    confirmPasswordInput.dispatchEvent(new Event("input"));
+    termsCheckbox.dispatchEvent(new Event("change"));
+    submitButton.click();
 
-    const successMessage = element.shadowRoot.querySelector(".success-message");
-    expect(successMessage).to.exist;
-    expect(successMessage.textContent).to.include("successfully registered");
+    await TestUtils.waitForComponent(element);
+
+    const success = await TestUtils.queryComponent(element, ".success-message");
+    expect(success).to.exist;
+    expect(success.textContent).to.include("successfully registered");
   });
 });

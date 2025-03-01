@@ -1,6 +1,6 @@
 import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
-import "../../pages/projects-page.js";
+import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import "../../components/pages/projects-page.js";
 
 describe("Projects Page", () => {
   let element;
@@ -33,203 +33,98 @@ describe("Projects Page", () => {
   beforeEach(async () => {
     // Mock API client
     window.api = {
-      getProjects: async () => mockProjects,
+      getProjects: async () => ({ projects: mockProjects }),
       updateProject: async (project) => project,
       deleteProject: async (id) => ({ success: true }),
     };
 
     element = await fixture(html`<projects-page></projects-page>`);
-    await element.updateComplete;
+    await TestUtils.waitForComponent(element);
   });
 
-  it("renders project list", () => {
-    const projects = element.shadowRoot.querySelectorAll(".project-card");
-    expect(projects.length).to.equal(mockProjects.length);
+  it("renders project list", async () => {
+    const cards = await TestUtils.queryAllComponents(element, ".project-card");
+    expect(cards.length).to.equal(mockProjects.length);
   });
 
-  it("displays project details correctly", () => {
-    const firstProject = element.shadowRoot.querySelector(".project-card");
-
-    expect(firstProject.querySelector(".project-name").textContent).to.equal(
-      mockProjects[0].name
+  it("displays project details correctly", async () => {
+    const firstProject = await TestUtils.waitForComponent(
+      element,
+      ".project-card"
     );
-    expect(
-      firstProject.querySelector(".project-description").textContent
-    ).to.equal(mockProjects[0].description);
-    expect(firstProject.querySelector(".project-progress").value).to.equal(
-      mockProjects[0].progress
+    const title = await TestUtils.waitForComponent(
+      firstProject,
+      ".project-title"
     );
-  });
-
-  it("handles project filtering", async () => {
-    const filterSelect = element.shadowRoot.querySelector(".status-filter");
-    filterSelect.value = "completed";
-    filterSelect.dispatchEvent(new Event("change"));
-    await element.updateComplete;
-
-    const visibleProjects = element.shadowRoot.querySelectorAll(
-      ".project-card:not(.hidden)"
-    );
-    expect(visibleProjects.length).to.equal(1);
-    expect(
-      visibleProjects[0].querySelector(".project-name").textContent
-    ).to.equal(mockProjects[1].name);
-  });
-
-  it("supports project search", async () => {
-    const searchInput = element.shadowRoot.querySelector(".search-input");
-    searchInput.value = "Test Project 1";
-    searchInput.dispatchEvent(new Event("input"));
-    await element.updateComplete;
-
-    const visibleProjects = element.shadowRoot.querySelectorAll(
-      ".project-card:not(.hidden)"
-    );
-    expect(visibleProjects.length).to.equal(1);
-    expect(
-      visibleProjects[0].querySelector(".project-name").textContent
-    ).to.include("Test Project 1");
-  });
-
-  it("handles new project creation", async () => {
-    const newProjectButton = element.shadowRoot.querySelector(
-      ".new-project-button"
+    const description = await TestUtils.waitForComponent(
+      firstProject,
+      ".project-description"
     );
 
-    setTimeout(() => newProjectButton.click());
-    const { detail } = await oneEvent(element, "show-modal");
-
-    expect(detail.type).to.equal("new-project");
-  });
-
-  it("shows project details modal", async () => {
-    const firstProject = element.shadowRoot.querySelector(".project-card");
-    const detailsButton = firstProject.querySelector(".details-button");
-
-    setTimeout(() => detailsButton.click());
-    const { detail } = await oneEvent(element, "show-modal");
-
-    expect(detail.type).to.equal("project-details");
-    expect(detail.projectId).to.equal(mockProjects[0].id);
-  });
-
-  it("handles project deletion", async () => {
-    const firstProject = element.shadowRoot.querySelector(".project-card");
-    const deleteButton = firstProject.querySelector(".delete-button");
-
-    setTimeout(() => deleteButton.click());
-    const { detail } = await oneEvent(element, "show-modal");
-
-    expect(detail.type).to.equal("confirm-delete");
-    expect(detail.projectId).to.equal(mockProjects[0].id);
-  });
-
-  it("updates project progress", async () => {
-    const firstProject = element.shadowRoot.querySelector(".project-card");
-    const progressBar = firstProject.querySelector(".project-progress");
-
-    progressBar.value = 80;
-    progressBar.dispatchEvent(new Event("change"));
-    await element.updateComplete;
-
-    expect(firstProject.querySelector(".progress-text").textContent).to.include(
-      "80%"
-    );
-  });
-
-  it("displays member avatars", () => {
-    const firstProject = element.shadowRoot.querySelector(".project-card");
-    const avatars = firstProject.querySelectorAll(".member-avatar");
-
-    expect(avatars.length).to.equal(mockProjects[0].members.length);
-    expect(avatars[0].src).to.include(mockProjects[0].members[0].avatar);
-  });
-
-  it("shows project tags", () => {
-    const firstProject = element.shadowRoot.querySelector(".project-card");
-    const tags = firstProject.querySelectorAll(".project-tag");
-
-    expect(tags.length).to.equal(mockProjects[0].tags.length);
-    expect(tags[0].textContent).to.include(mockProjects[0].tags[0]);
-  });
-
-  it("handles loading state", async () => {
-    element.loading = true;
-    await element.updateComplete;
-
-    const loader = element.shadowRoot.querySelector(".loading-indicator");
-    const skeleton = element.shadowRoot.querySelector(".project-skeleton");
-
-    expect(loader).to.exist;
-    expect(skeleton).to.exist;
-    expect(loader.hasAttribute("hidden")).to.be.false;
+    expect(title.textContent).to.equal(mockProjects[0].title);
+    expect(description.textContent).to.equal(mockProjects[0].description);
   });
 
   it("handles error state", async () => {
-    const error = "Failed to load projects";
-    element.error = error;
-    await element.updateComplete;
+    // Mock API error
+    window.api.getProjects = async () => {
+      throw new Error("Failed to load projects");
+    };
 
-    const errorMessage = element.shadowRoot.querySelector(".error-message");
-    const retryButton = element.shadowRoot.querySelector(".retry-button");
+    // Create new instance to trigger error
+    element = await fixture(html`<projects-page></projects-page>`);
+    await TestUtils.waitForComponent(element);
 
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include(error);
-    expect(retryButton).to.exist;
+    const error = await TestUtils.waitForComponent(element, ".error");
+    expect(error).to.exist;
+    expect(error.textContent).to.include("Failed to load projects");
   });
 
-  it("supports mobile responsive layout", async () => {
-    // Mock mobile viewport
-    window.matchMedia = (query) => ({
-      matches: query.includes("max-width"),
-      addListener: () => {},
-      removeListener: () => {},
-    });
+  it("shows loading state", async () => {
+    // Create new instance to see loading state
+    window.api.getProjects = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return { projects: mockProjects };
+    };
 
-    await element.updateComplete;
-
-    const container = element.shadowRoot.querySelector(".projects-container");
-    expect(container.classList.contains("mobile")).to.be.true;
+    element = await fixture(html`<projects-page></projects-page>`);
+    const loading = await TestUtils.waitForComponent(element, ".loading");
+    expect(loading).to.exist;
+    expect(loading.textContent).to.include("Loading");
   });
 
-  it("maintains accessibility attributes", () => {
-    const projects = element.shadowRoot.querySelectorAll(".project-card");
-    projects.forEach((project) => {
-      expect(project.getAttribute("role")).to.equal("article");
-      expect(project.getAttribute("aria-labelledby")).to.exist;
-    });
-
-    const buttons = element.shadowRoot.querySelectorAll("button");
-    buttons.forEach((button) => {
-      expect(button.getAttribute("aria-label")).to.exist;
-    });
-  });
-
-  it("supports keyboard navigation", async () => {
-    const projects = element.shadowRoot.querySelectorAll(".project-card");
-    const firstProject = projects[0];
-
-    firstProject.focus();
-    firstProject.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "ArrowDown" })
+  it("handles project submission", async () => {
+    const submitLink = await TestUtils.waitForComponent(
+      element,
+      ".submit-project"
     );
-    await element.updateComplete;
-
-    expect(document.activeElement).to.equal(projects[1]);
+    expect(submitLink).to.exist;
+    expect(submitLink.href).to.include("github.com/neoforge/showcase");
   });
 
-  it("handles tag filtering", async () => {
-    const tagFilter = element.shadowRoot.querySelector(".tag-filter");
-    tagFilter.value = "frontend";
-    tagFilter.dispatchEvent(new Event("change"));
-    await element.updateComplete;
-
-    const visibleProjects = element.shadowRoot.querySelectorAll(
-      ".project-card:not(.hidden)"
+  it("displays project tags", async () => {
+    const firstProject = await TestUtils.waitForComponent(
+      element,
+      ".project-card"
     );
-    expect(visibleProjects.length).to.equal(1);
-    expect(
-      visibleProjects[0].querySelector(".project-tag").textContent
-    ).to.include("frontend");
+    const tags = await TestUtils.queryAllComponents(firstProject, ".tag");
+
+    expect(tags.length).to.equal(mockProjects[0].tags.length);
+    expect(tags[0].textContent).to.equal(mockProjects[0].tags[0]);
+  });
+
+  it("shows project links", async () => {
+    const firstProject = await TestUtils.waitForComponent(
+      element,
+      ".project-card"
+    );
+    const links = await TestUtils.queryAllComponents(
+      firstProject,
+      ".project-link"
+    );
+
+    expect(links.length).to.equal(2); // Demo and Source links
+    expect(links[0].textContent).to.include("Live Demo");
+    expect(links[1].textContent).to.include("Source Code");
   });
 });

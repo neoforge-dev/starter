@@ -113,8 +113,7 @@ async def test_get_current_admin(db: AsyncSession):
         is_active=True
     )
     db.add(admin)
-    await db.commit()
-    await db.refresh(admin)
+    await db.flush()
     
     current_admin = await deps.get_current_admin(db=db, current_user=user)
     assert isinstance(current_admin, Admin)
@@ -140,7 +139,7 @@ async def test_get_current_admin_inactive(db: AsyncSession):
         is_active=False
     )
     db.add(admin)
-    await db.commit()
+    await db.flush()
     
     with pytest.raises(HTTPException) as exc_info:
         await deps.get_current_admin(db=db, current_user=user)
@@ -158,8 +157,7 @@ async def test_get_current_active_admin(db: AsyncSession):
         is_active=True
     )
     db.add(admin)
-    await db.commit()
-    await db.refresh(admin)
+    await db.flush()
     
     current_admin = await deps.get_current_active_admin(current_admin=admin)
     assert current_admin == admin
@@ -175,8 +173,7 @@ async def test_get_current_active_admin_inactive(db: AsyncSession):
         is_active=False
     )
     db.add(admin)
-    await db.commit()
-    await db.refresh(admin)
+    await db.flush()
     
     with pytest.raises(HTTPException) as exc_info:
         await deps.get_current_active_admin(current_admin=admin)

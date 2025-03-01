@@ -1,6 +1,6 @@
 import { expect } from "@esm-bundle/chai";
 import { fixture, html } from "@open-wc/testing";
-import "../../src/components/ui/modal.js";
+import { NeoModal } from "../../components/ui/modal.js";
 
 describe("Modal Component", () => {
   let element;
@@ -18,7 +18,7 @@ describe("Modal Component", () => {
   });
 
   it("should be defined", () => {
-    expect(element).to.be.instanceOf(customElements.get("neo-modal"));
+    expect(element).to.be.instanceOf(NeoModal);
   });
 
   it("should render slots correctly", () => {
@@ -77,10 +77,12 @@ describe("Modal Component", () => {
 
     element.open = true;
     await element.updateComplete;
+    await new Promise((resolve) => setTimeout(resolve, 10));
     expect(openEvent).to.be.true;
 
-    element.open = false;
+    element.close();
     await element.updateComplete;
+    await new Promise((resolve) => setTimeout(resolve, 10));
     expect(closeEvent).to.be.true;
   });
 });

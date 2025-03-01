@@ -1,9 +1,12 @@
-import { LitElement, html, css } from "lit";
-import { customElement } from "lit/decorators.js";
+import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
 
-@customElement("blog-page")
-export class BlogPage extends LitElement {
+/**
+ * @element blog-page
+ * @description Blog page component with posts and categories
+ */
+export class BlogPage extends BaseComponent {
   static styles = [
     baseStyles,
     css`

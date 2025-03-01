@@ -1,133 +1,165 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
+import {
+  fixture,
+  expect,
+  oneEvent,
+  waitForComponentUpdate,
+  waitForShadowDom,
+  TestUtils,
+} from "../setup.mjs";
+import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import "../../pages/faq-page.js";
 
 describe("FAQ Page", () => {
   let element;
-  const mockFAQs = [
-    {
-      id: "1",
-      question: "What is NeoForge?",
-      answer: "NeoForge is a modern web development framework...",
-      category: "general",
-      tags: ["basics", "introduction"],
-      helpful: 45,
-      notHelpful: 5,
-      relatedArticles: [
-        { id: "2", title: "Getting Started" },
-        { id: "3", title: "Core Concepts" },
-      ],
-    },
-    {
-      id: "2",
-      question: "How do I install NeoForge?",
-      answer: "You can install NeoForge using npm...",
-      category: "installation",
-      tags: ["setup", "installation"],
-      helpful: 120,
-      notHelpful: 8,
-      relatedArticles: [
-        { id: "4", title: "Dependencies" },
-        { id: "5", title: "Configuration" },
-      ],
-    },
-  ];
-
-  const mockCategories = [
-    { id: "general", name: "General", count: 10 },
-    { id: "installation", name: "Installation", count: 5 },
-    { id: "troubleshooting", name: "Troubleshooting", count: 15 },
-  ];
 
   beforeEach(async () => {
-    // Mock FAQ service
-    window.faq = {
-      getFAQs: async () => mockFAQs,
-      getCategories: async () => mockCategories,
-      getFAQById: async (id) => mockFAQs.find((f) => f.id === id),
-      submitFeedback: async (id, helpful) => ({ success: true }),
-      searchFAQs: async (query) =>
-        mockFAQs.filter(
-          (f) =>
-            f.question.toLowerCase().includes(query.toLowerCase()) ||
-            f.answer.toLowerCase().includes(query.toLowerCase())
-        ),
+    // Mock API service
+    window.api = {
+      getFAQ: vi.fn().mockResolvedValue({
+        categories: [
+          {
+            id: "general",
+            title: "General Questions",
+            questions: [
+              {
+                id: "what-is",
+                question: "What is NeoForge?",
+                answer: "NeoForge is a modern web development framework.",
+              },
+              {
+                id: "how-to-start",
+                question: "How do I get started?",
+                answer: "Follow our quick start guide.",
+              },
+            ],
+          },
+          {
+            id: "technical",
+            title: "Technical Questions",
+            questions: [
+              {
+                id: "requirements",
+                question: "What are the requirements?",
+                answer: "Node.js 18+ and npm 9+",
+              },
+            ],
+          },
+        ],
+      }),
     };
 
     element = await fixture(html`<faq-page></faq-page>`);
-    await element.updateComplete;
+    await TestUtils.waitForAll(element);
   });
 
-  it("renders FAQ sections", () => {
-    const list = element.shadowRoot.querySelector(".faq-list");
-    const items = list.querySelectorAll(".faq-item");
-    const categories = element.shadowRoot.querySelector(".category-list");
-
-    expect(list).to.exist;
-    expect(items.length).to.equal(mockFAQs.length);
-    expect(categories).to.exist;
+  it("renders FAQ sections", async () => {
+    const sections = await TestUtils.queryAllComponents(
+      element,
+      ".faq-section"
+    );
+    expect(sections.length).to.equal(2);
+    expect(sections[0].querySelector(".section-title").textContent).to.include(
+      "General Questions"
+    );
   });
 
-  it("displays FAQ questions and answers", () => {
-    const firstItem = element.shadowRoot.querySelector(".faq-item");
-    const question = firstItem.querySelector(".faq-question");
-    const answer = firstItem.querySelector(".faq-answer");
+  it("displays FAQ questions and answers", async () => {
+    const questions = await TestUtils.queryAllComponents(
+      element,
+      ".faq-question"
+    );
+    expect(questions.length).to.equal(3);
 
-    expect(question.textContent).to.equal(mockFAQs[0].question);
-    expect(answer.textContent).to.equal(mockFAQs[0].answer);
+    const firstQuestion = questions[0];
+    expect(
+      firstQuestion.querySelector(".question-text").textContent
+    ).to.include("What is NeoForge?");
+    expect(firstQuestion.querySelector(".answer-text").textContent).to.include(
+      "modern web development framework"
+    );
   });
 
   it("handles category filtering", async () => {
-    const categoryButtons =
-      element.shadowRoot.querySelectorAll(".category-button");
-    const installationButton = Array.from(categoryButtons).find((b) =>
-      b.textContent.includes("Installation")
+    const categoryFilter = await TestUtils.queryComponent(
+      element,
+      ".category-filter"
     );
+    const technicalButton = Array.from(
+      categoryFilter.querySelectorAll("button")
+    ).find((button) => button.textContent.includes("Technical"));
 
-    installationButton.click();
+    technicalButton.click();
     await element.updateComplete;
 
-    const visibleItems = element.shadowRoot.querySelectorAll(
-      ".faq-item:not(.hidden)"
+    const questions = await TestUtils.queryAllComponents(
+      element,
+      ".faq-question"
     );
-    expect(visibleItems.length).to.equal(1);
-    expect(visibleItems[0].querySelector(".faq-question").textContent).to.equal(
-      mockFAQs[1].question
+    expect(questions.length).to.equal(1);
+    expect(questions[0].querySelector(".question-text").textContent).to.include(
+      "requirements"
     );
+  });
+
+  it("shows loading state", async () => {
+    // Mock a delayed response
+    window.api.getFAQ = vi.fn().mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return { categories: [] };
+    });
+
+    element = await fixture(html`<faq-page></faq-page>`);
+    const spinner = await TestUtils.queryComponent(element, "neo-spinner");
+    expect(spinner).to.exist;
+  });
+
+  it("handles error state", async () => {
+    // Mock an error response
+    window.api.getFAQ = vi
+      .fn()
+      .mockRejectedValue(new Error("Failed to load FAQ"));
+
+    element = await fixture(html`<faq-page></faq-page>`);
+    await element.updateComplete;
+    const errorMessage = await TestUtils.queryComponent(
+      element,
+      ".error-message"
+    );
+    expect(errorMessage).to.exist;
+    expect(errorMessage.textContent).to.include("Failed to load FAQ");
+  });
+
+  it("expands and collapses questions", async () => {
+    const question = await TestUtils.queryComponent(element, ".faq-question");
+    const answer = question.querySelector(".answer-text");
+
+    expect(answer).to.not.be.visible;
+    question.click();
+    await element.updateComplete;
+    expect(answer).to.be.visible;
+
+    question.click();
+    await element.updateComplete;
+    expect(answer).to.not.be.visible;
   });
 
   it("supports search functionality", async () => {
-    const searchInput = element.shadowRoot.querySelector(".search-input");
-    searchInput.value = "install";
+    const searchInput = await TestUtils.queryComponent(
+      element,
+      ".search-input"
+    );
+    searchInput.value = "requirements";
     searchInput.dispatchEvent(new Event("input"));
     await element.updateComplete;
 
-    const visibleItems = element.shadowRoot.querySelectorAll(
-      ".faq-item:not(.hidden)"
+    const questions = await TestUtils.queryAllComponents(
+      element,
+      ".faq-question"
     );
-    expect(visibleItems.length).to.equal(1);
-    expect(
-      visibleItems[0].querySelector(".faq-question").textContent
-    ).to.include("install");
-  });
-
-  it("expands and collapses FAQ items", async () => {
-    const firstItem = element.shadowRoot.querySelector(".faq-item");
-    const question = firstItem.querySelector(".faq-question");
-    const answer = firstItem.querySelector(".faq-answer");
-
-    // Initially collapsed
-    expect(answer.classList.contains("hidden")).to.be.true;
-
-    // Expand
-    question.click();
-    await element.updateComplete;
-    expect(answer.classList.contains("hidden")).to.be.false;
-
-    // Collapse
-    question.click();
-    await element.updateComplete;
-    expect(answer.classList.contains("hidden")).to.be.true;
+    expect(questions.length).to.equal(1);
+    expect(questions[0].querySelector(".question-text").textContent).to.include(
+      "requirements"
+    );
   });
 
   it("handles feedback submission", async () => {
@@ -211,27 +243,6 @@ describe("FAQ Page", () => {
 
     const answer = items[0].querySelector(".faq-answer");
     expect(answer.classList.contains("hidden")).to.be.false;
-  });
-
-  it("handles loading states", async () => {
-    element.loading = true;
-    await element.updateComplete;
-
-    const loader = element.shadowRoot.querySelector(".loading-indicator");
-    const skeleton = element.shadowRoot.querySelector(".faq-skeleton");
-
-    expect(loader).to.exist;
-    expect(skeleton).to.exist;
-  });
-
-  it("displays error states", async () => {
-    const error = "Failed to load FAQs";
-    element.error = error;
-    await element.updateComplete;
-
-    const errorMessage = element.shadowRoot.querySelector(".error-message");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include(error);
   });
 
   it("supports tag filtering", async () => {

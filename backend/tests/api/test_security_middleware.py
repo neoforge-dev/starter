@@ -53,7 +53,7 @@ async def test_request_validation_content_type(app_with_validation: FastAPI):
     response = await middleware.dispatch(request, lambda _: None)
 
     assert response.status_code == 422
-    assert "Content-Length header is required" in response.json()["message"]
+    assert "Content-Length header is required" in response.body.decode()
 
     # Test POST with all required headers
     headers = {

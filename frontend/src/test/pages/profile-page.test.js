@@ -1,117 +1,163 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
-import "../../pages/profile-page.js";
+import { html, expect, oneEvent, TestUtils } from "../setup.mjs";
+import { ProfilePage } from "../../pages/profile-page.js";
 
 describe("Profile Page", () => {
   let element;
-  const mockUser = {
-    id: "123",
-    name: "John Doe",
-    email: "john@example.com",
-    avatar: "avatar.jpg",
-    role: "developer",
-    company: "TechCorp",
-    location: "San Francisco, CA",
-    bio: "Full-stack developer with 5 years of experience",
-    preferences: {
-      theme: "light",
-      notifications: true,
-      language: "en",
-    },
-    socialLinks: {
-      github: "github.com/johndoe",
-      linkedin: "linkedin.com/in/johndoe",
-      twitter: "twitter.com/johndoe",
-    },
-  };
 
   beforeEach(async () => {
-    // Mock auth state and API client
+    // Mock auth service
     window.auth = {
-      currentUser: mockUser,
-      isAuthenticated: true,
+      getCurrentUser: vi.fn().mockResolvedValue({
+        id: "123",
+        email: "test@example.com",
+        name: "Test User",
+        avatar: "https://example.com/avatar.jpg",
+        preferences: {
+          theme: "light",
+          notifications: true,
+        },
+      }),
+      updateProfile: vi.fn().mockResolvedValue({ success: true }),
+      updatePassword: vi.fn().mockResolvedValue({ success: true }),
+      updatePreferences: vi.fn().mockResolvedValue({ success: true }),
     };
 
-    window.api = {
-      updateProfile: async (data) => ({ ...mockUser, ...data }),
-      updateAvatar: async (file) => ({ url: "new-avatar.jpg" }),
-      updatePassword: async (data) => ({ success: true }),
-      deleteAccount: async () => ({ success: true }),
-    };
-
-    element = await fixture(html`<profile-page></profile-page>`);
+    element = await TestUtils.fixture(html`<profile-page></profile-page>`);
     await element.updateComplete;
   });
 
-  it("renders profile sections", () => {
-    const header = element.shadowRoot.querySelector(".profile-header");
-    const details = element.shadowRoot.querySelector(".profile-details");
-    const preferences = element.shadowRoot.querySelector(
-      ".preferences-section"
-    );
-    const security = element.shadowRoot.querySelector(".security-section");
+  it("renders profile sections", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
 
+    // Check header section
+    const header = shadowRoot.querySelector(".profile-header");
     expect(header).to.exist;
-    expect(details).to.exist;
-    expect(preferences).to.exist;
-    expect(security).to.exist;
+
+    // Check tabs
+    const tabs = shadowRoot.querySelector(".profile-tabs");
+    expect(tabs).to.exist;
+
+    // Check tab buttons
+    const tabButtons = shadowRoot.querySelectorAll(".profile-tab");
+    expect(tabButtons.length).to.equal(3); // Details, Security, Preferences tabs
+
+    // Check initial active tab (details)
+    const detailsSection = shadowRoot.querySelector(".profile-section");
+    expect(detailsSection).to.exist;
   });
 
-  it("displays user information correctly", () => {
-    const name = element.shadowRoot.querySelector(".user-name");
-    const email = element.shadowRoot.querySelector(".user-email");
-    const avatar = element.shadowRoot.querySelector(".user-avatar");
+  it("displays user information correctly", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const name = shadowRoot.querySelector(".profile-name");
+    const email = shadowRoot.querySelector(".profile-email");
+    const avatar = shadowRoot.querySelector(".profile-avatar");
 
-    expect(name.textContent).to.equal(mockUser.name);
-    expect(email.textContent).to.equal(mockUser.email);
-    expect(avatar.src).to.include(mockUser.avatar);
+    expect(name.textContent.trim()).to.equal("Test User");
+    expect(email.textContent.trim()).to.equal("test@example.com");
+    expect(avatar.src).to.equal("https://example.com/avatar.jpg");
+  });
+
+  it("switches between tabs correctly", async () => {
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+
+    // Click security tab
+    const securityTab = shadowRoot.querySelector('[data-tab="security"]');
+    securityTab.click();
+    await element.updateComplete;
+
+    const securitySection = shadowRoot.querySelector(".profile-section");
+    expect(securitySection).to.exist;
+    expect(securitySection.querySelector('[data-action="password"]')).to.exist;
+
+    // Click preferences tab
+    const preferencesTab = shadowRoot.querySelector('[data-tab="preferences"]');
+    preferencesTab.click();
+    await element.updateComplete;
+
+    const preferencesSection = shadowRoot.querySelector(".profile-section");
+    expect(preferencesSection).to.exist;
+    expect(preferencesSection.querySelector(".preference-toggle")).to.exist;
   });
 
   it("handles profile form submission", async () => {
-    const form = element.shadowRoot.querySelector(".profile-form");
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const form = shadowRoot.querySelector("form.profile-form");
     const nameInput = form.querySelector('input[name="name"]');
-    const bioInput = form.querySelector('textarea[name="bio"]');
 
-    // Update form values
+    // Set up form data
     nameInput.value = "Updated Name";
-    bioInput.value = "Updated bio";
+    const inputEvent = new Event("input", {
+      bubbles: true,
+      composed: true,
+    });
+    nameInput.dispatchEvent(inputEvent);
+    await element.updateComplete;
 
-    setTimeout(() => form.submit());
-    const { detail } = await oneEvent(element, "profile-update");
+    // Set up form submission
+    const submitPromise = oneEvent(element, "profile-updated");
+    const submitEvent = new Event("submit", {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    });
+    submitEvent.preventDefault = () => {};
 
-    expect(detail.name).to.equal("Updated Name");
-    expect(detail.bio).to.equal("Updated bio");
+    // Submit form
+    form.dispatchEvent(submitEvent);
+
+    // Wait for update and check results
+    const { detail } = await submitPromise;
+    expect(detail.success).to.be.true;
+    expect(window.auth.updateProfile).to.have.been.calledWith({
+      name: "Updated Name",
+    });
   });
 
   it("handles avatar upload", async () => {
-    const avatarInput = element.shadowRoot.querySelector(".avatar-input");
-    const file = new File([""], "test.jpg", { type: "image/jpeg" });
+    const shadowRoot = await TestUtils.waitForShadowDom(element);
+    const fileInput = shadowRoot.querySelector('input[type="file"]');
+    const file = new File(["test"], "avatar.jpg", { type: "image/jpeg" });
 
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    avatarInput.files = dataTransfer.files;
+    // Create a change event
+    const changeEvent = new Event("change", {
+      bubbles: true,
+      composed: true,
+    });
+    Object.defineProperty(changeEvent, "target", {
+      value: { files: [file] },
+      enumerable: true,
+    });
 
-    setTimeout(() => avatarInput.dispatchEvent(new Event("change")));
-    const { detail } = await oneEvent(element, "avatar-update");
+    // Dispatch event and wait for update
+    fileInput.dispatchEvent(changeEvent);
+    await element.updateComplete;
 
-    expect(detail.file).to.equal(file);
+    expect(window.auth.updateProfile).to.have.been.called;
   });
 
   it("updates user preferences", async () => {
-    const themeToggle = element.shadowRoot.querySelector(".theme-toggle");
-    const notificationsToggle = element.shadowRoot.querySelector(
-      ".notifications-toggle"
+    const themeToggle = await TestUtils.queryComponent(
+      element,
+      '.preference-toggle[name="theme"]'
+    );
+    const notificationsToggle = await TestUtils.queryComponent(
+      element,
+      '.preference-toggle[name="notifications"]'
     );
 
-    themeToggle.click();
+    TestUtils.dispatchEvent(themeToggle, "change", {
+      target: { checked: false },
+    });
+    TestUtils.dispatchEvent(notificationsToggle, "change", {
+      target: { checked: false },
+    });
+
     await element.updateComplete;
 
-    expect(element.preferences.theme).to.equal("dark");
-
-    notificationsToggle.click();
-    await element.updateComplete;
-
-    expect(element.preferences.notifications).to.be.false;
+    expect(window.auth.updatePreferences).to.have.been.calledWith({
+      theme: "dark",
+      notifications: false,
+    });
   });
 
   it("handles password change", async () => {

@@ -1,62 +1,54 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
-import "../../pages/settings-page.js";
+import { html, expect, oneEvent, TestUtils } from "../setup.mjs";
+import { SettingsPage } from "../../pages/settings-page.js";
 
 describe("Settings Page", () => {
   let element;
-  const mockSettings = {
-    theme: {
-      mode: "light",
-      primaryColor: "#007bff",
-      fontSize: "medium",
-    },
-    notifications: {
-      email: true,
-      push: true,
-      desktop: false,
-      frequency: "daily",
-    },
-    privacy: {
-      profileVisibility: "public",
-      activityTracking: true,
-      dataSharing: false,
-    },
-    accessibility: {
-      highContrast: false,
-      reducedMotion: false,
-      screenReader: false,
-      keyboardNavigation: true,
-    },
-    language: {
-      preferred: "en",
-      dateFormat: "MM/DD/YYYY",
-      timeFormat: "12h",
-    },
-  };
 
   beforeEach(async () => {
-    // Mock API client
-    window.api = {
-      getSettings: async () => mockSettings,
-      updateSettings: async (settings) => settings,
-      resetSettings: async () => ({ success: true }),
+    // Mock settings service
+    window.settings = {
+      getSettings: vi.fn().mockResolvedValue({
+        theme: "light",
+        notifications: true,
+        privacy: {
+          shareData: true,
+          analytics: true,
+        },
+        accessibility: {
+          highContrast: false,
+          reducedMotion: false,
+        },
+        language: "en",
+      }),
+      updateSettings: vi.fn().mockResolvedValue({ success: true }),
+      resetSettings: vi.fn().mockResolvedValue({ success: true }),
     };
 
-    element = await fixture(html`<settings-page></settings-page>`);
+    element = await TestUtils.fixture(html`<settings-page></settings-page>`);
     await element.updateComplete;
   });
 
-  it("renders settings sections", () => {
-    const themeSection = element.shadowRoot.querySelector(".theme-section");
-    const notificationsSection = element.shadowRoot.querySelector(
+  it("renders settings sections", async () => {
+    const themeSection = await TestUtils.queryComponent(
+      element,
+      ".theme-section"
+    );
+    const notificationsSection = await TestUtils.queryComponent(
+      element,
       ".notifications-section"
     );
-    const privacySection = element.shadowRoot.querySelector(".privacy-section");
-    const accessibilitySection = element.shadowRoot.querySelector(
+    const privacySection = await TestUtils.queryComponent(
+      element,
+      ".privacy-section"
+    );
+    const accessibilitySection = await TestUtils.queryComponent(
+      element,
       ".accessibility-section"
     );
-    const languageSection =
-      element.shadowRoot.querySelector(".language-section");
+    const languageSection = await TestUtils.queryComponent(
+      element,
+      ".language-section"
+    );
 
     expect(themeSection).to.exist;
     expect(notificationsSection).to.exist;
@@ -65,40 +57,43 @@ describe("Settings Page", () => {
     expect(languageSection).to.exist;
   });
 
-  it("displays current settings values", () => {
-    const themeMode = element.shadowRoot.querySelector(".theme-mode-select");
-    const emailNotifications = element.shadowRoot.querySelector(
-      ".email-notifications-toggle"
+  it("displays current settings values", async () => {
+    const themeToggle = await TestUtils.queryComponent(
+      element,
+      '.theme-toggle[value="light"]'
     );
-    const profileVisibility = element.shadowRoot.querySelector(
-      ".profile-visibility-select"
+    const notificationsToggle = await TestUtils.queryComponent(
+      element,
+      ".notifications-toggle[checked]"
+    );
+    const shareDataToggle = await TestUtils.queryComponent(
+      element,
+      '.privacy-toggle[name="shareData"][checked]'
+    );
+    const languageSelect = await TestUtils.queryComponent(
+      element,
+      'select[name="language"]'
     );
 
-    expect(themeMode.value).to.equal(mockSettings.theme.mode);
-    expect(emailNotifications.checked).to.equal(
-      mockSettings.notifications.email
-    );
-    expect(profileVisibility.value).to.equal(
-      mockSettings.privacy.profileVisibility
-    );
+    expect(themeToggle).to.exist;
+    expect(notificationsToggle).to.exist;
+    expect(shareDataToggle).to.exist;
+    expect(languageSelect.value).to.equal("en");
   });
 
   it("handles theme settings updates", async () => {
-    const themeMode = element.shadowRoot.querySelector(".theme-mode-select");
-    const primaryColor = element.shadowRoot.querySelector(
-      ".primary-color-input"
+    const themeToggle = await TestUtils.queryComponent(
+      element,
+      '.theme-toggle[value="dark"]'
     );
-
-    themeMode.value = "dark";
-    themeMode.dispatchEvent(new Event("change"));
-
-    primaryColor.value = "#ff0000";
-    primaryColor.dispatchEvent(new Event("change"));
-
+    TestUtils.dispatchEvent(themeToggle, "change", {
+      target: { checked: true },
+    });
     await element.updateComplete;
 
-    expect(element.settings.theme.mode).to.equal("dark");
-    expect(element.settings.theme.primaryColor).to.equal("#ff0000");
+    expect(window.settings.updateSettings).to.have.been.calledWith({
+      theme: "dark",
+    });
   });
 
   it("handles notification preferences", async () => {

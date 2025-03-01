@@ -1,0 +1,7 @@
+services:
+  test_config:
+    build: .
+    command: pytest tests/core/test_config.py -v
+    environment:
+      - ENVIRONMENT=test
+      - DEBUG=false

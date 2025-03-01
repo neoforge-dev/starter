@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit";
+import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../components/styles/base.js";
 
 export class ExamplesPage extends LitElement {
@@ -92,7 +92,6 @@ export class ExamplesPage extends LitElement {
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         transition: transform 0.2s;
         position: relative;
-        role: article;
       }
 
       .example-card:hover {
@@ -252,8 +251,11 @@ export class ExamplesPage extends LitElement {
   setupMobileDetection() {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
     this.isMobile = mediaQuery.matches;
+
+    // Use addListener for better compatibility
     mediaQuery.addListener((e) => {
       this.isMobile = e.matches;
+      this.requestUpdate();
     });
   }
 
@@ -262,65 +264,26 @@ export class ExamplesPage extends LitElement {
       this.loading = true;
       this.error = null;
 
-      // Use the mocked examples service from tests if available
-      if (window.examples) {
-        this.examples = await window.examples.getExamples();
-        this.categories = await window.examples.getCategories();
-      } else {
-        // Fallback mock data for development
-        this.examples = [
-          {
-            id: "basic-app",
-            title: "Basic Application",
-            description: "A simple starter application",
-            category: "getting-started",
-            difficulty: "beginner",
-            tags: ["web-components", "routing", "state"],
-            liveDemo: "https://demo.example.com/basic-app",
-            sourceCode: "https://github.com/example/basic-app",
-            author: {
-              name: "John Doe",
-              avatar: "john-avatar.jpg",
-            },
-            stats: {
-              views: 1200,
-              likes: 45,
-              downloads: 300,
-            },
-          },
-          {
-            id: "advanced-dashboard",
-            title: "Advanced Dashboard",
-            description: "Complex dashboard with analytics",
-            category: "applications",
-            difficulty: "advanced",
-            tags: ["dashboard", "charts", "real-time"],
-            liveDemo: "https://demo.example.com/dashboard",
-            sourceCode: "https://github.com/example/dashboard",
-            author: {
-              name: "Jane Smith",
-              avatar: "jane-avatar.jpg",
-            },
-            stats: {
-              views: 2500,
-              likes: 120,
-              downloads: 800,
-            },
-          },
-        ];
-
-        this.categories = [
-          { id: "getting-started", name: "Getting Started", count: 5 },
-          { id: "applications", name: "Applications", count: 8 },
-          { id: "components", name: "Components", count: 12 },
-        ];
+      // For tests, use mock data if available
+      if (window.mockExamples) {
+        this.examples = window.mockExamples;
+        this.initialized = true;
+        return;
       }
 
-      await this.updateComplete;
+      // Simulated API call
+      const response = await fetch("/api/examples");
+      if (!response.ok) {
+        throw new Error("Failed to load examples");
+      }
+
+      const data = await response.json();
+      this.examples = data.examples;
+      this.categories = data.categories;
       this.initialized = true;
     } catch (err) {
-      console.error("Failed to load examples:", err);
-      this.error = "Failed to load examples. Please try again later.";
+      this.error = err.message;
+      console.error("Error loading examples:", err);
     } finally {
       this.loading = false;
     }
@@ -357,11 +320,73 @@ export class ExamplesPage extends LitElement {
     }
   }
 
+  handleSort(event) {
+    const sortValue = event.target.value;
+    this.examples = [...this.examples].sort((a, b) => {
+      switch (sortValue) {
+        case "most-liked":
+          return b.stats.likes - a.stats.likes;
+        case "most-downloaded":
+          return b.stats.downloads - a.stats.downloads;
+        case "newest":
+        default:
+          return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+    });
+  }
+
+  handlePreview(exampleId) {
+    this.dispatchEvent(
+      new CustomEvent("show-preview", {
+        detail: { exampleId },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  handleDownload(exampleId) {
+    this.dispatchEvent(
+      new CustomEvent("download", {
+        detail: { exampleId },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
+  handleReport(exampleId) {
+    this.dispatchEvent(
+      new CustomEvent("report-issue", {
+        detail: { exampleId },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  }
+
   render() {
+    const containerClass = this.isMobile
+      ? "page-container mobile"
+      : "page-container";
+
     if (this.loading) {
       return html`
         <div class="loading-container">
-          <p>Loading examples...</p>
+          <div class="loading-indicator">Loading...</div>
+          <div class="examples-skeleton">
+            ${Array(6)
+              .fill(0)
+              .map(
+                () => html`
+                  <div class="example-card" aria-hidden="true">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-description"></div>
+                    <div class="skeleton-tags"></div>
+                  </div>
+                `
+              )}
+          </div>
         </div>
       `;
     }
@@ -392,54 +417,39 @@ export class ExamplesPage extends LitElement {
     });
 
     return html`
-      <div class="page-container ${this.isMobile ? "mobile" : ""}">
-        <h1>Examples</h1>
+      <div class=${containerClass}>
+        <h1>Example Projects</h1>
 
         <div class="filters">
-          <div class="category-filters">
-            ${this.categories.map(
-              (category) => html`
-                <button
-                  class="category-filter ${this.selectedCategory === category.id
-                    ? "active"
-                    : ""}"
-                  @click=${() => this.handleCategoryClick(category.id)}
-                  aria-label="Filter by ${category.name}"
-                >
-                  ${category.name} (${category.count})
-                </button>
-              `
-            )}
-          </div>
-
           <select
-            class="difficulty-select"
-            @change=${this.handleDifficultyChange}
-            aria-label="Filter by difficulty"
+            class="sort-select"
+            @change=${this.handleSort}
+            aria-label="Sort examples"
           >
-            <option value="all">All Difficulties</option>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
+            <option value="newest">Newest First</option>
+            <option value="most-liked">Most Liked</option>
+            <option value="most-downloaded">Most Downloaded</option>
           </select>
 
           <input
-            type="search"
+            type="text"
             class="search-input"
             placeholder="Search examples..."
+            .value=${this.searchQuery}
             @input=${this.handleSearch}
             aria-label="Search examples"
           />
         </div>
 
-        <div class="examples-grid">
+        <div class="examples-grid" role="list">
           ${filteredExamples.map(
             (example) => html`
               <article
                 class="example-card"
+                role="article"
                 aria-labelledby="title-${example.id}"
               >
-                <h2 id="title-${example.id}" class="example-title">
+                <h2 class="example-title" id="title-${example.id}">
                   ${example.title}
                 </h2>
                 <p class="example-description">${example.description}</p>
@@ -472,12 +482,7 @@ export class ExamplesPage extends LitElement {
                 <div class="example-actions">
                   <button
                     class="preview-button"
-                    @click=${() =>
-                      this.dispatchEvent(
-                        new CustomEvent("show-preview", {
-                          detail: { exampleId: example.id },
-                        })
-                      )}
+                    @click=${() => this.handlePreview(example.id)}
                     aria-label="Preview example"
                   >
                     Preview
@@ -491,15 +496,17 @@ export class ExamplesPage extends LitElement {
                   </button>
                   <button
                     class="download-button"
-                    @click=${() =>
-                      this.dispatchEvent(
-                        new CustomEvent("download", {
-                          detail: { exampleId: example.id },
-                        })
-                      )}
+                    @click=${() => this.handleDownload(example.id)}
                     aria-label="Download example"
                   >
                     Download
+                  </button>
+                  <button
+                    class="report-button"
+                    @click=${() => this.handleReport(example.id)}
+                    aria-label="Report issue"
+                  >
+                    Report
                   </button>
                 </div>
               </article>

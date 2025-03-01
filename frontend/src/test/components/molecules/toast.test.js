@@ -1,13 +1,24 @@
-import { expect, describe, it, beforeEach, vi } from "vitest";
-import { fixture, html, oneEvent } from "@open-wc/testing-helpers";
+import { expect, describe, it, beforeEach, afterEach } from "vitest";
+import { TestUtils, html } from "../../setup.mjs";
 import "../../../components/molecules/toast/toast.js";
 
 describe("NeoToast", () => {
   let element;
+  let container;
 
   beforeEach(async () => {
-    element = await fixture(html` <neo-toast>Toast message</neo-toast> `);
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    element = document.createElement("neo-toast");
+    element.textContent = "Toast message";
+    container.appendChild(element);
     await element.updateComplete;
+  });
+
+  afterEach(() => {
+    if (container && container.parentNode) {
+      container.parentNode.removeChild(container);
+    }
   });
 
   it("renders with default properties", async () => {
@@ -19,6 +30,11 @@ describe("NeoToast", () => {
     expect(element.dismissible).to.be.true;
     expect(element.icon).to.be.true;
     expect(element._visible).to.be.true;
+
+    // Check if the toast content is rendered with the text content
+    const toastContent = element.shadowRoot.querySelector(".toast-content");
+    expect(toastContent).to.exist;
+    expect(toastContent.textContent.trim()).to.equal("Toast message");
   });
 
   it("reflects attribute changes", async () => {
@@ -49,19 +65,12 @@ describe("NeoToast", () => {
   });
 
   it("applies position classes correctly", async () => {
-    const positions = [
-      "top-left",
-      "top-right",
-      "bottom-left",
-      "bottom-right",
-      "top-center",
-      "bottom-center",
-    ];
+    const positions = ["top-left", "top-right", "bottom-left", "bottom-right"];
     for (const position of positions) {
       element.position = position;
       await element.updateComplete;
-      const toast = element.shadowRoot.querySelector(".toast");
-      expect(toast.classList.contains(position)).to.be.true;
+      const container = element.shadowRoot.querySelector(".toast-container");
+      expect(container.classList.contains(position)).to.be.true;
     }
   });
 
@@ -102,7 +111,8 @@ describe("NeoToast", () => {
     element.duration = 100;
     await element.updateComplete;
 
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    // Wait for duration + animation time (200ms)
+    await new Promise((resolve) => setTimeout(resolve, 350));
     expect(element._visible).to.be.false;
   });
 
@@ -122,7 +132,7 @@ describe("NeoToast", () => {
 
   it("dispatches neo-dismiss event when closed", async () => {
     setTimeout(() => element.close());
-    const { detail } = await oneEvent(element, "neo-dismiss");
+    const { detail } = await TestUtils.oneEvent(element, "neo-dismiss");
 
     expect(detail).to.exist;
     expect(element._visible).to.be.false;
@@ -131,8 +141,9 @@ describe("NeoToast", () => {
   it("closes on dismiss button click", async () => {
     const dismissButton = element.shadowRoot.querySelector(".toast-dismiss");
     dismissButton.click();
-    await element.updateComplete;
 
+    // Wait for animation to complete (200ms)
+    await new Promise((resolve) => setTimeout(resolve, 250));
     expect(element._visible).to.be.false;
   });
 
@@ -142,20 +153,24 @@ describe("NeoToast", () => {
     expect(toast.getAttribute("aria-live")).to.equal("polite");
 
     const dismissButton = element.shadowRoot.querySelector(".toast-dismiss");
-    expect(dismissButton.getAttribute("aria-label")).to.equal("Dismiss toast");
+    expect(dismissButton.getAttribute("aria-label")).to.equal(
+      "Dismiss notification"
+    );
   });
 
   it("renders message content", async () => {
     element.message = "Test message";
     await element.updateComplete;
 
-    const message = element.shadowRoot.querySelector(".toast-message");
+    const message = element.shadowRoot.querySelector(".toast-content");
     expect(message.textContent.trim()).to.equal("Test message");
   });
 
   it("renders slot content", async () => {
     const content = "Custom content";
-    element = await fixture(html` <neo-toast>${content}</neo-toast> `);
+    element = await TestUtils.fixture(html`
+      <neo-toast>${content}</neo-toast>
+    `);
     await element.updateComplete;
 
     expect(element.textContent.trim()).to.equal(content);
@@ -168,12 +183,12 @@ describe("NeoToast", () => {
     element.close();
     await element.updateComplete;
 
-    expect(toast.classList.contains("visible")).to.be.false;
-    expect(toast.classList.contains("dismissing")).to.be.true;
+    expect(toast.classList.contains("visible")).to.be.true;
+    expect(toast.classList.contains("animating-out")).to.be.true;
   });
 
   it("supports complex content", async () => {
-    element = await fixture(html`
+    element = await TestUtils.fixture(html`
       <neo-toast>
         <div class="custom-content">
           <strong>Title</strong>

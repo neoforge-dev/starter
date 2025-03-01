@@ -58,7 +58,7 @@ export class ComponentTester {
       ComponentClass.name
         .replace(/([A-Z])/g, "-$1")
         .toLowerCase()
-        .replace(/^-/, ""); // Remove leading hyphen
+        .replace(/^-/, "");
     if (!customElements.get(tagName)) {
       customElements.define(tagName, ComponentClass);
     }
@@ -68,39 +68,53 @@ export class ComponentTester {
     // Wait for element to be connected and upgraded
     await el.updateComplete;
 
-    // Wait for shadowRoot to be available
-    await new Promise((resolve) => {
-      if (el.shadowRoot) {
-        resolve();
-      } else {
+    // Wait for shadowRoot and initial render
+    await this.waitForElement(el);
+
+    return el;
+  }
+
+  static async waitForElement(element) {
+    // Wait for shadowRoot
+    if (!element.shadowRoot) {
+      await new Promise((resolve) => {
         const observer = new MutationObserver(() => {
-          if (el.shadowRoot) {
+          if (element.shadowRoot) {
             observer.disconnect();
             resolve();
           }
         });
-        observer.observe(el, { attributes: true, childList: true });
-      }
-    });
+        observer.observe(element, { attributes: true, childList: true });
+      });
+    }
 
-    return el;
+    // Wait for updateComplete
+    await element.updateComplete;
+
+    // Additional frame to ensure all DOM updates are complete
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    return element;
   }
 
   static async click(element) {
     element.click();
     await element.updateComplete;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
   }
 
   static async type(element, value) {
     element.value = value;
     element.dispatchEvent(new Event("input"));
     await element.updateComplete;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
   }
 
   static async select(element, value) {
     element.value = value;
     element.dispatchEvent(new Event("change"));
     await element.updateComplete;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
   }
 
   static cleanup() {

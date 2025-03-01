@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import { createFilter } from "@rollup/pluginutils";
 import { criticalCSSPlugin } from "./build/plugins/critical-css.js";
 import { resolve } from "path";
+import { visualizer } from "rollup-plugin-visualizer";
 
 // Plugin to extract critical CSS
 function criticalCssPlugin() {
@@ -40,8 +41,14 @@ export default defineConfig({
     },
   },
   build: {
-    target: "esnext",
+    target: "es2020",
     minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     sourcemap: false,
     cssCodeSplit: true,
     cssMinify: "lightningcss",
@@ -56,8 +63,13 @@ export default defineConfig({
         chunkFileNames: "assets/[name].[hash].js",
         assetFileNames: "assets/[name].[hash].[ext]",
         manualChunks: {
-          lit: ["lit", "lit/decorators.js", "lit-html", "lit-element"],
-          vendor: ["highlight.js", "marked"],
+          chart: ["chart.js"],
+          lit: ["lit", "@lit/reactive-element", "lit-html", "lit-element"],
+          analytics: [
+            "./src/components/analytics/performance-chart.js",
+            "./src/components/analytics/error-log.js",
+            "./src/components/analytics/user-behavior.js",
+          ],
         },
       },
       external: [/^node:.*$/],
@@ -90,29 +102,47 @@ export default defineConfig({
         filename: "assets/[name].[hash].css",
       },
     },
+    chunkSizeWarningLimit: 500,
   },
   resolve: {
     alias: {
-      "@components": resolve(__dirname, "src/components"),
-      "@pages": resolve(__dirname, "src/pages"),
       "@styles": resolve(__dirname, "src/styles"),
-      "@utils": resolve(__dirname, "src/utils"),
       "@services": resolve(__dirname, "src/services"),
-      "lit/decorators.js": resolve(__dirname, "node_modules/lit/decorators.js"),
-      lit: resolve(__dirname, "node_modules/lit"),
-      "lit-html": resolve(__dirname, "node_modules/lit-html"),
-      "lit-element": resolve(__dirname, "node_modules/lit-element"),
-      "@lit/reactive-element":
-        "/node_modules/@lit/reactive-element/development/reactive-element.js",
+      "@utils": resolve(__dirname, "src/utils"),
+      "@components": resolve(__dirname, "src/components"),
+      lit: "lit",
+      "lit/decorators": "lit/decorators",
+      "lit-html": "lit-html",
+      "@lit/reactive-element": "@lit/reactive-element",
       chai: "chai/chai.js",
-      "lit/static-html.js": "lit/static-html.js",
-      "lit/directives/unsafe-html.js": "lit/directives/unsafe-html.js",
-      "lit/directive-helpers.js": "lit/directive-helpers.js",
-      "lit/html.js": "lit/html.js",
     },
   },
   optimizeDeps: {
-    include: ["lit", "chai", "@open-wc/testing-helpers"],
+    include: [
+      "chart.js",
+      "lit",
+      "@lit/reactive-element",
+      "lit-html",
+      "lit-element",
+      "@web/test-runner",
+      "@web/components",
+    ],
+    esbuildOptions: {
+      target: "es2022",
+      supported: {
+        "top-level-await": true,
+      },
+      plugins: [
+        {
+          name: "external-lit",
+          setup(build) {
+            build.onResolve({ filter: /^lit.*/ }, (args) => {
+              return { path: args.path, external: true };
+            });
+          },
+        },
+      ],
+    },
   },
   plugins: [
     criticalCSSPlugin({
@@ -133,42 +163,39 @@ export default defineConfig({
       minify: true,
       inlineThreshold: 8192, // 8KB
     }),
+    visualizer({
+      filename: "dist/stats.html",
+      gzipSize: true,
+      brotliSize: true,
+      open: true,
+    }),
   ],
   test: {
-    globals: true,
     environment: "happy-dom",
-    setupFiles: ["./src/test/setup.js"],
+    setupFiles: ["./src/test/setup.mjs"],
     include: ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+    deps: {
+      inline: [/^lit/, /@lit/, /^@open-wc/],
+    },
+    globals: true,
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
-      exclude: ["node_modules/", "src/test/setup.js"],
+      exclude: [
+        "coverage/**",
+        "dist/**",
+        "**/node_modules/**",
+        "**/*.d.ts",
+        "**/*.test.{js,jsx}",
+        "**/*.spec.{js,jsx}",
+        "**/test/**",
+      ],
     },
-    alias: {
-      lit: resolve(__dirname, "node_modules/lit/index.js"),
-      "lit/decorators.js": resolve(__dirname, "node_modules/lit/decorators.js"),
-      "lit/directives/": resolve(__dirname, "node_modules/lit/directives/"),
-      "lit/static-html.js": resolve(
-        __dirname,
-        "node_modules/lit/static-html.js"
-      ),
-      "lit/html.js": resolve(__dirname, "node_modules/lit/html.js"),
-      "@lit/reactive-element": resolve(
-        __dirname,
-        "node_modules/@lit/reactive-element/reactive-element.js"
-      ),
-      "@open-wc/testing-helpers": resolve(
-        __dirname,
-        "node_modules/@open-wc/testing-helpers/index.js"
-      ),
-      "@components": resolve(__dirname, "src/components"),
-      "@pages": resolve(__dirname, "src/pages"),
-      "@services": resolve(__dirname, "src/services"),
-      "@utils": resolve(__dirname, "src/utils"),
-      "../../src/components/ui/": resolve(__dirname, "src/components/ui/"),
-      "../../components/ui/": resolve(__dirname, "src/components/ui/"),
-      "../../pages/": resolve(__dirname, "src/pages/"),
-      "../../services/": resolve(__dirname, "src/services/"),
+    transformMode: {
+      web: [/\.js$/],
+    },
+    moduleNameMapper: {
+      "^https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js$": "lit",
     },
   },
 });

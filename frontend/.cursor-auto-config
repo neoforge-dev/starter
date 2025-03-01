@@ -1,0 +1,1 @@
+autorun_commands = ["npm run test", "npm run test:unit", "npm run build", "npm run lint", "make test"]

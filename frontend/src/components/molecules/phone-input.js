@@ -52,60 +52,101 @@ export class PhoneInput extends LitElement {
 
     .input-wrapper {
       display: flex;
-      align-items: center;
+      position: relative;
       border: 1px solid var(--phone-border-color, #d1d5db);
       border-radius: 0.375rem;
       overflow: hidden;
+      transition: all 0.2s ease;
     }
 
     .input-wrapper:focus-within {
-      outline: 2px solid var(--phone-focus-color, #60a5fa);
-      outline-offset: 2px;
+      border-color: var(--phone-focus-color, #3b82f6);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
     }
 
-    :host([disabled]) .input-wrapper {
+    .input-wrapper.disabled {
       background-color: var(--phone-disabled-bg, #f3f4f6);
       cursor: not-allowed;
-      opacity: 0.6;
     }
 
-    .country-select {
+    .input-wrapper.error {
+      border-color: var(--phone-error-color, #ef4444);
+    }
+
+    .country-selector {
+      display: flex;
+      align-items: center;
       padding: 0.5rem;
-      border: none;
+      background-color: var(--phone-selector-bg, #f9fafb);
       border-right: 1px solid var(--phone-border-color, #d1d5db);
-      background-color: var(--phone-country-bg, #f9fafb);
       cursor: pointer;
+      user-select: none;
+      min-width: 4.5rem;
     }
 
-    .country-select:hover {
-      background-color: var(--phone-country-hover-bg, #f3f4f6);
+    .country-selector.disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .country-flag {
+      margin-right: 0.25rem;
+      font-size: 1.25rem;
+    }
+
+    .country-code {
+      font-size: 0.875rem;
+      color: var(--phone-text-color, #374151);
+    }
+
+    .dropdown-icon {
+      margin-left: 0.25rem;
+      transition: transform 0.2s ease;
+    }
+
+    .dropdown-icon.open {
+      transform: rotate(180deg);
     }
 
     .country-dropdown {
       position: absolute;
       top: 100%;
       left: 0;
-      width: 200px;
-      max-height: 200px;
+      width: 100%;
+      max-height: 15rem;
       overflow-y: auto;
       background-color: white;
       border: 1px solid var(--phone-border-color, #d1d5db);
       border-radius: 0.375rem;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-      z-index: 50;
-      display: ${(props) => (props.isOpen ? "block" : "none")};
+      box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      z-index: 10;
+      display: none;
+    }
+
+    .country-dropdown.open {
+      display: block;
     }
 
     .country-option {
-      padding: 0.5rem;
-      cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      padding: 0.5rem;
+      cursor: pointer;
     }
 
     .country-option:hover {
-      background-color: var(--phone-option-hover-bg, #f3f4f6);
+      background-color: var(--phone-hover-bg, #f3f4f6);
+    }
+
+    .country-option.selected {
+      background-color: var(--phone-selected-bg, #e5e7eb);
+    }
+
+    .country-name {
+      margin-left: 0.5rem;
+      font-size: 0.875rem;
     }
 
     input {
@@ -114,6 +155,7 @@ export class PhoneInput extends LitElement {
       border: none;
       outline: none;
       font-size: 1rem;
+      color: var(--phone-text-color, #374151);
     }
 
     input:disabled {
@@ -122,58 +164,48 @@ export class PhoneInput extends LitElement {
     }
 
     .error-message {
-      margin-top: 0.5rem;
-      color: var(--phone-error-color, #dc2626);
-      font-size: 0.875rem;
+      color: var(--phone-error-color, #ef4444);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
     }
   `;
 
   constructor() {
     super();
+    this.name = "";
+    this.value = "";
+    this.label = "Phone Number";
+    this.placeholder = "Enter phone number";
+    this.defaultCountry = "US";
     this.disabled = false;
     this.required = false;
+    this.error = "";
     this.isOpen = false;
-    this.defaultCountry = "US";
-    this.selectedCountry = "US";
+    this.selectedCountry = "";
     this.formattedValue = "";
-    this._clickOutsideHandler = this._handleClickOutside.bind(this);
   }
 
   connectedCallback() {
     super.connectedCallback();
-    document.addEventListener("click", this._clickOutsideHandler);
-    this._initializeValue();
+    // Set default country
+    this.selectedCountry = this.defaultCountry || "US";
+    // Close dropdown when clicking outside
+    document.addEventListener("click", this._handleOutsideClick.bind(this));
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    document.removeEventListener("click", this._clickOutsideHandler);
+    document.removeEventListener("click", this._handleOutsideClick.bind(this));
   }
 
-  _initializeValue() {
-    if (this.value) {
-      // Extract country code and number from value
-      const match = this.value.match(/^\+(\d+)(.*)$/);
-      if (match) {
-        const [, code, number] = match;
-        const country = Object.entries(COUNTRY_CODES).find(
-          ([, data]) => data.code === `+${code}`
-        );
-        if (country) {
-          this.selectedCountry = country[0];
-          this.formattedValue = this._formatNumber(number);
-        }
-      }
-    }
-  }
-
-  _handleClickOutside(event) {
-    if (!this.renderRoot.contains(event.target)) {
+  _handleOutsideClick(e) {
+    if (this.isOpen && !this.renderRoot.contains(e.target)) {
       this.isOpen = false;
     }
   }
 
-  _toggleDropdown() {
+  _toggleDropdown(e) {
+    e.stopPropagation();
     if (!this.disabled) {
       this.isOpen = !this.isOpen;
     }
@@ -182,72 +214,70 @@ export class PhoneInput extends LitElement {
   _selectCountry(country) {
     this.selectedCountry = country;
     this.isOpen = false;
+    this._formatPhoneNumber();
     this._dispatchChangeEvent();
-  }
-
-  _formatNumber(value) {
-    if (!value) return "";
-    const digits = value.replace(/\D/g, "");
-    const pattern = COUNTRY_CODES[this.selectedCountry].pattern;
-    let formatted = digits;
-
-    // Apply pattern formatting
-    if (pattern) {
-      const parts = pattern.split("-");
-      let remaining = digits;
-      formatted = parts
-        .map((part) => {
-          const length = part.length;
-          const chunk = remaining.slice(0, length);
-          remaining = remaining.slice(length);
-          return chunk;
-        })
-        .filter(Boolean)
-        .join("-");
-    }
-
-    return formatted;
   }
 
   _handleInput(e) {
-    const value = e.target.value;
-    this.formattedValue = this._formatNumber(value);
+    const input = e.target.value.replace(/\D/g, "");
+    this.value = input;
+    this._formatPhoneNumber();
     this._dispatchChangeEvent();
-    this._validate();
   }
 
-  _validate() {
-    const isValid = this._isValidNumber();
-    this.dispatchEvent(
-      new CustomEvent("validate", {
-        detail: {
-          valid: isValid,
-          message: isValid ? "" : "Please enter a valid phone number",
-        },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
+  _formatPhoneNumber() {
+    const countryData = COUNTRY_CODES[this.selectedCountry];
+    if (!countryData || !this.value) {
+      this.formattedValue = this.value;
+      return;
+    }
 
-  _isValidNumber() {
-    if (!this.formattedValue) return !this.required;
-    const pattern = COUNTRY_CODES[this.selectedCountry].pattern;
-    const digitCount = this.formattedValue.replace(/\D/g, "").length;
-    const expectedCount = pattern.replace(/\D/g, "").length;
-    return digitCount === expectedCount;
+    let formatted = this.value;
+
+    // Format based on country
+    if (this.selectedCountry === "US" || this.selectedCountry === "CA") {
+      if (this.value.length > 0) {
+        formatted = this.value.match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+        formatted = !formatted[2]
+          ? formatted[1]
+          : `(${formatted[1]}) ${formatted[2]}${
+              formatted[3] ? `-${formatted[3]}` : ""
+            }`;
+      }
+    } else if (this.selectedCountry === "GB") {
+      if (this.value.length > 0) {
+        formatted = this.value.match(/(\d{0,2})(\d{0,4})(\d{0,6})/);
+        formatted = !formatted[2]
+          ? formatted[1]
+          : `${formatted[1]} ${formatted[2]}${
+              formatted[3] ? ` ${formatted[3]}` : ""
+            }`;
+      }
+    } else if (this.selectedCountry === "JP") {
+      if (this.value.length > 0) {
+        formatted = this.value.match(/(\d{0,2})(\d{0,4})(\d{0,4})/);
+        formatted = !formatted[2]
+          ? formatted[1]
+          : `${formatted[1]}-${formatted[2]}${
+              formatted[3] ? `-${formatted[3]}` : ""
+            }`;
+      }
+    }
+
+    this.formattedValue = formatted;
   }
 
   _dispatchChangeEvent() {
-    const countryCode = COUNTRY_CODES[this.selectedCountry].code;
-    const fullNumber = `${countryCode}${this.formattedValue.replace(/\D/g, "")}`;
-
+    const countryData = COUNTRY_CODES[this.selectedCountry];
     this.dispatchEvent(
       new CustomEvent("change", {
         detail: {
-          value: fullNumber,
+          name: this.name,
+          value: this.value,
           formattedValue: this.formattedValue,
-          country: this.selectedCountry,
+          countryCode: countryData?.code || "",
+          fullNumber: `${countryData?.code || ""}${this.value}`,
+          valid: this._isValid(),
         },
         bubbles: true,
         composed: true,
@@ -255,41 +285,79 @@ export class PhoneInput extends LitElement {
     );
   }
 
+  _isValid() {
+    if (!this.required && !this.value) {
+      return true;
+    }
+
+    const countryData = COUNTRY_CODES[this.selectedCountry];
+    if (!countryData) {
+      return false;
+    }
+
+    // Basic validation based on expected length
+    if (this.selectedCountry === "US" || this.selectedCountry === "CA") {
+      return this.value.replace(/\D/g, "").length === 10;
+    } else if (this.selectedCountry === "GB") {
+      const digits = this.value.replace(/\D/g, "");
+      return digits.length >= 10 && digits.length <= 11;
+    }
+
+    // Default validation - just check if there's a value
+    return this.value.length > 0;
+  }
+
   render() {
+    const countryData = COUNTRY_CODES[this.selectedCountry] || COUNTRY_CODES.US;
+
     return html`
       <div class="phone-input-container">
-        ${this.label ? html`<label>${this.label}</label>` : ""}
-        <div class="input-wrapper">
-          <div class="country-select" @click=${this._toggleDropdown}>
-            ${COUNTRY_CODES[this.selectedCountry].flag}
-            ${COUNTRY_CODES[this.selectedCountry].code}
+        ${this.label
+          ? html`<label for="phone-${this.name}">${this.label}</label>`
+          : ""}
+        <div
+          class="input-wrapper ${this.disabled ? "disabled" : ""} ${this.error
+            ? "error"
+            : ""}"
+        >
+          <div
+            class="country-selector ${this.disabled ? "disabled" : ""}"
+            @click="${this._toggleDropdown}"
+          >
+            <span class="country-flag">${countryData.flag}</span>
+            <span class="country-code">${countryData.code}</span>
+            <span class="dropdown-icon ${this.isOpen ? "open" : ""}">▼</span>
           </div>
           <input
             type="tel"
-            .name=${this.name}
-            .placeholder=${this.placeholder}
-            .value=${this.formattedValue}
-            ?disabled=${this.disabled}
-            ?required=${this.required}
-            @input=${this._handleInput}
+            id="phone-${this.name}"
+            name="${this.name}"
+            .value="${this.formattedValue}"
+            @input="${this._handleInput}"
+            placeholder="${this.placeholder}"
+            ?disabled="${this.disabled}"
+            ?required="${this.required}"
+            pattern="${countryData.pattern}"
           />
         </div>
-
-        <div class="country-dropdown">
+        <div class="country-dropdown ${this.isOpen ? "open" : ""}">
           ${Object.entries(COUNTRY_CODES).map(
-            ([country, data]) => html`
+            ([code, data]) => html`
               <div
-                class="country-option"
-                @click=${() => this._selectCountry(country)}
+                class="country-option ${this.selectedCountry === code
+                  ? "selected"
+                  : ""}"
+                @click="${() => this._selectCountry(code)}"
               >
-                ${data.flag} ${country} ${data.code}
+                <span class="country-flag">${data.flag}</span>
+                <span class="country-code">${data.code}</span>
+                <span class="country-name">${code}</span>
               </div>
             `
           )}
         </div>
-
         ${this.error
-          ? html` <div class="error-message">${this.error}</div> `
+          ? html`<div class="error-message">${this.error}</div>`
           : ""}
       </div>
     `;

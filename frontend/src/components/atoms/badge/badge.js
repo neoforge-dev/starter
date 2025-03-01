@@ -12,10 +12,12 @@ import "../../atoms/icon/icon.js";
  *
  * @prop {string} variant - The variant style of the badge
  * @prop {string} size - The size of the badge
- * @prop {boolean} rounded - Whether the badge has fully rounded corners
- * @prop {boolean} outlined - Whether the badge has an outlined style
  * @prop {string} icon - Optional icon name to display before the content
  * @prop {boolean} removable - Whether the badge can be removed
+ * @prop {boolean} pill - Whether the badge has a pill shape
+ * @prop {boolean} disabled - Whether the badge is disabled
+ * @prop {boolean} rounded - Whether the badge has fully rounded corners
+ * @prop {boolean} outlined - Whether the badge has an outlined style
  */
 export class NeoBadge extends LitElement {
   static properties = {
@@ -26,6 +28,8 @@ export class NeoBadge extends LitElement {
     icon: { type: String, reflect: true },
     removable: { type: Boolean, reflect: true },
     title: { type: String, reflect: true },
+    pill: { type: Boolean, reflect: true },
+    disabled: { type: Boolean, reflect: true },
   };
 
   constructor() {
@@ -37,38 +41,28 @@ export class NeoBadge extends LitElement {
     this.icon = null;
     this.removable = false;
     this.title = "Default";
+    this.pill = false;
+    this.disabled = false;
   }
 
   _handleRemove() {
     this.dispatchEvent(new CustomEvent("remove", { bubbles: true }));
   }
 
-  updated(changedProperties) {
-    super.updated(changedProperties);
-    // Wait for the next microtask to ensure content is updated
-    Promise.resolve().then(() => {
-      // Try to get content from direct text content first
-      let content = this.textContent.trim();
-
-      // If no direct content, try to get it from slot
-      if (!content) {
-        const slot = this.shadowRoot.querySelector("slot");
-        const nodes = slot.assignedNodes();
-        content = nodes
-          .map((node) => node.textContent)
-          .join("")
-          .trim();
-      }
-
-      if (content) {
-        this.title = content;
-        // Force a re-render to update the title attribute in the template
-        this.requestUpdate();
-      }
-    });
+  // Override to prevent automatic reflection of properties to attributes
+  // which can cause additional updates
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue !== newValue) {
+      super.attributeChangedCallback(name, oldValue, newValue);
+    }
   }
 
   render() {
+    // Get the title from the slot content if not explicitly set
+    if (this.title === "Default" && this.textContent.trim()) {
+      this.title = this.textContent.trim();
+    }
+
     return html`
       <div
         class="badge ${this.variant ? `variant-${this.variant}` : ""} ${this
@@ -76,11 +70,16 @@ export class NeoBadge extends LitElement {
           ? `size-${this.size}`
           : ""} ${this.rounded ? "rounded" : ""} ${this.outlined
           ? "outlined"
+          : ""} ${this.pill ? "pill" : ""} ${this.disabled
+          ? "disabled"
           : ""} truncate"
         title="${this.title}"
+        role="status"
       >
+        <slot name="prefix"></slot>
         ${this.icon ? html`<neo-icon name="${this.icon}"></neo-icon>` : ""}
         <slot></slot>
+        <slot name="suffix"></slot>
         ${this.removable
           ? html`<button
               class="close-button"
@@ -156,6 +155,18 @@ export class NeoBadge extends LitElement {
       .size-large {
         padding: 0.375rem 1rem;
         font-size: var(--font-size-base);
+      }
+
+      /* Pill shape */
+      .pill {
+        border-radius: 9999px;
+      }
+
+      /* Disabled state */
+      .disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
       }
 
       /* Variants */

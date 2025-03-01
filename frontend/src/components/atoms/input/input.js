@@ -18,6 +18,10 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {string} error - Error message to display
  * @prop {string} helperText - Helper text to display below input
  * @prop {string} helper - Additional helper text
+ * @prop {string} pattern - Validation pattern
+ * @prop {number} maxLength - Maximum length of input
+ * @prop {number} minLength - Minimum length of input
+ * @prop {string} name - Input name for form submission
  */
 export class NeoInput extends LitElement {
   static properties = {
@@ -30,6 +34,11 @@ export class NeoInput extends LitElement {
     error: { type: String },
     helperText: { type: String },
     helper: { type: String },
+    pattern: { type: String },
+    maxLength: { type: Number },
+    minLength: { type: Number },
+    name: { type: String },
+    _showPassword: { type: Boolean, state: true },
   };
 
   static styles = [
@@ -42,6 +51,8 @@ export class NeoInput extends LitElement {
 
       .input-wrapper {
         position: relative;
+        display: flex;
+        align-items: center;
       }
 
       label {
@@ -93,6 +104,27 @@ export class NeoInput extends LitElement {
       .input-wrapper.error input:focus {
         box-shadow: 0 0 0 2px var(--color-error-light);
       }
+
+      .password-toggle {
+        position: absolute;
+        right: var(--spacing-sm);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--color-text-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+
+      .prefix-slot {
+        margin-right: var(--spacing-xs);
+      }
+
+      .suffix-slot {
+        margin-left: var(--spacing-xs);
+      }
     `,
   ];
 
@@ -103,10 +135,13 @@ export class NeoInput extends LitElement {
     this.disabled = false;
     this.required = false;
     this._id = `neo-input-${Math.random().toString(36).substr(2, 9)}`;
+    this._showPassword = false;
   }
 
+  // Event handlers
   _handleInput(e) {
     this.value = e.target.value;
+
     this.dispatchEvent(
       new CustomEvent("neo-input", {
         detail: { value: this.value },
@@ -114,6 +149,9 @@ export class NeoInput extends LitElement {
         composed: true,
       })
     );
+
+    // Also dispatch standard input event
+    this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   }
 
   _handleChange(e) {
@@ -124,25 +162,97 @@ export class NeoInput extends LitElement {
         composed: true,
       })
     );
+
+    // Also dispatch standard change event
+    this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+  }
+
+  _togglePasswordVisibility() {
+    this._showPassword = !this._showPassword;
+  }
+
+  // Public methods
+  focus() {
+    const input = this.shadowRoot.querySelector("input");
+    if (input) {
+      input.focus();
+    }
+    this.dispatchEvent(new Event("focus", { bubbles: true, composed: true }));
+  }
+
+  blur() {
+    const input = this.shadowRoot.querySelector("input");
+    if (input) {
+      input.blur();
+    }
+    this.dispatchEvent(new Event("blur", { bubbles: true, composed: true }));
+  }
+
+  reportValidity() {
+    const input = this.shadowRoot.querySelector("input");
+    const isValid = input.reportValidity();
+
+    if (!isValid) {
+      this.error = input.validationMessage;
+      this.dispatchEvent(
+        new Event("invalid", { bubbles: true, composed: true })
+      );
+    } else {
+      this.error = "";
+    }
+
+    return isValid;
+  }
+
+  checkValidity() {
+    const input = this.shadowRoot.querySelector("input");
+    return input.checkValidity();
   }
 
   render() {
+    // Determine the actual input type (for password toggle)
+    const actualType =
+      this.type === "password" && this._showPassword ? "text" : this.type;
+
     return html`
       ${this.label ? html`<label for="${this._id}">${this.label}</label>` : ""}
       <div class="input-wrapper ${this.error ? "error" : ""}">
+        <slot name="prefix" class="prefix-slot"></slot>
         <input
           id="${this._id}"
-          type="${this.type}"
+          type="${actualType}"
           .value="${this.value}"
           placeholder="${this.placeholder || ""}"
           ?disabled="${this.disabled}"
           ?required="${this.required}"
+          name="${this.name || ""}"
+          pattern="${this.pattern || ""}"
+          maxlength="${this.maxLength || ""}"
+          minlength="${this.minLength || ""}"
           aria-label="${this.label || ""}"
           aria-invalid="${Boolean(this.error)}"
+          aria-required="${Boolean(this.required)}"
           aria-errormessage="${this.error ? `${this._id}-error` : ""}"
           @input="${this._handleInput}"
           @change="${this._handleChange}"
         />
+        ${this.type === "password"
+          ? html`
+              <button
+                type="button"
+                class="password-toggle"
+                @click="${this._togglePasswordVisibility}"
+                aria-label="${this._showPassword
+                  ? "Hide password"
+                  : "Show password"}"
+              >
+                <neo-icon
+                  name="${this._showPassword ? "visibility_off" : "visibility"}"
+                ></neo-icon>
+              </button>
+            `
+          : ""}
+        <slot name="suffix" class="suffix-slot"></slot>
       </div>
       ${this.error
         ? html`<div id="${this._id}-error" class="error-text">

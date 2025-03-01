@@ -4,6 +4,13 @@ import {
   AppError,
   ErrorType,
 } from "../../services/error-service.js";
+import { mockApiClient } from "../mocks/api-client.mock.js";
+import * as apiClientModule from "../../services/api-client.js";
+
+// Mock the API client
+vi.mock("../../services/api-client.js", () => ({
+  apiClient: mockApiClient,
+}));
 
 describe("ErrorService", () => {
   let consoleError;
@@ -20,6 +27,10 @@ describe("ErrorService", () => {
       warn: vi.fn(),
       info: vi.fn(),
     };
+
+    // Reset mock API client
+    mockApiClient.responses.clear();
+    mockApiClient.errors.clear();
   });
 
   afterEach(() => {
@@ -46,23 +57,27 @@ describe("ErrorService", () => {
   });
 
   describe("Error Handling", () => {
-    it("handles errors", () => {
+    it("handles errors", async () => {
       const listener = vi.fn();
       errorService.addListener(listener);
 
+      mockApiClient.setResponse("/errors", { success: true });
+
       const error = new AppError("Test error");
-      errorService.handleError(error);
+      await errorService.handleError(error);
 
       expect(listener).toHaveBeenCalledWith(error);
       errorService.removeListener(listener);
     });
 
-    it("converts regular errors to AppError", () => {
+    it("converts regular errors to AppError", async () => {
       const listener = vi.fn();
       errorService.addListener(listener);
 
+      mockApiClient.setResponse("/errors", { success: true });
+
       const originalError = new Error("Original error");
-      errorService.handleError(originalError);
+      await errorService.handleError(originalError);
 
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -70,6 +85,40 @@ describe("ErrorService", () => {
           type: ErrorType.UNKNOWN,
         })
       );
+      errorService.removeListener(listener);
+    });
+
+    it("handles network errors", async () => {
+      const listener = vi.fn();
+      errorService.addListener(listener);
+
+      const networkError = new TypeError("Failed to fetch");
+      mockApiClient.setError("/errors", networkError);
+
+      await errorService.handleError(networkError);
+
+      expect(listener).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: ErrorType.NETWORK,
+          message: "Network error. Please check your connection.",
+        })
+      );
+      errorService.removeListener(listener);
+    });
+
+    it("handles validation errors", async () => {
+      const listener = vi.fn();
+      errorService.addListener(listener);
+
+      const validationError = new AppError(
+        "Invalid input",
+        ErrorType.VALIDATION,
+        { field: "email" }
+      );
+
+      await errorService.handleError(validationError);
+
+      expect(listener).toHaveBeenCalledWith(validationError);
       errorService.removeListener(listener);
     });
   });
@@ -93,6 +142,30 @@ describe("ErrorService", () => {
       expect(normalized).toBeInstanceOf(AppError);
       expect(normalized.message).toBe("Test error");
       expect(normalized.type).toBe(ErrorType.UNKNOWN);
+    });
+
+    it("reports errors to the backend", async () => {
+      const postSpy = vi.spyOn(mockApiClient, "post");
+      mockApiClient.setResponse("/errors", { success: true });
+
+      const error = new AppError("Test error", ErrorType.API);
+      await errorService._reportError(error);
+
+      expect(postSpy).toHaveBeenCalledWith(
+        "/errors",
+        expect.objectContaining({
+          type: ErrorType.API,
+          message: "Test error",
+        })
+      );
+    });
+
+    it("handles failed error reporting gracefully", async () => {
+      const reportError = new Error("Failed to report");
+      mockApiClient.setError("/errors", reportError);
+
+      const error = new AppError("Test error", ErrorType.API);
+      await expect(errorService._reportError(error)).resolves.toBeUndefined();
     });
   });
 });

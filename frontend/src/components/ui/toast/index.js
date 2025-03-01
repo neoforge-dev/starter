@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit";
+import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 export class Toast extends LitElement {
   static get properties() {
@@ -77,11 +77,20 @@ export class Toast extends LitElement {
   }
 }
 
-customElements.define("neo-toast", Toast);
+if (!customElements.get("neo-toast")) {
+  customElements.define("neo-toast", Toast);
+}
 
 // Helper function to show toast messages
 export function showToast(message, type = "info", duration = 3000) {
   const toast = document.createElement("neo-toast");
+  
+  // Ensure body exists before appending
+  if (!document.body) {
+    console.error('Document body not available for toast');
+    return;
+  }
+  
   document.body.appendChild(toast);
 
   toast.message = message;

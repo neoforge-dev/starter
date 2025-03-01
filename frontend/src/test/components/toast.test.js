@@ -1,6 +1,6 @@
 import { expect } from "@esm-bundle/chai";
 import { fixture, html } from "@open-wc/testing";
-import "../../src/components/ui/toast.js";
+import "../../components/ui/toast.js";
 
 describe("Toast Component", () => {
   let element;

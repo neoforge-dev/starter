@@ -1,4 +1,4 @@
-.PHONY: setup serve dev dev-build test clean frontend backend test-lf beep
+.PHONY: setup serve dev dev-build test clean frontend backend test-lf beep test-frontend test-frontend-watch test-frontend-coverage test-frontend-visual test-frontend-a11y test-frontend-perf test-frontend-all
 
 setup: ## Initial setup of development environment
 	@echo "Creating development environment..."
@@ -27,10 +27,40 @@ dev-build: ## Rebuild and start development environment
 	cd frontend && npm install
 	make dev
 
-test: ## Run tests
-	@echo "Running tests..."
-	# cd frontend && npm test:fast
-	docker compose -f backend/docker-compose.dev.yml run --rm api pytest
+test-frontend: ## Run frontend tests
+	@echo "Running frontend tests..."
+	cd frontend && npm run test
+
+test-frontend-watch: ## Run frontend tests in watch mode
+	@echo "Running frontend tests in watch mode..."
+	cd frontend && npm run test:watch
+
+test-frontend-coverage: ## Run frontend tests with coverage
+	@echo "Running frontend tests with coverage..."
+	cd frontend && npm run test:coverage
+
+test-frontend-visual: ## Run frontend visual tests
+	@echo "Running frontend visual tests..."
+	cd frontend && npm run test:visual
+
+test-frontend-a11y: ## Run frontend accessibility tests
+	@echo "Running frontend accessibility tests..."
+	cd frontend && npm run test:a11y
+
+test-frontend-perf: ## Run frontend performance tests
+	@echo "Running frontend performance tests..."
+	cd frontend && npm run test:perf
+
+test-frontend-all: ## Run all frontend tests
+	@echo "Running all frontend tests..."
+	make test-frontend
+	make test-frontend-visual
+	make test-frontend-a11y
+	make test-frontend-perf
+
+test: test-frontend-all ## Run all tests (frontend and backend)
+	@echo "Running backend tests..."
+	docker compose -f backend/docker-compose.dev.yml run --rm api pytest --maxfail=5
 
 clean: ## Clean up development environment
 	@echo "Cleaning up..."
@@ -40,11 +70,11 @@ clean: ## Clean up development environment
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-test-lf: ## Run only the last failed tests
-	@echo "Running last failed tests..."
-	docker compose -f backend/docker-compose.dev.yml run --rm api pytest --lf
+test-lf:
+	docker-compose run --rm frontend npm run test:unit -- --bail 1
+	@echo "\a" # System beep
 
-beep: ## Emit a beep notification
-	@echo "Beep! You've reached the failure threshold. Please check your tests!"
+beep:
+	@echo "\a"
 
 .DEFAULT_GOAL := help

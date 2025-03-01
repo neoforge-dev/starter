@@ -1,7 +1,9 @@
-import { LitElement, html, css } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
-@customElement("form-validation")
 export class FormValidation extends LitElement {
   static styles = css`
     :host {
@@ -53,35 +55,123 @@ export class FormValidation extends LitElement {
     }
   `;
 
-  @property({ type: String }) value = "";
-  @property({ type: Array }) rules = [];
-  @property({ type: Boolean }) showValidation = false;
+  static properties = {
+    value: { type: String },
+    rules: { type: Array },
+    showValidation: { type: Boolean },
+    validationResults: { type: Array, state: true },
+    isValid: { type: Boolean, state: true },
+    errors: { type: Array, state: true },
+    touched: { type: Boolean, state: true },
+    required: { type: Boolean, reflect: true },
+    type: { type: String, reflect: true },
+    minlength: { type: Number, reflect: true },
+    maxlength: { type: Number, reflect: true },
+    pattern: { type: String, reflect: true },
+  };
 
-  @state() validationResults = [];
-  @state() isValid = false;
+  constructor() {
+    super();
+    this.value = "";
+    this.rules = [];
+    this.showValidation = false;
+    this.validationResults = [];
+    this.isValid = false;
+    this.errors = [];
+    this.touched = false;
+    this.required = false;
+    this.type = "";
+    this.minlength = 0;
+    this.maxlength = 0;
+    this.pattern = "";
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.addEventListener("blur", this._handleBlur.bind(this));
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.removeEventListener("blur", this._handleBlur.bind(this));
+  }
+
+  _handleBlur() {
+    this.touched = true;
+    this._validateAll();
+  }
 
   updated(changedProperties) {
-    if (changedProperties.has("value") || changedProperties.has("rules")) {
-      this._validateValue();
+    if (
+      changedProperties.has("value") ||
+      changedProperties.has("required") ||
+      changedProperties.has("type") ||
+      changedProperties.has("minlength") ||
+      changedProperties.has("maxlength") ||
+      changedProperties.has("pattern")
+    ) {
+      this._validateAll();
     }
   }
 
-  _validateValue() {
-    if (!this.rules || !this.rules.length) {
-      this.isValid = true;
-      this.validationResults = [];
-      return;
+  _validateAll() {
+    this.errors = [];
+
+    // Required validation
+    if (this.required && (!this.value || this.value.trim() === "")) {
+      this.errors.push("This field is required");
     }
 
-    this.validationResults = this.rules.map((rule) => {
-      const isValid = rule.test(this.value);
-      return {
-        message: rule.message,
-        isValid,
-      };
-    });
+    // Email validation
+    if (
+      this.type === "email" &&
+      this.value &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value)
+    ) {
+      this.errors.push("Please enter a valid email address");
+    }
 
-    this.isValid = this.validationResults.every((result) => result.isValid);
+    // Minlength validation
+    if (
+      this.minlength > 0 &&
+      this.value &&
+      this.value.length < this.minlength
+    ) {
+      this.errors.push(`Minimum length is ${this.minlength} characters`);
+    }
+
+    // Maxlength validation
+    if (
+      this.maxlength > 0 &&
+      this.value &&
+      this.value.length > this.maxlength
+    ) {
+      this.errors.push(`Maximum length is ${this.maxlength} characters`);
+    }
+
+    // Pattern validation
+    if (this.pattern && this.value) {
+      const regex = new RegExp(this.pattern);
+      if (!regex.test(this.value)) {
+        this.errors.push("Please match the requested format");
+      }
+    }
+
+    // Custom rules validation
+    if (this.rules && this.rules.length) {
+      this.validationResults = this.rules.map((rule) => {
+        const isValid = rule.test(this.value);
+        if (!isValid) {
+          this.errors.push(rule.message);
+        }
+        return {
+          message: rule.message,
+          isValid,
+        };
+      });
+    }
+
+    this.isValid = this.errors.length === 0;
     this._dispatchValidation();
   }
 
@@ -91,6 +181,7 @@ export class FormValidation extends LitElement {
         detail: {
           isValid: this.isValid,
           results: this.validationResults,
+          errors: this.errors,
         },
         bubbles: true,
         composed: true,
@@ -99,26 +190,24 @@ export class FormValidation extends LitElement {
   }
 
   render() {
-    if (!this.showValidation || !this.validationResults.length) {
-      return html`<slot></slot>`;
-    }
-
     return html`
       <slot></slot>
-      <div class="validation-list">
-        ${this.validationResults.map(
-          (result) => html`
-            <div
-              class="validation-item ${result.isValid ? "valid" : "invalid"}"
-            >
-              <span class="validation-icon">
-                ${result.isValid ? "✓" : "✗"}
-              </span>
-              <span>${result.message}</span>
+      ${this.touched && this.errors.length > 0
+        ? html`
+            <div class="validation-list">
+              ${this.errors.map(
+                (error) => html`
+                  <div class="validation-item invalid">
+                    <span class="validation-icon">✗</span>
+                    <span>${error}</span>
+                  </div>
+                `
+              )}
             </div>
           `
-        )}
-      </div>
+        : ""}
     `;
   }
 }
+
+customElements.define("form-validation", FormValidation);

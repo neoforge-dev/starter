@@ -29,9 +29,15 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         # Initialize metrics at middleware startup
         self.metrics = get_metrics()
+        # Define required headers
+        self.required_headers = {
+            "Accept",
+            "User-Agent"
+        }
         # Define public endpoints that don't require validation
         self.public_endpoints = {
             "/health",
+            "/health/detailed",
             f"{settings.api_v1_str}/auth/token",
             f"{settings.api_v1_str}/auth/register",
             f"{settings.api_v1_str}/auth/verify",
@@ -88,52 +94,24 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 return response
 
             # Validate request headers for other endpoints
-            errors = await self._validate_headers(request)
-            if errors:
-                error_models = [error.model_dump() for error in errors]
-                return JSONResponse(
-                    status_code=422,
-                    content={
-                        'detail': error_models,
-                        'errors': error_models
-                    }
-                )
+            validation_error = await self._validate_headers(request)
+            if validation_error:
+                return validation_error
             
-            # Validate content type for POST/PUT/PATCH requests
-            if request.method in {"POST", "PUT", "PATCH"}:
-                content_type = request.headers.get("content-type", "")
-                # Allow form data for token endpoint
-                if request.url.path.endswith("/token"):
-                    if not content_type.startswith("application/x-www-form-urlencoded"):
-                        return JSONResponse(
-                            status_code=415,
-                            content={
-                                "detail": "Unsupported Media Type",
-                                "message": "Content-Type must be application/x-www-form-urlencoded",
-                            },
-                        )
-                else:
-                    if not content_type.startswith("application/json"):
-                        return JSONResponse(
-                            status_code=415,
-                            content={
-                                "detail": "Unsupported Media Type",
-                                "message": "Content-Type must be application/json",
-                            },
-                        )
-                
-                # Validate Content-Length for write methods
-                if not request.headers.get("content-length", "").strip():
+            # Validate Content-Type for POST/PUT/PATCH requests
+            if request.method in ["POST", "PUT", "PATCH"]:
+                content_type = request.headers.get("content-type")
+                if not content_type or "application/json" not in content_type.lower():
+                    return JSONResponse(
+                        status_code=415,
+                        content={"message": "Content-Type must be application/json"}
+                    )
+
+                # Validate Content-Length is present
+                if "content-length" not in request.headers:
                     return JSONResponse(
                         status_code=422,
-                        content={
-                            'detail': [{
-                                'type': 'missing',
-                                'loc': ['body'],
-                                'msg': 'Content-Length header is required',
-                                'input': None
-                            }]
-                        }
+                        content={"message": "Content-Length header is required"}
                     )
             
             # Process request and track duration
@@ -198,33 +176,33 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 },
             )
     
-    async def _validate_headers(self, request: Request) -> List[ValidationErrorModel]:
+    async def _validate_headers(self, request: Request) -> Optional[Response]:
         """Validate request headers."""
-        errors = []
-        required_headers = {
-            'accept': 'application/json',
-            'user-agent': None  # Just check presence
-        }
-        
-        # Convert headers to lowercase for case-insensitive comparison
-        headers = {k.lower(): v for k, v in request.headers.items()}
-        
-        for header, expected_value in required_headers.items():
-            if header not in headers:
-                errors.append(ValidationErrorModel(
-                    type='validation_error',
-                    loc=['header', header],
-                    msg=f'Header "{header}" is required',
-                    input=None
-                ))
-            elif expected_value and headers[header].lower() != expected_value.lower():
-                errors.append(ValidationErrorModel(
-                    type='validation_error',
-                    loc=['header', header],
-                    msg=f'Header "{header}" must be "{expected_value}"',
-                    input=headers[header]
-                ))
-        return errors
+        # Check required headers
+        for header in self.required_headers:
+            if header not in request.headers:
+                return JSONResponse(
+                    content={"message": f"{header} header is required"},
+                    status_code=422,
+                )
+
+        # Validate Content-Type for POST, PUT, PATCH requests
+        if request.method in {"POST", "PUT", "PATCH"}:
+            content_type = request.headers.get("Content-Type", "")
+            if not content_type or "application/json" not in content_type.lower():
+                return JSONResponse(
+                    content={"message": "Content-Type must be application/json"},
+                    status_code=415,
+                )
+
+            # Check Content-Length header
+            if "Content-Length" not in request.headers:
+                return JSONResponse(
+                    content={"message": "Content-Length header is required"},
+                    status_code=422,
+                )
+
+        return None
 
 
 def setup_validation_middleware(app: FastAPI) -> None:

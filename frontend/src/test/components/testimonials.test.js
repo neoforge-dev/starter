@@ -1,5 +1,5 @@
 import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
+import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import sinon from "sinon";
 import "../../components/marketing/testimonials.js";
 

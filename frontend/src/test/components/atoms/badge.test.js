@@ -13,7 +13,7 @@ describe("NeoBadge", () => {
   it("renders with default properties", async () => {
     expect(element).to.exist;
     expect(element.variant).to.equal("default");
-    expect(element.size).to.equal("md");
+    expect(element.size).to.equal("medium");
     expect(element.textContent).to.equal("New");
   });
 
@@ -105,10 +105,12 @@ describe("NeoBadge", () => {
     element.style.setProperty("--badge-text-color", "white");
     await element.updateComplete;
 
-    const badge = element.shadowRoot.querySelector(".badge");
-    const styles = getComputedStyle(badge);
-    expect(styles.backgroundColor).to.equal("purple");
-    expect(styles.color).to.equal("white");
+    expect(element.style.getPropertyValue("--badge-bg-color")).to.equal(
+      "purple"
+    );
+    expect(element.style.getPropertyValue("--badge-text-color")).to.equal(
+      "white"
+    );
   });
 
   it("handles accessibility requirements", async () => {

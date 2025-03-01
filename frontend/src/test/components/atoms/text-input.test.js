@@ -1,176 +1,159 @@
-import { html, fixture, expect, oneEvent } from "@open-wc/testing";
+import { html } from "@open-wc/testing";
+import { BaseComponentTest } from "../../base-component.test.js";
 import "../../../components/atoms/text-input/text-input.js";
 
 describe("NeoTextInput", () => {
-  it("renders with default properties", async () => {
-    const el = await fixture(html`<neo-text-input></neo-text-input>`);
+  let testHarness;
 
-    expect(el.type).to.equal("text");
-    expect(el.value).to.equal("");
-    expect(el.placeholder).to.equal("");
-    expect(el.disabled).to.be.false;
-    expect(el.required).to.be.false;
-    expect(el.readonly).to.be.false;
-    expect(el.clearable).to.be.false;
+  beforeEach(() => {
+    testHarness = new BaseComponentTest();
+  });
+
+  afterEach(async () => {
+    await testHarness.teardown();
+  });
+
+  it("renders with default properties", async () => {
+    await testHarness.setup(html`<neo-text-input></neo-text-input>`);
+    const input = testHarness.query("input");
+    expect(input).to.exist;
+    expect(input.type).to.equal("text");
   });
 
   it("reflects properties to attributes", async () => {
-    const el = await fixture(
-      html`<neo-text-input
-        type="email"
-        value="test@example.com"
-        placeholder="Enter email"
-        ?disabled="${true}"
-        ?required="${true}"
-        ?readonly="${true}"
-      ></neo-text-input>`
-    );
-
-    expect(el).to.have.attribute("type", "email");
-    expect(el).to.have.attribute("disabled");
-    expect(el).to.have.attribute("required");
-    expect(el).to.have.attribute("readonly");
-    expect(el.value).to.equal("test@example.com");
-    expect(el.placeholder).to.equal("Enter email");
+    await testHarness.setup(html`
+      <neo-text-input
+        value="test"
+        placeholder="Enter text"
+        disabled
+        required
+      ></neo-text-input>
+    `);
+    const input = testHarness.query("input");
+    expect(input.value).to.equal("test");
+    expect(input.placeholder).to.equal("Enter text");
+    expect(input.disabled).to.be.true;
+    expect(input.required).to.be.true;
   });
 
   it("renders label when provided", async () => {
-    const el = await fixture(
-      html`<neo-text-input label="Email Address"></neo-text-input>`
-    );
-
-    const label = el.shadowRoot.querySelector("label");
+    await testHarness.setup(html`
+      <neo-text-input label="Username"></neo-text-input>
+    `);
+    const label = testHarness.query("label");
     expect(label).to.exist;
-    expect(label.textContent).to.equal("Email Address");
+    expect(label.textContent).to.equal("Username");
   });
 
   it("renders helper text when provided", async () => {
-    const el = await fixture(
-      html`<neo-text-input helper="Please enter your email"></neo-text-input>`
-    );
-
-    const helper = el.shadowRoot.querySelector(".helper-text");
-    expect(helper).to.exist;
-    expect(helper.textContent).to.equal("Please enter your email");
+    await testHarness.setup(html`
+      <neo-text-input helper-text="Enter your username"></neo-text-input>
+    `);
+    const helperText = testHarness.query(".helper-text");
+    expect(helperText).to.exist;
+    expect(helperText.textContent).to.equal("Enter your username");
   });
 
   it("renders error message when provided", async () => {
-    const el = await fixture(
-      html`<neo-text-input error="Invalid email format"></neo-text-input>`
-    );
-
-    const error = el.shadowRoot.querySelector(".error-message");
-    expect(error).to.exist;
-    expect(error.textContent.trim()).to.equal("Invalid email format");
+    await testHarness.setup(html`
+      <neo-text-input error="Username is required"></neo-text-input>
+    `);
+    const errorMessage = testHarness.query(".error-message");
+    expect(errorMessage).to.exist;
+    expect(errorMessage.textContent).to.equal("Username is required");
   });
 
   it("shows password toggle for password type", async () => {
-    const el = await fixture(
-      html`<neo-text-input type="password" value="secret"></neo-text-input>`
-    );
-
-    const toggleButton = el.shadowRoot.querySelector(".password-toggle");
+    await testHarness.setup(html`
+      <neo-text-input type="password"></neo-text-input>
+    `);
+    const toggleButton = testHarness.query(".password-toggle");
     expect(toggleButton).to.exist;
 
-    const input = el.shadowRoot.querySelector("input");
-    expect(input.type).to.equal("password");
+    await testHarness.click(".password-toggle");
+    expect(testHarness.query("input").type).to.equal("text");
 
-    toggleButton.click();
-    await el.updateComplete;
-    expect(input.type).to.equal("text");
-
-    toggleButton.click();
-    await el.updateComplete;
-    expect(input.type).to.equal("password");
+    await testHarness.click(".password-toggle");
+    expect(testHarness.query("input").type).to.equal("password");
   });
 
   it("shows clear button when clearable and has value", async () => {
-    const el = await fixture(
-      html`<neo-text-input
-        value="test value"
-        ?clearable="${true}"
-      ></neo-text-input>`
-    );
-
-    const clearButton = el.shadowRoot.querySelector(".clear-button");
+    await testHarness.setup(html`
+      <neo-text-input clearable value="test"></neo-text-input>
+    `);
+    const clearButton = testHarness.query(".clear-button");
     expect(clearButton).to.exist;
 
-    clearButton.click();
-    await el.updateComplete;
-    expect(el.value).to.equal("");
+    await testHarness.click(".clear-button");
+    expect(testHarness.query("input").value).to.equal("");
   });
 
   it("dispatches neo-input event on input", async () => {
-    const el = await fixture(html`<neo-text-input></neo-text-input>`);
-    const input = el.shadowRoot.querySelector("input");
+    await testHarness.setup(html`<neo-text-input></neo-text-input>`);
+    const input = testHarness.query("input");
 
-    setTimeout(() => {
-      input.value = "new value";
-      input.dispatchEvent(new Event("input"));
-    });
+    const eventPromise = testHarness.waitForEvent("neo-input");
+    await testHarness.type("input", "test");
+    const event = await eventPromise;
 
-    const { detail } = await oneEvent(el, "neo-input");
-    expect(detail.value).to.equal("new value");
+    expect(event.detail.value).to.equal("test");
   });
 
   it("dispatches neo-change event on change", async () => {
-    const el = await fixture(html`<neo-text-input></neo-text-input>`);
-    const input = el.shadowRoot.querySelector("input");
+    await testHarness.setup(html`<neo-text-input></neo-text-input>`);
+    const input = testHarness.query("input");
 
-    setTimeout(() => {
-      input.value = "new value";
-      input.dispatchEvent(new Event("change"));
-    });
+    const eventPromise = testHarness.waitForEvent("neo-change");
+    await testHarness.type("input", "test");
+    const event = await eventPromise;
 
-    const { detail } = await oneEvent(el, "neo-change");
-    expect(detail.value).to.equal("new value");
+    expect(event.detail.value).to.equal("test");
   });
 
   it("updates focused state on focus/blur", async () => {
-    const el = await fixture(html`<neo-text-input></neo-text-input>`);
-    const input = el.shadowRoot.querySelector("input");
+    await testHarness.setup(html`<neo-text-input></neo-text-input>`);
+    const input = testHarness.query("input");
 
-    input.dispatchEvent(new Event("focus"));
-    await el.updateComplete;
-    expect(el.shadowRoot.querySelector(".input-wrapper")).to.have.class(
-      "focused"
-    );
+    input.focus();
+    await testHarness.waitForUpdate();
+    expect(testHarness.element.hasAttribute("focused")).to.be.true;
 
-    input.dispatchEvent(new Event("blur"));
-    await el.updateComplete;
-    expect(el.shadowRoot.querySelector(".input-wrapper")).to.not.have.class(
-      "focused"
-    );
+    input.blur();
+    await testHarness.waitForUpdate();
+    expect(testHarness.element.hasAttribute("focused")).to.be.false;
   });
 
   it("supports prefix and suffix slots", async () => {
-    const el = await fixture(html`
+    await testHarness.setup(html`
       <neo-text-input>
-        <neo-icon slot="prefix" name="search"></neo-icon>
-        <neo-icon slot="suffix" name="calendar"></neo-icon>
+        <span slot="prefix">$</span>
+        <span slot="suffix">.00</span>
       </neo-text-input>
     `);
 
-    const prefix = el.shadowRoot.querySelector('slot[name="prefix"]');
-    const suffix = el.shadowRoot.querySelector('slot[name="suffix"]');
+    const prefix = testHarness.query("[slot='prefix']");
+    const suffix = testHarness.query("[slot='suffix']");
 
     expect(prefix).to.exist;
     expect(suffix).to.exist;
+    expect(prefix.textContent).to.equal("$");
+    expect(suffix.textContent).to.equal(".00");
   });
 
   it("has proper ARIA attributes", async () => {
-    const el = await fixture(html`
+    await testHarness.setup(html`
       <neo-text-input
         label="Username"
-        error="Required field"
-        ?required="${true}"
+        helper-text="Enter your username"
+        error="Username is required"
+        required
       ></neo-text-input>
     `);
 
-    const input = el.shadowRoot.querySelector("input");
-    expect(input).to.have.attribute("aria-label", "Username");
-    expect(input).to.have.attribute("aria-invalid", "true");
-    expect(input).to.have.attribute("aria-required", "true");
-    expect(input).to.have.attribute("aria-errormessage");
+    const input = testHarness.query("input");
+    expect(input.getAttribute("aria-label")).to.equal("Username");
+    expect(input.getAttribute("aria-required")).to.equal("true");
+    expect(input.getAttribute("aria-invalid")).to.exist;
+    expect(input.getAttribute("aria-describedby")).to.exist;
   });
 });

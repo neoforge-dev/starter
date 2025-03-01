@@ -2,7 +2,6 @@ import {
   LitElement,
   html,
   css,
-  unsafeCSS,
 } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 
@@ -197,4 +196,6 @@ export class NeoRadio extends LitElement {
   }
 }
 
-customElements.define("neo-radio", NeoRadio);
+if (!customElements.get("neo-radio")) {
+  customElements.define("neo-radio", NeoRadio);
+}

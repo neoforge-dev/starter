@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit";
+import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 
 /**
@@ -181,4 +181,6 @@ export class NeoSpinner extends LitElement {
   }
 }
 
-customElements.define("neo-spinner", NeoSpinner);
+if (!customElements.get("neo-spinner")) {
+  customElements.define("neo-spinner", NeoSpinner);
+}

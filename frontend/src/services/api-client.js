@@ -2,7 +2,7 @@ import { AppError, ErrorType } from "./error-service.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
-class ApiClient {
+export class ApiClient {
   constructor() {
     this._baseUrl = API_BASE_URL;
     this._defaultHeaders = {
@@ -19,8 +19,16 @@ class ApiClient {
    * @private
    */
   async _fetch(endpoint, options = {}) {
-    const url = `${this._baseUrl}${endpoint}`;
+    let url = `${this._baseUrl}${endpoint}`;
     const token = localStorage.getItem("neo-auth-token");
+
+    // Add query parameters if provided
+    if (options.params) {
+      const queryString = new URLSearchParams(options.params).toString();
+      url = `${url}${queryString ? `?${queryString}` : ""}`;
+      // Remove params from options to avoid sending them in the request body
+      delete options.params;
+    }
 
     const headers = {
       ...this._defaultHeaders,
@@ -37,21 +45,43 @@ class ApiClient {
       // Handle 401 Unauthorized
       if (response.status === 401) {
         localStorage.removeItem("neo-auth-token");
-        window.dispatchEvent(new CustomEvent("auth-expired"));
-        throw new AppError("Authentication expired", ErrorType.AUTH);
+        try {
+          window.dispatchEvent(new CustomEvent("auth-expired"));
+        } catch (e) {
+          console.warn("Could not dispatch auth-expired event:", e);
+        }
+        throw new AppError(
+          "Your session has expired. Please log in again.",
+          ErrorType.AUTH
+        );
       }
 
       let data;
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
+        try {
+          data = await response.json();
+        } catch (error) {
+          throw new AppError(
+            "API request failed: Invalid JSON response",
+            ErrorType.API,
+            {
+              originalError: error,
+              status: response.status,
+              statusText: response.statusText,
+            }
+          );
+        }
       } else {
+        // For non-JSON responses, get the raw text
         data = await response.text();
       }
 
       if (!response.ok) {
         throw new AppError(
-          data.message || "API request failed",
+          typeof data === "object"
+            ? data.message || "API request failed"
+            : data,
           ErrorType.API,
           {
             status: response.status,
@@ -88,8 +118,9 @@ class ApiClient {
 
   /**
    * Make a GET request
-   * @param {string} endpoint
-   * @param {Object} options
+   * @param {string} endpoint - API endpoint
+   * @param {Object} options - Request options
+   * @returns {Promise<any>}
    */
   async get(endpoint, options = {}) {
     return this._fetch(endpoint, {
@@ -100,9 +131,10 @@ class ApiClient {
 
   /**
    * Make a POST request
-   * @param {string} endpoint
-   * @param {Object} data
-   * @param {Object} options
+   * @param {string} endpoint - API endpoint
+   * @param {Object} data - Request body
+   * @param {Object} options - Request options
+   * @returns {Promise<any>}
    */
   async post(endpoint, data, options = {}) {
     return this._fetch(endpoint, {
@@ -114,9 +146,10 @@ class ApiClient {
 
   /**
    * Make a PUT request
-   * @param {string} endpoint
-   * @param {Object} data
-   * @param {Object} options
+   * @param {string} endpoint - API endpoint
+   * @param {Object} data - Request body
+   * @param {Object} options - Request options
+   * @returns {Promise<any>}
    */
   async put(endpoint, data, options = {}) {
     return this._fetch(endpoint, {
@@ -127,23 +160,10 @@ class ApiClient {
   }
 
   /**
-   * Make a PATCH request
-   * @param {string} endpoint
-   * @param {Object} data
-   * @param {Object} options
-   */
-  async patch(endpoint, data, options = {}) {
-    return this._fetch(endpoint, {
-      ...options,
-      method: "PATCH",
-      body: JSON.stringify(data),
-    });
-  }
-
-  /**
    * Make a DELETE request
-   * @param {string} endpoint
-   * @param {Object} options
+   * @param {string} endpoint - API endpoint
+   * @param {Object} options - Request options
+   * @returns {Promise<any>}
    */
   async delete(endpoint, options = {}) {
     return this._fetch(endpoint, {

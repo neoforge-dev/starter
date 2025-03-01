@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit";
+import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 
 /**
@@ -323,4 +323,8 @@ export class MemoryMonitor extends LitElement {
   }
 }
 
-customElements.define("memory-monitor", MemoryMonitor);
+if (!customElements.get("memory-monitor")) {
+  customElements.define("memory-monitor", MemoryMonitor);
+}
+
+export { MemoryMonitor };

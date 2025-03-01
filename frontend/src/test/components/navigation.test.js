@@ -1,6 +1,6 @@
 import { expect } from "@esm-bundle/chai";
 import { fixture, html } from "@open-wc/testing";
-import "../../src/components/ui/navigation.js";
+import "../../components/ui/navigation.js";
 
 describe("Navigation Component", () => {
   let element;

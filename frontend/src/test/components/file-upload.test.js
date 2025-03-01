@@ -1,6 +1,11 @@
 import { expect, describe, it, beforeEach } from "vitest";
 import { fixture, html } from "@open-wc/testing-helpers";
-import "../../components/ui/file-upload/index.js";
+import { FileUpload } from "../../components/ui/file-upload/index.js";
+
+// Register the component if not already registered
+if (!customElements.get("file-upload")) {
+  customElements.define("file-upload", FileUpload);
+}
 
 describe("FileUpload", () => {
   let element;
