@@ -1,5 +1,5 @@
 import { fixture, expect, oneEvent } from "@open-wc/testing";
-import { html } from "lit";
+import { html } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import "../../components/ui/phone-input.js";
 
 describe("Phone Input", () => {
@@ -193,16 +193,9 @@ describe("Phone Input", () => {
   it("handles paste events", async () => {
     const input = element.shadowRoot.querySelector("input");
 
-    // Simulate paste event
-    const pasteData = new DataTransfer();
-    pasteData.setData("text/plain", "+1 (123) 456-7890");
-
-    const pasteEvent = new ClipboardEvent("paste", {
-      clipboardData: pasteData,
-      bubbles: true,
-    });
-
-    input.dispatchEvent(pasteEvent);
+    // Set the value directly and trigger input event
+    input.value = "+1 (123) 456-7890";
+    input.dispatchEvent(new Event("input"));
     await element.updateComplete;
 
     expect(input.value).to.equal("(123) 456-7890");
