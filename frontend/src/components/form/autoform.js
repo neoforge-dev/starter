@@ -1,588 +1,399 @@
+// Import from lit directly for test environment
 import {
-  LitElement,
   html,
   css,
 } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { BaseComponent } from "../base-component.js";
+import { baseStyles } from "../../styles/base.js";
 
-export class NeoAutoform extends LitElement {
+/**
+ * @element neo-autoform
+ * @description A form component that automatically generates form fields based on a JSON schema
+ *
+ * @prop {Object} schema - JSON schema defining the form structure
+ * @prop {Object} value - Form data
+ * @prop {string} layout - Form layout (vertical, horizontal, grid)
+ * @prop {string} variant - Form variant (default, compact, floating)
+ * @prop {boolean} disabled - Whether the form is disabled
+ * @prop {boolean} readonly - Whether the form is readonly
+ */
+export class NeoAutoform extends BaseComponent {
   static properties = {
     schema: { type: Object },
     value: { type: Object },
-    variant: { type: String },
     layout: { type: String },
-    columns: { type: Number },
+    variant: { type: String },
     disabled: { type: Boolean },
     readonly: { type: Boolean },
-    showValidation: { type: Boolean },
     _errors: { type: Object, state: true },
-    _touched: { type: Set, state: true },
-    _formData: { type: Object, state: true },
   };
 
-  static styles = css`
-    :host {
-      display: block;
-      font-family: system-ui, sans-serif;
-    }
+  static styles = [
+    baseStyles,
+    css`
+      :host {
+        display: block;
+      }
 
-    .autoform {
-      width: 100%;
-    }
+      .form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+      }
 
-    /* Form Title & Description */
-    .form-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #111827;
-      margin: 0 0 0.5rem 0;
-    }
+      /* Layouts */
+      .layout-vertical {
+        flex-direction: column;
+      }
 
-    .form-description {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin: 0 0 2rem 0;
-    }
-
-    /* Layout Variants */
-    .layout-vertical {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .layout-horizontal {
-      display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: 2rem;
-      align-items: start;
-    }
-
-    .layout-grid {
-      display: grid;
-      gap: 1.5rem;
-      grid-template-columns: repeat(var(--form-columns, 2), 1fr);
-    }
-
-    /* Form Group */
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .form-group.horizontal {
-      display: contents;
-    }
-
-    .form-group.horizontal .form-label {
-      padding-top: 0.5rem;
-    }
-
-    /* Form Label */
-    .form-label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #374151;
-    }
-
-    .form-label.required::after {
-      content: "*";
-      color: #dc2626;
-      margin-left: 0.25rem;
-    }
-
-    .form-description {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-
-    /* Form Controls */
-    .form-control {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-
-    /* Input Variants */
-    .input-default {
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 0.375rem;
-      font-size: 0.875rem;
-      color: #111827;
-      background-color: white;
-      transition: all 0.2s;
-    }
-
-    .input-default:focus {
-      outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
-    }
-
-    .input-default:disabled {
-      background-color: #f3f4f6;
-      cursor: not-allowed;
-    }
-
-    .input-default.error {
-      border-color: #dc2626;
-    }
-
-    /* Compact Variant */
-    .variant-compact .input-default {
-      padding: 0.375rem 0.5rem;
-      font-size: 0.75rem;
-    }
-
-    .variant-compact .form-group {
-      gap: 0.25rem;
-    }
-
-    /* Floating Variant */
-    .variant-floating .form-group {
-      position: relative;
-    }
-
-    .variant-floating .form-label {
-      position: absolute;
-      left: 0.75rem;
-      top: 0.5rem;
-      font-size: 0.875rem;
-      color: #6b7280;
-      pointer-events: none;
-      transition: all 0.2s;
-      background-color: white;
-      padding: 0 0.25rem;
-    }
-
-    .variant-floating .input-default:focus + .form-label,
-    .variant-floating .input-default:not(:placeholder-shown) + .form-label {
-      transform: translateY(-1.4rem) scale(0.85);
-      color: #2563eb;
-    }
-
-    /* Validation Messages */
-    .validation-message {
-      font-size: 0.75rem;
-      color: #dc2626;
-    }
-
-    /* Special Input Types */
-    textarea.input-default {
-      min-height: 100px;
-      resize: vertical;
-    }
-
-    select.input-default {
-      padding-right: 2rem;
-      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-      background-position: right 0.5rem center;
-      background-repeat: no-repeat;
-      background-size: 1.5em 1.5em;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-    }
-
-    /* Form Actions */
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 1rem;
-      margin-top: 2rem;
-    }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-      font-weight: 500;
-      border-radius: 0.375rem;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .button-primary {
-      background-color: #2563eb;
-      color: white;
-    }
-
-    .button-primary:hover {
-      background-color: #1d4ed8;
-    }
-
-    .button-secondary {
-      background-color: white;
-      border: 1px solid #d1d5db;
-      color: #374151;
-    }
-
-    .button-secondary:hover {
-      background-color: #f3f4f6;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
       .layout-horizontal {
-        grid-template-columns: 1fr;
+        flex-direction: row;
+        flex-wrap: wrap;
       }
 
       .layout-grid {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       }
 
-      .form-group.horizontal {
-        display: flex;
+      /* Variants */
+      .variant-default {
+        /* Default styles */
       }
-    }
-  `;
+
+      .variant-compact .form-field {
+        margin-bottom: var(--spacing-sm);
+      }
+
+      .variant-compact label {
+        font-size: 0.9rem;
+      }
+
+      .variant-floating label {
+        position: absolute;
+        top: -0.5rem;
+        left: 0.5rem;
+        background: var(--color-background);
+        padding: 0 0.25rem;
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+      }
+
+      .variant-floating .form-field {
+        position: relative;
+        padding-top: 0.5rem;
+      }
+
+      /* Form elements */
+      .form-field {
+        margin-bottom: var(--spacing-md);
+      }
+
+      label {
+        display: block;
+        margin-bottom: var(--spacing-xs);
+        font-weight: 500;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: var(--spacing-sm);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-sm);
+        font-family: inherit;
+        font-size: inherit;
+        background-color: var(--color-input-bg);
+        color: var(--color-text);
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 2px var(--color-primary-alpha);
+      }
+
+      .error-message {
+        color: var(--color-error);
+        font-size: 0.85rem;
+        margin-top: var(--spacing-xs);
+      }
+
+      button[type="submit"] {
+        padding: var(--spacing-sm) var(--spacing-md);
+        background-color: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        font-weight: 500;
+        align-self: flex-start;
+      }
+
+      button[type="submit"]:hover {
+        background-color: var(--color-primary-dark);
+      }
+
+      button[type="submit"]:disabled {
+        background-color: var(--color-disabled);
+        cursor: not-allowed;
+      }
+    `,
+  ];
 
   constructor() {
     super();
-    this.schema = {
-      title: "",
-      description: "",
-      properties: {},
-    };
+    this.schema = {};
     this.value = {};
-    this.variant = "default";
     this.layout = "vertical";
-    this.columns = 2;
+    this.variant = "default";
     this.disabled = false;
     this.readonly = false;
-    this.showValidation = false;
     this._errors = {};
-    this._touched = new Set();
-    this._formData = {};
   }
 
-  firstUpdated() {
-    this._formData = { ...this.value };
+  connectedCallback() {
+    super.connectedCallback();
+    this.addEventListener("input", this.handleInput);
+    this.addEventListener("submit", this.handleSubmit);
   }
 
-  updated(changedProperties) {
-    if (changedProperties.has("value")) {
-      this._formData = { ...this.value };
-      this.requestUpdate();
-    }
-    if (changedProperties.has("schema")) {
-      this._formData = { ...this.value };
-      this.requestUpdate();
-    }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.removeEventListener("input", this.handleInput);
+    this.removeEventListener("submit", this.handleSubmit);
   }
 
-  _validateForm() {
-    const errors = {};
-    const { properties = {}, required = [] } = this.schema;
+  handleInput(e) {
+    const target = e.target;
+    const name = target.name;
+    const value = target.type === "checkbox" ? target.checked : target.value;
 
-    // Validate required fields
-    for (const field of required) {
-      if (!this._formData[field]) {
-        errors[field] = [`${field} is required`];
-      }
-    }
+    if (!name) return;
 
-    // Validate field constraints
-    for (const [field, schema] of Object.entries(properties)) {
-      const value = this._formData[field];
-
-      if (schema.type === "string") {
-        if (!value) continue;
-        if (schema.minLength && value.length < schema.minLength) {
-          errors[field] = [
-            `Field must have minimum length of ${schema.minLength}`,
-          ];
-        }
-        if (schema.maxLength && value.length > schema.maxLength) {
-          errors[field] = [
-            `Field must have maximum length of ${schema.maxLength}`,
-          ];
-        }
-        if (schema.pattern && !new RegExp(schema.pattern).test(value)) {
-          errors[field] = ["Invalid format"];
-        }
-        if (
-          schema.format === "email" &&
-          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-        ) {
-          errors[field] = ["Invalid email address"];
-        }
-      }
-
-      if (schema.type === "number") {
-        if (!value) continue;
-        const num = Number(value);
-        if (schema.minimum && num < schema.minimum) {
-          errors[field] = [`Minimum value is ${schema.minimum}`];
-        }
-        if (schema.maximum && num > schema.maximum) {
-          errors[field] = [`Maximum value is ${schema.maximum}`];
-        }
-      }
-
-      if (schema.type === "array") {
-        if (schema.optional && !value) continue;
-        const arrayValue = Array.isArray(value) ? value : [];
-        if (schema.minItems && arrayValue.length < schema.minItems) {
-          errors[field] = [`Minimum ${schema.minItems} items required`];
-        }
-        if (schema.maxItems && arrayValue.length > schema.maxItems) {
-          errors[field] = [`Maximum ${schema.maxItems} items allowed`];
-        }
-      }
-    }
-
-    this._errors = errors;
-    const valid = Object.keys(errors).length === 0;
-
-    this.dispatchEvent(
-      new CustomEvent("validate", {
-        detail: { valid, errors },
-      })
-    );
-
-    return valid;
-  }
-
-  _handleChange(field, event) {
-    const value =
-      event.target.type === "checkbox"
-        ? event.target.checked
-        : event.target.value;
-    this._formData = {
-      ...this._formData,
-      [field]: value,
+    // Update the value
+    this.value = {
+      ...this.value,
+      [name]: value,
     };
 
+    // Clear the error for this field
+    if (this._errors[name]) {
+      this._errors = {
+        ...this._errors,
+        [name]: null,
+      };
+    }
+
+    // Dispatch change event
     this.dispatchEvent(
-      new CustomEvent("change", {
+      new CustomEvent("neo-change", {
         detail: {
-          field,
+          name,
           value,
-          formData: this._formData,
+          formData: this.value,
         },
+        bubbles: true,
+        composed: true,
       })
     );
   }
 
-  _handleBlur(field, event) {
-    this._touched.add(field);
-    if (this.showValidation) {
-      this._validateForm();
+  handleSubmit(e) {
+    e.preventDefault();
+
+    // Validate the form
+    const errors = this.validateForm();
+    this._errors = errors;
+
+    if (Object.values(errors).some((error) => error)) {
+      // Form has errors
+      this.dispatchEvent(
+        new CustomEvent("neo-invalid", {
+          detail: {
+            errors,
+          },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      return;
     }
-  }
 
-  _handleSubmit(event) {
-    event.preventDefault();
-    const valid = this._validateForm();
-
+    // Form is valid
     this.dispatchEvent(
-      new CustomEvent("submit", {
+      new CustomEvent("neo-submit", {
         detail: {
-          valid,
-          data: this._formData,
-          errors: this._errors,
+          formData: this.value,
         },
+        bubbles: true,
+        composed: true,
       })
     );
   }
 
-  _renderField(field, schema) {
-    const value = this._formData[field] ?? "";
-    const errors = this._errors[field] || [];
-    const showError =
-      this.showValidation && this._touched.has(field) && errors.length > 0;
+  validateForm() {
+    const errors = {};
+    const { properties, required = [] } = this.schema;
 
-    let input;
-    if (schema.enum) {
-      const enumOptions = schema.enum.map((option) => ({
-        value: option,
-        label: option.charAt(0).toUpperCase() + option.slice(1),
-      }));
+    if (!properties) return errors;
 
-      input = html`
-        <select
-          name="${field}"
-          class="input-default ${showError ? "error" : ""}"
-          .value=${value}
-          ?disabled=${this.disabled}
-          ?readonly=${this.readonly}
-          @change=${(e) => this._handleChange(field, e)}
-          @blur=${(e) => this._handleBlur(field, e)}
-        >
-          <option value="">Select ${schema.title}</option>
-          ${enumOptions.map(
-            (option) =>
-              html`<option value=${option.value}>${option.label}</option>`
-          )}
-        </select>
-      `;
-    } else {
-      switch (schema.type) {
-        case "string":
-          switch (schema.format) {
-            case "password":
-              input = html`
-                <input
-                  name="${field}"
-                  type="password"
-                  class="input-default ${showError ? "error" : ""}"
-                  .value=${value}
-                  ?disabled=${this.disabled}
-                  ?readonly=${this.readonly}
-                  @input=${(e) => this._handleChange(field, e)}
-                  @blur=${(e) => this._handleBlur(field, e)}
-                />
-              `;
-              break;
-            case "email":
-              input = html`
-                <input
-                  name="${field}"
-                  type="email"
-                  class="input-default ${showError ? "error" : ""}"
-                  .value=${value}
-                  ?disabled=${this.disabled}
-                  ?readonly=${this.readonly}
-                  @input=${(e) => this._handleChange(field, e)}
-                  @blur=${(e) => this._handleBlur(field, e)}
-                />
-              `;
-              break;
-            case "textarea":
-              input = html`
-                <textarea
-                  name="${field}"
-                  class="input-default ${showError ? "error" : ""}"
-                  .value=${value}
-                  maxlength=${schema.maxLength}
-                  ?disabled=${this.disabled}
-                  ?readonly=${this.readonly}
-                  @input=${(e) => this._handleChange(field, e)}
-                  @blur=${(e) => this._handleBlur(field, e)}
-                ></textarea>
-              `;
-              break;
-            default:
-              input = html`
-                <input
-                  name="${field}"
-                  type="text"
-                  class="input-default ${showError ? "error" : ""}"
-                  .value=${value}
-                  ?disabled=${this.disabled}
-                  ?readonly=${this.readonly}
-                  @input=${(e) => this._handleChange(field, e)}
-                  @blur=${(e) => this._handleBlur(field, e)}
-                />
-              `;
-          }
-          break;
-
-        case "number":
-          input = html`
-            <input
-              name="${field}"
-              type="number"
-              class="input-default ${showError ? "error" : ""}"
-              .value=${value}
-              min=${schema.minimum}
-              max=${schema.maximum}
-              ?disabled=${this.disabled}
-              ?readonly=${this.readonly}
-              @input=${(e) => this._handleChange(field, e)}
-              @blur=${(e) => this._handleBlur(field, e)}
-            />
-          `;
-          break;
-
-        case "boolean":
-          input = html`
-            <input
-              name="${field}"
-              type="checkbox"
-              .checked=${value}
-              ?disabled=${this.disabled}
-              ?readonly=${this.readonly}
-              @change=${(e) => this._handleChange(field, e)}
-              @blur=${(e) => this._handleBlur(field, e)}
-            />
-          `;
-          break;
-
-        case "array":
-          input = html`
-            <input
-              name="${field}"
-              type="text"
-              class="input-default ${showError ? "error" : ""}"
-              .value=${(value || []).join(", ")}
-              ?disabled=${this.disabled}
-              ?readonly=${this.readonly}
-              @input=${(e) =>
-                this._handleChange(field, {
-                  target: {
-                    value: e.target.value.split(",").map((v) => v.trim()),
-                  },
-                })}
-              @blur=${(e) => this._handleBlur(field, e)}
-            />
-          `;
-          break;
+    // Check each property
+    Object.entries(properties).forEach(([name, field]) => {
+      // Required fields
+      if (required.includes(name) && !this.value[name]) {
+        errors[name] = `${field.title || name} is required`;
       }
-    }
 
-    return html`
-      <div
-        class="form-group ${this.layout === "horizontal" ? "horizontal" : ""}"
-      >
-        <label
-          class="form-label ${this.schema.required?.includes(field)
-            ? "required"
-            : ""}"
-        >
-          ${schema.title}
-        </label>
-        <div class="form-control">
-          ${input}
-          ${schema.description
-            ? html` <div class="form-description">${schema.description}</div> `
-            : ""}
-          ${showError
-            ? html` <div class="validation-message">${errors[0]}</div> `
-            : ""}
-        </div>
-      </div>
-    `;
+      // Type validation
+      if (this.value[name]) {
+        if (field.type === "number" && isNaN(Number(this.value[name]))) {
+          errors[name] = `${field.title || name} must be a number`;
+        }
+
+        if (field.type === "string") {
+          // String length
+          if (field.minLength && this.value[name].length < field.minLength) {
+            errors[name] = `${field.title || name} must be at least ${
+              field.minLength
+            } characters`;
+          }
+
+          if (field.maxLength && this.value[name].length > field.maxLength) {
+            errors[name] = `${field.title || name} must be at most ${
+              field.maxLength
+            } characters`;
+          }
+
+          // String format
+          if (
+            field.format === "email" &&
+            !this.isValidEmail(this.value[name])
+          ) {
+            errors[name] = `${field.title || name} must be a valid email`;
+          }
+        }
+
+        // Number range
+        if (field.type === "number") {
+          if (
+            field.minimum !== undefined &&
+            Number(this.value[name]) < field.minimum
+          ) {
+            errors[name] = `${field.title || name} must be at least ${
+              field.minimum
+            }`;
+          }
+
+          if (
+            field.maximum !== undefined &&
+            Number(this.value[name]) > field.maximum
+          ) {
+            errors[name] = `${field.title || name} must be at most ${
+              field.maximum
+            }`;
+          }
+        }
+      }
+    });
+
+    return errors;
+  }
+
+  getFieldError(name) {
+    return this._errors[name] || null;
+  }
+
+  isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
   render() {
-    const { title = "", description = "", properties = {} } = this.schema;
+    if (!this.schema || !this.schema.properties) {
+      return html`<div>No schema provided</div>`;
+    }
+
     return html`
       <form
-        class="autoform variant-${this.variant}"
-        @submit=${this._handleSubmit}
+        class="form layout-${this.layout} variant-${this.variant}"
+        ?disabled=${this.disabled}
+        ?readonly=${this.readonly}
       >
-        ${title ? html`<h2 class="form-title">${title}</h2>` : ""}
-        ${description
-          ? html`<p class="form-description">${description}</p>`
+        ${this.schema.title ? html`<h2>${this.schema.title}</h2>` : ""}
+        ${this.schema.description
+          ? html`<p>${this.schema.description}</p>`
           : ""}
+        ${Object.entries(this.schema.properties).map(([name, field]) =>
+          this.renderField(name, field)
+        )}
 
-        <div
-          class="layout-${this.layout}"
-          style="--form-columns: ${this.columns}"
-        >
-          ${Object.entries(properties).map(([field, schema]) =>
-            this._renderField(field, schema)
-          )}
-        </div>
+        <button type="submit" ?disabled=${this.disabled}>Submit</button>
       </form>
+    `;
+  }
+
+  renderField(name, field) {
+    const value = this.value[name] || "";
+    const error = this.getFieldError(name);
+    const required = this.schema.required?.includes(name);
+
+    return html`
+      <div class="form-field">
+        <label for="${name}">
+          ${field.title || name}
+          ${required ? html`<span class="required">*</span>` : ""}
+        </label>
+
+        ${field.type === "string"
+          ? html`
+              <input
+                type="${field.format === "email" ? "email" : "text"}"
+                id="${name}"
+                name="${name}"
+                .value="${value}"
+                ?disabled=${this.disabled}
+                ?readonly=${this.readonly}
+                ?required=${required}
+                minlength="${field.minLength || ""}"
+                maxlength="${field.maxLength || ""}"
+              />
+            `
+          : field.type === "number"
+            ? html`
+                <input
+                  type="number"
+                  id="${name}"
+                  name="${name}"
+                  .value="${value}"
+                  ?disabled=${this.disabled}
+                  ?readonly=${this.readonly}
+                  ?required=${required}
+                  min="${field.minimum !== undefined ? field.minimum : ""}"
+                  max="${field.maximum !== undefined ? field.maximum : ""}"
+                />
+              `
+            : field.type === "boolean"
+              ? html`
+                  <input
+                    type="checkbox"
+                    id="${name}"
+                    name="${name}"
+                    .checked="${Boolean(value)}"
+                    ?disabled=${this.disabled}
+                    ?readonly=${this.readonly}
+                  />
+                `
+              : html`<div>Unsupported field type: ${field.type}</div>`}
+        ${error ? html`<div class="error-message">${error}</div>` : ""}
+      </div>
     `;
   }
 }
 
-customElements.define("neo-autoform", NeoAutoform);
+// Register the component
+if (!customElements.get("neo-autoform")) {
+  customElements.define("neo-autoform", NeoAutoform);
+}
