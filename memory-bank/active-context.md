@@ -22,6 +22,7 @@ We are currently refactoring the frontend components to use standard class synta
    - Input Component
    - Theme Toggle Component
    - Radio Component
+   - Testimonials Component
 
 2. Discovered that the Spinner Component is already using standard class syntax with all tests passing.
 
@@ -39,7 +40,6 @@ We are currently refactoring the frontend components to use standard class synta
 ### Next Steps
 
 1. Continue refactoring the remaining components:
-   - Testimonials Component
    - Toast Component
    - Icon Component
    - Navigation Component
