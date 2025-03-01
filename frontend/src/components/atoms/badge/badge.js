@@ -20,17 +20,19 @@ import "../../atoms/icon/icon.js";
  * @prop {boolean} outlined - Whether the badge has an outlined style
  */
 export class NeoBadge extends LitElement {
-  static properties = {
-    variant: { type: String, reflect: true },
-    size: { type: String, reflect: true },
-    rounded: { type: Boolean, reflect: true },
-    outlined: { type: Boolean, reflect: true },
-    icon: { type: String, reflect: true },
-    removable: { type: Boolean, reflect: true },
-    title: { type: String, reflect: true },
-    pill: { type: Boolean, reflect: true },
-    disabled: { type: Boolean, reflect: true },
-  };
+  static get properties() {
+    return {
+      variant: { type: String, reflect: true },
+      size: { type: String, reflect: true },
+      rounded: { type: Boolean, reflect: true },
+      outlined: { type: Boolean, reflect: true },
+      icon: { type: String, reflect: true },
+      removable: { type: Boolean, reflect: true },
+      title: { type: String, reflect: true },
+      pill: { type: Boolean, reflect: true },
+      disabled: { type: Boolean, reflect: true },
+    };
+  }
 
   constructor() {
     super();
@@ -93,178 +95,179 @@ export class NeoBadge extends LitElement {
     `;
   }
 
-  static styles = [
-    baseStyles,
-    css`
-      :host {
-        display: inline-flex;
-      }
+  static get styles() {
+    return [
+      baseStyles,
+      css`
+        :host {
+          display: inline-flex;
+        }
 
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--spacing-xs);
-        padding: var(--badge-padding, 0.25rem 0.75rem);
-        border-radius: var(--badge-radius, var(--radius-sm));
-        font-size: var(--badge-font-size, var(--font-size-sm));
-        font-weight: var(--font-weight-medium);
-        line-height: 1.4;
-        transition: all var(--transition-fast);
-      }
+        .badge {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--spacing-xs);
+          padding: var(--badge-padding, 0.25rem 0.75rem);
+          border-radius: var(--badge-radius, var(--radius-sm));
+          font-size: var(--badge-font-size, var(--font-size-sm));
+          font-weight: var(--font-weight-medium);
+          line-height: 1.4;
+          transition: all var(--transition-fast);
+        }
 
-      .truncate {
-        max-width: 200px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
+        .truncate {
+          max-width: 200px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
 
-      .close-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        margin-left: var(--spacing-xs);
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: inherit;
-        opacity: 0.7;
-        transition: opacity var(--transition-fast);
-      }
+        .close-button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          margin-left: var(--spacing-xs);
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: inherit;
+          opacity: 0.7;
+          transition: opacity var(--transition-fast);
+        }
 
-      .close-button:hover {
-        opacity: 1;
-      }
+        .close-button:hover {
+          opacity: 1;
+        }
 
-      .close-button neo-icon {
-        font-size: 0.85em;
-      }
+        .close-button neo-icon {
+          font-size: 0.85em;
+        }
 
-      /* Sizes */
-      .size-small {
-        padding: 0.125rem 0.5rem;
-        font-size: var(--font-size-xs);
-      }
+        /* Sizes */
+        .size-small {
+          padding: 0.125rem 0.5rem;
+          font-size: var(--font-size-xs);
+        }
 
-      .size-medium {
-        padding: 0.25rem 0.75rem;
-        font-size: var(--font-size-sm);
-      }
+        .size-medium {
+          padding: 0.25rem 0.75rem;
+          font-size: var(--font-size-sm);
+        }
 
-      .size-large {
-        padding: 0.375rem 1rem;
-        font-size: var(--font-size-base);
-      }
+        .size-large {
+          padding: 0.375rem 1rem;
+          font-size: var(--font-size-base);
+        }
 
-      /* Pill shape */
-      .pill {
-        border-radius: 9999px;
-      }
+        /* Pill shape */
+        .pill {
+          border-radius: 9999px;
+        }
 
-      /* Disabled state */
-      .disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        pointer-events: none;
-      }
+        /* Disabled state */
+        .disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
 
-      /* Variants */
-      .variant-default {
-        background: var(--color-gray-100);
-        color: var(--color-gray-700);
-      }
+        /* Variants */
+        .variant-default {
+          background: var(--color-gray-100);
+          color: var(--color-gray-700);
+        }
 
-      .variant-primary {
-        background: var(--color-primary);
-        color: white;
-      }
+        .variant-primary {
+          background: var(--color-primary);
+          color: white;
+        }
 
-      .variant-secondary {
-        background: var(--color-secondary);
-        color: white;
-      }
+        .variant-secondary {
+          background: var(--color-secondary);
+          color: white;
+        }
 
-      .variant-success {
-        background: var(--color-success);
-        color: white;
-      }
+        .variant-success {
+          background: var(--color-success);
+          color: white;
+        }
 
-      .variant-error {
-        background: var(--color-error);
-        color: white;
-      }
+        .variant-error {
+          background: var(--color-error);
+          color: white;
+        }
 
-      .variant-warning {
-        background: var(--color-warning);
-        color: var(--color-gray-900);
-      }
+        .variant-warning {
+          background: var(--color-warning);
+          color: var(--color-gray-900);
+        }
 
-      .variant-info {
-        background: var(--color-info);
-        color: white;
-      }
+        .variant-info {
+          background: var(--color-info);
+          color: white;
+        }
 
-      /* Rounded */
-      .rounded {
-        border-radius: 9999px;
-      }
+        /* Rounded */
+        .rounded {
+          border-radius: 9999px;
+        }
 
-      /* Outlined */
-      .outlined {
-        background: transparent;
-        border: 1px solid currentColor;
-      }
+        /* Outlined */
+        .outlined {
+          background: transparent;
+          border: 1px solid currentColor;
+        }
 
-      .outlined.variant-default {
-        color: var(--color-gray-600);
-      }
+        .outlined.variant-default {
+          color: var(--color-gray-600);
+        }
 
-      .outlined.variant-primary {
-        color: var(--color-primary);
-      }
+        .outlined.variant-primary {
+          color: var(--color-primary);
+        }
 
-      .outlined.variant-secondary {
-        color: var(--color-secondary);
-      }
+        .outlined.variant-secondary {
+          color: var(--color-secondary);
+        }
 
-      .outlined.variant-success {
-        color: var(--color-success);
-      }
+        .outlined.variant-success {
+          color: var(--color-success);
+        }
 
-      .outlined.variant-error {
-        color: var(--color-error);
-      }
+        .outlined.variant-error {
+          color: var(--color-error);
+        }
 
-      .outlined.variant-warning {
-        color: var(--color-warning);
-      }
+        .outlined.variant-warning {
+          color: var(--color-warning);
+        }
 
-      .outlined.variant-info {
-        color: var(--color-info);
-      }
+        .outlined.variant-info {
+          color: var(--color-info);
+        }
 
-      /* Slots */
-      ::slotted([slot="prefix"]) {
-        margin-right: calc(var(--spacing-xs) * -1);
-      }
+        /* Slots */
+        ::slotted([slot="prefix"]) {
+          margin-right: calc(var(--spacing-xs) * -1);
+        }
 
-      ::slotted([slot="suffix"]) {
-        margin-left: calc(var(--spacing-xs) * -1);
-      }
+        ::slotted([slot="suffix"]) {
+          margin-left: calc(var(--spacing-xs) * -1);
+        }
 
-      /* Custom Colors */
-      :host([style*="--badge-bg-color"]) .badge:not(.outlined) {
-        background: var(--badge-bg-color);
-      }
+        /* Custom Colors */
+        :host([style*="--badge-bg-color"]) .badge:not(.outlined) {
+          background: var(--badge-bg-color);
+        }
 
-      :host([style*="--badge-text-color"]) .badge {
-        color: var(--badge-text-color);
-      }
-    `,
-  ];
+        :host([style*="--badge-text-color"]) .badge {
+          color: var(--badge-text-color);
+        }
+      `,
+    ];
+  }
 }
 
-if (!customElements.get("neo-badge")) {
-  customElements.define("neo-badge", NeoBadge);
-}
+// Register the custom element
+customElements.define("neo-badge", NeoBadge);
