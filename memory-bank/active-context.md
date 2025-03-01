@@ -35,13 +35,20 @@ We are currently working on modernizing the frontend components by replacing dec
   - Improved sorting and pagination mechanisms
   - Enhanced text formatting for page information display
   - Ensured all tests pass by addressing whitespace normalization in tests
+- Successfully refactored the form-validation component to use standard class syntax
+  - Fixed error handling and validation logic
+  - Improved required field validation
+  - Ensured all tests pass
+- Successfully refactored the language-selector component to use standard class syntax
+  - Fixed event detail structure to match test expectations
+  - Implemented keyboard navigation for accessibility
+  - Updated class names to match test expectations
+  - Ensured all tests pass
 
 ## Next Steps
 
 1. Continue refactoring other components that use decorator syntax:
    - file-upload component
-   - form-validation component
-   - language-selector component
    - data-table component
 
 2. Address deprecation warnings for @open-wc/semantic-dom-diff in the test environment

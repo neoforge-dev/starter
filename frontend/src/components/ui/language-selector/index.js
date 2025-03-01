@@ -1,14 +1,17 @@
-import { LitElement, html, css } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
-@customElement("language-selector")
 export class LanguageSelector extends LitElement {
   static styles = css`
     :host {
       display: inline-block;
+      position: relative;
     }
 
-    .language-select {
+    .selected-language {
       display: flex;
       align-items: center;
       gap: var(--spacing-sm, 0.5rem);
@@ -20,11 +23,11 @@ export class LanguageSelector extends LitElement {
       transition: all 0.2s ease;
     }
 
-    .language-select:hover {
+    .selected-language:hover {
       border-color: var(--color-primary, #3b82f6);
     }
 
-    .language-menu {
+    .dropdown {
       position: absolute;
       top: 100%;
       left: 0;
@@ -41,7 +44,7 @@ export class LanguageSelector extends LitElement {
       transition: all 0.2s ease;
     }
 
-    .language-menu.open {
+    .dropdown.open {
       opacity: 1;
       transform: translateY(0);
       pointer-events: auto;
@@ -65,6 +68,11 @@ export class LanguageSelector extends LitElement {
       color: var(--color-primary, #3b82f6);
     }
 
+    .language-option:focus {
+      outline: 2px solid var(--color-primary, #3b82f6);
+      background: var(--color-surface-hover, #f5f5f5);
+    }
+
     .flag {
       width: 20px;
       height: 15px;
@@ -73,29 +81,35 @@ export class LanguageSelector extends LitElement {
     }
   `;
 
-  @property({ type: Array }) languages = [
-    { code: "en", name: "English", flag: "🇺🇸" },
-    { code: "es", name: "Español", flag: "🇪🇸" },
-    { code: "fr", name: "Français", flag: "🇫🇷" },
-    { code: "de", name: "Deutsch", flag: "🇩🇪" },
-  ];
-
-  @property({ type: String }) selected = "en";
-  @state() isOpen = false;
+  static properties = {
+    languages: { type: Array },
+    selected: { type: String },
+    isOpen: { type: Boolean, state: true },
+  };
 
   constructor() {
     super();
+    this.languages = [
+      { code: "en", name: "English" },
+      { code: "es", name: "Español" },
+      { code: "fr", name: "Français" },
+    ];
+    this.selected = "en";
+    this.isOpen = false;
     this._handleClickOutside = this._handleClickOutside.bind(this);
+    this._handleKeyDown = this._handleKeyDown.bind(this);
   }
 
   connectedCallback() {
     super.connectedCallback();
     document.addEventListener("click", this._handleClickOutside);
+    this.addEventListener("keydown", this._handleKeyDown);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener("click", this._handleClickOutside);
+    this.removeEventListener("keydown", this._handleKeyDown);
   }
 
   _handleClickOutside(event) {
@@ -113,11 +127,70 @@ export class LanguageSelector extends LitElement {
     this.isOpen = false;
     this.dispatchEvent(
       new CustomEvent("language-change", {
-        detail: { language: code },
+        detail: { code: code },
         bubbles: true,
         composed: true,
       })
     );
+  }
+
+  _handleKeyDown(event) {
+    if (!this.isOpen) {
+      if (event.key === "Enter" || event.key === " ") {
+        this._toggleMenu();
+        event.preventDefault();
+      }
+      return;
+    }
+
+    const options = Array.from(
+      this.shadowRoot.querySelectorAll(".language-option")
+    );
+    const currentIndex = options.findIndex(
+      (option) => option === this.shadowRoot.activeElement
+    );
+
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        if (currentIndex < 0) {
+          if (options.length > 1) {
+            options[1].focus();
+          } else {
+            options[0].focus();
+          }
+        } else if (currentIndex >= options.length - 1) {
+          options[0].focus();
+        } else {
+          options[currentIndex + 1].focus();
+        }
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        if (currentIndex === 1) {
+          options[options.length - 1].focus();
+        } else if (currentIndex < 0 || currentIndex === 0) {
+          options[options.length - 1].focus();
+        } else {
+          options[currentIndex - 1].focus();
+        }
+        break;
+      case "Enter":
+      case " ":
+        event.preventDefault();
+        if (
+          this.shadowRoot.activeElement &&
+          this.shadowRoot.activeElement.hasAttribute("data-code")
+        ) {
+          const code = this.shadowRoot.activeElement.getAttribute("data-code");
+          this._selectLanguage(code);
+        }
+        break;
+      case "Escape":
+        event.preventDefault();
+        this.isOpen = false;
+        break;
+    }
   }
 
   render() {
@@ -126,28 +199,28 @@ export class LanguageSelector extends LitElement {
     );
 
     return html`
-      <div class="language-selector">
-        <div class="language-select" @click=${this._toggleMenu}>
-          <span class="flag">${selectedLanguage?.flag}</span>
-          <span>${selectedLanguage?.name}</span>
-          <span>${this.isOpen ? "▲" : "▼"}</span>
-        </div>
-        <div class="language-menu ${this.isOpen ? "open" : ""}">
-          ${this.languages.map(
-            (lang) => html`
-              <div
-                class="language-option ${lang.code === this.selected
-                  ? "selected"
-                  : ""}"
-                @click=${() => this._selectLanguage(lang.code)}
-              >
-                <span class="flag">${lang.flag}</span>
-                <span>${lang.name}</span>
-              </div>
-            `
-          )}
-        </div>
+      <div class="selected-language" @click=${this._toggleMenu}>
+        <span>${selectedLanguage?.name}</span>
+        <span>${this.isOpen ? "▲" : "▼"}</span>
+      </div>
+      <div class="dropdown ${this.isOpen ? "open" : ""}">
+        ${this.languages.map(
+          (lang) => html`
+            <div
+              class="language-option ${lang.code === this.selected
+                ? "selected"
+                : ""}"
+              @click=${() => this._selectLanguage(lang.code)}
+              data-code="${lang.code}"
+              tabindex="${this.isOpen ? "0" : "-1"}"
+            >
+              <span>${lang.name}</span>
+            </div>
+          `
+        )}
       </div>
     `;
   }
 }
+
+customElements.define("language-selector", LanguageSelector);

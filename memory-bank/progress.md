@@ -54,6 +54,19 @@
 - ✅ Improved sorting and pagination
 - ✅ Enhanced text formatting for page info
 
+### Form Validation Component
+- ✅ All tests passing
+- ✅ Decorator syntax replaced with standard class syntax
+- ✅ Fixed error handling and validation
+- ✅ Improved required field validation
+
+### Language Selector Component
+- ✅ All tests passing
+- ✅ Decorator syntax replaced with standard class syntax
+- ✅ Fixed event detail structure
+- ✅ Implemented keyboard navigation
+- ✅ Updated class names to match test expectations
+
 ### Autoform Component
 - ✅ Decorator syntax issues fixed in component implementation
 - ❌ Tests still failing due to memory issues
