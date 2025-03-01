@@ -1,4 +1,8 @@
-import { LitElement, html, css } from "lit";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 
 /**
@@ -17,167 +21,153 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {string} emptyMessage - Message to show when no data
  */
 export class NeoTable extends LitElement {
-  static get properties() {
-    return {
-      columns: { type: Array },
-      data: { type: Array },
-      selected: { type: Array },
-      selectable: { type: Boolean },
-      sortable: { type: Boolean },
-      filterable: { type: Boolean },
-      paginated: { type: Boolean },
-      pageSize: { type: Number },
-      currentPage: { type: Number },
-      emptyMessage: { type: String },
-      _sortColumn: { type: String, state: true },
-      _sortDirection: { type: String, state: true },
-      _filters: { type: Object, state: true },
-      _allSelected: { type: Boolean, state: true },
-    };
-  }
+  static properties = {
+    columns: { type: Array },
+    data: { type: Array },
+    selected: { type: Array },
+    selectable: { type: Boolean },
+    sortable: { type: Boolean },
+    filterable: { type: Boolean },
+    paginated: { type: Boolean },
+    pageSize: { type: Number },
+    currentPage: { type: Number },
+    emptyMessage: { type: String },
+    _sortColumn: { type: String, state: true },
+    _sortDirection: { type: String, state: true },
+    _filters: { type: Object, state: true },
+    _allSelected: { type: Boolean, state: true },
+  };
 
-  static get styles() {
-    return [
-      baseStyles,
-      css`
-        :host {
-          display: block;
-        }
+  static styles = [
+    baseStyles,
+    css`
+      :host {
+        display: block;
+      }
 
-        .table-container {
-          overflow-x: auto;
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-lg);
-        }
+      .table-container {
+        overflow-x: auto;
+        width: 100%;
+        border: 1px solid var(--color-border, #e2e8f0);
+        border-radius: var(--border-radius, 0.375rem);
+      }
 
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 14px;
-        }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--font-size-sm, 0.875rem);
+      }
 
-        th,
-        td {
-          padding: 12px 16px;
-          text-align: left;
-          border-bottom: 1px solid var(--color-border);
-        }
+      th,
+      td {
+        padding: var(--spacing-3, 0.75rem) var(--spacing-4, 1rem);
+        text-align: left;
+        border-bottom: 1px solid var(--color-border, #e2e8f0);
+      }
 
-        th {
-          background-color: var(--color-surface-variant);
-          font-weight: 600;
-          white-space: nowrap;
-        }
+      th {
+        font-weight: 600;
+        background-color: var(--color-bg-subtle, #f8fafc);
+        position: relative;
+      }
 
-        td {
-          background-color: var(--color-surface);
-        }
+      tr:last-child td {
+        border-bottom: none;
+      }
 
-        tr:last-child td {
-          border-bottom: none;
-        }
+      tbody tr:hover {
+        background-color: var(--color-bg-hover, #f1f5f9);
+      }
 
-        /* Sortable columns */
-        .sortable {
-          cursor: pointer;
-          user-select: none;
-        }
+      .sortable {
+        cursor: pointer;
+        user-select: none;
+      }
 
-        .sortable:hover {
-          background-color: var(--color-surface-hover);
-        }
+      .sortable:hover {
+        background-color: var(--color-bg-hover, #f1f5f9);
+      }
 
-        .sort-icon {
-          margin-left: 4px;
-          opacity: 0.5;
-        }
+      .sort-indicator {
+        display: inline-block;
+        margin-left: 0.25rem;
+        transition: transform 0.2s ease;
+      }
 
-        .sort-icon.active {
-          opacity: 1;
-        }
+      .sort-asc .sort-indicator::after {
+        content: "↑";
+      }
 
-        /* Selectable rows */
-        .checkbox-cell {
-          width: 48px;
-          text-align: center;
-        }
+      .sort-desc .sort-indicator::after {
+        content: "↓";
+      }
 
-        tr.selected td {
-          background-color: var(--color-primary-light);
-        }
+      .filter-container {
+        margin-top: 0.5rem;
+        display: flex;
+        gap: 0.5rem;
+      }
 
-        /* Empty state */
-        .empty-message {
-          padding: 32px;
-          text-align: center;
-          color: var(--color-text-secondary);
-        }
+      .filter-input {
+        padding: 0.25rem 0.5rem;
+        border: 1px solid var(--color-border, #e2e8f0);
+        border-radius: var(--border-radius-sm, 0.25rem);
+        font-size: var(--font-size-xs, 0.75rem);
+      }
 
-        /* Filters */
-        .filter-row th {
-          padding: 8px 16px;
-          background-color: var(--color-surface);
-        }
+      .pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--spacing-3, 0.75rem) var(--spacing-4, 1rem);
+        background-color: var(--color-bg-subtle, #f8fafc);
+        border-top: 1px solid var(--color-border, #e2e8f0);
+      }
 
-        .filter-input {
-          width: 100%;
-          padding: 4px 8px;
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
-          font-size: 14px;
-        }
+      .pagination-info {
+        font-size: var(--font-size-sm, 0.875rem);
+      }
 
-        .filter-input:focus {
-          outline: none;
-          border-color: var(--color-primary);
-        }
+      .pagination-controls {
+        display: flex;
+        gap: 0.25rem;
+      }
 
-        /* Pagination */
-        .pagination {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 12px 16px;
-          background-color: var(--color-surface);
-          border-top: 1px solid var(--color-border);
-        }
+      .pagination-button {
+        padding: 0.25rem 0.5rem;
+        border: 1px solid var(--color-border, #e2e8f0);
+        border-radius: var(--border-radius-sm, 0.25rem);
+        background-color: var(--color-bg, white);
+        cursor: pointer;
+        font-size: var(--font-size-xs, 0.75rem);
+      }
 
-        .page-info {
-          color: var(--color-text-secondary);
-          font-size: 14px;
-        }
+      .pagination-button:hover:not(:disabled) {
+        background-color: var(--color-bg-hover, #f1f5f9);
+      }
 
-        .page-controls {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
+      .pagination-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
 
-        .page-button {
-          padding: 4px 8px;
-          border: 1px solid var(--color-border);
-          border-radius: var(--radius-sm);
-          background: none;
-          cursor: pointer;
-        }
+      .pagination-button.active {
+        background-color: var(--color-primary, #3b82f6);
+        color: white;
+        border-color: var(--color-primary, #3b82f6);
+      }
 
-        .page-button:hover:not(:disabled) {
-          background-color: var(--color-surface-hover);
-        }
+      .checkbox-cell {
+        width: 1.5rem;
+      }
 
-        .page-button:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .page-button.active {
-          background-color: var(--color-primary);
-          color: white;
-          border-color: var(--color-primary);
-        }
-      `,
-    ];
-  }
+      .empty-message {
+        padding: var(--spacing-6, 1.5rem);
+        text-align: center;
+        color: var(--color-text-muted, #64748b);
+      }
+    `,
+  ];
 
   constructor() {
     super();
@@ -191,7 +181,7 @@ export class NeoTable extends LitElement {
     this.pageSize = 10;
     this.currentPage = 1;
     this.emptyMessage = "No data available";
-    this._sortColumn = "";
+    this._sortColumn = null;
     this._sortDirection = "asc";
     this._filters = {};
     this._allSelected = false;
@@ -201,12 +191,14 @@ export class NeoTable extends LitElement {
     let result = [...this.data];
 
     // Apply filters
-    if (this.filterable) {
+    if (this.filterable && Object.keys(this._filters).length > 0) {
       Object.entries(this._filters).forEach(([key, value]) => {
         if (value) {
-          result = result.filter((item) =>
-            String(item[key]).toLowerCase().includes(value.toLowerCase())
-          );
+          result = result.filter((item) => {
+            const itemValue = String(item[key] || "").toLowerCase();
+            const filterValue = String(value).toLowerCase();
+            return itemValue.includes(filterValue);
+          });
         }
       });
     }
@@ -284,6 +276,7 @@ export class NeoTable extends LitElement {
     };
 
     this.currentPage = 1;
+    this.requestUpdate();
 
     this.dispatchEvent(
       new CustomEvent("neo-filter", {
