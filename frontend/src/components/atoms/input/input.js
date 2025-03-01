@@ -24,109 +24,113 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {string} name - Input name for form submission
  */
 export class NeoInput extends LitElement {
-  static properties = {
-    type: { type: String, reflect: true },
-    label: { type: String },
-    value: { type: String },
-    placeholder: { type: String },
-    disabled: { type: Boolean, reflect: true },
-    required: { type: Boolean, reflect: true },
-    error: { type: String },
-    helperText: { type: String },
-    helper: { type: String },
-    pattern: { type: String },
-    maxLength: { type: Number },
-    minLength: { type: Number },
-    name: { type: String },
-    _showPassword: { type: Boolean, state: true },
-  };
+  static get properties() {
+    return {
+      type: { type: String, reflect: true },
+      label: { type: String },
+      value: { type: String },
+      placeholder: { type: String },
+      disabled: { type: Boolean, reflect: true },
+      required: { type: Boolean, reflect: true },
+      error: { type: String },
+      helperText: { type: String },
+      helper: { type: String },
+      pattern: { type: String },
+      maxLength: { type: Number },
+      minLength: { type: Number },
+      name: { type: String },
+      _showPassword: { type: Boolean, state: true },
+    };
+  }
 
-  static styles = [
-    baseStyles,
-    css`
-      :host {
-        display: block;
-        margin-bottom: var(--spacing-md);
-      }
+  static get styles() {
+    return [
+      baseStyles,
+      css`
+        :host {
+          display: block;
+          margin-bottom: var(--spacing-md);
+        }
 
-      .input-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-      }
+        .input-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
 
-      label {
-        display: block;
-        margin-bottom: var(--spacing-xs);
-        color: var(--color-text);
-        font-size: var(--font-size-sm);
-        font-weight: var(--font-weight-medium);
-      }
+        label {
+          display: block;
+          margin-bottom: var(--spacing-xs);
+          color: var(--color-text);
+          font-size: var(--font-size-sm);
+          font-weight: var(--font-weight-medium);
+        }
 
-      input {
-        width: 100%;
-        padding: var(--spacing-sm);
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
-        font-family: var(--font-family);
-        font-size: var(--font-size-base);
-        line-height: 1.5;
-        transition: all var(--transition-fast);
-      }
+        input {
+          width: 100%;
+          padding: var(--spacing-sm);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          font-family: var(--font-family);
+          font-size: var(--font-size-base);
+          line-height: 1.5;
+          transition: all var(--transition-fast);
+        }
 
-      input:focus {
-        outline: none;
-        border-color: var(--color-primary);
-        box-shadow: 0 0 0 2px var(--color-primary-light);
-      }
+        input:focus {
+          outline: none;
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 2px var(--color-primary-light);
+        }
 
-      input:disabled {
-        background-color: var(--color-gray-100);
-        cursor: not-allowed;
-      }
+        input:disabled {
+          background-color: var(--color-gray-100);
+          cursor: not-allowed;
+        }
 
-      .error-text {
-        color: var(--color-error);
-        font-size: var(--font-size-sm);
-        margin-top: var(--spacing-xs);
-      }
+        .error-text {
+          color: var(--color-error);
+          font-size: var(--font-size-sm);
+          margin-top: var(--spacing-xs);
+        }
 
-      .helper-text {
-        color: var(--color-text-light);
-        font-size: var(--font-size-sm);
-        margin-top: var(--spacing-xs);
-      }
+        .helper-text {
+          color: var(--color-text-light);
+          font-size: var(--font-size-sm);
+          margin-top: var(--spacing-xs);
+        }
 
-      .input-wrapper.error input {
-        border-color: var(--color-error);
-      }
+        .input-wrapper.error input {
+          border-color: var(--color-error);
+        }
 
-      .input-wrapper.error input:focus {
-        box-shadow: 0 0 0 2px var(--color-error-light);
-      }
+        .input-wrapper.error input:focus {
+          box-shadow: 0 0 0 2px var(--color-error-light);
+        }
 
-      .password-toggle {
-        position: absolute;
-        right: var(--spacing-sm);
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: var(--color-text-light);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-      }
+        .password-toggle {
+          position: absolute;
+          right: var(--spacing-sm);
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: var(--color-text-light);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+        }
 
-      .prefix-slot {
-        margin-right: var(--spacing-xs);
-      }
+        .prefix-slot {
+          margin-right: var(--spacing-xs);
+        }
 
-      .suffix-slot {
-        margin-left: var(--spacing-xs);
-      }
-    `,
-  ];
+        .suffix-slot {
+          margin-left: var(--spacing-xs);
+        }
+      `,
+    ];
+  }
 
   constructor() {
     super();
@@ -269,6 +273,4 @@ export class NeoInput extends LitElement {
   }
 }
 
-if (!customElements.get("neo-input")) {
-  customElements.define("neo-input", NeoInput);
-}
+customElements.define("neo-input", NeoInput);

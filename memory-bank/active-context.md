@@ -18,11 +18,11 @@ We are modernizing the frontend components by replacing decorator syntax with st
 10. **Form Component**: Refactored to use standard class syntax instead of decorators. Tests passing with simplified test cases.
 11. **Modal Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
 12. **Badge Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
+13. **Input Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
 
 ### Next Steps
 
 1. Continue refactoring the remaining components:
-   - Input Component
    - Theme Toggle Component
    - Radio Component
    - Spinner Component
