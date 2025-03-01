@@ -1,4 +1,7 @@
-import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import {
   BaseComponent,
   defineComponent,
@@ -9,66 +12,69 @@ import { baseStyles } from "../../styles/base.js";
  * @element ui-form
  * @description A form component that handles validation, submission, and field management
  */
-@defineComponent("ui-form")
 export class UIForm extends BaseComponent {
-  static properties = {
-    config: { type: Object },
-    submitText: { type: String },
-    asyncValidators: { type: Object },
-    formData: { type: Object, state: true },
-    errors: { type: Array, state: true },
-  };
+  static get properties() {
+    return {
+      config: { type: Object },
+      submitText: { type: String },
+      asyncValidators: { type: Object },
+      formData: { type: Object, state: true },
+      errors: { type: Array, state: true },
+    };
+  }
 
-  static styles = [
-    baseStyles,
-    css`
-      :host {
-        display: block;
-      }
+  static get styles() {
+    return [
+      baseStyles,
+      css`
+        :host {
+          display: block;
+        }
 
-      .form-field {
-        margin-bottom: 1rem;
-      }
+        .form-field {
+          margin-bottom: 1rem;
+        }
 
-      label {
-        display: block;
-        margin-bottom: 0.5rem;
-      }
+        label {
+          display: block;
+          margin-bottom: 0.5rem;
+        }
 
-      input,
-      textarea,
-      select {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
-      }
+        input,
+        textarea,
+        select {
+          width: 100%;
+          padding: 0.5rem;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+        }
 
-      input[type="checkbox"] {
-        width: auto;
-      }
+        input[type="checkbox"] {
+          width: auto;
+        }
 
-      .error-message {
-        color: var(--color-error);
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-      }
+        .error-message {
+          color: var(--color-error);
+          font-size: 0.875rem;
+          margin-top: 0.25rem;
+        }
 
-      button[type="submit"] {
-        background: var(--color-primary);
-        color: white;
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: var(--radius-sm);
-        cursor: pointer;
-      }
+        button[type="submit"] {
+          background: var(--color-primary);
+          color: white;
+          padding: 0.75rem 1.5rem;
+          border: none;
+          border-radius: var(--radius-sm);
+          cursor: pointer;
+        }
 
-      button[type="submit"]:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-      }
-    `,
-  ];
+        button[type="submit"]:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+      `,
+    ];
+  }
 
   constructor() {
     super();
@@ -77,6 +83,11 @@ export class UIForm extends BaseComponent {
     this.asyncValidators = {};
     this.formData = {};
     this.errors = [];
+
+    // Ensure shadow root is created
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: "open" });
+    }
   }
 
   connectedCallback() {
@@ -259,3 +270,6 @@ export class UIForm extends BaseComponent {
     `;
   }
 }
+
+// Register the component
+defineComponent("ui-form", UIForm);
