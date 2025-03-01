@@ -4,6 +4,7 @@ import "../../components/theme-toggle.js";
 
 describe("ThemeToggleButton", () => {
   let element;
+  let originalLocalStorage;
 
   // Helper function to ensure component is fully initialized
   async function waitForElement(el) {
@@ -14,9 +15,12 @@ describe("ThemeToggleButton", () => {
   }
 
   beforeEach(async () => {
+    // Save original localStorage
+    originalLocalStorage = global.localStorage;
+
     // Mock localStorage with a working implementation
     const store = {};
-    global.localStorage = {
+    const mockLocalStorage = {
       getItem: (key) => store[key] || null,
       setItem: (key, value) => {
         store[key] = value;
@@ -26,13 +30,27 @@ describe("ThemeToggleButton", () => {
       },
     };
 
+    // Use Object.defineProperty instead of direct assignment
+    Object.defineProperty(global, "localStorage", {
+      value: mockLocalStorage,
+      writable: true,
+      configurable: true,
+    });
+
     // Mock matchMedia for testing
-    global.window.matchMedia = (query) => ({
+    const mockMatchMedia = (query) => ({
       matches: query.includes("dark") ? false : true,
       addEventListener: () => {},
       removeEventListener: () => {},
       addListener: () => {},
       removeListener: () => {},
+    });
+
+    // Use Object.defineProperty for matchMedia
+    Object.defineProperty(global.window, "matchMedia", {
+      value: mockMatchMedia,
+      writable: true,
+      configurable: true,
     });
 
     element = await fixture(html`<theme-toggle-button></theme-toggle-button>`);
@@ -50,6 +68,13 @@ describe("ThemeToggleButton", () => {
     localStorage.removeItem("theme");
     document.documentElement.removeAttribute("data-theme");
     document.documentElement.classList.remove("theme-transition");
+
+    // Restore original localStorage
+    Object.defineProperty(global, "localStorage", {
+      value: originalLocalStorage,
+      writable: true,
+      configurable: true,
+    });
   });
 
   it("renders with default properties", async () => {

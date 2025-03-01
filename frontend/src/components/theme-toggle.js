@@ -2,133 +2,135 @@ import { LitElement, html, css } from "lit";
 import { ThemeToggleMixin } from "../styles/theme.js";
 
 export class ThemeToggleButton extends ThemeToggleMixin(LitElement) {
-  static styles = css`
-    :host {
-      display: inline-block;
-      position: relative;
-    }
+  static get styles() {
+    return css`
+      :host {
+        display: inline-block;
+        position: relative;
+      }
 
-    button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      padding: 8px;
-      border: none;
-      border-radius: var(--radius-md);
-      background: var(--surface-color);
-      color: var(--text-color);
-      cursor: pointer;
-      transition: all var(--transition-normal);
-      position: relative;
-      overflow: hidden;
-    }
+      button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        padding: 8px;
+        border: none;
+        border-radius: var(--radius-md);
+        background: var(--surface-color);
+        color: var(--text-color);
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+      }
 
-    button::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: var(--primary-color);
-      opacity: 0;
-      transition: opacity var(--transition-normal);
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-    }
-
-    button:hover::before {
-      opacity: 0.1;
-    }
-
-    button:focus-visible {
-      outline: none;
-      box-shadow:
-        0 0 0 2px var(--background-color),
-        0 0 0 4px var(--primary-color);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    .icon-container {
-      position: relative;
-      width: 24px;
-      height: 24px;
-      transform-style: preserve-3d;
-      transition: transform var(--transition-normal)
-        cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    :host(.transitioning) .icon-container {
-      transform: rotateY(180deg);
-    }
-
-    .icon {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      line-height: 1;
-      backface-visibility: hidden;
-      transition: opacity var(--transition-normal);
-    }
-
-    .icon.light {
-      transform: rotateY(0);
-    }
-
-    .icon.dark {
-      transform: rotateY(180deg);
-    }
-
-    /* Theme transition overlay */
-    .theme-transition-overlay {
-      position: fixed;
-      top: var(--theme-transition-origin-y, 50%);
-      left: var(--theme-transition-origin-x, 50%);
-      width: 0;
-      height: 0;
-      background: var(--theme-transition-background);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 9999;
-      opacity: 0;
-      transition: none;
-    }
-
-    :host(.transitioning) .theme-transition-overlay {
-      width: calc(100vw * 2.5);
-      height: calc(100vw * 2.5);
-      opacity: 1;
-      transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      button,
-      .icon-container,
-      .icon,
-      .theme-transition-overlay {
-        transition: none !important;
+      button::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--primary-color);
+        opacity: 0;
+        transition: opacity var(--transition-normal);
       }
 
       button:hover {
-        transform: none;
+        transform: translateY(-2px);
+      }
+
+      button:hover::before {
+        opacity: 0.1;
+      }
+
+      button:focus-visible {
+        outline: none;
+        box-shadow:
+          0 0 0 2px var(--background-color),
+          0 0 0 4px var(--primary-color);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .icon-container {
+        position: relative;
+        width: 24px;
+        height: 24px;
+        transform-style: preserve-3d;
+        transition: transform var(--transition-normal)
+          cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       :host(.transitioning) .icon-container {
-        transform: none;
+        transform: rotateY(180deg);
       }
-    }
-  `;
+
+      .icon {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        line-height: 1;
+        backface-visibility: hidden;
+        transition: opacity var(--transition-normal);
+      }
+
+      .icon.light {
+        transform: rotateY(0);
+      }
+
+      .icon.dark {
+        transform: rotateY(180deg);
+      }
+
+      /* Theme transition overlay */
+      .theme-transition-overlay {
+        position: fixed;
+        top: var(--theme-transition-origin-y, 50%);
+        left: var(--theme-transition-origin-x, 50%);
+        width: 0;
+        height: 0;
+        background: var(--theme-transition-background);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0;
+        transition: none;
+      }
+
+      :host(.transitioning) .theme-transition-overlay {
+        width: calc(100vw * 2.5);
+        height: calc(100vw * 2.5);
+        opacity: 1;
+        transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        button,
+        .icon-container,
+        .icon,
+        .theme-transition-overlay {
+          transition: none !important;
+        }
+
+        button:hover {
+          transform: none;
+        }
+
+        :host(.transitioning) .icon-container {
+          transform: none;
+        }
+      }
+    `;
+  }
 
   constructor() {
     super();

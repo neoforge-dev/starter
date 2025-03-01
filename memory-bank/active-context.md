@@ -2,28 +2,36 @@
 
 ## Current Focus
 
-We are modernizing the frontend components by replacing decorator syntax with standard class syntax. This is to ensure better compatibility with modern JavaScript and tooling.
+We are currently refactoring the frontend components to use standard class syntax instead of decorators. This is part of our effort to modernize the codebase and improve compatibility with newer versions of Lit.
 
 ### Recent Changes
 
-1. **Phone Input Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
-2. **Pagination Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
-3. **Tabs Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
-4. **Table Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
-5. **Form Validation Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
-6. **Language Selector Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
-7. **Data Table Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
-8. **File Upload Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
-9. **Autoform Component**: Refactored to use standard class syntax instead of decorators. Tests are failing due to memory issues.
-10. **Form Component**: Refactored to use standard class syntax instead of decorators. Tests passing with simplified test cases.
-11. **Modal Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
-12. **Badge Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
-13. **Input Component**: Refactored to use standard class syntax instead of decorators. All tests passing.
+1. Successfully refactored the following components to use standard class syntax:
+   - Phone Input Component
+   - Pagination Component
+   - Tabs Component
+   - Table Component
+   - Form Validation Component
+   - Language Selector Component
+   - Data Table Component
+   - File Upload Component
+   - Autoform Component (tests failing due to memory issues)
+   - Form Component
+   - Modal Component
+   - Badge Component
+   - Input Component
+   - Theme Toggle Component
+
+2. For each component, we've made the following changes:
+   - Changed `static properties = {...}` to `static get properties() { return {...}; }`
+   - Changed `static styles = [...]` to `static get styles() { return [...]; }`
+   - Ensured all tests are passing (except for Autoform component)
+
+3. Fixed test issues in the Theme Toggle component tests related to mocking localStorage and matchMedia.
 
 ### Next Steps
 
 1. Continue refactoring the remaining components:
-   - Theme Toggle Component
    - Radio Component
    - Spinner Component
    - Testimonials Component
@@ -35,16 +43,9 @@ We are modernizing the frontend components by replacing decorator syntax with st
    - Error Page Component
    - FAQ Accordion Component
 
-2. Address the memory issues with the Autoform component tests:
-   - Consider increasing the memory allocation for Node.js during test runs
-   - Optimize the test cases to reduce memory usage
-   - Split the test file into smaller chunks
+2. Address the memory issues with the Autoform component tests.
 
-3. Address the deprecation warnings for @open-wc/semantic-dom-diff:
-   - Research alternatives or update the library
-   - Consider using a different approach for DOM comparison in tests
-
-4. Consider configuring Lit to run in production mode during tests to avoid the dev mode warning.
+3. Consider configuring Lit to run in production mode during tests to avoid development mode warnings.
 
 ## Active Decisions
 
