@@ -152,30 +152,20 @@
 ### Backend
 *[Backend next steps to be documented]*
 
-## Frontend Components
+## Component Refactoring Progress
 
 ### Components Successfully Refactored to Standard Class Syntax
-The following components have been successfully refactored to standard class syntax and all tests are passing:
-
-1. Phone Input Component
-2. Pagination Component
+1. Navigation Component
+2. Dropdown Component
 3. Modal Component
-4. Theme Toggle Component
-5. Radio Component
-6. Icon Component
-7. Navigation Component
+4. Tooltip Component
+5. Tabs Component
+6. Card Component
+7. Alert Component
 8. Button Component
 9. Checkbox Component
 10. Error Page Component
+11. FAQ Accordion Component
 
 ### Components Still Using Decorators
-The following components still need to be refactored to standard class syntax:
-
-1. FAQ Accordion Component
-
-### Components Already Using Standard Class Syntax
-The following components were already using standard class syntax:
-
-1. Spinner Component
-2. Testimonials Component
-3. Toast Component 
+None - all components have been successfully refactored! 

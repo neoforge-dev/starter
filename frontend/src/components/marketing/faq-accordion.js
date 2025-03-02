@@ -5,207 +5,211 @@ import {
 } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 export class NeoFaqAccordion extends LitElement {
-  static properties = {
-    items: { type: Array },
-    variant: { type: String },
-    layout: { type: String },
-    columns: { type: Number },
-    defaultOpen: { type: Boolean },
-    allowMultiple: { type: Boolean },
-    _openItems: { type: Set, state: true },
-  };
+  static get properties() {
+    return {
+      items: { type: Array },
+      variant: { type: String },
+      layout: { type: String },
+      columns: { type: Number },
+      defaultOpen: { type: Boolean },
+      allowMultiple: { type: Boolean },
+      _openItems: { type: Set, state: true },
+    };
+  }
 
-  static styles = css`
-    :host {
-      display: block;
-      font-family: system-ui, sans-serif;
-    }
-
-    .faq-container {
-      width: 100%;
-      max-width: 1280px;
-      margin: 0 auto;
-    }
-
-    /* Stack Layout */
-    .layout-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    /* Grid Layout */
-    .layout-grid {
-      display: grid;
-      gap: 2rem;
-      grid-template-columns: repeat(var(--faq-columns, 2), 1fr);
-    }
-
-    /* Sections Layout */
-    .layout-sections {
-      display: flex;
-      flex-direction: column;
-      gap: 3rem;
-    }
-
-    .section-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #111827;
-      margin: 0 0 1.5rem 0;
-    }
-
-    .section-items {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    /* Accordion Item */
-    .accordion-item {
-      width: 100%;
-    }
-
-    /* Default Variant */
-    .variant-default {
-      background-color: white;
-      border-radius: 0.5rem;
-      box-shadow:
-        0 1px 3px 0 rgb(0 0 0 / 0.1),
-        0 1px 2px -1px rgb(0 0 0 / 0.1);
-      overflow: hidden;
-    }
-
-    /* Minimal Variant */
-    .variant-minimal {
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    /* Bordered Variant */
-    .variant-bordered {
-      border: 1px solid #e5e7eb;
-      border-radius: 0.5rem;
-    }
-
-    /* Card Variant */
-    .variant-card {
-      background-color: white;
-      border-radius: 0.5rem;
-      box-shadow:
-        0 4px 6px -1px rgb(0 0 0 / 0.1),
-        0 2px 4px -2px rgb(0 0 0 / 0.1);
-      transition:
-        transform 0.2s,
-        box-shadow 0.2s;
-    }
-
-    .variant-card:hover {
-      transform: translateY(-2px);
-      box-shadow:
-        0 10px 15px -3px rgb(0 0 0 / 0.1),
-        0 4px 6px -4px rgb(0 0 0 / 0.1);
-    }
-
-    /* Question Button */
-    .question-button {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background: none;
-      border: none;
-      cursor: pointer;
-      text-align: left;
-      color: #111827;
-      font-size: 1rem;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
-
-    .variant-default .question-button,
-    .variant-card .question-button {
-      padding: 1.25rem;
-    }
-
-    .variant-minimal .question-button {
-      padding: 1rem 0;
-    }
-
-    .variant-bordered .question-button {
-      padding: 1rem 1.25rem;
-    }
-
-    .question-button:hover {
-      background-color: #f9fafb;
-    }
-
-    .variant-minimal .question-button:hover {
-      background-color: transparent;
-    }
-
-    /* Icon */
-    .icon {
-      width: 1.25rem;
-      height: 1.25rem;
-      margin-left: 1rem;
-      transform: rotate(0deg);
-      transition: transform 0.2s;
-      opacity: 0.5;
-    }
-
-    .icon.open {
-      transform: rotate(180deg);
-    }
-
-    /* Answer */
-    .answer {
-      padding: 0;
-      height: 0;
-      overflow: hidden;
-      opacity: 0;
-      transition: all 0.3s;
-    }
-
-    .answer.open {
-      padding: 0 1rem 1rem 1rem;
-      height: auto;
-      opacity: 1;
-    }
-
-    .variant-default .answer.open,
-    .variant-card .answer.open {
-      padding: 0 1.25rem 1.25rem 1.25rem;
-    }
-
-    .variant-minimal .answer.open {
-      padding: 0 0 1rem 0;
-    }
-
-    .variant-bordered .answer.open {
-      padding: 0 1.25rem 1.25rem 1.25rem;
-    }
-
-    .answer-content {
-      color: #4b5563;
-      line-height: 1.625;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .layout-grid {
-        grid-template-columns: 1fr;
+  static get styles() {
+    return css`
+      :host {
+        display: block;
+        font-family: system-ui, sans-serif;
       }
 
+      .faq-container {
+        width: 100%;
+        max-width: 1280px;
+        margin: 0 auto;
+      }
+
+      /* Stack Layout */
+      .layout-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      /* Grid Layout */
+      .layout-grid {
+        display: grid;
+        gap: 2rem;
+        grid-template-columns: repeat(var(--faq-columns, 2), 1fr);
+      }
+
+      /* Sections Layout */
+      .layout-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 3rem;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 1.5rem 0;
+      }
+
+      .section-items {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      /* Accordion Item */
+      .accordion-item {
+        width: 100%;
+      }
+
+      /* Default Variant */
+      .variant-default {
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow:
+          0 1px 3px 0 rgb(0 0 0 / 0.1),
+          0 1px 2px -1px rgb(0 0 0 / 0.1);
+        overflow: hidden;
+      }
+
+      /* Minimal Variant */
+      .variant-minimal {
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      /* Bordered Variant */
+      .variant-bordered {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+      }
+
+      /* Card Variant */
+      .variant-card {
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow:
+          0 4px 6px -1px rgb(0 0 0 / 0.1),
+          0 2px 4px -2px rgb(0 0 0 / 0.1);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .variant-card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          0 10px 15px -3px rgb(0 0 0 / 0.1),
+          0 4px 6px -4px rgb(0 0 0 / 0.1);
+      }
+
+      /* Question Button */
       .question-button {
-        font-size: 0.875rem;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: background-color 0.2s;
+      }
+
+      .variant-default .question-button,
+      .variant-card .question-button {
+        padding: 1.25rem;
+      }
+
+      .variant-minimal .question-button {
+        padding: 1rem 0;
+      }
+
+      .variant-bordered .question-button {
+        padding: 1rem 1.25rem;
+      }
+
+      .question-button:hover {
+        background-color: #f9fafb;
+      }
+
+      .variant-minimal .question-button:hover {
+        background-color: transparent;
+      }
+
+      /* Icon */
+      .icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-left: 1rem;
+        transform: rotate(0deg);
+        transition: transform 0.2s;
+        opacity: 0.5;
+      }
+
+      .icon.open {
+        transform: rotate(180deg);
+      }
+
+      /* Answer */
+      .answer {
+        padding: 0;
+        height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: all 0.3s;
+      }
+
+      .answer.open {
+        padding: 0 1rem 1rem 1rem;
+        height: auto;
+        opacity: 1;
+      }
+
+      .variant-default .answer.open,
+      .variant-card .answer.open {
+        padding: 0 1.25rem 1.25rem 1.25rem;
+      }
+
+      .variant-minimal .answer.open {
+        padding: 0 0 1rem 0;
+      }
+
+      .variant-bordered .answer.open {
+        padding: 0 1.25rem 1.25rem 1.25rem;
       }
 
       .answer-content {
-        font-size: 0.875rem;
+        color: #4b5563;
+        line-height: 1.625;
       }
-    }
-  `;
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .layout-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .question-button {
+          font-size: 0.875rem;
+        }
+
+        .answer-content {
+          font-size: 0.875rem;
+        }
+      }
+    `;
+  }
 
   constructor() {
     super();
