@@ -1,4 +1,7 @@
-import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { BaseComponent, defineComponent } from "./base-component.js";
 import { baseStyles } from "../styles/base.js";
 
@@ -6,90 +9,93 @@ import { baseStyles } from "../styles/base.js";
  * @element neo-error-page
  * @description Error page component for displaying error messages
  */
-@defineComponent("neo-error-page")
 export class ErrorPage extends BaseComponent {
-  static properties = {
-    code: { type: String },
-    message: { type: String },
-    description: { type: String },
-  };
+  static get properties() {
+    return {
+      code: { type: String },
+      message: { type: String },
+      description: { type: String },
+    };
+  }
 
-  static styles = [
-    baseStyles,
-    css`
-      :host {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        padding: var(--spacing-xl);
-        text-align: center;
-        background: var(--surface-color);
-      }
+  static get styles() {
+    return [
+      baseStyles,
+      css`
+        :host {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          padding: var(--spacing-xl);
+          text-align: center;
+          background: var(--surface-color);
+        }
 
-      .error-container {
-        max-width: 600px;
-        margin: 0 auto;
-      }
+        .error-container {
+          max-width: 600px;
+          margin: 0 auto;
+        }
 
-      .error-code {
-        font-size: 8rem;
-        font-weight: 700;
-        color: var(--color-primary);
-        margin: 0;
-        line-height: 1;
-        opacity: 0.5;
-      }
-
-      .error-message {
-        font-size: 2rem;
-        font-weight: 500;
-        color: var(--text-color);
-        margin: var(--spacing-md) 0;
-      }
-
-      .error-description {
-        font-size: 1.125rem;
-        color: var(--text-color-light);
-        margin-bottom: var(--spacing-lg);
-      }
-
-      .home-button {
-        display: inline-flex;
-        align-items: center;
-        padding: var(--spacing-sm) var(--spacing-md);
-        background: var(--color-primary);
-        color: white;
-        text-decoration: none;
-        border-radius: var(--border-radius);
-        font-weight: 500;
-        transition: background 0.2s ease;
-      }
-
-      .home-button:hover {
-        background: var(--color-primary-dark);
-      }
-
-      .home-button neo-icon {
-        margin-right: var(--spacing-xs);
-      }
-
-      @media (max-width: 768px) {
         .error-code {
-          font-size: 6rem;
+          font-size: 8rem;
+          font-weight: 700;
+          color: var(--color-primary);
+          margin: 0;
+          line-height: 1;
+          opacity: 0.5;
         }
 
         .error-message {
-          font-size: 1.5rem;
+          font-size: 2rem;
+          font-weight: 500;
+          color: var(--text-color);
+          margin: var(--spacing-md) 0;
         }
 
         .error-description {
-          font-size: 1rem;
+          font-size: 1.125rem;
+          color: var(--text-color-light);
+          margin-bottom: var(--spacing-lg);
         }
-      }
-    `,
-  ];
+
+        .home-button {
+          display: inline-flex;
+          align-items: center;
+          padding: var(--spacing-sm) var(--spacing-md);
+          background: var(--color-primary);
+          color: white;
+          text-decoration: none;
+          border-radius: var(--border-radius);
+          font-weight: 500;
+          transition: background 0.2s ease;
+        }
+
+        .home-button:hover {
+          background: var(--color-primary-dark);
+        }
+
+        .home-button neo-icon {
+          margin-right: var(--spacing-xs);
+        }
+
+        @media (max-width: 768px) {
+          .error-code {
+            font-size: 6rem;
+          }
+
+          .error-message {
+            font-size: 1.5rem;
+          }
+
+          .error-description {
+            font-size: 1rem;
+          }
+        }
+      `,
+    ];
+  }
 
   constructor() {
     super();
@@ -112,4 +118,8 @@ export class ErrorPage extends BaseComponent {
       </div>
     `;
   }
+}
+
+if (!customElements.get("neo-error-page")) {
+  customElements.define("neo-error-page", ErrorPage);
 }

@@ -166,12 +166,12 @@ The following components have been successfully refactored to standard class syn
 7. Navigation Component
 8. Button Component
 9. Checkbox Component
+10. Error Page Component
 
 ### Components Still Using Decorators
 The following components still need to be refactored to standard class syntax:
 
-1. Error Page Component
-2. FAQ Accordion Component
+1. FAQ Accordion Component
 
 ### Components Already Using Standard Class Syntax
 The following components were already using standard class syntax:
