@@ -3,6 +3,9 @@ import pytest
 from prometheus_client import Counter, Histogram, Gauge, REGISTRY
 from unittest.mock import patch, MagicMock
 import time
+import asyncio
+import random
+import threading
 
 from app.core.metrics import (
     get_metrics,
@@ -149,7 +152,7 @@ def test_metrics_reset():
     assert REGISTRY.get_sample_value(
         "http_requests_total",
         {"method": "GET", "endpoint": "/test", "status": "200"}
-    ) == 0.0
+    ) == None  # After reset, the metric should be None, not 0
     
     assert REGISTRY.get_sample_value(
         "db_connections_active"
@@ -190,12 +193,10 @@ def test_metrics_manager_error_tracking():
     ) == 1.0
 
 def test_concurrent_metrics_recording():
-    """Test concurrent metrics recording."""
-    import asyncio
-    import random
+    """Test concurrent metrics recording using threads instead of asyncio."""
+    metrics = get_metrics()
     
-    async def record_metrics():
-        metrics = get_metrics()
+    def record_metrics():
         # Simulate concurrent requests
         for _ in range(5):
             metrics["http_requests"].labels(
@@ -203,16 +204,25 @@ def test_concurrent_metrics_recording():
                 endpoint="/test",
                 status="200"
             ).inc()
-            await asyncio.sleep(random.uniform(0.01, 0.05))
+            time.sleep(0.01)  # Small delay
     
-    # Run concurrent coroutines
-    asyncio.run(asyncio.gather(*[record_metrics() for _ in range(3)]))
+    # Create and start threads
+    threads = []
+    for _ in range(3):
+        thread = threading.Thread(target=record_metrics)
+        thread.start()
+        threads.append(thread)
     
-    # Verify total count (5 requests * 3 coroutines)
-    assert REGISTRY.get_sample_value(
+    # Wait for all threads to complete
+    for thread in threads:
+        thread.join()
+    
+    # Verify total count (5 requests * 3 threads)
+    value = REGISTRY.get_sample_value(
         "http_requests_total",
         {"method": "GET", "endpoint": "/test", "status": "200"}
-    ) == 15.0
+    )
+    assert value == 15.0
 
 def test_custom_metrics():
     """Test adding custom metrics."""

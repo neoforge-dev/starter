@@ -179,10 +179,11 @@ class Settings(BaseSettings):
         """Validate all settings."""
         # Handle test mode settings first
         if self.testing or self.environment == Environment.TEST:
-            self.debug = False
-            self.cors_origins = []
-            self.environment = Environment.TEST
-            self.testing = True
+            # Use object.__setattr__ to bypass validation and prevent recursion
+            object.__setattr__(self, "debug", False)
+            object.__setattr__(self, "cors_origins", [])
+            object.__setattr__(self, "environment", Environment.TEST)
+            object.__setattr__(self, "testing", True)
             return self
 
         # Validate SMTP settings

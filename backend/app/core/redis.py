@@ -17,19 +17,11 @@ logger = structlog.get_logger()
 # Initialize metrics
 metrics = get_metrics()
 
-# Metrics
-REDIS_OPERATIONS = Counter(
-    "redis_operations_total",
-    "Total number of Redis operations",
-    labelnames=["operation"],
-)
+# Use metrics from the metrics module instead of creating new ones
+REDIS_OPERATIONS = metrics["redis_operations_total"]
+REDIS_ERRORS = metrics["redis_errors_total"]
 
-REDIS_ERRORS = Counter(
-    "redis_errors_total",
-    "Total number of Redis errors",
-    labelnames=["error_type"],
-)
-
+# Create a new histogram for Redis operation duration
 REDIS_OPERATION_DURATION = Histogram(
     "redis_operation_duration_seconds",
     "Duration of Redis operations",

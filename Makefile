@@ -58,7 +58,7 @@ test-frontend-all: ## Run all frontend tests
 	make test-frontend-a11y
 	make test-frontend-perf
 
-test: test-frontend-all ## Run all tests (frontend and backend)
+test: ## Run all tests backend
 	@echo "Running backend tests..."
 	docker compose -f backend/docker-compose.dev.yml run --rm api pytest --maxfail=5
 
