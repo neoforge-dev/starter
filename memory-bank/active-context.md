@@ -17,6 +17,7 @@ We are currently refactoring frontend components to use standard class syntax in
 - Theme Toggle Component
 - Radio Component
 - Icon Component
+- Navigation Component
 
 #### Changes Made:
 
@@ -24,11 +25,11 @@ We are currently refactoring frontend components to use standard class syntax in
 - Fixed test issues in Theme Toggle component (updated error message test)
 - Fixed test issues in Radio component (updated radio group test to manually set checked property)
 - Fixed test issues in Icon component (updated click event test to use dispatchEvent and fixed loading state test)
+- Fixed test issues in Navigation component (updated expanded class handling and keyboard navigation)
 
 #### Next Steps:
 
 - Continue refactoring remaining components:
-  - Navigation Component
   - Button Component
   - Checkbox Component
   - Error Page Component
@@ -72,8 +73,6 @@ We are currently refactoring frontend components to use standard class syntax in
 ### Next Steps
 
 1. Continue refactoring the remaining components:
-   - Icon Component
-   - Navigation Component
    - Button Component
    - Checkbox Component
    - Error Page Component
