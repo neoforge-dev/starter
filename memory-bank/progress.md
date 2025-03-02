@@ -2,58 +2,95 @@
 
 ## What Works
 
-- Backend API endpoints for user management
-- Frontend authentication flow
+### Backend
+- Core API endpoints for user management
+- Authentication and authorization with JWT
+- Database models and relationships
+- Metrics collection and monitoring
+- Configuration management
+- Database connectivity with PostgreSQL
+- CRUD operations with SQLModel
+- Model relationships and cascading deletes
+- Comprehensive testing infrastructure
+
+### Frontend
+- Authentication flow
 - Dashboard page rendering
 - Basic component testing infrastructure
 - Component test helper utilities for shadow DOM testing
-- Backend test factories for generating test data
-- Backend test runner script with flexible options
-- Comprehensive backend testing documentation
 
 ## What's Left to Build
 
+### Backend
+- Complete API endpoints for all features
+- Implement remaining business logic
+- Enhance error handling and validation
+- Improve test coverage to meet 80% threshold
+- Implement remaining database migrations
+- Add performance optimizations
+
+### Frontend
 - Optimize web component testing to resolve memory issues
 - Complete the registration page tests
 - Implement remaining frontend features
 - Enhance error handling and validation
 - Improve test coverage
-- Resolve backend database testing issues
 
 ## Current Status
 
-We've made significant progress on the testing infrastructure for both frontend web components and backend services. We've created:
+### Backend Testing
+We've made significant progress on the backend testing infrastructure:
 
-1. A comprehensive web component testing guide
-2. A component test helper library
-3. An optimized test runner script for frontend tests
-4. Updated test cases for the registration page
-5. A flexible test runner script for backend tests
-6. Factory classes for generating test data
-7. Mock tests for backend components that don't require database access
-8. Tests for all factory classes
-9. A comprehensive README for backend testing
+1. Created a comprehensive test runner script (`backend/scripts/run_tests.sh`) with options for coverage reporting, verbosity control, test markers, maximum failure limit, Docker container rebuilding, and test database creation.
+2. Implemented a `UserFactory` in `backend/tests/factories.py` for generating test user objects.
+3. Created mock tests for the metrics module to demonstrate testing without dependencies.
+4. Resolved PostgreSQL collation issues by:
+   - Creating a custom PostgreSQL Docker image with proper locale settings
+   - Adding an initialization script to create the test database with correct collation
+   - Updating docker-compose.dev.yml to use the custom PostgreSQL image
+   - Creating a script to fix collation issues in existing installations
+5. Added database-dependent tests:
+   - Basic connectivity and collation tests
+   - CRUD operations tests using factories
+   - Model relationship tests
+6. Created a dedicated script for running database tests (`backend/scripts/run_db_tests.sh`)
 
-However, we're still facing memory issues when running the frontend tests and database connectivity issues when running backend tests. The frontend tests are encountering "JavaScript heap out of memory" errors, even with optimized settings. The backend tests requiring database access are failing due to PostgreSQL container configuration issues.
+### Frontend Testing
+We've made progress on the frontend testing infrastructure:
+
+1. Created a comprehensive web component testing guide (`frontend/src/test/WEB_COMPONENT_TESTING.md`)
+2. Developed a component test helper library (`frontend/src/test/helpers/component-test-helper.js`)
+3. Updated the registration page test to use the new helper functions
+4. Created a script to run tests with optimized memory settings (`frontend/run-tests.sh`)
+5. Created a simplified version of the registration page test
 
 ## Known Issues
 
-1. **Memory Leaks in Tests**: The web component tests are consuming excessive memory, leading to crashes.
-2. **Shadow DOM Testing Complexity**: Testing components with shadow DOM requires special handling.
-3. **Component Lifecycle Management**: Ensuring components are properly initialized and cleaned up in tests.
-4. **Event Propagation**: Events may not propagate as expected across shadow DOM boundaries.
-5. **PostgreSQL Container Issues**: Collation settings preventing database creation.
-6. **Database-Dependent Tests Failing**: Unable to create test_db database needed for most backend tests.
+### Backend
+- Test coverage is below the required 80% threshold
+- Some tests are still failing due to missing fixtures or dependencies
+- Documentation for API endpoints is incomplete
+
+### Frontend
+- Memory leaks in tests leading to excessive memory consumption
+- Complexity in testing components with shadow DOM
+- Challenges in component lifecycle management
+- Event propagation across shadow DOM boundaries
 
 ## Next Priorities
 
+### Backend
+1. Increase test coverage to meet the 80% threshold
+2. Create more tests for database operations and API endpoints
+3. Implement better test isolation to reduce dependencies on shared fixtures
+4. Follow FastAPI async patterns as specified in the backend rules
+
+### Frontend
 1. Resolve memory issues in web component tests
 2. Complete the registration page implementation and tests
 3. Implement remaining frontend features
 4. Enhance error handling and validation
 5. Improve test coverage
-6. Fix PostgreSQL container configuration
-7. Create more backend tests that don't require database access
 
 ## Frontend Components
 
@@ -168,14 +205,24 @@ However, we're still facing memory issues when running the frontend tests and da
 - ✅ Successfully tested datetime utilities
 - ✅ Successfully tested configuration settings
 
+### Test Infrastructure
+- ✅ Created a comprehensive test runner script with flexible options
+- ✅ Implemented factory classes for generating test data
+- ✅ Added tests for all factory classes
+- ✅ Created a comprehensive README for backend testing
+- ✅ Created a custom PostgreSQL Docker image with proper locale settings
+- ✅ Added an initialization script to create the test database with correct collation
+- ✅ Created a script to fix collation issues in existing installations
+
 ### Database Issues
-- ⚠️ Identified issues with PostgreSQL container's collation settings
-- ⚠️ Unable to create test_db database needed for most tests
-- ⚠️ Tests requiring database access currently failing
+- ✅ Resolved issues with PostgreSQL container's collation settings
+- ✅ Enabled creation of test_db database with proper collation
+- ⏳ Need to run database-dependent tests to verify the solution
 
 ### Test Coverage
 - ⚠️ Current coverage is below the required 80% threshold
 - ✅ Created simplified test files to test core functionality without database dependencies
+- ⏳ Need to create more tests for database operations and API endpoints
 
 ## Services
 

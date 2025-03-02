@@ -159,4 +159,108 @@ httpx==0.24.0
 - User Management API (`/api/v1/users/`)
 - Projects API (`/api/v1/projects/`)
 - Billing API (`/api/v1/billing/`)
-- Reports API (`/api/v1/reports/`) 
+- Reports API (`/api/v1/reports/`)
+
+## Testing Infrastructure
+
+### Backend Testing
+
+1. **Pytest**: Main testing framework
+   - `pytest-asyncio`: For testing async code
+   - `pytest-cov`: For coverage reporting
+   - `pytest-xdist`: For parallel test execution
+
+2. **Factory Boy**: Test data generation
+   - Integrated with SQLModel for database persistence
+   - Used with Faker for random data generation
+
+3. **Mock**: Mocking library for unit tests
+   - Used to mock external dependencies
+   - Allows testing components in isolation
+
+4. **PostgreSQL Test Container**: Dedicated database for testing
+   - Custom Docker image with proper locale settings
+   - Initialization script for test database creation
+
+5. **Test Runner Scripts**:
+   - `backend/scripts/run_tests.sh`: Main test runner
+   - `backend/scripts/run_db_tests.sh`: Database test runner
+   - `backend/scripts/fix_postgres_collation.sh`: Collation fix script
+
+### Frontend Testing
+
+1. **Vitest**: Main testing framework
+   - Compatible with Vite build system
+   - Fast execution with watch mode
+
+2. **Testing Library**: DOM testing utilities
+   - Custom helpers for shadow DOM queries
+   - Event simulation and assertion
+
+3. **Custom Test Helpers**:
+   - `component-test-helper.js`: Shadow DOM utilities
+   - Memory optimization functions
+
+4. **Test Runner Script**:
+   - `frontend/run-tests.sh`: Optimized test execution
+
+## Technical Constraints
+
+### Backend
+
+- Must follow async patterns with FastAPI
+- Must use SQLModel for database interactions
+- Must maintain 80% test coverage
+- Must use type hints throughout the codebase
+- Must follow PEP 8 style guide
+
+### Frontend
+
+- Must use native web components
+- Must use shadow DOM for encapsulation
+- Must be compatible with modern browsers
+- Must follow ES6+ standards
+- Must be accessible (WCAG 2.1 AA)
+
+## Dependencies
+
+### Backend Dependencies
+
+- **fastapi**: Web framework
+- **sqlmodel**: ORM
+- **pydantic**: Data validation
+- **alembic**: Database migrations
+- **psycopg2-binary**: PostgreSQL driver
+- **python-jose[cryptography]**: JWT handling
+- **passlib[bcrypt]**: Password hashing
+- **python-multipart**: Form data parsing
+- **prometheus-client**: Metrics collection
+- **psutil**: System metrics collection
+
+### Backend Dev Dependencies
+
+- **pytest**: Testing framework
+- **pytest-asyncio**: Async testing
+- **pytest-cov**: Coverage reporting
+- **factory-boy**: Test data generation
+- **faker**: Random data generation
+- **black**: Code formatting
+- **isort**: Import sorting
+- **mypy**: Type checking
+- **flake8**: Linting
+
+### Frontend Dependencies
+
+- **lit**: Web component library
+- **lit-html**: HTML templating
+- **lit-element**: Component base class
+- **@open-wc/testing**: Web component testing utilities
+- **@testing-library/dom**: DOM testing utilities
+
+### Frontend Dev Dependencies
+
+- **vite**: Build tool
+- **vitest**: Testing framework
+- **@vitest/coverage-c8**: Coverage reporting
+- **eslint**: Linting
+- **prettier**: Code formatting 

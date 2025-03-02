@@ -13,6 +13,7 @@ MAXFAIL=0
 TEST_PATH=""
 REBUILD=0
 CREATE_DB=0
+FIX_COLLATION=0
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -41,6 +42,10 @@ while [[ $# -gt 0 ]]; do
       CREATE_DB=1
       shift
       ;;
+    --fix-collation)
+      FIX_COLLATION=1
+      shift
+      ;;
     -h|--help)
       echo "Usage: ./scripts/run_tests.sh [options] [test_path]"
       echo ""
@@ -51,6 +56,7 @@ while [[ $# -gt 0 ]]; do
       echo "  -f, --maxfail VALUE  Stop after N failures"
       echo "  -r, --rebuild        Rebuild Docker containers before running tests"
       echo "  -d, --create-db      Create/recreate test database before running tests"
+      echo "  --fix-collation      Fix PostgreSQL collation issues (recreates containers)"
       echo "  -h, --help           Show this help message"
       echo ""
       echo "Examples:"
@@ -59,6 +65,7 @@ while [[ $# -gt 0 ]]; do
       echo "  ./scripts/run_tests.sh tests/test_api            # Run API tests"
       echo "  ./scripts/run_tests.sh -m 'not slow'             # Run tests that are not marked as slow"
       echo "  ./scripts/run_tests.sh -f 1 tests/test_api       # Run API tests, stop after first failure"
+      echo "  ./scripts/run_tests.sh --fix-collation           # Fix PostgreSQL collation issues and run tests"
       exit 0
       ;;
     *)
@@ -67,6 +74,14 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Fix PostgreSQL collation issues if requested
+if [ $FIX_COLLATION -eq 1 ]; then
+  echo "Fixing PostgreSQL collation issues..."
+  ./scripts/fix_postgres_collation.sh
+  # After fixing collation, we should create the database
+  CREATE_DB=1
+fi
 
 # Build command arguments
 ARGS=""
@@ -101,7 +116,7 @@ fi
 if [ $CREATE_DB -eq 1 ]; then
   echo "Creating/recreating test database..."
   docker compose -f backend/docker-compose.dev.yml exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS test_db;"
-  docker compose -f backend/docker-compose.dev.yml exec -T db psql -U postgres -c "CREATE DATABASE test_db;"
+  docker compose -f backend/docker-compose.dev.yml exec -T db psql -U postgres -c "CREATE DATABASE test_db WITH ENCODING 'UTF8' LC_COLLATE='en_US.utf8' LC_CTYPE='en_US.utf8' TEMPLATE=template0;"
   docker compose -f backend/docker-compose.dev.yml run --rm api python -m app.db.init_db
 fi
 

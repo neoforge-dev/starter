@@ -51,7 +51,9 @@ services:
       - .:/app
 
   db:
-    image: postgres:15-alpine
+    build:
+      context: ./docker/postgres
+      dockerfile: Dockerfile
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -108,10 +110,6 @@ services:
         condition: service_healthy
     command: >
       bash -c "
-        PGPASSWORD=postgres psql -h db -U postgres -c 'DROP DATABASE IF EXISTS test_db;' &&
-        PGPASSWORD=postgres psql -h db -U postgres -c 'CREATE DATABASE test_db;' &&
-        python -m app.db.init_db &&
-        rm -f /tmp/.coverage &&
         python -m pytest -v --cov=app --cov-report=term-missing
       "
 
