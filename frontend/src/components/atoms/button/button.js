@@ -1,4 +1,8 @@
-import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 
 /**
@@ -13,180 +17,184 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {boolean} fullWidth - Whether the button should take full width
  */
 export class NeoButton extends LitElement {
-  static properties = {
-    variant: { type: String, reflect: true },
-    size: { type: String, reflect: true },
-    type: { type: String, reflect: true },
-    disabled: { type: Boolean, reflect: true },
-    loading: { type: Boolean, reflect: true },
-    fullWidth: { type: Boolean, reflect: true },
-  };
+  static get properties() {
+    return {
+      variant: { type: String, reflect: true },
+      size: { type: String, reflect: true },
+      type: { type: String, reflect: true },
+      disabled: { type: Boolean, reflect: true },
+      loading: { type: Boolean, reflect: true },
+      fullWidth: { type: Boolean, reflect: true },
+    };
+  }
 
-  static styles = [
-    baseStyles,
-    css`
-      :host {
-        display: inline-block;
-        vertical-align: middle;
-      }
-
-      :host([fullWidth]) {
-        display: block;
-        width: 100%;
-      }
-
-      :host([disabled]) {
-        pointer-events: none;
-        opacity: 0.5;
-      }
-
-      button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: var(--spacing-xs);
-        width: 100%;
-        border: none;
-        border-radius: var(--radius-md);
-        font-family: var(--font-family);
-        font-weight: var(--font-weight-medium);
-        cursor: pointer;
-        transition: all var(--transition-fast);
-      }
-
-      /* Sizes */
-      .size-sm {
-        height: 32px;
-        padding: 0 var(--spacing-sm);
-        font-size: var(--font-size-sm);
-      }
-
-      .size-md {
-        height: 40px;
-        padding: 0 var(--spacing-md);
-        font-size: var(--font-size-base);
-      }
-
-      .size-lg {
-        height: 48px;
-        padding: 0 var(--spacing-lg);
-        font-size: var(--font-size-lg);
-      }
-
-      /* Variants */
-      .variant-primary {
-        background: var(--color-primary);
-        color: white;
-      }
-
-      .variant-primary:hover:not(:disabled) {
-        background: var(--color-primary-dark);
-      }
-
-      .variant-secondary {
-        background: var(--color-secondary);
-        color: white;
-      }
-
-      .variant-secondary:hover:not(:disabled) {
-        background: var(--color-secondary-dark);
-      }
-
-      .variant-tertiary {
-        background: transparent;
-        color: var(--color-primary);
-        box-shadow: inset 0 0 0 2px var(--color-primary);
-      }
-
-      .variant-tertiary:hover:not(:disabled) {
-        background: var(--color-primary-light);
-      }
-
-      .variant-danger {
-        background: var(--color-error);
-        color: white;
-      }
-
-      .variant-danger:hover:not(:disabled) {
-        background: var(--color-error-dark);
-      }
-
-      .variant-ghost {
-        background: transparent;
-        color: var(--color-text);
-      }
-
-      .variant-ghost:hover:not(:disabled) {
-        background: var(--color-gray-100);
-      }
-
-      .variant-text {
-        background: transparent;
-        color: var(--color-primary);
-        padding: 0;
-      }
-
-      .variant-text:hover:not(:disabled) {
-        text-decoration: underline;
-      }
-
-      /* States */
-      button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        pointer-events: none;
-        background: var(--color-gray-300) !important;
-        color: var(--color-gray-600) !important;
-        border-color: var(--color-gray-300) !important;
-      }
-
-      button:focus-visible {
-        outline: none;
-        box-shadow: 0 0 0 3px var(--color-primary-light);
-      }
-
-      .variant-danger:focus-visible {
-        box-shadow: 0 0 0 3px var(--color-error-light);
-      }
-
-      /* Loading State */
-      .loading {
-        position: relative;
-        color: transparent !important;
-      }
-
-      .spinner {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 16px;
-        height: 16px;
-        border: 2px solid currentColor;
-        border-radius: 50%;
-        border-right-color: transparent;
-        animation: spin 0.75s linear infinite;
-      }
-
-      @keyframes spin {
-        from {
-          transform: translate(-50%, -50%) rotate(0deg);
+  static get styles() {
+    return [
+      baseStyles,
+      css`
+        :host {
+          display: inline-block;
+          vertical-align: middle;
         }
-        to {
-          transform: translate(-50%, -50%) rotate(360deg);
+
+        :host([fullWidth]) {
+          display: block;
+          width: 100%;
         }
-      }
 
-      /* Slots */
-      ::slotted([slot="prefix"]) {
-        margin-right: calc(var(--spacing-xs) * -1);
-      }
+        :host([disabled]) {
+          pointer-events: none;
+          opacity: 0.5;
+        }
 
-      ::slotted([slot="suffix"]) {
-        margin-left: calc(var(--spacing-xs) * -1);
-      }
-    `,
-  ];
+        button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: var(--spacing-xs);
+          width: 100%;
+          border: none;
+          border-radius: var(--radius-md);
+          font-family: var(--font-family);
+          font-weight: var(--font-weight-medium);
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        /* Sizes */
+        .size-sm {
+          height: 32px;
+          padding: 0 var(--spacing-sm);
+          font-size: var(--font-size-sm);
+        }
+
+        .size-md {
+          height: 40px;
+          padding: 0 var(--spacing-md);
+          font-size: var(--font-size-base);
+        }
+
+        .size-lg {
+          height: 48px;
+          padding: 0 var(--spacing-lg);
+          font-size: var(--font-size-lg);
+        }
+
+        /* Variants */
+        .variant-primary {
+          background: var(--color-primary);
+          color: white;
+        }
+
+        .variant-primary:hover:not(:disabled) {
+          background: var(--color-primary-dark);
+        }
+
+        .variant-secondary {
+          background: var(--color-secondary);
+          color: white;
+        }
+
+        .variant-secondary:hover:not(:disabled) {
+          background: var(--color-secondary-dark);
+        }
+
+        .variant-tertiary {
+          background: transparent;
+          color: var(--color-primary);
+          box-shadow: inset 0 0 0 2px var(--color-primary);
+        }
+
+        .variant-tertiary:hover:not(:disabled) {
+          background: var(--color-primary-light);
+        }
+
+        .variant-danger {
+          background: var(--color-error);
+          color: white;
+        }
+
+        .variant-danger:hover:not(:disabled) {
+          background: var(--color-error-dark);
+        }
+
+        .variant-ghost {
+          background: transparent;
+          color: var(--color-text);
+        }
+
+        .variant-ghost:hover:not(:disabled) {
+          background: var(--color-gray-100);
+        }
+
+        .variant-text {
+          background: transparent;
+          color: var(--color-primary);
+          padding: 0;
+        }
+
+        .variant-text:hover:not(:disabled) {
+          text-decoration: underline;
+        }
+
+        /* States */
+        button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          pointer-events: none;
+          background: var(--color-gray-300) !important;
+          color: var(--color-gray-600) !important;
+          border-color: var(--color-gray-300) !important;
+        }
+
+        button:focus-visible {
+          outline: none;
+          box-shadow: 0 0 0 3px var(--color-primary-light);
+        }
+
+        .variant-danger:focus-visible {
+          box-shadow: 0 0 0 3px var(--color-error-light);
+        }
+
+        /* Loading State */
+        .loading {
+          position: relative;
+          color: transparent !important;
+        }
+
+        .spinner {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 16px;
+          height: 16px;
+          border: 2px solid currentColor;
+          border-radius: 50%;
+          border-right-color: transparent;
+          animation: spin 0.75s linear infinite;
+        }
+
+        @keyframes spin {
+          from {
+            transform: translate(-50%, -50%) rotate(0deg);
+          }
+          to {
+            transform: translate(-50%, -50%) rotate(360deg);
+          }
+        }
+
+        /* Slots */
+        ::slotted([slot="prefix"]) {
+          margin-right: calc(var(--spacing-xs) * -1);
+        }
+
+        ::slotted([slot="suffix"]) {
+          margin-left: calc(var(--spacing-xs) * -1);
+        }
+      `,
+    ];
+  }
 
   constructor() {
     super();
@@ -252,7 +260,7 @@ export class NeoButton extends LitElement {
         <slot name="prefix"></slot>
         <slot></slot>
         <slot name="suffix"></slot>
-        ${this.loading ? html`<div class="spinner"></div>` : ""}
+        ${this.loading ? html`<span class="spinner"></span>` : ""}
       </button>
     `;
   }
