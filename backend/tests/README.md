@@ -22,7 +22,8 @@ All tests are designed to run inside Docker containers to ensure consistent envi
 
 ```bash
 # Initialize the test environment (builds containers, creates test database)
-./scripts/init_test_env.sh
+cd backend
+make init-test-env
 ```
 
 ### Run Tests with Make
@@ -64,6 +65,15 @@ make fix-collation
 # Run tests with coverage report
 ./scripts/run_tests_fixed.sh -c -v
 ```
+
+### Test Runner Improvements
+
+The test runner script (`run_tests_fixed.sh`) has been improved with the following features:
+
+- Works from any directory using absolute paths
+- Includes improved error handling and reporting
+- Automatically detects whether to use the test or api service
+- Provides detailed error messages for common issues
 
 ### Legacy Test Runner
 
@@ -207,7 +217,7 @@ Tests that require database access use a separate test database. The database is
 If you're experiencing issues with the test database, you can recreate it using:
 
 ```bash
-./scripts/run_tests.sh --create-db
+make test-with-db
 ```
 
 ## Markers
@@ -221,7 +231,7 @@ We use pytest markers to categorize tests:
 You can run tests with specific markers using:
 
 ```bash
-./scripts/run_tests.sh --markers="not slow"
+./scripts/run_tests_fixed.sh -m "not slow" -v
 ```
 
 ## Best Practices
@@ -241,21 +251,30 @@ You can run tests with specific markers using:
 
 If you're experiencing database connection issues, try:
 
-1. Rebuilding the Docker containers: `./scripts/run_tests.sh --rebuild`
-2. Recreating the test database: `./scripts/run_tests.sh --create-db`
-3. Checking the Docker logs: `docker-compose logs postgres`
+1. Initializing the test environment: `make init-test-env`
+2. Rebuilding the Docker containers: `make rebuild-test`
+3. Recreating the test database: `make test-with-db`
+4. Checking the Docker logs: `docker compose -f docker-compose.dev.yml logs db`
 
 ### Memory Issues
 
 If tests are failing due to memory issues, try:
 
-1. Running fewer tests at once: `./scripts/run_tests.sh --markers="not slow"`
-2. Increasing Docker memory allocation in your Docker settings
+1. Running fewer tests at a time: `./scripts/run_tests_fixed.sh -v tests/test_api`
+2. Increasing Docker memory allocation in Docker Desktop settings
 
-### Test Hanging
+### Service Not Found Issues
 
-If tests are hanging, try:
+If you get errors about the test service not being found, the script will automatically fall back to using the api service. You can check if the test service is defined in docker-compose.dev.yml:
 
-1. Running with verbose output to see where it's stuck: `./scripts/run_tests.sh --verbose`
-2. Adding timeouts to potentially problematic tests
-3. Running tests one at a time to identify the problematic test 
+```bash
+grep -A 20 "test:" docker-compose.dev.yml
+```
+
+### Environment Variable Issues
+
+If tests are failing due to missing environment variables, check the environment variables in the test container:
+
+```bash
+docker compose -f docker-compose.dev.yml run --rm test env | grep -E 'SECRET|DATABASE|REDIS'
+``` 

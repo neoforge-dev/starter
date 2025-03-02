@@ -2,8 +2,21 @@
 
 ## Current Focus
 
-### Backend Testing
-We are currently working on testing the backend components of the NeoForge application. We've encountered issues with the PostgreSQL database container, which is preventing us from running tests that require database access. To make progress, we've created simplified test files that don't depend on database access.
+### Backend Testing and Configuration
+We are currently working on testing the backend components of the NeoForge application and fixing configuration issues. We've resolved several issues with the test environment setup, including database connectivity and environment variable configuration.
+
+#### Recently Resolved Issues
+1. Fixed the `secret_key` configuration issue:
+   - Identified that the `secret_key` field in the Settings class was defined without a default value, making it a required field
+   - Added a default value for the `secret_key` field in the Settings class to ensure it works even when the environment variable is not set
+   - Modified the model_validator to set a default secret_key value when in test mode
+   - Successfully ran tests after fixing the configuration issue
+
+2. Fixed database connectivity issues:
+   - Created the missing `app` database that was required by the tests
+   - Ran migrations to set up the database schema
+   - Ensured the test database `test_db` was properly configured
+   - Successfully ran tests that depend on database connectivity
 
 #### Successfully Tested Components
 1. Metrics Module - Core functionality for tracking application metrics
@@ -38,12 +51,20 @@ We are currently working on testing the backend components of the NeoForge appli
    - CRUD operations tests using factories
    - Model relationship tests
 9. Created a dedicated script for running database tests (`backend/scripts/run_db_tests.sh`)
+10. Fixed Docker testing setup issues:
+    - Created improved test runner script (`backend/scripts/run_tests_fixed.sh`) that works from any directory
+    - Updated test environment initialization script (`backend/scripts/init_test_env.sh`) with better error handling
+    - Updated Makefile with new commands for initializing the test environment
+    - Updated documentation to reflect the changes
+    - Added automatic fallback to api service if test service is not available
+    - Improved error handling and reporting in all scripts
 
 #### Issues Encountered
 - PostgreSQL container has collation issues preventing database creation (RESOLVED)
 - Unable to create the test_db database needed for most tests (RESOLVED)
 - Tests requiring database access are failing with InvalidCatalogNameError (RESOLVED)
 - Test coverage is below the required 80% threshold
+- Docker testing setup had path inconsistencies and error handling issues (RESOLVED)
 
 #### Changes Made
 - Created simplified test files that don't require database fixtures
@@ -54,6 +75,10 @@ We are currently working on testing the backend components of the NeoForge appli
 - Added comprehensive documentation for the testing infrastructure
 - Fixed PostgreSQL collation issues with a custom Docker image and initialization script
 - Added database-dependent tests to verify the solution
+- Fixed Docker testing setup issues with improved scripts and documentation
+- Added better error handling and reporting to all testing scripts
+- Made scripts work from any directory using absolute paths
+- Added automatic fallback to api service if test service is not available
 
 ### Component Refactoring
 We are refactoring all components that use decorators to use standard class syntax. This is to ensure compatibility with future versions of Lit and to make the codebase more maintainable.
@@ -106,12 +131,27 @@ We've also created comprehensive tests for API endpoints:
 
 We've also created standalone test versions for auth, middleware, and security modules that can run without the full application context, which helps verify that these core components work correctly in isolation.
 
+### Docker Testing Setup Improvements
+
+We've made significant improvements to the Docker testing setup to ensure tests run reliably and consistently:
+
+1. **Fixed Path Inconsistencies**: Updated scripts to use absolute paths and work from any directory.
+2. **Improved Error Handling**: Added detailed error messages and proper exit codes for common issues.
+3. **Enhanced Test Environment Initialization**: Created a robust script to initialize the test environment with proper error handling and timeout management.
+4. **Service Detection**: Added automatic detection of available services and fallback mechanisms.
+5. **Environment Variable Handling**: Ensured consistent environment variable handling across all scripts.
+6. **Documentation Updates**: Updated all documentation to reflect the changes and provide clear instructions.
+7. **Makefile Improvements**: Added new commands for initializing the test environment and running different types of tests.
+
+These improvements ensure that tests run reliably and consistently across different environments and provide clear error messages when issues occur.
+
 ### Next Steps
 
 1. Create more database-related tests
 2. Run coverage reports to identify areas needing more tests
 3. Address any remaining core modules that need testing
 4. Implement tests for any remaining API endpoints
+5. Run all tests to ensure they pass with the improved Docker testing setup
 
 ## Next Steps
 
@@ -121,6 +161,7 @@ We've also created standalone test versions for auth, middleware, and security m
 - Create more tests for database operations and API endpoints
 - Implement better test isolation to reduce dependencies on shared fixtures
 - Follow FastAPI async patterns as specified in the backend rules
+- Run all tests with the improved Docker testing setup to ensure they pass
 
 ### Component Refactoring
 - All components have been successfully refactored to standard class syntax!

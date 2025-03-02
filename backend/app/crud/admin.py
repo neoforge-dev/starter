@@ -67,6 +67,7 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
         *,
         obj_in: AdminCreate,
         actor_id: int,
+        user_id: int,
     ) -> Admin:
         """
         Create new admin.
@@ -75,12 +76,13 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
             db: Database session
             obj_in: Admin data
             actor_id: ID of the user creating the admin
+            user_id: ID of the user to associate with this admin
             
         Returns:
             Created admin
         """
         db_obj = Admin(
-            user_id=obj_in.user_id,
+            user_id=user_id,
             role=obj_in.role,
             is_active=obj_in.is_active,
             created_by=actor_id,

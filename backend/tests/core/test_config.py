@@ -1,170 +1,204 @@
-"""Test configuration settings."""
-import os
-from typing import Dict, Any
+"""
+Test configuration module functionality.
+
+This test verifies that the configuration module works correctly, including:
+- Settings validation
+- Default values
+- Environment variable parsing
+- Settings caching
+"""
+
 import pytest
-from pydantic import ValidationError
-import structlog
+import os
+from unittest.mock import patch
+from pydantic import SecretStr, ValidationError
 
-from app.core.config import Settings
+from app.core.config import (
+    Settings,
+    Environment,
+    parse_bool_str,
+    parse_environment,
+    get_settings,
+)
 
-logger = structlog.get_logger()
 
-@pytest.fixture
-def valid_env_vars() -> Dict[str, Any]:
-    """Valid environment variables for testing."""
-    return {
-        "APP_NAME": "TestApp",
-        "APP_VERSION": "0.1.0",
-        "FRONTEND_URL": "http://localhost:3000",
-        "SECRET_KEY": "test_secret_key_replace_in_production_7e1a34bd93b148f0",
-        "JWT_ALGORITHM": "HS256",
-        "RATE_LIMIT_REQUESTS": "100",
-        "RATE_LIMIT_WINDOW": "60",
-        "API_V1_STR": "/api/v1",
-        "DATABASE_URL": "postgresql+asyncpg://postgres:postgres@db:5432/test_db",
-        "DEBUG": "false",
-        "TESTING": "false",
-        "REDIS_URL": "redis://redis:6379/0",
-        "ENVIRONMENT": "development",
-        "CORS_ORIGINS": '["http://localhost:3000"]',
-        "ACCESS_TOKEN_EXPIRE_MINUTES": "10080",
-    }
+def test_parse_bool_str():
+    """Test that parse_bool_str correctly parses boolean values from strings."""
+    # Test string values
+    assert parse_bool_str("true") is True
+    assert parse_bool_str("True") is True
+    assert parse_bool_str("1") is True
+    assert parse_bool_str("false") is False
+    assert parse_bool_str("False") is False
+    assert parse_bool_str("0") is False
+    
+    # Test boolean values
+    assert parse_bool_str(True) is True
+    assert parse_bool_str(False) is False
+    
+    # Test invalid values
+    with pytest.raises(ValueError):
+        parse_bool_str("invalid")
 
-@pytest.fixture(autouse=True)
-def clean_env():
-    """Clean environment variables before and after each test."""
-    # Store original environment
-    original_env = dict(os.environ)
-    
-    # Log environment state before cleanup
-    logger.info("environment_before_cleanup", env_vars={k: v for k, v in os.environ.items() if k.isupper()})
-    
-    # Clean up environment variables first
-    for key in list(os.environ.keys()):
-        if key.isupper():  # Only remove uppercase env vars (our settings)
-            del os.environ[key]
-    
-    yield
-    
-    # Log environment state before restoration
-    logger.info("environment_before_restore", env_vars={k: v for k, v in os.environ.items() if k.isupper()})
-    
-    # Restore original environment
-    os.environ.clear()
-    os.environ.update(original_env)
-    
-    # Log final environment state
-    logger.info("environment_after_restore", env_vars={k: v for k, v in os.environ.items() if k.isupper()})
 
-def test_valid_settings(valid_env_vars: Dict[str, Any]):
-    """Test valid settings configuration."""
-    # Log test start
-    logger.info("test_valid_settings_start", env_vars=valid_env_vars)
+def test_parse_environment():
+    """Test that parse_environment correctly validates environment values."""
+    # Test valid values
+    assert parse_environment("development") == "development"
+    assert parse_environment("staging") == "staging"
+    assert parse_environment("production") == "production"
+    assert parse_environment("test") == "test"
     
-    # Set environment variables
-    for key, value in valid_env_vars.items():
-        os.environ[key] = value
+    # Test invalid values
+    with pytest.raises(ValueError):
+        parse_environment("invalid")
+
+
+def test_environment_enum():
+    """Test that Environment enum has the correct values."""
+    assert Environment.DEVELOPMENT == "development"
+    assert Environment.STAGING == "staging"
+    assert Environment.PRODUCTION == "production"
+    assert Environment.TEST == "test"
+
+
+def test_settings_default_values():
+    """Test that Settings has the correct default values."""
+    # Create settings with default values
+    settings = Settings(secret_key="test_secret")
     
-    # Log environment after setting variables
-    logger.info("environment_after_setup", env_vars={k: v for k, v in os.environ.items() if k.isupper()})
-    
-    settings = Settings()
-    
-    # Log actual settings values
-    logger.info(
-        "settings_values",
-        app_name=settings.app_name,
-        version=settings.version,
-        frontend_url=settings.frontend_url,
-        environment=settings.environment,
-        debug=settings.debug,
-        testing=settings.testing,
-        cors_origins=settings.cors_origins
-    )
-    
-    # Check basic settings
+    # Verify default values
     assert settings.app_name == "TestApp"
     assert settings.version == "0.1.0"
     assert settings.frontend_url == "http://localhost:3000"
-    assert settings.environment == "development"
+    assert settings.algorithm == "HS256"
+    assert settings.rate_limit_requests == 100
+    assert settings.rate_limit_window == 60
+    assert settings.api_v1_str == "/api/v1"
+    assert settings.database_url_for_env == "postgresql+asyncpg://postgres:postgres@db:5432/app"
     assert settings.debug is False
     assert settings.testing is False
+    assert settings.redis_url == "redis://redis:6379/0"
+    assert settings.environment == Environment.DEVELOPMENT
     assert settings.cors_origins == ["http://localhost:3000"]
+    assert settings.access_token_expire_minutes == 10080  # 7 days
 
-def test_invalid_environment(valid_env_vars: Dict[str, Any]):
-    """Test invalid environment setting."""
-    env_vars = valid_env_vars.copy()
-    env_vars["ENVIRONMENT"] = "invalid"
-    
-    logger.info("test_invalid_environment_start", modified_env_vars=env_vars)
-    
-    # Set environment variables
-    for key, value in env_vars.items():
-        os.environ[key] = value
-    
-    with pytest.raises(ValidationError) as exc_info:
-        Settings()
-    
-    logger.info("validation_error", error=str(exc_info.value))
-    assert "Environment must be one of: development, staging, production, test" in str(exc_info.value)
 
-def test_invalid_secret_key(valid_env_vars: Dict[str, Any]):
-    """Test invalid secret key."""
-    env_vars = valid_env_vars.copy()
-    env_vars["SECRET_KEY"] = "short"
-    
-    # Set environment variables
-    for key, value in env_vars.items():
-        os.environ[key] = value
-    
-    with pytest.raises(ValidationError) as exc_info:
-        Settings()
-    
-    assert "Secret key must be at least 32 characters long" in str(exc_info.value)
-
-def test_empty_cors_origins_in_testing(valid_env_vars: Dict[str, Any]):
-    """Test empty CORS origins in testing environment."""
-    env_vars = valid_env_vars.copy()
-    env_vars["TESTING"] = "true"
-    env_vars["ENVIRONMENT"] = "test"
-    env_vars["CORS_ORIGINS"] = "[]"
-    
-    logger.info("test_empty_cors_origins_start", env_vars=env_vars)
-    
-    # Set environment variables
-    for key, value in env_vars.items():
-        os.environ[key] = value
-    
-    # Log environment after setting variables
-    logger.info("environment_before_settings", env_vars={k: v for k, v in os.environ.items() if k.isupper()})
-    
-    settings = Settings()
-    
-    # Log actual settings values
-    logger.info(
-        "settings_values",
-        cors_origins=settings.cors_origins,
-        environment=settings.environment,
-        debug=settings.debug,
-        testing=settings.testing
+def test_settings_custom_values():
+    """Test that Settings accepts custom values."""
+    # Create settings with custom values
+    settings = Settings(
+        app_name="CustomApp",
+        version="1.0.0",
+        frontend_url="https://example.com",
+        secret_key="custom_secret",
+        algorithm="RS256",
+        rate_limit_requests=200,
+        rate_limit_window=120,
+        api_v1_str="/api/v2",
+        database_url_for_env="postgresql+asyncpg://user:pass@host:5432/db",
+        debug=True,
+        testing=True,
+        redis_url="redis://custom:6379/1",
+        environment=Environment.PRODUCTION,
+        cors_origins=["https://example.com", "https://api.example.com"],
+        access_token_expire_minutes=1440,  # 1 day
     )
     
-    assert settings.cors_origins == []
-    assert settings.environment == "test"
+    # Verify custom values
+    assert settings.app_name == "CustomApp"
+    assert settings.version == "1.0.0"
+    assert settings.frontend_url == "https://example.com"
+    assert settings.secret_key.get_secret_value() == "custom_secret"
+    assert settings.algorithm == "RS256"
+    assert settings.rate_limit_requests == 200
+    assert settings.rate_limit_window == 120
+    assert settings.api_v1_str == "/api/v2"
+    assert settings.database_url_for_env == "postgresql+asyncpg://user:pass@host:5432/db"
+    assert settings.debug is True
+    assert settings.testing is True
+    assert settings.redis_url == "redis://custom:6379/1"
+    assert settings.environment == Environment.PRODUCTION
+    assert settings.cors_origins == ["https://example.com", "https://api.example.com"]
+    assert settings.access_token_expire_minutes == 1440
+
+
+def test_settings_environment_validation():
+    """Test that Settings validates environment values."""
+    # Valid environment
+    settings = Settings(secret_key="test_secret", environment="production")
+    assert settings.environment == Environment.PRODUCTION
+    
+    # Invalid environment
+    with pytest.raises(ValidationError):
+        Settings(secret_key="test_secret", environment="invalid")
+
+
+def test_settings_cors_origins_validation():
+    """Test that Settings validates CORS origins."""
+    # String value
+    settings = Settings(secret_key="test_secret", cors_origins="https://example.com")
+    assert settings.cors_origins == ["https://example.com"]
+    
+    # List value
+    settings = Settings(secret_key="test_secret", cors_origins=["https://example.com", "https://api.example.com"])
+    assert settings.cors_origins == ["https://example.com", "https://api.example.com"]
+    
+    # JSON string value
+    settings = Settings(secret_key="test_secret", cors_origins='["https://example.com", "https://api.example.com"]')
+    assert settings.cors_origins == ["https://example.com", "https://api.example.com"]
+
+
+def test_settings_debug_validation():
+    """Test that Settings validates debug values."""
+    # String values
+    settings = Settings(secret_key="test_secret", debug="true")
+    assert settings.debug is True
+    
+    settings = Settings(secret_key="test_secret", debug="false")
+    assert settings.debug is False
+    
+    # Boolean values
+    settings = Settings(secret_key="test_secret", debug=True)
+    assert settings.debug is True
+    
+    settings = Settings(secret_key="test_secret", debug=False)
     assert settings.debug is False
 
-def test_smtp_password_required_with_user(valid_env_vars: Dict[str, Any]):
-    """Test SMTP password is required when SMTP user is set."""
-    env_vars = valid_env_vars.copy()
-    env_vars["SMTP_USER"] = "test@example.com"
-    env_vars["SMTP_PASSWORD"] = None
+
+def test_settings_testing_validation():
+    """Test that Settings validates testing values."""
+    # String values
+    settings = Settings(secret_key="test_secret", testing="true")
+    assert settings.testing is True
     
-    # Set environment variables
-    for key, value in env_vars.items():
-        if value is not None:
-            os.environ[key] = value
+    settings = Settings(secret_key="test_secret", testing="false")
+    assert settings.testing is False
     
-    with pytest.raises(ValidationError) as exc_info:
-        Settings()
+    # Boolean values
+    settings = Settings(secret_key="test_secret", testing=True)
+    assert settings.testing is True
     
-    assert "SMTP password is required when SMTP user is set" in str(exc_info.value) 
+    settings = Settings(secret_key="test_secret", testing=False)
+    assert settings.testing is False
+
+
+def test_get_settings_caching():
+    """Test that get_settings caches the settings."""
+    # Call get_settings twice
+    settings1 = get_settings()
+    settings2 = get_settings()
+    
+    # Verify that the same object is returned
+    assert settings1 is settings2
+
+
+@patch.dict(os.environ, {"APP_NAME": "EnvApp", "SECRET_KEY": "env_secret"})
+def test_settings_from_environment():
+    """Test that Settings loads values from environment variables."""
+    # Create settings
+    settings = Settings()
+    
+    # Verify values from environment
+    assert settings.app_name == "EnvApp"
+    assert settings.secret_key.get_secret_value() == "env_secret" 

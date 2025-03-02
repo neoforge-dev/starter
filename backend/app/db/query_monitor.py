@@ -54,17 +54,13 @@ def record_query_metrics(query: str, duration: float) -> None:
     
     # Update metrics
     metrics["db_query_count"].labels(query_type=query_type, table=table).inc()
-    metrics["db_query_duration"].labels(query_type=query_type, table=table).observe(duration)
+    metrics["db_query_duration_seconds"].labels(query_type=query_type, table=table).observe(duration)
     
     # Log slow queries (>100ms)
     if duration > 0.1:
         metrics["db_slow_queries"].labels(query_type=query_type, table=table).inc()
         logger.warning(
-            "slow_query_detected",
-            query_type=query_type,
-            table=table,
-            duration=duration,
-            query=query,
+            f"Slow query detected: {duration:.4f}s - {query_type} on {table}"
         )
 
 def before_cursor_execute(

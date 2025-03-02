@@ -63,10 +63,26 @@ async def create_admin(
             detail="Email already registered",
         )
 
+    # Create user first
+    user_in = schemas.UserCreate(
+        email=admin_in.email,
+        password=admin_in.password,
+        full_name=admin_in.full_name,
+        is_superuser=True,
+        is_active=admin_in.is_active
+    )
+    user = await crud.user.create(db, obj_in=user_in)
+    
+    # Create admin with user_id
+    admin_data = schemas.AdminCreate(
+        role=admin_in.role,
+        is_active=admin_in.is_active
+    )
     admin = await crud.admin.create(
         db=db,
-        obj_in=admin_in,
+        obj_in=admin_data,
         actor_id=current_admin.id,
+        user_id=user.id
     )
     return admin
 

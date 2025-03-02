@@ -129,8 +129,8 @@ async def readonly_admin_headers(readonly_admin, test_settings):
 
 async def test_create_admin(client: AsyncClient, db: AsyncSession, super_admin_headers: dict) -> None:
     """Test creating a new admin user."""
-    # Clean up existing admins with this email if any
-    await db.execute(text("DELETE FROM admins WHERE email = 'new-admin@example.com'"))
+    # Clean up existing users with this email if any
+    await db.execute(text("DELETE FROM users WHERE email = 'new-admin@example.com'"))
     await db.commit()
     
     admin_data = {

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.4
 
 # Base stage with shared dependencies
-FROM python:3.13-slim-bookworm AS base
+FROM python:3.11-slim-bookworm AS base
 
 # Install UV package manager
 RUN pip install --no-cache-dir uv==0.5.29
@@ -18,20 +18,29 @@ ENV PYTHONUNBUFFERED=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     postgresql-client \
-    libpq5 \
-    gcc \
-    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Builder stage for compiling dependencies
 FROM base AS builder
 
-# Install build dependencies
+# Add Apache Arrow repository and install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+    cmake \
+    ninja-build \
+    pkg-config \
+    libssl-dev \
+    gnupg \
+    lsb-release \
+    wget \
+    && wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
+    && apt-get install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+    libarrow-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
 
 WORKDIR /app
 
@@ -48,7 +57,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 # Install dependencies with cache mount
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install -e . && \
-    uv pip install -e .[dev]
+    uv pip install -e ".[dev]"
 
 # Install test dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -86,12 +95,24 @@ COPY alembic.ini ./
 COPY pytest.ini ./
 COPY .env.test ./
 
-# Install all dependencies in development stage
+# Add Apache Arrow repository and install development dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+    cmake \
+    ninja-build \
+    pkg-config \
+    libssl-dev \
+    gnupg \
+    lsb-release \
+    wget \
+    && wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
+    && apt-get install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+    libarrow-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
 
 # Ensure all test dependencies are installed
 RUN uv pip install -e .[dev] && \

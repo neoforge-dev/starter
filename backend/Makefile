@@ -1,4 +1,8 @@
-.PHONY: test test-all test-db test-api test-core test-coverage rebuild-test clean-test
+.PHONY: test test-all test-db test-api test-core test-coverage rebuild-test clean-test init-test-env
+
+# Initialize test environment
+init-test-env:
+	./scripts/init_test_env.sh
 
 # Run all tests
 test-all:

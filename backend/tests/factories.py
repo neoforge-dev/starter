@@ -16,8 +16,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.item import Item
 from app.models.user import User
+from app.models.admin import Admin, AdminRole
 from app.schemas.user import UserCreate
-from app.core.security import get_password_hash
+from app.core.auth import get_password_hash
 
 class AsyncModelFactory(factory.Factory):
     """
@@ -94,7 +95,7 @@ class ModelFactory(factory.Factory):
         """
         return model_class(**kwargs)
 
-class UserFactory(factory.Factory):
+class UserFactory(AsyncModelFactory):
     """Factory for creating User objects for testing."""
     
     class Meta:
@@ -107,42 +108,23 @@ class UserFactory(factory.Factory):
     is_superuser = False
     
     @classmethod
-    async def create(cls, session: AsyncSession, **kwargs):
-        """Create a user and add it to the database.
-        
-        Args:
-            session: SQLAlchemy async session
-            **kwargs: Attributes to override defaults
-            
-        Returns:
-            User: Created user object
-        """
-        # Create user with factory
-        user = cls(**kwargs)
-        
-        # If password is provided, hash it
+    async def _create(
+        cls,
+        model_class: type[SQLModel],
+        session: AsyncSession,
+        *args: Any,
+        **kwargs: Any
+    ) -> Coroutine[Any, Any, SQLModel]:
+        """Override create to handle password hashing."""
         if "password" in kwargs:
-            user.hashed_password = get_password_hash(kwargs["password"])
+            kwargs["hashed_password"] = get_password_hash(kwargs["password"])
+            del kwargs["password"]
             
-        # Add to database
-        session.add(user)
-        await session.commit()
-        await session.refresh(user)
-        
-        return user
+        return await super()._create(model_class, session, *args, **kwargs)
     
     @classmethod
     async def create_batch(cls, session: AsyncSession, size: int, **kwargs):
-        """Create multiple users and add them to the database.
-        
-        Args:
-            session: SQLAlchemy async session
-            size: Number of users to create
-            **kwargs: Attributes to override defaults
-            
-        Returns:
-            list[User]: List of created user objects
-        """
+        """Create multiple users and add them to the database."""
         users = []
         for _ in range(size):
             user = await cls.create(session=session, **kwargs)
@@ -163,6 +145,53 @@ class UserCreateFactory(ModelFactory):
     full_name = factory.Faker("name")
     password = factory.Faker("password", length=12, special_chars=True, digits=True)
     password_confirm = factory.SelfAttribute("password")
+
+class AdminFactory(AsyncModelFactory):
+    """Factory for creating Admin records with associated User records."""
+    
+    class Meta:
+        model = Admin
+    
+    # Default values for Admin fields
+    role = AdminRole.USER_ADMIN
+    is_active = True
+    last_login = None
+    
+    @classmethod
+    async def _create(
+        cls,
+        model_class: type[SQLModel],
+        session: AsyncSession,
+        *args: Any,
+        **kwargs: Any
+    ) -> Coroutine[Any, Any, SQLModel]:
+        """Create both User and Admin records."""
+        # Extract user-specific fields with defaults
+        email = kwargs.pop('email', None)
+        if not email:
+            email = f"admin{uuid4()}@neoforge.test"
+            
+        password = kwargs.pop('password', 'admin123')
+        full_name = kwargs.pop('full_name', "Admin User")  # Simple default name
+        user_is_active = kwargs.pop('is_active', True)
+        
+        # Create the user first
+        user = await UserFactory.create(
+            session=session,
+            email=email,
+            password=password,
+            full_name=full_name,
+            is_active=user_is_active,
+            is_superuser=True
+        )
+        
+        # Create the admin record
+        kwargs['user_id'] = user.id
+        admin = await super()._create(model_class, session, *args, **kwargs)
+        
+        # Refresh to get the full relationship
+        await session.refresh(admin)
+        return admin
 
 class ItemFactory:
     """Factory for creating Item instances."""

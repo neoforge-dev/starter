@@ -5,6 +5,10 @@
 
 set -e
 
+# Get the directory of the script
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BACKEND_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
+
 # Default values
 COVERAGE=0
 VERBOSE=0
@@ -75,10 +79,13 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Change to backend directory
+cd "$BACKEND_DIR"
+
 # Fix PostgreSQL collation issues if requested
 if [ $FIX_COLLATION -eq 1 ]; then
   echo "Fixing PostgreSQL collation issues..."
-  ./scripts/fix_postgres_collation.sh
+  "$SCRIPT_DIR/fix_postgres_collation.sh"
   # After fixing collation, we should create the database
   CREATE_DB=1
 fi
@@ -115,9 +122,19 @@ fi
 # Create/recreate test database if requested
 if [ $CREATE_DB -eq 1 ]; then
   echo "Creating/recreating test database..."
-  docker compose -f docker-compose.dev.yml exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS test_db;"
-  docker compose -f docker-compose.dev.yml exec -T db psql -U postgres -c "CREATE DATABASE test_db WITH ENCODING 'UTF8' LC_COLLATE='en_US.utf8' LC_CTYPE='en_US.utf8' TEMPLATE=template0;"
-  docker compose -f docker-compose.dev.yml run --rm api python -m app.db.init_db
+  docker compose -f docker-compose.dev.yml exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS test_db;" || {
+    echo "Error: Could not drop test database. Make sure the database service is running."
+    echo "Try running: docker compose -f docker-compose.dev.yml up -d db"
+    exit 1
+  }
+  docker compose -f docker-compose.dev.yml exec -T db psql -U postgres -c "CREATE DATABASE test_db WITH ENCODING 'UTF8' LC_COLLATE='en_US.utf8' LC_CTYPE='en_US.utf8' TEMPLATE=template0;" || {
+    echo "Error: Could not create test database."
+    exit 1
+  }
+  docker compose -f docker-compose.dev.yml run --rm -e DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/test_db api python -m app.db.init_db || {
+    echo "Error: Could not initialize test database."
+    exit 1
+  }
 fi
 
 # Set environment variables for the test container
@@ -129,14 +146,24 @@ ENV_VARS="-e PYTHONPATH=/app \
   -e SECRET_KEY=test_secret_key_replace_in_production_7e1a34bd93b148f0 \
   -e database_url=postgresql+asyncpg://postgres:postgres@db:5432/test_db \
   -e DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/test_db \
+  -e database_url_for_env=postgresql+asyncpg://postgres:postgres@db:5432/test_db \
+  -e DATABASE_URL_FOR_ENV=postgresql+asyncpg://postgres:postgres@db:5432/test_db \
   -e redis_url=redis://redis:6379/1 \
   -e REDIS_URL=redis://redis:6379/1 \
   -e JWT_SECRET=test-secret-123 \
   -e JWT_ALGORITHM=HS256"
 
-# Run the tests
-echo "Running tests with: pytest $ARGS"
-docker compose -f docker-compose.dev.yml run --rm $ENV_VARS test pytest $ARGS
+# Check if test service exists in docker-compose.dev.yml
+if grep -q "test:" docker-compose.dev.yml; then
+  # Run the tests using the test service
+  echo "Running tests with: pytest $ARGS"
+  docker compose -f docker-compose.dev.yml run --rm $ENV_VARS test pytest $ARGS
+else
+  # Fallback to using the api service
+  echo "Test service not found, using api service instead."
+  echo "Running tests with: pytest $ARGS"
+  docker compose -f docker-compose.dev.yml run --rm $ENV_VARS api pytest $ARGS
+fi
 
 # Print success message
 echo "Tests completed successfully!" 

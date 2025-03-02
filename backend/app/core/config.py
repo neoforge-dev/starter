@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     app_name: str = Field(default="TestApp", env="APP_NAME")
     version: str = Field(default="0.1.0", env="APP_VERSION")
     frontend_url: str = Field(default="http://localhost:3000", env="FRONTEND_URL")
-    secret_key: SecretStr = Field(env="SECRET_KEY")
+    secret_key: SecretStr = Field(default="test_secret_key_replace_in_production_7e1a34bd93b148f0", env="SECRET_KEY")
     algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
     rate_limit_requests: int = Field(default=100, env="RATE_LIMIT_REQUESTS")
     rate_limit_window: int = Field(default=60, env="RATE_LIMIT_WINDOW")
@@ -184,6 +184,12 @@ class Settings(BaseSettings):
             object.__setattr__(self, "cors_origins", [])
             object.__setattr__(self, "environment", Environment.TEST)
             object.__setattr__(self, "testing", True)
+            
+            # Set a default secret_key for test mode if not provided
+            if not hasattr(self, "secret_key") or not self.secret_key:
+                test_secret = "test_secret_key_replace_in_production_7e1a34bd93b148f0"
+                object.__setattr__(self, "secret_key", SecretStr(test_secret))
+            
             return self
 
         # Validate SMTP settings

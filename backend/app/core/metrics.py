@@ -25,9 +25,6 @@ def initialize_metrics() -> Dict[str, Any]:
          ["method", "endpoint"],
          buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
     )
-    # Remove the +inf bucket to satisfy test expectations
-    if float("inf") in hist_http._buckets:
-         del hist_http._buckets[float("inf")]
     _metrics["http_request_duration_seconds"] = hist_http
 
     _metrics["db_connections_active"] = Gauge(
@@ -35,14 +32,47 @@ def initialize_metrics() -> Dict[str, Any]:
          "Active database connections"
     )
 
+    # Add db_query_count metric
+    _metrics["db_query_count"] = Counter(
+         "db_query_count_total",
+         "Total number of database queries",
+         ["query_type", "table"]
+    )
+
+    # Add db_slow_queries metric
+    _metrics["db_slow_queries"] = Counter(
+         "db_slow_queries_total",
+         "Total number of slow database queries (>100ms)",
+         ["query_type", "table"]
+    )
+
+    # Add database pool metrics
+    _metrics["db_pool_size"] = Gauge(
+         "db_pool_size",
+         "Current database connection pool size"
+    )
+    
+    _metrics["db_pool_checkouts"] = Counter(
+         "db_pool_checkouts_total",
+         "Total number of database connection checkouts"
+    )
+    
+    _metrics["db_pool_checkins"] = Counter(
+         "db_pool_checkins_total",
+         "Total number of database connection checkins"
+    )
+    
+    _metrics["db_pool_overflow"] = Counter(
+         "db_pool_overflow_total",
+         "Total number of database connection pool overflows"
+    )
+
     hist_db = Histogram(
          "db_query_duration_seconds",
          "Database query duration in seconds",
-         ["query_type"],
+         ["query_type", "table"],
          buckets=[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 5.0]
     )
-    if float("inf") in hist_db._buckets:
-         del hist_db._buckets[float("inf")]
     _metrics["db_query_duration_seconds"] = hist_db
 
     _metrics["redis_operations_total"] = Counter(

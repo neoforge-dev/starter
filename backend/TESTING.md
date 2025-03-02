@@ -29,17 +29,23 @@ The NeoForge backend testing infrastructure is designed to run all tests inside 
   - Supports various options like coverage reporting, verbosity control, and test markers
   - Properly sets environment variables for the test container
   - Handles database creation and initialization
+  - Works from any directory using absolute paths
+  - Includes improved error handling
+  - Automatically detects whether to use the test or api service
 
 - **init_test_env.sh**: Script to initialize the test environment
   - Builds Docker images
   - Starts database and Redis services
   - Creates test database with proper collation settings
   - Runs database migrations
+  - Works from any directory using absolute paths
+  - Includes improved error handling and timeout management
 
 ### Makefile
 
 The Makefile provides convenient commands for running tests:
 
+- `make init-test-env`: Initialize the test environment
 - `make test`: Run all tests
 - `make test-db`: Run database tests only
 - `make test-api`: Run API tests only
@@ -64,24 +70,30 @@ The following changes were made to fix the Docker testing setup:
    - Ensured proper volume mounting for test artifacts
 
 3. **Created run_tests_fixed.sh**:
-   - Fixed path to docker-compose.dev.yml
+   - Fixed path to docker-compose.dev.yml using absolute paths
    - Added proper environment variable handling
    - Used the dedicated test service instead of the api service
+   - Added fallback to api service if test service is not available
+   - Improved error handling and reporting
+   - Made the script work from any directory
 
 4. **Created init_test_env.sh**:
    - Added script to initialize the test environment
    - Ensured database and Redis services are started and healthy
    - Created test database with proper collation settings
    - Ran database migrations
+   - Improved error handling and timeout management
+   - Made the script work from any directory
 
-5. **Created Makefile**:
+5. **Updated Makefile**:
    - Added convenient commands for running different types of tests
+   - Added command to initialize the test environment
    - Simplified common testing operations
 
 6. **Updated Documentation**:
    - Added testing instructions to README.md
    - Updated tests/README.md with new testing approach
-   - Created TESTING.md (this file) to document the testing setup
+   - Updated TESTING.md (this file) to document the testing setup
 
 ## Environment Variables
 
@@ -106,7 +118,8 @@ To run tests, follow these steps:
 
 1. Initialize the test environment:
    ```bash
-   ./scripts/init_test_env.sh
+   cd backend
+   make init-test-env
    ```
 
 2. Run tests using Make:
@@ -154,4 +167,11 @@ If you encounter issues with the testing setup, try the following:
 5. Check environment variables:
    ```bash
    docker compose -f docker-compose.dev.yml run --rm test env | grep -E 'SECRET|DATABASE|REDIS'
-   ``` 
+   ```
+
+6. If you get errors about the test service not being found, check if it's defined in docker-compose.dev.yml:
+   ```bash
+   grep -A 20 "test:" docker-compose.dev.yml
+   ```
+
+7. If the test service is not defined, the script will automatically fall back to using the api service. 
