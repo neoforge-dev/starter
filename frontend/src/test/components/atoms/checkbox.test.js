@@ -105,6 +105,6 @@ describe("NeoCheckbox", () => {
     expect(checkbox.getAttribute("aria-invalid")).to.equal("true");
 
     const errorMessage = element.shadowRoot.querySelector(".error-message");
-    expect(errorMessage.textContent).to.equal("This field is required");
+    expect(errorMessage.textContent.trim()).to.equal("This field is required");
   });
 });

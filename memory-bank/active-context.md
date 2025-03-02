@@ -19,6 +19,7 @@ We are currently refactoring frontend components to use standard class syntax in
 - Icon Component
 - Navigation Component
 - Button Component
+- Checkbox Component
 
 #### Changes Made:
 
@@ -28,11 +29,12 @@ We are currently refactoring frontend components to use standard class syntax in
 - Fixed test issues in Icon component (updated click event test to use dispatchEvent and fixed loading state test)
 - Fixed test issues in Navigation component (updated expanded class handling and keyboard navigation)
 - Refactored Button component to use standard class syntax with all tests passing
+- Refactored Checkbox component to use standard class syntax with all tests passing
+- Fixed test issues in Checkbox component (updated error message test to trim whitespace)
 
 #### Next Steps:
 
 - Continue refactoring remaining components:
-  - Checkbox Component
   - Error Page Component
   - FAQ Accordion Component
 
@@ -77,7 +79,6 @@ We are currently refactoring frontend components to use standard class syntax in
 ### Next Steps
 
 1. Continue refactoring the remaining components:
-   - Checkbox Component
    - Error Page Component
    - FAQ Accordion Component
 

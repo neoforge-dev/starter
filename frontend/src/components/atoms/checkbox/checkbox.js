@@ -17,117 +17,123 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {string} error - Error message to display
  */
 export class NeoCheckbox extends LitElement {
-  static properties = {
-    label: { type: String },
-    checked: { type: Boolean, reflect: true },
-    indeterminate: { type: Boolean, reflect: true },
-    disabled: { type: Boolean, reflect: true },
-    required: { type: Boolean, reflect: true },
-    error: { type: String },
-  };
+  static get properties() {
+    return {
+      label: { type: String },
+      checked: { type: Boolean, reflect: true },
+      indeterminate: { type: Boolean, reflect: true },
+      disabled: { type: Boolean, reflect: true },
+      required: { type: Boolean, reflect: true },
+      error: { type: String },
+    };
+  }
 
-  static styles = [
-    baseStyles,
-    css`
-      :host {
-        display: block;
-        margin-bottom: var(--spacing-sm);
-      }
+  static get styles() {
+    return [
+      baseStyles,
+      css`
+        :host {
+          display: block;
+          margin-bottom: var(--spacing-sm);
+        }
 
-      .checkbox-wrapper {
-        display: flex;
-        align-items: flex-start;
-        gap: var(--spacing-xs);
-        cursor: pointer;
-      }
+        .checkbox-wrapper {
+          display: flex;
+          align-items: flex-start;
+          gap: var(--spacing-xs);
+          cursor: pointer;
+        }
 
-      .checkbox-wrapper.disabled {
-        cursor: not-allowed;
-        opacity: 0.5;
-      }
+        .checkbox-wrapper.disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
 
-      .checkbox-container {
-        position: relative;
-        width: 18px;
-        height: 18px;
-        flex-shrink: 0;
-      }
+        .checkbox-container {
+          position: relative;
+          width: 18px;
+          height: 18px;
+          flex-shrink: 0;
+        }
 
-      input[type="checkbox"] {
-        position: absolute;
-        opacity: 0;
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        cursor: inherit;
-      }
+        input[type="checkbox"] {
+          position: absolute;
+          opacity: 0;
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          cursor: inherit;
+        }
 
-      .checkbox-custom {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: white;
-        border: 2px solid var(--color-border);
-        border-radius: var(--radius-sm);
-        transition: all var(--transition-fast);
-      }
+        .checkbox-custom {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: white;
+          border: 2px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          transition: all var(--transition-fast);
+        }
 
-      input[type="checkbox"]:focus + .checkbox-custom {
-        border-color: var(--color-primary);
-        box-shadow: 0 0 0 2px var(--color-primary-light);
-      }
+        input[type="checkbox"]:focus + .checkbox-custom {
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 2px var(--color-primary-light);
+        }
 
-      input[type="checkbox"]:checked + .checkbox-custom {
-        background: var(--color-primary);
-        border-color: var(--color-primary);
-      }
+        input[type="checkbox"]:checked + .checkbox-custom {
+          background: var(--color-primary);
+          border-color: var(--color-primary);
+        }
 
-      input[type="checkbox"]:checked + .checkbox-custom::after {
-        content: "";
-        position: absolute;
-        left: 5px;
-        top: 2px;
-        width: 4px;
-        height: 8px;
-        border: solid white;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-      }
+        input[type="checkbox"]:checked + .checkbox-custom::after {
+          content: "";
+          position: absolute;
+          left: 5px;
+          top: 2px;
+          width: 4px;
+          height: 8px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+        }
 
-      .checkbox-wrapper.indeterminate .checkbox-custom::after {
-        content: "";
-        position: absolute;
-        left: 3px;
-        top: 7px;
-        width: 8px;
-        height: 2px;
-        background: white;
-      }
+        .checkbox-wrapper.indeterminate .checkbox-custom::after {
+          content: "";
+          position: absolute;
+          left: 3px;
+          top: 7px;
+          width: 8px;
+          height: 2px;
+          background: white;
+        }
 
-      label {
-        font-size: var(--font-size-sm);
-        line-height: 1.4;
-        color: var(--color-text);
-        user-select: none;
-      }
+        label {
+          font-size: var(--font-size-sm);
+          line-height: 1.4;
+          color: var(--color-text);
+          user-select: none;
+        }
 
-      .error-message {
-        margin-top: var(--spacing-xs);
-        color: var(--color-error);
-        font-size: var(--font-size-sm);
-      }
+        .error-message {
+          margin-top: var(--spacing-xs);
+          color: var(--color-error);
+          font-size: var(--font-size-sm);
+        }
 
-      .checkbox-wrapper.error .checkbox-custom {
-        border-color: var(--color-error);
-      }
+        .checkbox-wrapper.error .checkbox-custom {
+          border-color: var(--color-error);
+        }
 
-      .checkbox-wrapper.error input[type="checkbox"]:focus + .checkbox-custom {
-        box-shadow: 0 0 0 2px var(--color-error-light);
-      }
-    `,
-  ];
+        .checkbox-wrapper.error
+          input[type="checkbox"]:focus
+          + .checkbox-custom {
+          box-shadow: 0 0 0 2px var(--color-error-light);
+        }
+      `,
+    ];
+  }
 
   constructor() {
     super();
