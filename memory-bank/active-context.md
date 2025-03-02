@@ -79,6 +79,32 @@ We are refactoring all components that use decorators to use standard class synt
 - Refactored components to use standard class syntax instead of decorators
 - Created simplified test files for memory-intensive components like Autoform
 
+### Backend Testing Improvements
+
+We're currently focused on increasing test coverage for the backend to meet the 80% threshold. We've implemented tests for several core modules:
+
+1. **Redis Module Tests**: Comprehensive tests covering connection pooling, monitoring, metrics, error handling, and health checks, all using mocking.
+2. **Email Module Tests**: Tests for service initialization, email queueing, and various email types, also using mocking.
+3. **Cache Module Tests**: Tests for cache operations and error handling, utilizing mocking.
+4. **Logging Module Tests**: Tests for logging setup and configuration verification.
+5. **Security Module Tests**: Tests for JWT token creation and validation.
+6. **Config Module Tests**: Tests for settings validation and default values.
+7. **Middleware Module Tests**: Tests for security headers middleware.
+8. **Auth Module Tests**: Tests for password hashing and verification.
+9. **Queue Module Tests**: Tests for email queue initialization, enqueuing, dequeuing, marking emails as completed or failed, requeuing, and queue size tracking.
+10. **ML Module Tests**: Tests for model metrics validation, training run logging, and handling of missing MLflow dependency.
+11. **Celery Module Tests**: Tests for Celery app initialization, configuration parameters, task routing, and default queue settings.
+12. **Database Module Tests**: Tests for database pool initialization, cached query functionality with cache hits and misses, and error handling.
+
+We've also created standalone test versions for auth, middleware, and security modules that can run without the full application context, which helps verify that these core components work correctly in isolation.
+
+### Next Steps
+
+1. Implement tests for API endpoints
+2. Create more database-related tests
+3. Run coverage reports to identify areas needing more tests
+4. Address any remaining core modules that need testing
+
 ## Next Steps
 
 ### Backend Testing
@@ -359,4 +385,11 @@ We are currently refactoring frontend components to use standard class syntax in
 
 3. Explore if we can further optimize the Vitest configuration to better handle memory issues.
 
-4. Consider breaking down large test files into smaller, more focused test files to reduce memory usage. 
+4. Consider breaking down large test files into smaller, more focused test files to reduce memory usage.
+
+### Next Steps
+
+1. Continue increasing test coverage for remaining core modules
+2. Implement tests for API endpoints
+3. Create more database-related tests
+4. Run coverage reports to identify areas needing more tests 

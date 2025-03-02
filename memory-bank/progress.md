@@ -13,6 +13,29 @@
 - Model relationships and cascading deletes
 - Comprehensive testing infrastructure
 
+#### Core Module Tests
+- Metrics module functionality
+- Security module (JWT token creation and validation)
+- Datetime utilities
+- Configuration settings
+- Redis module with mocking
+- Email module with mocking
+- Cache module with mocking
+- Logging module with mocking
+- Config module (settings validation and default values)
+- Middleware module (security headers)
+- Auth module (password hashing and verification)
+- Queue module (email queue operations)
+- ML module (model metrics validation and training run logging)
+- Celery module (configuration and task routing)
+- Database module (connection pooling and cached queries)
+
+#### Test Infrastructure
+- Comprehensive test runner script
+- Database test utilities
+- Standalone tests for core modules that can run without the full application context
+- Successfully verified auth, middleware, and security modules with standalone tests
+
 ### Frontend
 - Authentication flow
 - Dashboard page rendering
@@ -204,6 +227,18 @@ We've made progress on the frontend testing infrastructure:
 - ✅ Successfully tested security module (JWT token creation and validation)
 - ✅ Successfully tested datetime utilities
 - ✅ Successfully tested configuration settings
+- ✅ Successfully tested Redis module with mocking
+- ✅ Successfully tested Email module with mocking
+- ✅ Successfully tested Cache module with mocking
+- ✅ Successfully tested Logging module with mocking
+- ✅ Successfully tested Security module (JWT token creation and validation)
+- ✅ Successfully tested Config module (settings validation and default values)
+- ✅ Successfully tested Middleware module (security headers)
+- ✅ Successfully tested Auth module (password hashing and verification)
+- ✅ Successfully tested Queue module (email queue operations)
+- ✅ Successfully tested ML module (model metrics validation and training run logging)
+- ✅ Successfully tested Celery module (configuration and task routing)
+- ✅ Successfully tested Database module (connection pooling and cached queries)
 
 ### Test Infrastructure
 - ✅ Created a comprehensive test runner script with flexible options
