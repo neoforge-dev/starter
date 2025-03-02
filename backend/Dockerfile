@@ -19,6 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     postgresql-client \
     libpq5 \
+    gcc \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Builder stage for compiling dependencies
@@ -46,8 +48,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install -e . && \
     uv pip install -e .[dev]
 
-# Install pytest and its related packages
-RUN uv pip install pytest pytest-asyncio pytest-cov
+# Install additional dependencies explicitly
+RUN uv pip install psutil prometheus_client pytest pytest-asyncio pytest-cov
 
 # Install and configure Alembic
 RUN uv pip install alembic psycopg2-binary && \
@@ -75,7 +77,8 @@ COPY alembic ./alembic
 COPY alembic.ini ./
 
 # Install dependencies in development stage
-RUN uv pip install -e .[dev]
+RUN uv pip install -e .[dev] && \
+    uv pip install psutil prometheus_client
 
 # Production stage
 FROM base AS production

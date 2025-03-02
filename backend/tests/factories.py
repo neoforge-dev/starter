@@ -4,17 +4,20 @@ Test data factories for generating model instances.
 Uses FactoryBoy with SQLModel integration for type-safe test data creation.
 """
 
-from app.models.item import Item
 import factory
 from factory import fuzzy
+from factory.faker import Faker
 from datetime import datetime, timezone
+from typing import Any, Type, Coroutine
+from uuid import uuid4
+
+from sqlmodel import SQLModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.item import Item
 from app.models.user import User
 from app.schemas.user import UserCreate
-from sqlmodel import SQLModel
-from typing import Any, Type, Coroutine
-from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import uuid4
-from app.core.auth import get_password_hash
+from app.core.security import get_password_hash
 
 class AsyncModelFactory(factory.Factory):
     """
@@ -91,38 +94,60 @@ class ModelFactory(factory.Factory):
         """
         return model_class(**kwargs)
 
-class UserFactory:
-    """Factory for creating User test instances."""
+class UserFactory(factory.Factory):
+    """Factory for creating User objects for testing."""
+    
+    class Meta:
+        model = User
+    
+    email = Faker('email')
+    full_name = Faker('name')
+    hashed_password = factory.LazyFunction(lambda: get_password_hash("password123"))
+    is_active = True
+    is_superuser = False
     
     @classmethod
-    async def create(
-        cls,
-        session: AsyncSession,
-        *,
-        email: str | None = None,
-        full_name: str | None = None,
-        password: str | None = None,
-        is_superuser: bool = False,
-        is_active: bool = True,
-        **kwargs
-    ) -> User:
-        """Create and persist a User with required fields."""
-        email = email or f"user-{uuid4().hex}@example.com"
-        full_name = full_name or "Test User"
-        password = password or "securepassword123"
+    async def create(cls, session: AsyncSession, **kwargs):
+        """Create a user and add it to the database.
         
-        user = User(
-            email=email,
-            full_name=full_name,
-            hashed_password=get_password_hash(password),
-            is_superuser=is_superuser,
-            is_active=is_active,
-            **kwargs
-        )
+        Args:
+            session: SQLAlchemy async session
+            **kwargs: Attributes to override defaults
+            
+        Returns:
+            User: Created user object
+        """
+        # Create user with factory
+        user = cls(**kwargs)
+        
+        # If password is provided, hash it
+        if "password" in kwargs:
+            user.hashed_password = get_password_hash(kwargs["password"])
+            
+        # Add to database
         session.add(user)
-        await session.commit()  # Ensure the user is committed to the database
-        await session.refresh(user)  # Refresh to get the latest state
+        await session.commit()
+        await session.refresh(user)
+        
         return user
+    
+    @classmethod
+    async def create_batch(cls, session: AsyncSession, size: int, **kwargs):
+        """Create multiple users and add them to the database.
+        
+        Args:
+            session: SQLAlchemy async session
+            size: Number of users to create
+            **kwargs: Attributes to override defaults
+            
+        Returns:
+            list[User]: List of created user objects
+        """
+        users = []
+        for _ in range(size):
+            user = await cls.create(session=session, **kwargs)
+            users.append(user)
+        return users
 
 class UserCreateFactory(ModelFactory):
     """

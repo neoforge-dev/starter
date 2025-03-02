@@ -1,4 +1,4 @@
-.PHONY: setup serve dev dev-build test clean frontend backend test-lf beep test-frontend test-frontend-watch test-frontend-coverage test-frontend-visual test-frontend-a11y test-frontend-perf test-frontend-all
+.PHONY: setup serve dev dev-build test clean frontend backend test-lf beep test-frontend test-frontend-watch test-frontend-coverage test-frontend-visual test-frontend-a11y test-frontend-perf test-frontend-all test-metrics
 
 setup: ## Initial setup of development environment
 	@echo "Creating development environment..."
@@ -61,6 +61,10 @@ test-frontend-all: ## Run all frontend tests
 test: ## Run all tests backend
 	@echo "Running backend tests..."
 	docker compose -f backend/docker-compose.dev.yml run --rm api pytest --maxfail=5
+
+test-metrics: ## Run metrics tests directly without pytest
+	@echo "Running metrics tests directly..."
+	docker compose -f backend/docker-compose.dev.yml run --rm test bash -c "pip install psutil && python run_metrics_test.py"
 
 clean: ## Clean up development environment
 	@echo "Cleaning up..."

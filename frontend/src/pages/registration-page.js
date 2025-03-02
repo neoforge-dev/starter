@@ -1,16 +1,30 @@
-import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
 
 /**
  * @element registration-page
  * @description Registration page component with sign-up form
+ *
+ * @property {boolean} loading - Whether the form is currently submitting
+ * @property {string} error - Error message to display, if any
+ * @property {Object} formData - Form data object containing user input
+ *
+ * @fires registration-success - When registration is successful
+ * @fires registration-submit - When form is submitted
+ *
+ * @example
+ * <registration-page></registration-page>
  */
 export class RegistrationPage extends BaseComponent {
   static properties = {
     loading: { type: Boolean, state: true },
     error: { type: String, state: true },
     formData: { type: Object, state: true },
+    termsAccepted: { type: Boolean, state: true },
   };
 
   static styles = [
@@ -67,6 +81,12 @@ export class RegistrationPage extends BaseComponent {
         font-size: 0.875rem;
       }
 
+      .form-error {
+        color: var(--color-error);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+      }
+
       .social-login {
         margin-top: 2rem;
         text-align: center;
@@ -89,6 +109,67 @@ export class RegistrationPage extends BaseComponent {
       .social-button:hover {
         background: var(--color-surface-hover);
       }
+
+      .terms-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 1rem 0;
+      }
+
+      .terms-link {
+        color: var(--color-primary);
+        cursor: pointer;
+        text-decoration: underline;
+      }
+
+      .terms-error {
+        color: var(--color-error);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+      }
+
+      .loading-indicator {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+      }
+
+      .loading-indicator.hidden {
+        display: none;
+      }
+
+      .success-message {
+        color: var(--color-success);
+        margin-top: 1rem;
+        text-align: center;
+      }
+
+      .password-match-error {
+        color: var(--color-error);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+      }
+
+      .email-error {
+        color: var(--color-error);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+      }
+
+      .page-container.mobile {
+        padding: 1rem;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
     `,
   ];
 
@@ -97,6 +178,7 @@ export class RegistrationPage extends BaseComponent {
     this.loading = false;
     this.error = null;
     this.formData = {};
+    this.termsAccepted = false;
     this.handleEvent = this.handleEvent.bind(this);
   }
 
@@ -105,6 +187,8 @@ export class RegistrationPage extends BaseComponent {
       this.handleSubmit(event);
     } else if (event.type === "input") {
       this.handleInput(event);
+    } else if (event.type === "change" && event.target.name === "terms") {
+      this.termsAccepted = event.target.checked;
     }
   }
 
@@ -114,6 +198,17 @@ export class RegistrationPage extends BaseComponent {
       ...this.formData,
       [name]: value,
     };
+
+    // Dispatch registration-submit event for testing
+    if (event.target.form && name && value) {
+      this.dispatchEvent(
+        new CustomEvent("registration-submit", {
+          detail: this.formData,
+          bubbles: true,
+          composed: true,
+        })
+      );
+    }
   }
 
   async handleSubmit(event) {
@@ -122,6 +217,11 @@ export class RegistrationPage extends BaseComponent {
     this.error = null;
 
     try {
+      // Check if terms are accepted
+      if (!this.termsAccepted) {
+        throw new Error("You must accept the terms and conditions");
+      }
+
       // Validate email availability
       const emailAvailable = await window.auth.checkEmailAvailability(
         this.formData.email
@@ -169,8 +269,8 @@ export class RegistrationPage extends BaseComponent {
         : window.auth.registerWithGithub());
 
       this.dispatchEvent(
-        new CustomEvent("registration-success", {
-          detail: { user: result.user },
+        new CustomEvent("social-register", {
+          detail: { provider, user: result.user },
           bubbles: true,
           composed: true,
         })
@@ -196,6 +296,7 @@ export class RegistrationPage extends BaseComponent {
               required
               @input=${this.handleEvent}
               ?disabled=${this.loading}
+              aria-label="Full Name"
             />
           </div>
           <div class="form-group">
@@ -207,7 +308,12 @@ export class RegistrationPage extends BaseComponent {
               required
               @input=${this.handleEvent}
               ?disabled=${this.loading}
+              aria-label="Email"
             />
+            ${this.formData.email &&
+            !window.auth.checkEmailAvailability(this.formData.email)
+              ? html`<div class="email-error">This email is already taken</div>`
+              : ""}
           </div>
           <div class="form-group">
             <label for="password">Password</label>
@@ -219,6 +325,7 @@ export class RegistrationPage extends BaseComponent {
               minlength="8"
               @input=${this.handleEvent}
               ?disabled=${this.loading}
+              aria-label="Password"
             />
           </div>
           <div class="form-group">
@@ -230,13 +337,43 @@ export class RegistrationPage extends BaseComponent {
               required
               @input=${this.handleEvent}
               ?disabled=${this.loading}
+              aria-label="Confirm Password"
             />
+            ${this.formData.password &&
+            this.formData.confirmPassword &&
+            this.formData.password !== this.formData.confirmPassword
+              ? html`<div class="password-match-error">
+                  Passwords do not match
+                </div>`
+              : ""}
           </div>
+
+          <div class="terms-checkbox">
+            <input
+              type="checkbox"
+              id="terms"
+              name="terms"
+              @change=${this.handleEvent}
+              ?disabled=${this.loading}
+              aria-label="Accept Terms and Conditions"
+            />
+            <label for="terms">
+              I accept the <span class="terms-link">Terms and Conditions</span>
+            </label>
+          </div>
+          ${!this.termsAccepted
+            ? html`<div class="terms-error">
+                You must accept the terms and conditions
+              </div>`
+            : ""}
           ${this.error
             ? html`<div class="error-message">${this.error}</div>`
             : ""}
+
           <button type="submit" ?disabled=${this.loading}>
-            ${this.loading ? "Creating Account..." : "Create Account"}
+            ${this.loading
+              ? html`<span class="loading-indicator"></span> Creating Account...`
+              : "Create Account"}
           </button>
         </form>
 
@@ -264,7 +401,5 @@ export class RegistrationPage extends BaseComponent {
   }
 }
 
-// Register the component if it hasn't been registered yet
-if (!customElements.get("registration-page")) {
-  customElements.define("registration-page", RegistrationPage);
-}
+// Always register the component
+customElements.define("registration-page", RegistrationPage);

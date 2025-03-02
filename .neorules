@@ -141,3 +141,58 @@
 - Prioritize fixing failing tests before adding new features
 - Maintain comprehensive documentation in Memory Bank
 - Regularly update progress tracking 
+
+// Web Component Testing
+// When testing web components, follow these guidelines:
+
+1. Use the helper functions in `frontend/src/test/helpers/component-test-helper.js` for:
+   - Creating and mounting components
+   - Finding elements in shadow DOM
+   - Simulating user interactions
+   - Waiting for component updates
+   - Handling events
+
+2. Structure tests with proper setup and cleanup:
+   ```javascript
+   beforeEach(async () => {
+     // Mock dependencies
+     window.someService = { method: vi.fn() };
+     
+     // Create component
+     element = await createComponent("my-component");
+   });
+
+   afterEach(() => {
+     // Clean up
+     removeComponent(element);
+     delete window.someService;
+   });
+   ```
+
+3. Use shadow DOM-aware queries:
+   ```javascript
+   // ❌ Don't use:
+   element.querySelector(".button");
+   
+   // ✅ Do use:
+   findInShadow(element, ".button");
+   ```
+
+4. Wait for asynchronous updates:
+   ```javascript
+   click(button);
+   await waitForUpdate(element);
+   ```
+
+5. Test one behavior per test to reduce complexity and memory usage.
+
+6. Run tests with memory optimization:
+   ```bash
+   ./run-tests.sh path/to/test.js
+   ```
+
+7. If encountering memory issues:
+   - Break down large test files into smaller ones
+   - Ensure proper cleanup in afterEach
+   - Reduce the number of assertions per test
+   - Use the simplified test approach for complex components 

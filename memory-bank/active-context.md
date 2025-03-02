@@ -11,6 +11,20 @@ We are currently working on testing the backend components of the NeoForge appli
 3. DateTime Utilities - UTC time functions and timezone-aware conversions
 4. Configuration Settings - Default values and settings validation
 
+#### Recent Improvements
+1. Created a comprehensive test runner script (`backend/scripts/run_tests.sh`) with options for:
+   - Coverage reporting
+   - Verbosity control
+   - Test markers
+   - Maximum failure limit
+   - Docker container rebuilding
+   - Test database creation
+2. Implemented a `UserFactory` in `backend/tests/factories.py` for generating test user objects
+3. Created mock tests for the metrics module to demonstrate testing without dependencies
+4. Fixed import organization in the factories module
+5. Added tests for all factory classes (`UserFactory`, `UserCreateFactory`, `ItemFactory`)
+6. Created a comprehensive README for backend testing (`backend/tests/README.md`)
+
 #### Issues Encountered
 - PostgreSQL container has collation issues preventing database creation
 - Unable to create the test_db database needed for most tests
@@ -21,6 +35,9 @@ We are currently working on testing the backend components of the NeoForge appli
 - Created simplified test files that don't require database fixtures
 - Focused on testing core functionality that can be isolated from database dependencies
 - Ran tests with the --no-cov flag to bypass coverage requirements
+- Implemented factory pattern for test data generation
+- Created a flexible test runner script to streamline the testing process
+- Added comprehensive documentation for the testing infrastructure
 
 ### Component Refactoring
 We are refactoring all components that use decorators to use standard class syntax. This is to ensure compatibility with future versions of Lit and to make the codebase more maintainable.
@@ -272,3 +289,57 @@ We are currently refactoring frontend components to use standard class syntax in
 - Local database for testing and development 
 - JSDOM for component testing (with limitations)
 - Vitest for running unit tests 
+
+## Recent Changes
+
+1. Created a comprehensive web component testing guide at `frontend/src/test/WEB_COMPONENT_TESTING.md`
+2. Developed a component test helper file at `frontend/src/test/helpers/component-test-helper.js`
+3. Updated the registration page test to use the new helper functions
+4. Created a script to run tests with optimized memory settings at `frontend/run-tests.sh`
+5. Created a simplified version of the registration page test
+
+## Next Steps
+
+1. **Memory Optimization**: We need to further optimize the testing environment to handle memory issues. The current approach still encounters "JavaScript heap out of memory" errors.
+
+2. **Test Isolation**: Ensure each test is properly isolated and cleans up after itself to prevent memory leaks.
+
+3. **CI Integration**: Update the CI pipeline to use our optimized testing approach.
+
+4. **Documentation**: Complete the web component testing guide with more examples and best practices.
+
+## Active Decisions
+
+1. **Testing Strategy**: We've decided to use a custom helper library for testing web components instead of relying solely on standard testing utilities. This approach provides better support for shadow DOM and component lifecycle management.
+
+2. **Memory Management**: We're addressing memory issues by:
+   - Running tests in isolation
+   - Reducing the Node.js memory limit
+   - Forcing garbage collection between tests
+   - Simplifying test cases
+
+3. **Test Structure**: We're adopting a pattern where each test:
+   - Creates components in beforeEach
+   - Cleans up in afterEach
+   - Tests one specific behavior
+   - Uses shadow DOM-aware queries
+
+## Known Issues
+
+1. **Memory Leaks**: The tests are still encountering memory issues, even with optimized settings. This suggests there might be memory leaks in the components or test setup.
+
+2. **Shadow DOM Access**: Standard DOM queries don't work with shadow DOM, requiring special helper functions.
+
+3. **Component Lifecycle**: Tests may run before components are fully initialized, leading to flaky tests.
+
+4. **Event Handling**: Events may not propagate as expected across shadow DOM boundaries.
+
+## Considerations
+
+1. Consider switching to a different testing framework that better handles web components and memory management.
+
+2. Investigate if there are memory leaks in the component implementation that need to be addressed.
+
+3. Explore if we can further optimize the Vitest configuration to better handle memory issues.
+
+4. Consider breaking down large test files into smaller, more focused test files to reduce memory usage. 

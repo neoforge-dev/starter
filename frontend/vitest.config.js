@@ -97,6 +97,21 @@ export default defineConfig({
     },
     // Enable experimental features for decorator support
     experimentalBabelParserPlugins: ["decorators-legacy", "classProperties"],
+    // Run tests sequentially to avoid memory issues
+    sequence: {
+      shuffle: false,
+      concurrent: false,
+    },
+    // Add memory management options
+    pool: "forks",
+    // Run tests in isolation
+    isolate: false,
+    // Add memory management options
+    memoryLimit: "512MB", // Limit memory usage
+    // Force garbage collection between tests
+    forceGc: true,
+    // Run tests one at a time
+    singleThread: true,
   },
   resolve: {
     conditions: ["browser", "development", "default"],
