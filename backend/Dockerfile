@@ -37,6 +37,8 @@ WORKDIR /app
 
 # Copy only dependency files first
 COPY pyproject.toml ./
+COPY requirements.txt ./
+COPY requirements.test.txt ./
 
 # Create a virtual environment
 ENV VIRTUAL_ENV=/opt/venv
@@ -48,8 +50,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install -e . && \
     uv pip install -e .[dev]
 
+# Install test dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install -r requirements.test.txt
+
 # Install additional dependencies explicitly
-RUN uv pip install psutil prometheus_client pytest pytest-asyncio pytest-cov
+RUN uv pip install psutil prometheus_client pytest pytest-asyncio pytest-cov httpx
 
 # Install and configure Alembic
 RUN uv pip install alembic psycopg2-binary && \
@@ -69,16 +75,28 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy dependency files
 COPY pyproject.toml ./
+COPY requirements.txt ./
+COPY requirements.test.txt ./
 
 # Copy application code
 COPY app ./app
 COPY tests ./tests
 COPY alembic ./alembic
 COPY alembic.ini ./
+COPY pytest.ini ./
+COPY .env.test ./
 
-# Install dependencies in development stage
+# Install all dependencies in development stage
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure all test dependencies are installed
 RUN uv pip install -e .[dev] && \
-    uv pip install psutil prometheus_client
+    uv pip install -r requirements.test.txt && \
+    uv pip install psutil prometheus_client pytest pytest-asyncio pytest-cov httpx
 
 # Production stage
 FROM base AS production

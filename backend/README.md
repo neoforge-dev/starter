@@ -26,6 +26,57 @@ uvicorn app.main:app --reload
 
 Visit `http://localhost:8000/docs` for interactive API documentation.
 
+## 🧪 Running Tests
+
+All tests are designed to run inside Docker containers to ensure consistent environments and proper isolation.
+
+### Initialize Test Environment
+
+```bash
+# Initialize the test environment (builds containers, creates test database)
+./scripts/init_test_env.sh
+```
+
+### Run Tests with Make
+
+```bash
+# Run all tests
+make test
+
+# Run specific test suites
+make test-db     # Database tests
+make test-api    # API tests
+make test-core   # Core module tests
+
+# Run tests with coverage report
+make test-coverage
+
+# Rebuild containers and run tests
+make rebuild-test
+
+# Create/recreate test database and run tests
+make test-with-db
+
+# Fix PostgreSQL collation issues and run tests
+make fix-collation
+```
+
+### Run Tests Directly
+
+```bash
+# Run all tests with verbose output
+./scripts/run_tests_fixed.sh -v
+
+# Run specific tests
+./scripts/run_tests_fixed.sh -v tests/test_api
+
+# Run tests with specific markers
+./scripts/run_tests_fixed.sh -m "not db" -v
+
+# Run tests with coverage report
+./scripts/run_tests_fixed.sh -c -v
+```
+
 ## 🏗 Project Structure
 
 ```

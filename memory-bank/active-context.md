@@ -96,14 +96,22 @@ We're currently focused on increasing test coverage for the backend to meet the 
 11. **Celery Module Tests**: Tests for Celery app initialization, configuration parameters, task routing, and default queue settings.
 12. **Database Module Tests**: Tests for database pool initialization, cached query functionality with cache hits and misses, and error handling.
 
+We've also created comprehensive tests for API endpoints:
+
+1. **Authentication Endpoints**: Tests for login with valid and invalid credentials, token validation, and handling inactive users.
+2. **User Management Endpoints**: Tests for creating, reading, updating, and deleting users, with proper permission checks.
+3. **Item Management Endpoints**: Tests for creating, reading, updating, and deleting items, with ownership validation and error handling.
+4. **Admin Management Endpoints**: Tests for admin operations with role-based permission checks, ensuring proper access control.
+5. **Health Check Endpoints**: Tests for system health monitoring, including database, Redis, and system resource checks.
+
 We've also created standalone test versions for auth, middleware, and security modules that can run without the full application context, which helps verify that these core components work correctly in isolation.
 
 ### Next Steps
 
-1. Implement tests for API endpoints
-2. Create more database-related tests
-3. Run coverage reports to identify areas needing more tests
-4. Address any remaining core modules that need testing
+1. Create more database-related tests
+2. Run coverage reports to identify areas needing more tests
+3. Address any remaining core modules that need testing
+4. Implement tests for any remaining API endpoints
 
 ## Next Steps
 
@@ -393,3 +401,42 @@ We are currently refactoring frontend components to use standard class syntax in
 2. Implement tests for API endpoints
 3. Create more database-related tests
 4. Run coverage reports to identify areas needing more tests 
+
+### Docker Testing Setup Fixes
+
+We've fixed the Docker testing setup to ensure all tests run properly inside Docker containers. The main issues were related to environment variables and path configurations. Here's what we've done:
+
+1. **Fixed Environment Variable Handling**:
+   - Added environment variables in both lowercase and uppercase formats in docker-compose.dev.yml
+   - Explicitly passed environment variables to the test container in run_tests_fixed.sh
+   - Ensured the SECRET_KEY variable is properly set, which was causing the validation error
+
+2. **Improved Docker Configuration**:
+   - Updated the Dockerfile to ensure all test dependencies are properly installed
+   - Added explicit installation of test dependencies from requirements.test.txt
+   - Ensured all required packages are installed in the development stage
+   - Added copying of test configuration files like pytest.ini and .env.test
+
+3. **Created Better Test Runner Scripts**:
+   - Fixed run_tests_fixed.sh to use the correct path to docker-compose.dev.yml
+   - Created init_test_env.sh to properly initialize the test environment
+   - Added proper environment variable handling in all scripts
+
+4. **Added Makefile for Convenience**:
+   - Created a Makefile with convenient commands for running different types of tests
+   - Added commands for running database tests, API tests, core module tests, etc.
+   - Added commands for rebuilding containers and fixing collation issues
+
+5. **Improved Documentation**:
+   - Created TESTING.md to document the testing setup in detail
+   - Updated README.md with testing instructions
+   - Updated tests/README.md with the new testing approach
+
+These changes ensure that all tests can now run properly inside Docker containers, including the database tests. The setup provides consistent test environments and proper isolation, making the tests more reliable and reproducible.
+
+### Next Steps
+
+1. Run all tests using the new Docker setup to verify everything works correctly
+2. Continue increasing test coverage to meet the 80% threshold
+3. Create more tests for database operations and API endpoints
+4. Implement better test isolation to reduce dependencies on shared fixtures 

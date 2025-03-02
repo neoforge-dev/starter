@@ -98,11 +98,16 @@ services:
       - debug=1
       - testing=1
       - secret_key=test_secret_key_replace_in_production_7e1a34bd93b148f0
+      - SECRET_KEY=test_secret_key_replace_in_production_7e1a34bd93b148f0
       - database_url=postgresql+asyncpg://postgres:postgres@db:5432/test_db
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/test_db
       - redis_url=redis://redis:6379/1
+      - REDIS_URL=redis://redis:6379/1
       - COVERAGE_FILE=/tmp/.coverage
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - JWT_SECRET=test-secret-123
+      - JWT_ALGORITHM=HS256
     depends_on:
       db:
         condition: service_healthy

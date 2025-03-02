@@ -30,6 +30,13 @@
 - Celery module (configuration and task routing)
 - Database module (connection pooling and cached queries)
 
+#### API Endpoint Tests
+- Authentication endpoints (login, token validation)
+- User management endpoints (CRUD operations)
+- Item management endpoints (CRUD operations)
+- Admin management endpoints (CRUD operations with role-based permissions)
+- Health check endpoints
+
 #### Test Infrastructure
 - Comprehensive test runner script
 - Database test utilities
@@ -312,4 +319,13 @@ We've made progress on the frontend testing infrastructure:
 12. Autoform Component (with simplified tests)
 
 ### Components Still Using Decorators
-None - all components have been successfully refactored! 
+None - all components have been successfully refactored!
+
+### Docker Testing Setup
+- ✅ Fixed Docker testing setup to ensure all tests run properly inside containers
+- ✅ Created a Makefile with convenient commands for running different types of tests
+- ✅ Created init_test_env.sh script to initialize the test environment
+- ✅ Fixed run_tests_fixed.sh script to use the correct path to docker-compose.dev.yml
+- ✅ Updated Dockerfile to ensure all test dependencies are properly installed
+- ✅ Added environment variables in both lowercase and uppercase formats in docker-compose.dev.yml
+- ✅ Created comprehensive documentation in TESTING.md 

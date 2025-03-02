@@ -10,12 +10,64 @@ The tests are organized as follows:
 - `tests/factories.py`: Contains factory classes for generating test data
 - `tests/test_api/`: Contains tests for API endpoints
 - `tests/test_core/`: Contains tests for core functionality
-- `tests/test_crud/`: Contains tests for database operations
+- `tests/test_db/`: Contains tests for database operations
+- `tests/test_crud/`: Contains tests for database CRUD operations
 - `tests/test_models/`: Contains tests for data models
 
 ## Running Tests
 
-We provide a convenient script to run tests with various options:
+All tests are designed to run inside Docker containers to ensure consistent environments and proper isolation.
+
+### Initialize Test Environment
+
+```bash
+# Initialize the test environment (builds containers, creates test database)
+./scripts/init_test_env.sh
+```
+
+### Run Tests with Make
+
+```bash
+# Run all tests
+make test
+
+# Run specific test suites
+make test-db     # Database tests
+make test-api    # API tests
+make test-core   # Core module tests
+
+# Run tests with coverage report
+make test-coverage
+
+# Rebuild containers and run tests
+make rebuild-test
+
+# Create/recreate test database and run tests
+make test-with-db
+
+# Fix PostgreSQL collation issues and run tests
+make fix-collation
+```
+
+### Run Tests Directly
+
+```bash
+# Run all tests with verbose output
+./scripts/run_tests_fixed.sh -v
+
+# Run specific tests
+./scripts/run_tests_fixed.sh -v tests/test_api
+
+# Run tests with specific markers
+./scripts/run_tests_fixed.sh -m "not db" -v
+
+# Run tests with coverage report
+./scripts/run_tests_fixed.sh -c -v
+```
+
+### Legacy Test Runner
+
+We also maintain the original test runner for backward compatibility:
 
 ```bash
 # Run all tests
