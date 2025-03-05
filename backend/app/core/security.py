@@ -77,7 +77,11 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
     
-    user = await user_crud.get(db, id=int(user_id))
+    try:
+        user = await user_crud.get(db, id=int(user_id))
+    except ValueError:
+        raise credentials_exception
+        
     if user is None:
         raise credentials_exception
     return user 

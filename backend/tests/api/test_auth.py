@@ -18,6 +18,7 @@ async def test_login_access_token(client: AsyncClient, db: AsyncSession) -> None
         password="testpassword123",
         is_active=True
     )
+    await db.commit()
     
     # Test login
     response = await client.post(

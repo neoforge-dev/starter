@@ -70,50 +70,23 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 
                 return response
 
-            # Skip validation for endpoints that require authentication
-            # Let FastAPI's authentication handle these cases
-            if endpoint.startswith(settings.api_v1_str) and (
-                not request.headers.get("Authorization") or  # No auth token
-                request.headers.get("Authorization", "").startswith("Bearer ")  # Has auth token
-            ):
-                response = await call_next(request)
-                duration = time.time() - start_time
-                
-                # Record metrics
-                self.metrics["http_request_duration_seconds"].labels(
-                    method=method,
-                    endpoint=endpoint,
-                ).observe(duration)
-                
-                self.metrics["http_requests"].labels(
-                    method=method,
-                    endpoint=endpoint,
-                    status=str(response.status_code),
-                ).inc()
+            # For API endpoints, validate request body first
+            if endpoint.startswith(settings.api_v1_str):
+                # Validate request headers
+                validation_error = await self._validate_headers(request)
+                if validation_error:
+                    return validation_error
 
-                return response
+                # Validate request body for POST/PUT/PATCH requests
+                if method in ["POST", "PUT", "PATCH"]:
+                    try:
+                        body = await request.json()
+                    except json.JSONDecodeError:
+                        return JSONResponse(
+                            status_code=422,
+                            content={"detail": "Invalid JSON in request body"}
+                        )
 
-            # Validate request headers for other endpoints
-            validation_error = await self._validate_headers(request)
-            if validation_error:
-                return validation_error
-            
-            # Validate Content-Type for POST/PUT/PATCH requests
-            if request.method in ["POST", "PUT", "PATCH"]:
-                content_type = request.headers.get("content-type")
-                if not content_type or "application/json" not in content_type.lower():
-                    return JSONResponse(
-                        status_code=415,
-                        content={"message": "Content-Type must be application/json"}
-                    )
-
-                # Validate Content-Length is present
-                if "content-length" not in request.headers:
-                    return JSONResponse(
-                        status_code=422,
-                        content={"message": "Content-Length header is required"}
-                    )
-            
             # Process request and track duration
             response = await call_next(request)
             duration = time.time() - start_time

@@ -63,7 +63,7 @@ services:
     build:
       context: ./backend
       target: development
-    command: pytest --watch
+    command: pytest
     volumes:
       - ./backend:/app
     environment:

@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class EmailWorker:
     def __init__(self, queue):
         self.queue = queue
+        self.is_running = False
 
     async def process_one(self) -> bool:
         """Process one email from the queue."""
@@ -48,6 +49,16 @@ class EmailWorker:
         except Exception as e:
             logger.error(f"Error processing email queue: {e}")
             return False
+            
+    def start(self):
+        """Start the email worker."""
+        logger.info("Starting email worker")
+        self.is_running = True
+        
+    def stop(self):
+        """Stop the email worker."""
+        logger.info("Stopping email worker")
+        self.is_running = False
 
 # Create a singleton instance of EmailWorker. The actual queue should be set properly in production.
 email_worker = EmailWorker(queue=None) 

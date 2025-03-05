@@ -73,9 +73,24 @@ uvicorn app.main:app --reload
 cd frontend
 npm run test:unit
 
-# Run backend tests
+# Run backend tests (IMPORTANT: Always use Docker for backend tests)
 cd backend
-pytest
+make test                # Run all tests
+make test-api            # Run API tests only
+make test-db             # Run database tests only
+make test-core           # Run core module tests only
+make test-coverage       # Run tests with coverage report
+make rebuild-test        # Rebuild test containers and run tests
+make test-with-db        # Create/recreate test database and run tests
+make fix-collation       # Fix PostgreSQL collation issues and run tests
+make init-test-env       # Initialize test environment
+
+# Alternative direct script usage
+cd backend
+./scripts/run_tests_fixed.sh -v                # Run all tests verbosely
+./scripts/run_tests_fixed.sh -v -c             # Run all tests with coverage
+./scripts/run_tests_fixed.sh -v tests/api      # Run API tests only
+./scripts/init_test_env.sh                     # Initialize test environment
 
 # Build frontend for production
 cd frontend

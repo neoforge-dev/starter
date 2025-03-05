@@ -5,6 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, ConfigDict
 
 from app.models.admin import AdminRole
+from app.schemas.user import UserCreate
 
 
 class AdminPermissionBase(BaseModel):
@@ -52,6 +53,29 @@ class AdminCreate(AdminBase):
     email: EmailStr
     full_name: str
     password: str
+    password_confirm: str
+
+    def model_post_init(self, __context) -> None:
+        """Validate that password and password_confirm match."""
+        super().model_post_init(__context)
+        if self.password != self.password_confirm:
+            raise ValueError("Passwords do not match")
+
+    def to_user_create(self) -> UserCreate:
+        """Convert to UserCreate schema."""
+        return UserCreate(
+            email=self.email,
+            full_name=self.full_name,
+            password=self.password,
+            password_confirm=self.password_confirm,
+            is_superuser=True,
+            is_active=self.is_active
+        )
+
+
+class AdminCreateWithoutUser(AdminBase):
+    """Schema for creating admin users when user already exists."""
+    pass
 
 
 class AdminUpdate(AdminBase):
@@ -72,6 +96,15 @@ class Admin(AdminBase):
     last_login: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+
+
+class AdminWithUser(Admin):
+    """Schema for admin responses with user information."""
+    model_config = ConfigDict(from_attributes=True)
+    
+    email: EmailStr
+    full_name: str
+    user_id: int
 
 
 class AdminAuditLogBase(BaseModel):

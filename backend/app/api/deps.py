@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+import logging
 
 from app import crud
 from app.models.user import User
@@ -32,21 +33,29 @@ async def get_current_user(
     token: str = Depends(reusable_oauth2)
 ) -> User:
     """Get current user from token."""
+    logger = logging.getLogger(__name__)
+    logger.debug(f"Attempting to decode token: {token[:10]}...")
+    
     try:
         payload = jwt.decode(
             token, settings.secret_key.get_secret_value(), algorithms=[settings.algorithm]
         )
+        logger.debug(f"Token decoded successfully, payload sub: {payload.get('sub')}")
         token_data = TokenPayload(**payload)
-    except (jwt.JWTError, ValidationError):
+    except (jwt.JWTError, ValidationError) as e:
+        logger.debug(f"Token validation error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
         )
     user = await crud.user.get(db, id=token_data.sub)
     if not user:
+        logger.debug(f"User not found for id: {token_data.sub}")
         raise HTTPException(status_code=404, detail="User not found")
     if not user.is_active:
+        logger.debug(f"User found but not active for id: {token_data.sub}")
         raise HTTPException(status_code=400, detail="Inactive user")
+    logger.debug(f"User found for id: {token_data.sub}, email: {user.email}")
     return user
 
 
@@ -75,18 +84,31 @@ async def get_current_admin(
     current_user: User = Depends(get_current_user),
 ) -> Admin:
     """Get current admin user."""
-    admin = await crud.admin.get_by_user_id(db=db, user_id=current_user.id)
-    if not admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user is not an admin",
-        )
-    if not admin.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive admin user",
-        )
-    return admin
+    logger = logging.getLogger(__name__)
+    logger.debug(f"Attempting to get admin for user_id: {current_user.id}")
+    
+    try:
+        admin = await crud.admin.get_by_user_id(db=db, user_id=current_user.id)
+        if not admin:
+            logger.debug(f"No admin found for user_id: {current_user.id} - raising 403 FORBIDDEN")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="The user is not an admin",
+            )
+        if not admin.is_active:
+            logger.debug(f"Admin found but not active for user_id: {current_user.id} - raising 403 FORBIDDEN")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Inactive admin user",
+            )
+        logger.debug(f"Admin found for user_id: {current_user.id}, admin_id: {admin.id}, role: {admin.role}")
+        return admin
+    except HTTPException as e:
+        logger.debug(f"HTTPException in get_current_admin: status_code={e.status_code}, detail={e.detail}")
+        raise
+    except Exception as e:
+        logger.debug(f"Unexpected exception in get_current_admin: {str(e)}")
+        raise
 
 
 async def get_current_active_admin(

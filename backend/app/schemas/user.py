@@ -21,7 +21,14 @@ class UserCreate(UserBase):
     
     email: EmailStr
     password: str
+    password_confirm: str
     full_name: str
+    
+    def model_post_init(self, __context) -> None:
+        """Validate that password and password_confirm match."""
+        super().model_post_init(__context)
+        if self.password != self.password_confirm:
+            raise ValueError("Passwords do not match")
 
 
 # Properties to receive via API on update

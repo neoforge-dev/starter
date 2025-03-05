@@ -18,7 +18,9 @@ from app.models.item import Item
 from app.models.user import User
 from app.models.admin import Admin, AdminRole
 from app.schemas.user import UserCreate
-from app.core.auth import get_password_hash
+
+# Configure faker globally
+factory.Faker._DEFAULT_LOCALE = 'en_US'
 
 class AsyncModelFactory(factory.Factory):
     """
@@ -96,40 +98,46 @@ class ModelFactory(factory.Factory):
         return model_class(**kwargs)
 
 class UserFactory(AsyncModelFactory):
-    """Factory for creating User objects for testing."""
-    
+    """Factory for creating User instances."""
+
     class Meta:
         model = User
-    
-    email = Faker('email')
-    full_name = Faker('name')
-    hashed_password = factory.LazyFunction(lambda: get_password_hash("password123"))
+
+    email = Faker("email", locale="en_US")
+    full_name = Faker("name", locale="en_US")
+    password = "testpass123"
     is_active = True
     is_superuser = False
-    
+    created_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+
     @classmethod
-    async def _create(
-        cls,
-        model_class: type[SQLModel],
-        session: AsyncSession,
-        *args: Any,
-        **kwargs: Any
-    ) -> Coroutine[Any, Any, SQLModel]:
-        """Override create to handle password hashing."""
+    async def _create(cls, model_class: type[SQLModel], session: AsyncSession, *args: Any, **kwargs: Any) -> Coroutine[Any, Any, SQLModel]:
+        """Create a User instance with password hashing."""
+        from app.core.auth import get_password_hash  # Import here to avoid circular import
+        
+        # Ensure email and full_name are set
+        if "email" not in kwargs:
+            kwargs["email"] = cls.email.evaluate(None, None, {"locale": "en_US"})
+        if "full_name" not in kwargs:
+            kwargs["full_name"] = cls.full_name.evaluate(None, None, {"locale": "en_US"})
+
+        # Handle password hashing
         if "password" in kwargs:
-            kwargs["hashed_password"] = get_password_hash(kwargs["password"])
-            del kwargs["password"]
-            
+            kwargs['hashed_password'] = get_password_hash(kwargs.pop("password"))
+        elif not kwargs.get("hashed_password"):
+            kwargs["hashed_password"] = get_password_hash(cls.password)
+
+        # Ensure is_active is set
+        if "is_active" not in kwargs:
+            kwargs["is_active"] = cls.is_active
+
         return await super()._create(model_class, session, *args, **kwargs)
-    
+
     @classmethod
-    async def create_batch(cls, session: AsyncSession, size: int, **kwargs):
-        """Create multiple users and add them to the database."""
-        users = []
-        for _ in range(size):
-            user = await cls.create(session=session, **kwargs)
-            users.append(user)
-        return users
+    async def create_batch(cls, session: AsyncSession, size: int = 1, **kwargs: Any) -> list[SQLModel]:
+        """Create multiple User instances."""
+        return [await cls.create(session=session, **kwargs) for _ in range(size)]
 
 class UserCreateFactory(ModelFactory):
     """
@@ -141,82 +149,78 @@ class UserCreateFactory(ModelFactory):
     class Meta:
         model = UserCreate
         
-    email = factory.Sequence(lambda n: f"newuser{n}@neoforge.test")
-    full_name = factory.Faker("name")
-    password = factory.Faker("password", length=12, special_chars=True, digits=True)
+    email = factory.Sequence(lambda n: f"newuser{n}@example.com")
+    full_name = Faker("name", locale="en_US")
+    password = factory.Faker("password", length=12, special_chars=True, digits=True, locale="en_US")
     password_confirm = factory.SelfAttribute("password")
 
-class AdminFactory(AsyncModelFactory):
-    """Factory for creating Admin records with associated User records."""
+class AdminFactory(ModelFactory):
+    """Factory for creating Admin model instances."""
     
     class Meta:
         model = Admin
-    
-    # Default values for Admin fields
-    role = AdminRole.USER_ADMIN
+        
+    email = Faker("email", locale="en_US")
+    full_name = Faker("name", locale="en_US")
+    password = "testpass123"
     is_active = True
+    role = AdminRole.USER_ADMIN
     last_login = None
     
     @classmethod
-    async def _create(
-        cls,
-        model_class: type[SQLModel],
-        session: AsyncSession,
-        *args: Any,
-        **kwargs: Any
-    ) -> Coroutine[Any, Any, SQLModel]:
-        """Create both User and Admin records."""
-        # Extract user-specific fields with defaults
-        email = kwargs.pop('email', None)
-        if not email:
-            email = f"admin{uuid4()}@neoforge.test"
-            
-        password = kwargs.pop('password', 'admin123')
-        full_name = kwargs.pop('full_name', "Admin User")  # Simple default name
-        user_is_active = kwargs.pop('is_active', True)
+    async def _create(cls, model_class: Type[Admin], session: AsyncSession, **kwargs) -> Admin:
+        """Create an Admin instance with an associated User."""
+        # Extract user fields with defaults
+        user_fields = {
+            "email": kwargs.pop("email", cls.email.evaluate(None, None, {"locale": "en_US"})),
+            "full_name": kwargs.pop("full_name", cls.full_name.evaluate(None, None, {"locale": "en_US"})),
+            "password": kwargs.pop("password", cls.password),
+            "is_active": kwargs.pop("is_active", cls.is_active),
+            "is_superuser": True  # Always set superuser for admin users
+        }
         
-        # Create the user first
-        user = await UserFactory.create(
-            session=session,
-            email=email,
-            password=password,
-            full_name=full_name,
-            is_active=user_is_active,
-            is_superuser=True
-        )
+        # Create user first
+        user = await UserFactory.create(session=session, **user_fields)
         
-        # Create the admin record
-        kwargs['user_id'] = user.id
-        admin = await super()._create(model_class, session, *args, **kwargs)
+        # Create admin with user_id
+        kwargs["user_id"] = user.id
+        kwargs.setdefault("role", cls.role)
+        kwargs.setdefault("is_active", user.is_active)
+        kwargs.setdefault("last_login", cls.last_login)
         
-        # Refresh to get the full relationship
-        await session.refresh(admin)
+        admin = model_class(**kwargs)
+        session.add(admin)
+        await session.commit()
+        await session.refresh(admin, ["user"])
+        
         return admin
 
-class ItemFactory:
+class ItemFactory(AsyncModelFactory):
     """Factory for creating Item instances."""
 
+    class Meta:
+        model = Item
+
+    title = Faker("sentence", nb_words=4, locale="en_US")
+    description = Faker("paragraph", locale="en_US")
+    created_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+
     @classmethod
-    async def create(
-        cls,
-        session: AsyncSession,
-        user: User | None = None,
-        owner: User | None = None,
-        **kwargs: Any
-    ) -> Item:
-        """Create an Item instance."""
-        if user:
-            kwargs["owner_id"] = user.id
-        if owner:
-            kwargs["owner_id"] = owner.id
-        
+    async def _create(cls, model_class: type[SQLModel], session: AsyncSession, *args: Any, **kwargs: Any) -> Coroutine[Any, Any, SQLModel]:
+        """Create an Item instance with an owner."""
+        # Ensure title and description are set
         if "title" not in kwargs:
-            kwargs["title"] = fuzzy.FuzzyText(length=10).fuzz()
+            kwargs["title"] = cls.title.evaluate(None, None, {"locale": "en_US"})
         if "description" not in kwargs:
-            kwargs["description"] = fuzzy.FuzzyText(length=30).fuzz()
-        
-        item = Item(**kwargs)
-        session.add(item)
-        await session.commit()  # Ensure the item is committed
-        await session.refresh(item)  # Refresh to get the latest state
-        return item 
+            kwargs["description"] = cls.description.evaluate(None, None, {"locale": "en_US"})
+
+        # Handle owner
+        if "owner_id" not in kwargs and "owner" not in kwargs:
+            # Create a default owner if none provided
+            owner = await UserFactory.create(session=session)
+            kwargs["owner_id"] = owner.id
+        elif "owner" in kwargs:
+            kwargs["owner_id"] = kwargs.pop("owner").id
+
+        return await super()._create(model_class, session, *args, **kwargs) 

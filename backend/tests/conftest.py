@@ -10,6 +10,7 @@ from redis.exceptions import ConnectionError, TimeoutError
 from datetime import timedelta
 from sqlalchemy import select
 from fastapi import FastAPI
+import logging
 
 from app.main import app
 from app.core.config import Settings, settings
@@ -113,14 +114,22 @@ async def redis(test_settings) -> AsyncGenerator[Redis, None]:
 @pytest_asyncio.fixture(scope="function")
 async def client(test_settings) -> AsyncGenerator[AsyncClient, None]:
     """Create a test client."""
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+    
     # Import FastAPI app
     from app.main import app as fastapi_app
     from app.core.config import Settings
+    
+    logger.debug("Setting up test client with app routes:")
+    for route in fastapi_app.routes:
+        logger.debug(f"Route: {route.path}, methods: {getattr(route, 'methods', None)}")
     
     # Override app settings with test settings
     if not hasattr(fastapi_app, "dependency_overrides"):
         fastapi_app.dependency_overrides = {}
     fastapi_app.dependency_overrides[Settings] = lambda: test_settings
+    logger.debug(f"Override settings: {test_settings}")
     
     # Override get_settings in all modules that might use it
     import app.core.config
@@ -128,12 +137,15 @@ async def client(test_settings) -> AsyncGenerator[AsyncClient, None]:
     app.core.config.get_settings = lambda: test_settings
     
     transport = ASGITransport(app=fastapi_app)
+    logger.debug("Creating AsyncClient with transport")
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        logger.debug("AsyncClient created")
         yield ac
     
     # Clear dependency overrides after test
     if hasattr(fastapi_app, "dependency_overrides"):
         fastapi_app.dependency_overrides.clear()
+    logger.debug("Test client cleanup completed")
 
 @pytest_asyncio.fixture(scope="function")
 async def regular_user(db: AsyncSession) -> User:
@@ -184,7 +196,7 @@ async def superuser(db: AsyncSession) -> User:
 async def regular_user_headers(regular_user: User, test_settings: Settings) -> dict:
     """Get headers for regular user authentication."""
     access_token = create_access_token(
-        subject=str(regular_user.id),
+        subject=regular_user.id,
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {
@@ -197,7 +209,7 @@ async def regular_user_headers(regular_user: User, test_settings: Settings) -> d
 async def superuser_headers(superuser: User, test_settings: Settings) -> dict:
     """Get headers for superuser authentication."""
     access_token = create_access_token(
-        subject=str(superuser.id),
+        subject=superuser.id,
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {

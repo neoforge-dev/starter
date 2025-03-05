@@ -87,7 +87,31 @@ We've made significant progress on the backend testing infrastructure and config
    - Ensured the test database `test_db` was properly configured
    - Successfully ran tests that depend on database connectivity
 
-3. Created a comprehensive test runner script (`backend/scripts/run_tests.sh`) with options for coverage reporting, verbosity control, test markers, maximum failure limit, Docker container rebuilding, and test database creation.
+3. Created a comprehensive test runner script (`backend/scripts/run_tests_fixed.sh`) with options for coverage reporting, verbosity control, test markers, maximum failure limit, Docker container rebuilding, and test database creation.
+
+4. **Important: All backend tests must be run using the Docker testing setup to ensure consistent test environments.**
+   - The Docker testing setup provides a consistent environment for all tests
+   - It ensures that all dependencies (PostgreSQL, Redis) are properly configured
+   - It isolates the test environment from the local development environment
+   - It automatically sets all required environment variables for tests
+
+5. Improved test infrastructure:
+   - Created a dedicated test environment initialization script (`backend/scripts/init_test_env.sh`)
+   - Updated the Makefile with new commands for initializing the test environment and running different types of tests
+   - Added automatic service detection and fallback mechanisms
+   - Improved error handling and reporting in all testing scripts
+   - Added proper timeout handling for service health checks
+
+6. Verified admin API endpoints:
+   - Confirmed that admin endpoints are properly registered in the API router
+   - Created a dedicated test to verify the registration of admin endpoints
+   - Identified and fixed issues with admin endpoint tests
+   - Ensured that admin endpoints return appropriate status codes
+
+7. Current test coverage is below the required 80% threshold:
+   - Overall coverage is around 47%
+   - Need to improve test coverage for admin endpoints, middleware, and core modules
+   - Plan to add more tests for the remaining untested functionality
 
 ### Frontend Testing
 We've made progress on the frontend testing infrastructure:

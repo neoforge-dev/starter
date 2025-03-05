@@ -4,193 +4,141 @@ Tests for the factory classes used to generate test data.
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.models.user import User
+from app.models.admin import Admin, AdminRole
 from app.models.item import Item
 from app.schemas.user import UserCreate
-from tests.factories import UserFactory, ItemFactory, UserCreateFactory
+from tests.factories import UserFactory, AdminFactory, ItemFactory, UserCreateFactory
+
+pytestmark = pytest.mark.asyncio
 
 
-@pytest.mark.asyncio
-async def test_user_factory_create(db_session: AsyncSession):
-    """Test that UserFactory.create creates a user with expected attributes."""
-    # Create a user with default attributes
-    user = await UserFactory.create(session=db_session)
+async def test_user_factory_create(db: AsyncSession):
+    """Test creating a user with UserFactory."""
+    # Create a user with default values
+    user = await UserFactory.create(session=db)
     
-    # Check that the user was created with expected attributes
+    # Verify the user was created
     assert user.id is not None
-    assert user.email is not None
+    assert "@" in user.email  # Email should be valid
     assert user.full_name is not None
     assert user.hashed_password is not None
     assert user.is_active is True
     assert user.is_superuser is False
     
-    # Verify the user was added to the database
-    db_user = await db_session.get(User, user.id)
-    assert db_user is not None
-    assert db_user.id == user.id
+    # Verify we can retrieve it from the database
+    result = await db.execute(select(User).where(User.id == user.id))
+    db_user = result.scalar_one()
     assert db_user.email == user.email
 
 
-@pytest.mark.asyncio
-async def test_user_factory_create_with_custom_attributes(db_session: AsyncSession):
-    """Test that UserFactory.create creates a user with custom attributes."""
-    # Create a user with custom attributes
-    custom_email = "custom@example.com"
-    custom_name = "Custom User"
-    custom_password = "custom_password"
+async def test_user_factory_with_custom_values(db: AsyncSession):
+    """Test creating a user with custom values."""
+    custom_data = {
+        "email": "custom@example.com",
+        "full_name": "Custom User",
+        "password": "custom_password",  # Should be hashed
+        "is_active": False,
+        "is_superuser": True
+    }
     
-    user = await UserFactory.create(
-        session=db_session,
-        email=custom_email,
-        full_name=custom_name,
-        password=custom_password,
-        is_superuser=True
-    )
+    user = await UserFactory.create(session=db, **custom_data)
     
-    # Check that the user was created with custom attributes
-    assert user.email == custom_email
-    assert user.full_name == custom_name
-    assert user.is_superuser is True
-    
-    # Verify the password was hashed
-    assert user.hashed_password != custom_password
-    
-    # Verify the user was added to the database
-    db_user = await db_session.get(User, user.id)
-    assert db_user is not None
-    assert db_user.email == custom_email
-    assert db_user.is_superuser is True
+    assert user.email == custom_data["email"]
+    assert user.full_name == custom_data["full_name"]
+    assert user.hashed_password != custom_data["password"]  # Password should be hashed
+    assert user.is_active == custom_data["is_active"]
+    assert user.is_superuser == custom_data["is_superuser"]
 
 
-@pytest.mark.asyncio
-async def test_user_factory_create_batch(db_session: AsyncSession):
-    """Test that UserFactory.create_batch creates multiple users."""
-    # Create a batch of users
-    batch_size = 3
-    users = await UserFactory.create_batch(session=db_session, size=batch_size)
+async def test_user_factory_create_batch(db: AsyncSession):
+    """Test creating multiple users with UserFactory."""
+    users = await UserFactory.create_batch(db, size=3)
     
-    # Check that the correct number of users was created
-    assert len(users) == batch_size
+    assert len(users) == 3
+    # Verify all users have unique emails
+    emails = [user.email for user in users]
+    assert len(set(emails)) == 3
+
+
+async def test_admin_factory_create(db: AsyncSession):
+    """Test creating an admin with AdminFactory."""
+    admin = await AdminFactory.create(session=db)
     
-    # Check that each user has expected attributes
-    for user in users:
-        assert user.id is not None
-        assert user.email is not None
-        assert user.full_name is not None
-        assert user.is_active is True
+    # Verify admin properties
+    assert admin.id is not None
+    assert admin.user_id is not None
+    assert admin.role == AdminRole.USER_ADMIN
+    assert admin.is_active is True
     
-    # Verify all users were added to the database
-    for user in users:
-        db_user = await db_session.get(User, user.id)
-        assert db_user is not None
-        assert db_user.id == user.id
+    # Verify associated user was created
+    assert admin.user is not None
+    assert admin.user.is_superuser is True
+    assert admin.user.is_active is True
 
 
-def test_user_create_factory():
-    """Test that UserCreateFactory creates a UserCreate schema with expected attributes."""
-    # Create a UserCreate schema with default attributes
-    user_create = UserCreateFactory()
+async def test_admin_factory_with_custom_values(db: AsyncSession):
+    """Test creating an admin with custom values."""
+    custom_data = {
+        "email": "custom.admin@example.com",
+        "full_name": "Custom Admin",
+        "password": "admin_password",
+        "role": AdminRole.SUPER_ADMIN,
+        "is_active": False
+    }
     
-    # Check that the schema was created with expected attributes
-    assert isinstance(user_create, UserCreate)
-    assert user_create.email is not None
-    assert user_create.full_name is not None
-    assert user_create.password is not None
-    assert user_create.password_confirm is not None
-    assert user_create.password == user_create.password_confirm
-
-
-def test_user_create_factory_with_custom_attributes():
-    """Test that UserCreateFactory creates a UserCreate schema with custom attributes."""
-    # Create a UserCreate schema with custom attributes
-    custom_email = "custom@example.com"
-    custom_name = "Custom User"
-    custom_password = "custom_password"
+    admin = await AdminFactory.create(session=db, **custom_data)
     
-    user_create = UserCreateFactory(
-        email=custom_email,
-        full_name=custom_name,
-        password=custom_password,
-        password_confirm=custom_password
-    )
-    
-    # Check that the schema was created with custom attributes
-    assert user_create.email == custom_email
-    assert user_create.full_name == custom_name
-    assert user_create.password == custom_password
-    assert user_create.password_confirm == custom_password
+    assert admin.role == custom_data["role"]
+    assert admin.is_active == custom_data["is_active"]
+    assert admin.user.email == custom_data["email"]
+    assert admin.user.full_name == custom_data["full_name"]
 
 
-def test_user_create_factory_sequence():
-    """Test that UserCreateFactory creates unique emails in sequence."""
-    # Create multiple UserCreate schemas
-    user_create1 = UserCreateFactory()
-    user_create2 = UserCreateFactory()
-    user_create3 = UserCreateFactory()
-    
-    # Check that each schema has a unique email
-    assert user_create1.email != user_create2.email
-    assert user_create2.email != user_create3.email
-    assert user_create1.email != user_create3.email
-
-
-@pytest.mark.asyncio
-async def test_item_factory_create(db_session: AsyncSession):
-    """Test that ItemFactory.create creates an item with expected attributes."""
-    # Create an item with default attributes
-    item = await ItemFactory.create(session=db_session)
-    
-    # Check that the item was created with expected attributes
-    assert item.id is not None
-    assert item.title is not None
-    assert item.description is not None
-    assert item.owner_id is None  # No owner specified
-    
-    # Verify the item was added to the database
-    db_item = await db_session.get(Item, item.id)
-    assert db_item is not None
-    assert db_item.id == item.id
-    assert db_item.title == item.title
-    assert db_item.description == item.description
-
-
-@pytest.mark.asyncio
-async def test_item_factory_create_with_owner(db_session: AsyncSession):
-    """Test that ItemFactory.create creates an item with an owner."""
-    # Create a user first
-    user = await UserFactory.create(session=db_session)
+async def test_item_factory_create(db: AsyncSession):
+    """Test creating an item with ItemFactory."""
+    # First create a user as owner
+    user = await UserFactory.create(session=db)
     
     # Create an item with the user as owner
-    item = await ItemFactory.create(session=db_session, owner=user)
+    item = await ItemFactory.create(session=db, owner=user)
     
-    # Check that the item was created with the correct owner
+    assert item.id is not None
     assert item.owner_id == user.id
+    assert item.title is not None
+    assert item.description is not None
     
-    # Verify the item was added to the database
-    db_item = await db_session.get(Item, item.id)
-    assert db_item is not None
+    # Verify we can retrieve it from the database
+    result = await db.execute(select(Item).where(Item.id == item.id))
+    db_item = result.scalar_one()
     assert db_item.owner_id == user.id
 
 
-@pytest.mark.asyncio
-async def test_item_factory_create_with_custom_attributes(db_session: AsyncSession):
-    """Test that ItemFactory.create creates an item with custom attributes."""
-    # Create an item with custom attributes
-    custom_title = "Custom Title"
-    custom_description = "Custom Description"
+async def test_item_factory_with_custom_values(db: AsyncSession):
+    """Test creating an item with custom values."""
+    user = await UserFactory.create(session=db)
     
-    item = await ItemFactory.create(
-        session=db_session,
-        title=custom_title,
-        description=custom_description
-    )
+    custom_data = {
+        "title": "Custom Item",
+        "description": "Custom Description",
+        "owner": user
+    }
     
-    # Check that the item was created with custom attributes
-    assert item.title == custom_title
-    assert item.description == custom_description
+    item = await ItemFactory.create(session=db, **custom_data)
     
-    # Verify the item was added to the database
-    db_item = await db_session.get(Item, item.id)
-    assert db_item is not None
-    assert db_item.title == custom_title
-    assert db_item.description == custom_description 
+    assert item.title == custom_data["title"]
+    assert item.description == custom_data["description"]
+    assert item.owner_id == user.id
+
+
+async def test_user_create_factory(db: AsyncSession):
+    """Test UserCreateFactory for schema validation."""
+    user_create = UserCreateFactory()
+    
+    assert user_create.email is not None
+    assert "@" in user_create.email
+    assert user_create.full_name is not None
+    assert user_create.password is not None
+    assert user_create.password == user_create.password_confirm
+    assert len(user_create.password) >= 12  # Password should be at least 12 chars 

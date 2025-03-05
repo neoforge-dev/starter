@@ -2,6 +2,7 @@
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 from app.core.cache import clear_cache
 from app.core.config import settings
@@ -11,8 +12,13 @@ pytestmark = pytest.mark.asyncio
 
 async def test_cached_users(client: AsyncClient, db: AsyncSession):
     """Test cached users endpoint."""
-    # Create test users
-    users = [await UserFactory.create(session=db) for _ in range(3)]
+    # Clear existing data
+    await db.execute(text("DELETE FROM admins"))  # Delete admins first
+    await db.execute(text("DELETE FROM users"))   # Then delete users
+    await db.commit()
+    
+    # Create exactly 3 test users
+    users = [await UserFactory.create(session=db, is_active=True) for _ in range(3)]
     await db.commit()
     
     # First request should hit database

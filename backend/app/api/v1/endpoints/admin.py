@@ -1,5 +1,6 @@
 """Admin API endpoints."""
 from typing import Any, List
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,10 @@ from app.api import deps
 from app.core.auth import get_password_hash
 from app.models.admin import Admin, AdminRole
 from app.schemas import admin as schemas
+from app.schemas.user import UserCreate
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -20,8 +25,11 @@ def check_admin_permission(
     resource: str,
 ) -> None:
     """Check if admin has required permissions."""
+    logger.debug(f"Checking permissions for admin {current_admin.id}, role={current_admin.role}, required_role={required_role}")
+    
     # Super admin can do anything
     if current_admin.role == AdminRole.SUPER_ADMIN:
+        logger.debug("Admin is super admin, allowing action")
         return
 
     # Check role hierarchy
@@ -33,13 +41,16 @@ def check_admin_permission(
     }
 
     if role_hierarchy[current_admin.role] < role_hierarchy[required_role]:
+        logger.debug(f"Permission denied: {current_admin.role} < {required_role}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Admin role {current_admin.role} cannot perform {action} on {resource}",
         )
+    
+    logger.debug(f"Permission granted: {current_admin.role} >= {required_role}")
 
 
-@router.post("/", response_model=schemas.Admin)
+@router.post("/", response_model=schemas.AdminWithUser, status_code=status.HTTP_201_CREATED)
 async def create_admin(
     *,
     db: AsyncSession = Depends(deps.get_db),
@@ -47,6 +58,8 @@ async def create_admin(
     current_admin: Admin = Depends(deps.get_current_admin),
 ) -> Any:
     """Create new admin user."""
+    logger.debug(f"Creating admin user, current_admin={current_admin.id}, role={current_admin.role}")
+    
     # Check permissions
     check_admin_permission(
         current_admin=current_admin,
@@ -64,17 +77,11 @@ async def create_admin(
         )
 
     # Create user first
-    user_in = schemas.UserCreate(
-        email=admin_in.email,
-        password=admin_in.password,
-        full_name=admin_in.full_name,
-        is_superuser=True,
-        is_active=admin_in.is_active
-    )
+    user_in = admin_in.to_user_create()
     user = await crud.user.create(db, obj_in=user_in)
     
     # Create admin with user_id
-    admin_data = schemas.AdminCreate(
+    admin_data = schemas.AdminCreateWithoutUser(
         role=admin_in.role,
         is_active=admin_in.is_active
     )
@@ -84,18 +91,49 @@ async def create_admin(
         actor_id=current_admin.id,
         user_id=user.id
     )
-    return admin
+    
+    # Create response using AdminWithUser schema
+    response_data = schemas.AdminWithUser(
+        id=admin.id,
+        user_id=admin.user_id,
+        role=admin.role,
+        is_active=admin.is_active,
+        last_login=admin.last_login,
+        created_at=admin.created_at,
+        updated_at=admin.updated_at,
+        email=user.email,
+        full_name=user.full_name
+    )
+    
+    return response_data
 
 
-@router.get("/me", response_model=schemas.Admin)
+@router.get("/me", response_model=schemas.AdminWithUser)
 async def read_admin_me(
     current_admin: Admin = Depends(deps.get_current_admin),
+    db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """Get current admin user."""
-    return current_admin
+    user = await crud.user.get(db, id=current_admin.user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    return schemas.AdminWithUser(
+        id=current_admin.id,
+        user_id=current_admin.user_id,
+        role=current_admin.role,
+        is_active=current_admin.is_active,
+        last_login=current_admin.last_login,
+        created_at=current_admin.created_at,
+        updated_at=current_admin.updated_at,
+        email=user.email,
+        full_name=user.full_name
+    )
 
 
-@router.get("/{admin_id}", response_model=schemas.Admin)
+@router.get("/{admin_id}", response_model=schemas.AdminWithUser)
 async def read_admin(
     *,
     admin_id: int,
@@ -110,17 +148,37 @@ async def read_admin(
         action="read",
         resource="admin",
     )
-
-    admin = await crud.admin.get(db=db, id=admin_id)
+    
+    # Get admin
+    admin = await crud.admin.get(db, id=admin_id)
     if not admin:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Admin not found",
         )
-    return admin
+    
+    # Get the associated user
+    user = await crud.user.get(db, id=admin.user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    
+    return schemas.AdminWithUser(
+        id=admin.id,
+        user_id=admin.user_id,
+        role=admin.role,
+        is_active=admin.is_active,
+        last_login=admin.last_login,
+        created_at=admin.created_at,
+        updated_at=admin.updated_at,
+        email=user.email,
+        full_name=user.full_name
+    )
 
 
-@router.get("/", response_model=List[schemas.Admin])
+@router.get("/", response_model=List[schemas.AdminWithUser])
 async def read_admins(
     db: AsyncSession = Depends(deps.get_db),
     skip: int = 0,
@@ -141,10 +199,19 @@ async def read_admins(
         skip=skip,
         limit=limit,
     )
-    return admins
+    
+    # Format the response to include user information
+    result = []
+    for admin, user in admins:
+        admin_data = {**admin.__dict__}
+        admin_data["email"] = user.email
+        admin_data["full_name"] = user.full_name
+        result.append(admin_data)
+    
+    return result
 
 
-@router.put("/{admin_id}", response_model=schemas.Admin)
+@router.put("/{admin_id}", response_model=schemas.AdminWithUser)
 async def update_admin(
     *,
     db: AsyncSession = Depends(deps.get_db),
@@ -152,14 +219,7 @@ async def update_admin(
     admin_in: schemas.AdminUpdate,
     current_admin: Admin = Depends(deps.get_current_admin),
 ) -> Any:
-    """Update an admin."""
-    admin = await crud.admin.get(db=db, id=admin_id)
-    if not admin:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Admin not found",
-        )
-
+    """Update admin user."""
     # Check permissions
     check_admin_permission(
         current_admin=current_admin,
@@ -167,21 +227,62 @@ async def update_admin(
         action="update",
         resource="admin",
     )
-
-    # Only super admin can modify other super admins
-    if admin.role == AdminRole.SUPER_ADMIN and current_admin.role != AdminRole.SUPER_ADMIN:
+    
+    # Get admin
+    admin = await crud.admin.get(db, id=admin_id)
+    if not admin:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only super admins can modify other super admins",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Admin not found",
         )
-
+    
+    # Get the associated user
+    user = await crud.user.get(db, id=admin.user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    
+    # Update user if needed
+    if admin_in.email or admin_in.full_name or admin_in.password:
+        user_update = {}
+        if admin_in.email:
+            user_update["email"] = admin_in.email
+        if admin_in.full_name:
+            user_update["full_name"] = admin_in.full_name
+        if admin_in.password:
+            user_update["password"] = admin_in.password
+            user_update["password_confirm"] = admin_in.password
+        
+        user = await crud.user.update(
+            db=db,
+            db_obj=user,
+            obj_in=user_update
+        )
+    
+    # Update admin
     admin = await crud.admin.update(
         db=db,
         db_obj=admin,
         obj_in=admin_in,
-        actor_id=current_admin.id,
+        actor_id=current_admin.id
     )
-    return admin
+    
+    # Create response using AdminWithUser schema
+    response_data = schemas.AdminWithUser(
+        id=admin.id,
+        user_id=admin.user_id,
+        role=admin.role,
+        is_active=admin.is_active,
+        last_login=admin.last_login,
+        created_at=admin.created_at,
+        updated_at=admin.updated_at,
+        email=user.email,
+        full_name=user.full_name
+    )
+    
+    return response_data
 
 
 @router.delete("/{admin_id}", response_model=schemas.Admin)

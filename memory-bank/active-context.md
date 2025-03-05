@@ -3,7 +3,7 @@
 ## Current Focus
 
 ### Backend Testing and Configuration
-We are currently working on testing the backend components of the NeoForge application and fixing configuration issues. We've resolved several issues with the test environment setup, including database connectivity and environment variable configuration.
+We are currently working on testing the backend components of the NeoForge application and fixing configuration issues. We've resolved several issues with the test environment setup, including database connectivity and environment variable configuration. **All backend tests must be run using the Docker testing setup to ensure consistent test environments.**
 
 #### Recently Resolved Issues
 1. Fixed the `secret_key` configuration issue:
@@ -18,6 +18,12 @@ We are currently working on testing the backend components of the NeoForge appli
    - Ensured the test database `test_db` was properly configured
    - Successfully ran tests that depend on database connectivity
 
+3. Fixed Docker testing setup issues:
+   - Resolved hostname resolution issues for database connections
+   - Ensured proper environment variables are set for test containers
+   - Improved error handling in test scripts
+   - Added automatic fallback to api service if test service is not available
+
 #### Successfully Tested Components
 1. Metrics Module - Core functionality for tracking application metrics
 2. Security Module - JWT token creation and validation
@@ -26,6 +32,7 @@ We are currently working on testing the backend components of the NeoForge appli
 5. Database Connection - Basic connectivity and collation settings
 6. CRUD Operations - Create, Read, Update, Delete operations with SQLModel
 7. Model Relationships - Foreign keys and relationship loading
+8. Admin API Endpoints - Verified that admin endpoints are properly registered
 
 #### Recent Improvements
 1. Created a comprehensive test runner script (`backend/scripts/run_tests.sh`) with options for:
@@ -36,22 +43,40 @@ We are currently working on testing the backend components of the NeoForge appli
    - Docker container rebuilding
    - Test database creation
    - PostgreSQL collation fixing
-2. Implemented a `UserFactory` in `backend/tests/factories.py` for generating test user objects
-3. Created mock tests for the metrics module to demonstrate testing without dependencies
-4. Fixed import organization in the factories module
-5. Added tests for all factory classes (`UserFactory`, `UserCreateFactory`, `ItemFactory`)
-6. Created a comprehensive README for backend testing (`backend/tests/README.md`)
-7. Resolved PostgreSQL collation issues by:
-   - Creating a custom PostgreSQL Docker image with proper locale settings
-   - Adding an initialization script to create the test database with correct collation
-   - Updating docker-compose.dev.yml to use the custom PostgreSQL image
-   - Creating a script to fix collation issues in existing installations
-8. Added database-dependent tests:
-   - Basic connectivity and collation tests
-   - CRUD operations tests using factories
-   - Model relationship tests
-9. Created a dedicated script for running database tests (`backend/scripts/run_db_tests.sh`)
-10. Fixed Docker testing setup issues:
+2. Created an improved test runner script (`backend/scripts/run_tests_fixed.sh`) that:
+   - Works from any directory using absolute paths
+   - Has better error handling and reporting
+   - Sets all required environment variables for tests
+   - Automatically detects and uses the appropriate Docker service
+   - Provides clear error messages when services are not available
+3. Created a dedicated test environment initialization script (`backend/scripts/init_test_env.sh`) that:
+   - Ensures Docker is running
+   - Builds necessary Docker images
+   - Starts database and Redis services
+   - Waits for services to be healthy with proper timeout handling
+   - Creates and configures the test database
+   - Runs migrations to prepare the database schema
+4. Updated the Makefile with new commands for:
+   - Initializing the test environment (`make init-test-env`)
+   - Running different types of tests (`make test-api`, `make test-db`, etc.)
+   - Rebuilding test containers (`make rebuild-test`)
+   - Fixing collation issues (`make fix-collation`)
+5. Implemented a `UserFactory` in `backend/tests/factories.py` for generating test user objects
+6. Created mock tests for the metrics module to demonstrate testing without dependencies
+7. Fixed import organization in the factories module
+8. Added tests for all factory classes (`UserFactory`, `UserCreateFactory`, `ItemFactory`)
+9. Created a comprehensive README for backend testing (`backend/tests/README.md`)
+10. Resolved PostgreSQL collation issues by:
+    - Creating a custom PostgreSQL Docker image with proper locale settings
+    - Adding an initialization script to create the test database with correct collation
+    - Updating docker-compose.dev.yml to use the custom PostgreSQL image
+    - Creating a script to fix collation issues in existing installations
+11. Added database-dependent tests:
+    - Basic connectivity and collation tests
+    - CRUD operations tests using factories
+    - Model relationship tests
+12. Created a dedicated script for running database tests (`backend/scripts/run_db_tests.sh`)
+13. Fixed Docker testing setup issues:
     - Created improved test runner script (`backend/scripts/run_tests_fixed.sh`) that works from any directory
     - Updated test environment initialization script (`backend/scripts/init_test_env.sh`) with better error handling
     - Updated Makefile with new commands for initializing the test environment

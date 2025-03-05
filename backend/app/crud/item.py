@@ -24,5 +24,20 @@ class CRUDItem(CRUDBase[Item, ItemCreate, ItemUpdate]):
         )
         return result.scalar_one_or_none()
 
+    async def create(
+        self,
+        db: AsyncSession,
+        *,
+        obj_in: ItemCreate,
+        owner_id: int,
+    ) -> Item:
+        """Create a new item with owner."""
+        obj_in_data = obj_in.model_dump()
+        db_obj = self.model(**obj_in_data, owner_id=owner_id)
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj
+
 
 item = CRUDItem(Item) 

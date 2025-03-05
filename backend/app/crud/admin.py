@@ -41,7 +41,7 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
         *,
         skip: int = 0,
         limit: int = 100,
-    ) -> List[Admin]:
+    ) -> List[tuple[Admin, "User"]]:
         """
         Get multiple admins with their associated users.
         
@@ -51,15 +51,17 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
             limit: Maximum number of records to return
             
         Returns:
-            List of admins with their users
+            List of tuples containing (admin, user) pairs
         """
+        from app.models.user import User
+        
         result = await db.execute(
-            select(Admin)
-            .options(joinedload(Admin.user))
+            select(Admin, User)
+            .join(User, Admin.user_id == User.id)
             .offset(skip)
             .limit(limit)
         )
-        return list(result.scalars().all())
+        return list(result.all())
 
     async def create(
         self,
@@ -85,7 +87,6 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
             user_id=user_id,
             role=obj_in.role,
             is_active=obj_in.is_active,
-            created_by=actor_id,
         )
         db.add(db_obj)
         await db.commit()
@@ -118,6 +119,35 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
             update_data = obj_in.model_dump(exclude_unset=True)
         update_data["updated_by"] = actor_id
         return await super().update(db, db_obj=db_obj, obj_in=update_data)
+
+    async def remove(
+        self,
+        db: AsyncSession,
+        *,
+        id: int,
+        actor_id: int,
+    ) -> Admin:
+        """
+        Remove admin by ID.
+        
+        Args:
+            db: Database session
+            id: Admin ID
+            actor_id: ID of the admin performing the action
+            
+        Returns:
+            Removed admin
+        """
+        # Get admin
+        admin = await self.get(db, id=id)
+        if not admin:
+            raise ValueError(f"Admin with ID {id} not found")
+        
+        # Delete admin
+        await db.delete(admin)
+        await db.commit()
+        
+        return admin
 
 
 admin = CRUDAdmin() 

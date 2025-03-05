@@ -22,20 +22,23 @@ async def create_item(
     *,
     db: Annotated[AsyncSession, Depends(get_db)],
     item_in: ItemCreate,
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
 ) -> Item:
     """Create new item."""
     logger.info(
         "create_item_request",
         item_data=item_in.model_dump(),
+        user_id=current_user.id,
     )
     try:
-        item = await item_crud.create(db, obj_in=item_in)
+        item = await item_crud.create(db, obj_in=item_in, owner_id=current_user.id)
         return item
     except Exception as e:
         logger.error(
             "create_item_error",
             error=str(e),
             item_data=item_in.model_dump(),
+            user_id=current_user.id,
         )
         raise
 
@@ -62,6 +65,7 @@ async def read_item(
     *,
     db: Annotated[AsyncSession, Depends(get_db)],
     item_id: int,
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
 ) -> Item:
     """Get item by ID."""
     item = await item_crud.get(db, id=item_id)
@@ -69,6 +73,11 @@ async def read_item(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found",
+        )
+    if item.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions",
         )
     return item
 
@@ -79,6 +88,7 @@ async def update_item(
     db: Annotated[AsyncSession, Depends(get_db)],
     item_id: int,
     item_in: ItemUpdate,
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
 ) -> Item:
     """Update item."""
     item = await item_crud.get(db, id=item_id)
@@ -86,6 +96,11 @@ async def update_item(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found",
+        )
+    if item.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions",
         )
     return await item_crud.update(db, db_obj=item, obj_in=item_in)
 
@@ -95,6 +110,7 @@ async def delete_item(
     *,
     db: Annotated[AsyncSession, Depends(get_db)],
     item_id: int,
+    current_user: Annotated[UserResponse, Depends(get_current_user)],
 ) -> None:
     """Delete item."""
     item = await item_crud.get(db, id=item_id)
@@ -102,5 +118,10 @@ async def delete_item(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found",
+        )
+    if item.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions",
         )
     await item_crud.remove(db, id=item_id) 

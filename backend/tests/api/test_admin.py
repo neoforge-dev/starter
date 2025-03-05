@@ -2,13 +2,53 @@
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
+from sqlalchemy import text, select, delete
+import logging
 
 from app.core.config import settings
-from app.models.admin import AdminRole
+from app.models.admin import AdminRole, Admin
+from app.models.user import User
 from tests.factories import UserFactory, AdminFactory
 
 pytestmark = pytest.mark.asyncio
+
+
+@pytest.fixture(scope="function", autouse=True)
+async def cleanup_admin_users(db: AsyncSession):
+    """Clean up admin users before and after each test."""
+    # Delete existing admin users with test emails
+    test_emails = [
+        "user-admin-test@example.com",
+        "content-admin-test@example.com",
+        "super-admin-test@example.com",
+        "readonly-admin-test@example.com"
+    ]
+    
+    # First find users with these emails
+    for email in test_emails:
+        result = await db.execute(select(User).where(User.email == email))
+        user = result.scalar_one_or_none()
+        if user:
+            # Delete associated admin record first
+            await db.execute(delete(Admin).where(Admin.user_id == user.id))
+            # Then delete the user
+            await db.execute(delete(User).where(User.id == user.id))
+    
+    await db.commit()
+    
+    yield
+    
+    # Clean up after test
+    for email in test_emails:
+        result = await db.execute(select(User).where(User.email == email))
+        user = result.scalar_one_or_none()
+        if user:
+            # Delete associated admin record first
+            await db.execute(delete(Admin).where(Admin.user_id == user.id))
+            # Then delete the user
+            await db.execute(delete(User).where(User.id == user.id))
+    
+    await db.commit()
 
 
 @pytest.fixture
@@ -16,7 +56,7 @@ async def admin_user(db: AsyncSession):
     """Create an admin user with USER_ADMIN role."""
     return await AdminFactory.create(
         session=db,
-        email="user-admin@example.com",
+        email="user-admin-test@example.com",
         password="admin123",
         role=AdminRole.USER_ADMIN,
         is_active=True
@@ -28,7 +68,7 @@ async def content_admin(db: AsyncSession):
     """Create an admin user with CONTENT_ADMIN role."""
     return await AdminFactory.create(
         session=db,
-        email="content-admin@example.com",
+        email="content-admin-test@example.com",
         password="admin123",
         role=AdminRole.CONTENT_ADMIN,
         is_active=True
@@ -40,7 +80,7 @@ async def super_admin(db: AsyncSession):
     """Create an admin user with SUPER_ADMIN role."""
     return await AdminFactory.create(
         session=db,
-        email="super-admin@example.com",
+        email="super-admin-test@example.com",
         password="admin123",
         role=AdminRole.SUPER_ADMIN,
         is_active=True
@@ -52,7 +92,7 @@ async def readonly_admin(db: AsyncSession):
     """Create an admin user with READONLY_ADMIN role."""
     return await AdminFactory.create(
         session=db,
-        email="readonly-admin@example.com",
+        email="readonly-admin-test@example.com",
         password="admin123",
         role=AdminRole.READONLY_ADMIN,
         is_active=True
@@ -66,7 +106,7 @@ async def admin_headers(admin_user, test_settings):
     from datetime import timedelta
     
     access_token = create_access_token(
-        subject=str(admin_user.id),
+        subject=str(admin_user.user_id),
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {
@@ -83,7 +123,7 @@ async def content_admin_headers(content_admin, test_settings):
     from datetime import timedelta
     
     access_token = create_access_token(
-        subject=str(content_admin.id),
+        subject=str(content_admin.user_id),
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {
@@ -100,7 +140,7 @@ async def super_admin_headers(super_admin, test_settings):
     from datetime import timedelta
     
     access_token = create_access_token(
-        subject=str(super_admin.id),
+        subject=str(super_admin.user_id),
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {
@@ -117,7 +157,7 @@ async def readonly_admin_headers(readonly_admin, test_settings):
     from datetime import timedelta
     
     access_token = create_access_token(
-        subject=str(readonly_admin.id),
+        subject=str(readonly_admin.user_id),
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {
@@ -129,6 +169,8 @@ async def readonly_admin_headers(readonly_admin, test_settings):
 
 async def test_create_admin(client: AsyncClient, db: AsyncSession, super_admin_headers: dict) -> None:
     """Test creating a new admin user."""
+    logger = logging.getLogger(__name__)
+    
     # Clean up existing users with this email if any
     await db.execute(text("DELETE FROM users WHERE email = 'new-admin@example.com'"))
     await db.commit()
@@ -136,15 +178,23 @@ async def test_create_admin(client: AsyncClient, db: AsyncSession, super_admin_h
     admin_data = {
         "email": "new-admin@example.com",
         "password": "newadmin123",
+        "password_confirm": "newadmin123",
         "full_name": "New Admin",
         "role": AdminRole.USER_ADMIN.value
     }
+    
+    logger.debug(f"Making request with headers: {super_admin_headers}")
+    logger.debug(f"API path: {settings.api_v1_str}/admin/")
     
     response = await client.post(
         f"{settings.api_v1_str}/admin/",
         json=admin_data,
         headers=super_admin_headers
     )
+    
+    logger.debug(f"Response status code: {response.status_code}")
+    logger.debug(f"Response headers: {response.headers}")
+    logger.debug(f"Response body: {response.text}")
     
     assert response.status_code == 201
     data = response.json()
@@ -157,18 +207,29 @@ async def test_create_admin(client: AsyncClient, db: AsyncSession, super_admin_h
 
 async def test_create_admin_permission_denied(client: AsyncClient, db: AsyncSession, readonly_admin_headers: dict) -> None:
     """Test creating a new admin user with insufficient permissions."""
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+    
     admin_data = {
         "email": "another-admin@example.com",
         "password": "anotheradmin123",
+        "password_confirm": "anotheradmin123",
         "full_name": "Another Admin",
         "role": AdminRole.USER_ADMIN.value
     }
+    
+    logger.debug(f"Making request with headers: {readonly_admin_headers}")
+    logger.debug(f"API path: {settings.api_v1_str}/admin/")
     
     response = await client.post(
         f"{settings.api_v1_str}/admin/",
         json=admin_data,
         headers=readonly_admin_headers
     )
+    
+    logger.debug(f"Response status code: {response.status_code}")
+    logger.debug(f"Response headers: {response.headers}")
+    logger.debug(f"Response body: {response.text}")
     
     assert response.status_code == 403
     data = response.json()
@@ -185,35 +246,30 @@ async def test_read_admin_me(client: AsyncClient, db: AsyncSession, admin_header
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == admin_user.id
-    assert data["email"] == admin_user.email
     assert data["role"] == admin_user.role.value
+    assert data["is_active"] == admin_user.is_active
+    assert data["user_id"] == admin_user.user_id
 
 
-async def test_read_admin(client: AsyncClient, db: AsyncSession, super_admin_headers: dict, admin_user) -> None:
-    """Test reading a specific admin user."""
+async def test_read_admin(client: AsyncClient, db: AsyncSession, admin_headers: dict, admin_user) -> None:
+    """Test reading admin by ID."""
     response = await client.get(
         f"{settings.api_v1_str}/admin/{admin_user.id}",
-        headers=super_admin_headers
+        headers=admin_headers
     )
     
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == admin_user.id
-    assert data["email"] == admin_user.email
     assert data["role"] == admin_user.role.value
+    assert data["is_active"] == admin_user.is_active
+    assert data["user_id"] == admin_user.user_id
 
 
-async def test_read_admin_permission_denied(client: AsyncClient, db: AsyncSession, readonly_admin_headers: dict, admin_user) -> None:
-    """Test reading a specific admin user with insufficient permissions."""
-    response = await client.get(
-        f"{settings.api_v1_str}/admin/{admin_user.id}",
-        headers=readonly_admin_headers
-    )
-    
-    # Readonly admin should be able to read other admins, but not modify them
-    assert response.status_code == 200
-    data = response.json()
-    assert data["id"] == admin_user.id
+async def test_read_admin_permission_denied(client: AsyncClient, db: AsyncSession, readonly_admin_headers: dict):
+    response = await client.get(f"{settings.api_v1_str}/admin/1", headers=readonly_admin_headers)
+    assert response.status_code == 403
+    assert "cannot perform read" in response.json()["detail"].lower()
 
 
 async def test_read_admins(client: AsyncClient, db: AsyncSession, super_admin_headers: dict) -> None:

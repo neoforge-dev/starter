@@ -14,7 +14,7 @@ class ItemBase(BaseModel):
 
 class ItemCreate(ItemBase):
     """Schema for creating an item."""
-    owner_id: int
+    owner_id: Optional[int] = None
 
 
 class ItemUpdate(ItemBase):

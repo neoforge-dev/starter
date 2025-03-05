@@ -15,12 +15,13 @@ async def test_read_items(client: AsyncClient, db: AsyncSession, regular_user_he
     await db.execute(text("TRUNCATE TABLE items CASCADE"))
     await db.commit()
 
-    # Create test items
+    # Create test items with the same owner
     items = [
         await ItemFactory.create(session=db, owner=regular_user),
         await ItemFactory.create(session=db, owner=regular_user),
         await ItemFactory.create(session=db, owner=regular_user),
     ]
+    await db.commit()
 
     response = await client.get(f"{settings.api_v1_str}/items/", headers=regular_user_headers)
     assert response.status_code == 200
@@ -53,6 +54,7 @@ async def test_read_item(client: AsyncClient, db: AsyncSession, regular_user_hea
     """Test reading a single item."""
     # Create a test item
     item = await ItemFactory.create(session=db, owner=regular_user)
+    await db.commit()
     
     response = await client.get(
         f"{settings.api_v1_str}/items/{item.id}",
@@ -71,6 +73,7 @@ async def test_update_item(client: AsyncClient, db: AsyncSession, regular_user_h
     """Test updating an item."""
     # Create a test item
     item = await ItemFactory.create(session=db, owner=regular_user)
+    await db.commit()
     
     update_data = {
         "title": "Updated Item",
@@ -95,6 +98,7 @@ async def test_delete_item(client: AsyncClient, db: AsyncSession, regular_user_h
     """Test deleting an item."""
     # Create a test item
     item = await ItemFactory.create(session=db, owner=regular_user)
+    await db.commit()
     
     # Delete the item
     response = await client.delete(
@@ -162,6 +166,7 @@ async def test_read_other_user_item(client: AsyncClient, db: AsyncSession, regul
     
     # Create an item owned by the other user
     item = await ItemFactory.create(session=db, owner=other_user)
+    await db.commit()
     
     # Try to read the item as the regular user
     response = await client.get(
