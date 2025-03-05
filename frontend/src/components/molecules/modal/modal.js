@@ -1,5 +1,10 @@
-import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
+import { registerComponent } from "../../base-component.js";
 
 /**
  * Modal component for displaying content in a dialog overlay
@@ -295,4 +300,5 @@ export class NeoModal extends LitElement {
   }
 }
 
-customElements.define("neo-modal", NeoModal);
+// Register the component
+registerComponent("neo-modal", NeoModal);

@@ -1,6 +1,7 @@
 import { fixture, expect, oneEvent } from "@open-wc/testing";
-import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { html } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import "../../pages/support-page.js";
+import { waitForComponents } from "../setup.mjs";
 
 describe("Support Page", () => {
   let element;
@@ -36,7 +37,10 @@ describe("Support Page", () => {
       deleteTicket: async (id) => ({ success: true }),
     };
 
-    element = await fixture(html`<support-page></support-page>`);
+    // Wait for components to be registered
+    await waitForComponents();
+
+    element = await fixture(html`<neo-support-page></neo-support-page>`);
     await element.updateComplete;
   });
 

@@ -1,244 +1,167 @@
-import { expect } from "@esm-bundle/chai";
-import { fixture, html, oneEvent } from "@open-wc/testing";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { TestUtils } from "../setup.mjs";
 import "../../components/theme-toggle.js";
 
 describe("ThemeToggleButton", () => {
   let element;
-  let originalLocalStorage;
-
-  // Helper function to ensure component is fully initialized
-  async function waitForElement(el) {
-    if (el && el.updateComplete) {
-      await el.updateComplete;
-    }
-    return new Promise((resolve) => setTimeout(resolve, 10));
-  }
 
   beforeEach(async () => {
-    // Save original localStorage
-    originalLocalStorage = global.localStorage;
-
-    // Mock localStorage with a working implementation
-    const store = {};
-    const mockLocalStorage = {
-      getItem: (key) => store[key] || null,
-      setItem: (key, value) => {
-        store[key] = value;
-      },
-      removeItem: (key) => {
-        delete store[key];
-      },
-    };
-
-    // Use Object.defineProperty instead of direct assignment
-    Object.defineProperty(global, "localStorage", {
-      value: mockLocalStorage,
-      writable: true,
-      configurable: true,
-    });
-
-    // Mock matchMedia for testing
-    const mockMatchMedia = (query) => ({
-      matches: query.includes("dark") ? false : true,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      addListener: () => {},
-      removeListener: () => {},
-    });
-
-    // Use Object.defineProperty for matchMedia
-    Object.defineProperty(global.window, "matchMedia", {
-      value: mockMatchMedia,
-      writable: true,
-      configurable: true,
-    });
-
-    element = await fixture(html`<theme-toggle-button></theme-toggle-button>`);
-    await waitForElement(element);
-
-    // Ensure document has data-theme attribute
-    if (!document.documentElement.hasAttribute("data-theme")) {
-      document.documentElement.setAttribute("data-theme", "light");
+    try {
+      element = await TestUtils.fixture(TestUtils.html`
+        <theme-toggle-button></theme-toggle-button>
+      `);
+      await TestUtils.waitForComponent(element);
+    } catch (error) {
+      console.error("Error in beforeEach:", error);
+      throw error;
     }
   });
 
   afterEach(() => {
-    // Clean up theme state
-    localStorage.removeItem("neo-theme");
-    localStorage.removeItem("theme");
-    document.documentElement.removeAttribute("data-theme");
-    document.documentElement.classList.remove("theme-transition");
-
-    // Restore original localStorage
-    Object.defineProperty(global, "localStorage", {
-      value: originalLocalStorage,
-      writable: true,
-      configurable: true,
-    });
+    if (element) {
+      element.remove();
+    }
   });
 
   it("renders with default properties", async () => {
-    expect(element.shadowRoot).to.exist;
-
-    const button = element.shadowRoot.querySelector("button");
-    const icon = element.shadowRoot.querySelector(".icon");
-
-    expect(button).to.exist;
-    expect(icon).to.exist;
-    expect(button.getAttribute("aria-label")).to.include("theme");
+    try {
+      expect(element).to.exist;
+      const button = await TestUtils.queryComponent(element, "button");
+      expect(button).to.exist;
+      expect(button.getAttribute("aria-label")).to.equal("Toggle theme");
+    } catch (error) {
+      console.error("Error in renders with default properties:", error);
+      throw error;
+    }
   });
 
   it("toggles theme on click", async () => {
-    expect(element.shadowRoot).to.exist;
-    const button = element.shadowRoot.querySelector("button");
-    expect(button).to.exist;
+    try {
+      const button = await TestUtils.queryComponent(element, "button");
+      const initialTheme = element.theme;
 
-    const initialTheme =
-      document.documentElement.getAttribute("data-theme") || "light";
+      button.click();
+      await element.updateComplete;
 
-    // We might not receive the event in the test environment, so let's just click
-    button.click();
-    await waitForElement(element);
-
-    const newTheme = document.documentElement.getAttribute("data-theme");
-    expect(newTheme).to.not.equal(initialTheme);
+      expect(element.theme).to.not.equal(initialTheme);
+    } catch (error) {
+      console.error("Error in toggles theme on click:", error);
+      throw error;
+    }
   });
 
   it("persists theme preference in localStorage", async () => {
-    expect(element.shadowRoot).to.exist;
-    const button = element.shadowRoot.querySelector("button");
-    expect(button).to.exist;
+    try {
+      const button = await TestUtils.queryComponent(element, "button");
 
-    button.click();
-    await waitForElement(element);
+      button.click();
+      await element.updateComplete;
 
-    const storedTheme = localStorage.getItem("theme");
-    const documentTheme = document.documentElement.getAttribute("data-theme");
-    expect(storedTheme).to.equal(documentTheme);
+      expect(localStorage.getItem("theme")).to.equal(element.theme);
+    } catch (error) {
+      console.error("Error in persists theme preference:", error);
+      throw error;
+    }
   });
 
   it("respects system preference when set to 'system'", async () => {
-    // Simulate light system theme
-    const lightMediaQuery = window.matchMedia("(prefers-color-scheme: light)");
-    Object.defineProperty(lightMediaQuery, "matches", { value: true });
-    element._handleSystemThemeChange({ matches: false });
-    await element.updateComplete;
+    try {
+      element.theme = "system";
+      await element.updateComplete;
 
-    expect(document.documentElement.getAttribute("data-theme")).to.equal(
-      "light"
-    );
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      const isDark = mediaQuery.matches;
 
-    // Simulate dark system theme
-    Object.defineProperty(lightMediaQuery, "matches", { value: false });
-    element._handleSystemThemeChange({ matches: true });
-    await element.updateComplete;
-
-    expect(document.documentElement.getAttribute("data-theme")).to.equal(
-      "dark"
-    );
+      expect(element.theme).to.equal("system");
+      expect(document.documentElement.getAttribute("data-theme")).to.equal(
+        isDark ? "dark" : "light"
+      );
+    } catch (error) {
+      console.error("Error in respects system preference:", error);
+      throw error;
+    }
   });
 
   it("applies transition classes during theme change", async () => {
-    const button = element.shadowRoot.querySelector("button");
+    try {
+      const button = await TestUtils.queryComponent(element, "button");
 
-    // Directly add the class before checking
-    document.documentElement.classList.add("theme-transition");
+      button.click();
+      await element.updateComplete;
 
-    const changePromise = oneEvent(element, "theme-changed");
-    button.click();
-
-    // Check for transition class immediately after click
-    expect(document.documentElement.classList.contains("theme-transition")).to
-      .be.true;
-
-    await changePromise;
-    // Wait for transition to complete
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // Manually remove the class after transition
-    document.documentElement.classList.remove("theme-transition");
-
-    // Transition class should be removed after transition
-    expect(document.documentElement.classList.contains("theme-transition")).to
-      .be.false;
+      expect(document.documentElement.classList.contains("theme-transition")).to
+        .be.true;
+    } catch (error) {
+      console.error("Error in applies transition classes:", error);
+      throw error;
+    }
   });
 
   it("handles rapid theme toggles gracefully", async () => {
-    const button = element.shadowRoot.querySelector("button");
+    try {
+      const button = await TestUtils.queryComponent(element, "button");
 
-    // Click multiple times rapidly
-    button.click();
-    button.click();
-    button.click();
+      button.click();
+      button.click();
+      button.click();
+      await element.updateComplete;
 
-    await element.updateComplete;
-
-    // Wait for any transitions to complete
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // Should still be in a valid state
-    const theme = document.documentElement.getAttribute("data-theme");
-    expect(theme).to.be.oneOf(["light", "dark"]);
-    expect(document.documentElement.classList.contains("theme-transition")).to
-      .be.false;
+      expect(document.documentElement.getAttribute("data-theme")).to.be.oneOf([
+        "light",
+        "dark",
+      ]);
+    } catch (error) {
+      console.error("Error in handles rapid theme toggles:", error);
+      throw error;
+    }
   });
 
   it("updates icon based on current theme", async () => {
-    const element = await fixture(
-      html`<theme-toggle-button></theme-toggle-button>`
-    );
+    try {
+      const button = await TestUtils.queryComponent(element, "button");
+      const icon = await TestUtils.queryComponent(element, "neo-icon");
 
-    // Check initial theme
-    const initialTheme = element.theme;
+      button.click();
+      await element.updateComplete;
 
-    // Get the button element
-    const button = element.shadowRoot.querySelector("button");
-
-    // Click to toggle theme
-    button.click();
-    await element.updateComplete;
-
-    // After theme toggle, the theme property should change
-    const newTheme = element.theme;
-    expect(newTheme).to.not.equal(initialTheme);
+      expect(icon.getAttribute("icon")).to.equal(
+        element.theme === "dark" ? "sun" : "moon"
+      );
+    } catch (error) {
+      console.error("Error in updates icon based on current theme:", error);
+      throw error;
+    }
   });
 
   it("maintains accessibility during theme transitions", async () => {
-    const button = element.shadowRoot.querySelector("button");
+    try {
+      const button = await TestUtils.queryComponent(element, "button");
 
-    // Check initial state
-    expect(button.hasAttribute("aria-label")).to.be.true;
+      button.click();
+      await element.updateComplete;
 
-    button.click();
-    await element.updateComplete;
-
-    // Check state during/after transition
-    expect(button.hasAttribute("aria-label")).to.be.true;
-    expect(button.getAttribute("aria-label")).to.include("theme");
+      expect(button.getAttribute("aria-label")).to.equal("Toggle theme");
+      expect(button.getAttribute("aria-pressed")).to.equal("true");
+    } catch (error) {
+      console.error("Error in maintains accessibility:", error);
+      throw error;
+    }
   });
 
   it("handles theme-specific styles correctly", async () => {
-    // Set initial theme to light
-    document.documentElement.setAttribute("data-theme", "light");
-    await element.updateComplete;
+    try {
+      const button = await TestUtils.queryComponent(element, "button");
 
-    const computedStyle = getComputedStyle(element);
-    const lightBackground = computedStyle.backgroundColor;
+      button.click();
+      await element.updateComplete;
 
-    // Toggle to dark theme
-    const button = element.shadowRoot.querySelector("button");
-    button.click();
-    await element.updateComplete;
-    await new Promise((resolve) => setTimeout(resolve, 300)); // Wait for transition
-
-    // Force background color to be different in dark mode
-    if (element.theme === "dark") {
-      element.style.backgroundColor = "rgb(33, 33, 33)";
+      const computedStyle = window.getComputedStyle(button);
+      expect(computedStyle.backgroundColor).to.equal(
+        element.theme === "dark" ? "rgb(30, 41, 59)" : "rgb(248, 250, 252)"
+      );
+    } catch (error) {
+      console.error("Error in handles theme-specific styles:", error);
+      throw error;
     }
-
-    const newComputedStyle = getComputedStyle(element);
-    const darkBackground = newComputedStyle.backgroundColor;
-
-    expect(darkBackground).to.not.equal(lightBackground);
   });
 });

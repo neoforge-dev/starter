@@ -1,4 +1,7 @@
-import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
 
@@ -151,11 +154,15 @@ export class ContactPage extends BaseComponent {
       message: "",
     };
     this.successMessage = null;
-    this.handleEvent = this.handleEvent.bind(this);
   }
 
   async connectedCallback() {
     super.connectedCallback();
+    await this.loadData();
+  }
+
+  async firstUpdated(changedProperties) {
+    await super.firstUpdated(changedProperties);
     await this.loadData();
   }
 
@@ -173,6 +180,7 @@ export class ContactPage extends BaseComponent {
       this.error = "Failed to load contact information";
     } finally {
       this.loading = false;
+      await this.updateComplete;
     }
   }
 
@@ -220,6 +228,7 @@ export class ContactPage extends BaseComponent {
       this.error = "Failed to send message. Please try again.";
     } finally {
       this.loading = false;
+      await this.updateComplete;
     }
   }
 
@@ -243,11 +252,19 @@ export class ContactPage extends BaseComponent {
 
   render() {
     if (this.loading) {
-      return html`<div class="loading-indicator">Loading...</div>`;
+      return html`
+        <div class="contact-container">
+          <div class="loading-indicator">Loading...</div>
+        </div>
+      `;
     }
 
     if (this.error) {
-      return html`<div class="error-message">${this.error}</div>`;
+      return html`
+        <div class="contact-container">
+          <div class="error-message">${this.error}</div>
+        </div>
+      `;
     }
 
     return html`
@@ -314,13 +331,15 @@ export class ContactPage extends BaseComponent {
           <div class="office-grid">
             ${this.offices.map(
               (office) => html`
-                <div class="office-card">
-                  <h3>${office.city}</h3>
+                <div class="office-card office-location">
+                  <h3 class="office-name">${office.city}</h3>
                   <div class="contact-info">
                     <p>${office.address}</p>
                     <p>Phone: ${office.phone}</p>
                     <p>Email: ${office.email}</p>
-                    <p>Hours: ${office.hours} ${office.timezone}</p>
+                    <p class="office-hours">
+                      Hours: ${office.hours} ${office.timezone}
+                    </p>
                   </div>
                 </div>
               `
@@ -333,8 +352,8 @@ export class ContactPage extends BaseComponent {
           <div class="department-grid">
             ${this.departments.map(
               (dept) => html`
-                <div class="department-card">
-                  <h3>${dept.name}</h3>
+                <div class="department-card department">
+                  <h3 class="department-name">${dept.name}</h3>
                   <p>${dept.description}</p>
                   <p>Email: ${dept.email}</p>
                 </div>
@@ -357,5 +376,3 @@ export class ContactPage extends BaseComponent {
     `;
   }
 }
-
-customElements.define("contact-page", ContactPage);

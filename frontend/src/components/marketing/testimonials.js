@@ -3,6 +3,7 @@ import {
   html,
   css,
 } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { registerComponent } from "../base-component.js";
 
 export class Testimonials extends LitElement {
   static get properties() {
@@ -445,4 +446,5 @@ export class Testimonials extends LitElement {
   }
 }
 
-customElements.define("ui-testimonials", Testimonials);
+// Register the component
+registerComponent("neo-testimonials", Testimonials);

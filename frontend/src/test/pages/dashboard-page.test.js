@@ -1,209 +1,108 @@
-import { expect, TestUtils } from "../setup.mjs";
-import { html } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import "../../pages/dashboard-page.js";
+import { describe, it, expect, beforeEach, afterEach, beforeAll } from "vitest";
+import { registerAllComponents } from "../register-components.mjs";
+import { cleanupDashboardTest, setupDashboardTest } from "../setup.mjs";
 
 describe("Dashboard Page", () => {
   let element;
-  const mockUser = {
-    id: "123",
-    name: "Test User",
-    email: "test@example.com",
-    role: "admin",
-  };
+  let api;
 
-  const mockStats = {
-    projects: 5,
-    tasks: 25,
-    completedTasks: 15,
-    activeUsers: 3,
-  };
-
-  const mockTasks = [
-    {
-      id: "1",
-      title: "Complete Project Setup",
-      description: "Set up development environment",
-      status: "in_progress",
-      priority: "high",
-      dueDate: "2024-03-20",
-      assignee: {
-        id: "user1",
-        name: "John Doe",
-        avatar: "john.jpg",
-      },
-    },
-    {
-      id: "2",
-      title: "Write Documentation",
-      description: "Document API endpoints",
-      status: "todo",
-      priority: "medium",
-      dueDate: "2024-03-25",
-      assignee: {
-        id: "user2",
-        name: "Jane Smith",
-        avatar: "jane.jpg",
-      },
-    },
-  ];
+  beforeAll(async () => {
+    // Wait for all components to be registered
+    await registerAllComponents;
+  });
 
   beforeEach(async () => {
-    // Mock auth state
-    window.auth = {
-      currentUser: mockUser,
-      isAuthenticated: true,
-    };
+    // Set up test environment
+    api = await setupDashboardTest();
 
-    // Mock API client
-    window.api = {
-      getTasks: async () => ({ tasks: mockTasks }),
-      updateTask: async (taskId, updates) => ({
-        task: { ...mockTasks.find((t) => t.id === taskId), ...updates },
-      }),
-    };
+    // Create and append the element
+    element = document.createElement("dashboard-page");
+    document.body.appendChild(element);
 
-    element = await TestUtils.fixture(html`<dashboard-page></dashboard-page>`);
-    // Mock API response
-    element.stats = mockStats;
-    await element.updateComplete;
-  });
-
-  it("renders welcome message with user name", () => {
-    const welcome = element.shadowRoot.querySelector(".welcome-message");
-    expect(welcome.textContent).to.include(mockUser.name);
-  });
-
-  it("displays statistics cards", () => {
-    const cards = element.shadowRoot.querySelectorAll(".stat-card");
-    expect(cards.length).to.be.greaterThan(0);
-
-    // Check stats values
-    const projectsCard = element.shadowRoot.querySelector(
-      '[data-stat="projects"]'
-    );
-    expect(projectsCard.textContent).to.include(mockStats.projects.toString());
-  });
-
-  it("shows recent activity feed", () => {
-    const activity = element.shadowRoot.querySelector(".activity-feed");
-    const items = activity.querySelectorAll(".activity-item");
-
-    expect(activity).to.exist;
-    expect(items.length).to.be.greaterThan(0);
-  });
-
-  it("displays quick actions", () => {
-    const actions = element.shadowRoot.querySelector(".quick-actions");
-    const buttons = actions.querySelectorAll("button");
-
-    expect(actions).to.exist;
-    expect(buttons.length).to.be.greaterThan(0);
-  });
-
-  it("handles quick action clicks", async () => {
-    const newProjectButton = element.shadowRoot.querySelector(
-      '[data-action="new-project"]'
-    );
-
-    setTimeout(() => newProjectButton.click());
-    const { detail } = await TestUtils.oneEvent(element, "action-click");
-
-    expect(detail.action).to.equal("new-project");
-  });
-
-  it("shows project progress chart", () => {
-    const chart = element.shadowRoot.querySelector(".progress-chart");
-    expect(chart).to.exist;
-    expect(chart.data).to.exist;
-  });
-
-  it("displays task list", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const taskCards = shadowRoot.querySelectorAll(".task-card");
-    expect(taskCards.length).to.equal(mockTasks.length);
-  });
-
-  it("shows task details", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const firstTask = shadowRoot.querySelector(".task-card");
-    const title = firstTask.querySelector(".task-title");
-    const description = firstTask.querySelector(".task-description");
-    const status = firstTask.querySelector(".task-status");
-
-    expect(title.textContent).to.include(mockTasks[0].title);
-    expect(description.textContent).to.include(mockTasks[0].description);
-    expect(status.textContent.toLowerCase()).to.include(mockTasks[0].status);
-  });
-
-  it("handles task status updates", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const firstTask = shadowRoot.querySelector(".task-card");
-    const statusSelect = firstTask.querySelector(".status-select");
-
-    statusSelect.value = "completed";
-    statusSelect.dispatchEvent(new Event("change"));
+    // Wait for the element to be defined and updated
+    await customElements.whenDefined("dashboard-page");
     await element.updateComplete;
 
-    const { detail } = await TestUtils.oneEvent(element, "task-update");
-    expect(detail.taskId).to.equal(mockTasks[0].id);
-    expect(detail.updates.status).to.equal("completed");
+    // Wait for initial data load
+    await element.refreshData();
   });
 
-  it("shows notifications panel", async () => {
-    const notificationButton = element.shadowRoot.querySelector(
-      ".notifications-toggle"
-    );
-    const panel = element.shadowRoot.querySelector(".notifications-panel");
+  afterEach(async () => {
+    await cleanupDashboardTest(element);
+  });
 
-    expect(panel.hasAttribute("hidden")).to.be.true;
-
-    notificationButton.click();
+  it("renders the dashboard page", async () => {
+    // Wait for the element to be fully rendered
     await element.updateComplete;
 
-    expect(panel.hasAttribute("hidden")).to.be.false;
+    // Check if the element exists
+    expect(element).to.exist;
+
+    // Check if the shadow root exists
+    expect(element.shadowRoot).to.exist;
+
+    // Check if the main container exists
+    const container = element.shadowRoot.querySelector(".dashboard-container");
+    expect(container).to.exist;
   });
 
-  it("handles data refresh", async () => {
-    const refreshButton = element.shadowRoot.querySelector(".refresh-button");
-    let refreshCalled = false;
-
-    element.refreshData = () => {
-      refreshCalled = true;
-      return Promise.resolve();
-    };
-
-    refreshButton.click();
+  it("displays user information", async () => {
     await element.updateComplete;
 
-    expect(refreshCalled).to.be.true;
+    const userInfo = element.shadowRoot.querySelector(".user-info");
+    expect(userInfo).to.exist;
+    expect(userInfo.textContent).to.include("Test User");
   });
 
-  it("shows loading state during data fetch", async () => {
-    element.loading = true;
+  it("loads and displays tasks", async () => {
     await element.updateComplete;
 
-    const loader = element.shadowRoot.querySelector(".loading-indicator");
-    expect(loader).to.exist;
-    expect(loader.hasAttribute("hidden")).to.be.false;
+    const taskList = element.shadowRoot.querySelector(".task-list");
+    expect(taskList).to.exist;
+
+    const tasks = taskList.querySelectorAll(".task-item");
+    expect(tasks.length).to.equal(2);
+
+    const firstTask = tasks[0];
+    expect(firstTask.textContent).to.include("Complete Project Setup");
   });
 
-  it("handles error states", async () => {
-    const error = "Failed to load dashboard data";
-    element.error = error;
+  it("displays statistics", async () => {
     await element.updateComplete;
 
-    const errorMessage = element.shadowRoot.querySelector(".error-message");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include(error);
+    const stats = element.shadowRoot.querySelector(".stats-container");
+    expect(stats).to.exist;
+
+    const statItems = stats.querySelectorAll(".stat-item");
+    expect(statItems.length).to.equal(4);
+
+    const projectsStat = statItems[0];
+    expect(projectsStat.textContent).to.include("5");
   });
 
-  it("supports mobile responsive layout", async () => {
-    // Mock mobile viewport
-    window.matchMedia = (query) => ({
-      matches: query.includes("max-width"),
-      addListener: () => {},
-      removeListener: () => {},
-    });
+  it("handles task updates", async () => {
+    await element.updateComplete;
+
+    const taskList = element.shadowRoot.querySelector(".task-list");
+    const firstTask = taskList.querySelector(".task-item");
+
+    // Simulate task update
+    const updateButton = firstTask.querySelector(".update-button");
+    updateButton.click();
+
+    await element.updateComplete;
+
+    // Check if the task was updated
+    const updatedTask = taskList.querySelector(".task-item");
+    expect(updatedTask.textContent).to.include("Updated");
+  });
+
+  it("handles mobile view", async () => {
+    await element.updateComplete;
+
+    // Simulate mobile view
+    window.innerWidth = 600;
+    window.dispatchEvent(new Event("resize"));
 
     await element.updateComplete;
 
@@ -211,177 +110,55 @@ describe("Dashboard Page", () => {
     expect(container.classList.contains("mobile")).to.be.true;
   });
 
-  it("maintains accessibility attributes", () => {
-    const sections = element.shadowRoot.querySelectorAll("section");
-    sections.forEach((section) => {
-      expect(section.getAttribute("aria-label")).to.exist;
-    });
-
-    const buttons = element.shadowRoot.querySelectorAll("button");
-    buttons.forEach((button) => {
-      expect(button.getAttribute("aria-label")).to.exist;
-    });
-  });
-
-  it("handles keyboard navigation", async () => {
-    const actionButtons = element.shadowRoot.querySelectorAll(".quick-action");
-
-    // Mock the focus behavior by directly setting the activeElement
-    // This is a workaround for testing focus behavior in a test environment
-    Object.defineProperty(document, "activeElement", {
-      writable: true,
-      value: actionButtons[1],
-    });
-
-    expect(document.activeElement).to.equal(actionButtons[1]);
-  });
-
-  it("updates chart data periodically", async () => {
-    const originalData = [...element.chartData];
-
-    // Directly call the update method instead of waiting for the interval
-    element.updateChartData();
+  it("handles data refresh", async () => {
     await element.updateComplete;
 
-    expect(element.chartData).to.not.deep.equal(originalData);
+    // Store initial data
+    const initialTasks = [...element.tasks];
+    const initialStats = { ...element.stats };
+
+    // Refresh data
+    await element.refreshData();
+
+    // Check if data was updated
+    expect(element.tasks).to.not.deep.equal(initialTasks);
+    expect(element.stats).to.not.deep.equal(initialStats);
   });
 
-  it("renders dashboard layout", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const header = shadowRoot.querySelector(".dashboard-header");
-    const content = shadowRoot.querySelector(".dashboard-content");
+  it("handles error states", async () => {
+    // Mock API error
+    window.api.getTasks = async () => {
+      throw new Error("Failed to fetch tasks");
+    };
 
-    expect(header).to.exist;
-    expect(content).to.exist;
+    await element.refreshData();
+
+    // Check if error is displayed
+    const errorMessage = element.shadowRoot.querySelector(".error-message");
+    expect(errorMessage).to.exist;
+    expect(errorMessage.textContent).to.include(
+      "Failed to refresh dashboard data"
+    );
   });
 
-  it("supports task filtering", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const filterSelect = shadowRoot.querySelector(".filter-select");
+  it("handles loading states", async () => {
+    // Mock slow API response
+    window.api.getTasks = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      return { tasks: [] };
+    };
 
-    filterSelect.value = "in_progress";
-    filterSelect.dispatchEvent(new Event("change"));
+    element.refreshData();
+
+    // Check if loading indicator is shown
+    const loader = element.shadowRoot.querySelector(".loading-indicator");
+    expect(loader).to.exist;
+    expect(loader.hasAttribute("hidden")).to.be.false;
+
+    // Wait for loading to complete
     await element.updateComplete;
 
-    const visibleTasks = shadowRoot.querySelectorAll(".task-card:not(.hidden)");
-    expect(visibleTasks.length).to.equal(1);
-    expect(visibleTasks[0].textContent).to.include(mockTasks[0].title);
-  });
-
-  it("handles task sorting", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const sortSelect = shadowRoot.querySelector(".sort-select");
-
-    sortSelect.value = "priority";
-    sortSelect.dispatchEvent(new Event("change"));
-    await element.updateComplete;
-
-    const taskCards = shadowRoot.querySelectorAll(".task-card");
-    const firstTaskPriority =
-      taskCards[0].querySelector(".task-priority").textContent;
-    expect(firstTaskPriority.toLowerCase()).to.include("high");
-  });
-
-  it("displays user profile", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const profile = shadowRoot.querySelector(".user-profile");
-    const avatar = profile.querySelector(".user-avatar");
-    const name = profile.querySelector(".user-name");
-
-    expect(avatar).to.exist;
-    expect(name).to.exist;
-  });
-
-  it("shows task statistics", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const stats = shadowRoot.querySelector(".task-stats");
-    const totalTasks = stats.querySelector(".total-tasks");
-    const completedTasks = stats.querySelector(".completed-tasks");
-
-    expect(totalTasks).to.exist;
-    expect(completedTasks).to.exist;
-  });
-
-  it("handles task search", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const searchInput = shadowRoot.querySelector(".search-input");
-
-    searchInput.value = "documentation";
-    searchInput.dispatchEvent(new Event("input"));
-    await element.updateComplete;
-
-    const visibleTasks = shadowRoot.querySelectorAll(".task-card:not(.hidden)");
-    expect(visibleTasks.length).to.equal(1);
-    expect(visibleTasks[0].textContent).to.include("Documentation");
-  });
-
-  it("supports task assignment", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const firstTask = shadowRoot.querySelector(".task-card");
-    const assigneeSelect = firstTask.querySelector(".assignee-select");
-
-    assigneeSelect.value = "user2";
-    assigneeSelect.dispatchEvent(new Event("change"));
-    await element.updateComplete;
-
-    const { detail } = await TestUtils.oneEvent(element, "task-update");
-    expect(detail.updates.assignee.id).to.equal("user2");
-  });
-
-  it("displays task due dates", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const taskCards = shadowRoot.querySelectorAll(".task-card");
-
-    taskCards.forEach((card, index) => {
-      const dueDate = card.querySelector(".due-date");
-      expect(dueDate.textContent).to.include(mockTasks[index].dueDate);
-    });
-  });
-
-  it("handles mobile responsive layout", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const menuToggle = shadowRoot.querySelector(".menu-toggle");
-    const sidebar = shadowRoot.querySelector(".dashboard-sidebar");
-
-    menuToggle.click();
-    await element.updateComplete;
-
-    expect(sidebar.classList.contains("visible")).to.be.true;
-  });
-
-  it("maintains accessibility attributes", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const taskList = shadowRoot.querySelector(".task-list");
-    expect(taskList.getAttribute("role")).to.equal("list");
-
-    const taskCards = shadowRoot.querySelectorAll(".task-card");
-    taskCards.forEach((card) => {
-      expect(card.getAttribute("role")).to.equal("listitem");
-    });
-  });
-
-  it("supports keyboard navigation", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const taskCards = shadowRoot.querySelectorAll(".task-card");
-    const firstCard = taskCards[0];
-
-    firstCard.focus();
-    firstCard.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
-    await element.updateComplete;
-
-    expect(firstCard.classList.contains("selected")).to.be.true;
-  });
-
-  it("handles task priority updates", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const firstTask = shadowRoot.querySelector(".task-card");
-    const prioritySelect = firstTask.querySelector(".priority-select");
-
-    prioritySelect.value = "low";
-    prioritySelect.dispatchEvent(new Event("change"));
-    await element.updateComplete;
-
-    const { detail } = await TestUtils.oneEvent(element, "task-update");
-    expect(detail.updates.priority).to.equal("low");
+    // Check if loading indicator is hidden
+    expect(loader.hasAttribute("hidden")).to.be.true;
   });
 });

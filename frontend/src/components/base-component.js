@@ -7,15 +7,11 @@ import { LitElement } from "lit";
 export class BaseComponent extends LitElement {
   constructor() {
     super();
-    this._initializeShadowRoot();
     this._bindEventHandlers();
   }
 
-  _initializeShadowRoot() {
-    if (!this.shadowRoot) {
-      console.log(`Initializing shadow root for ${this.tagName}`);
-      this.attachShadow({ mode: "open" });
-    }
+  _bindEventHandlers() {
+    // Override in subclasses to bind event handlers
   }
 
   async connectedCallback() {
@@ -46,64 +42,92 @@ export class BaseComponent extends LitElement {
    */
   createRenderRoot() {
     console.log(`Creating render root for ${this.tagName}`);
-    return this.shadowRoot || this._initializeShadowRoot();
+    return this.attachShadow({ mode: "open" });
   }
 
   /**
-   * Wait for component to be ready
-   * @returns {Promise<void>}
+   * Register a component with the custom elements registry
+   * @param {string} name The name of the component
+   * @param {typeof LitElement} component The component class to register
    */
-  async waitForReady() {
-    console.log(`Waiting for ready ${this.tagName}`);
-    await this.updateComplete;
-    return this;
-  }
+  static registerComponent(name, component) {
+    // More lenient check for LitElement components
+    const isLitElementComponent =
+      component &&
+      typeof component === "function" &&
+      // Check if it extends LitElement directly
+      (component.prototype instanceof LitElement ||
+        // Or check if it has LitElement's key properties/methods
+        (component.prototype &&
+          typeof component.prototype.render === "function" &&
+          component.prototype.createRenderRoot));
 
-  /**
-   * Bind all event handlers
-   * @private
-   */
-  _bindEventHandlers() {
-    // Get all properties from the prototype chain
-    const proto = Object.getPrototypeOf(this);
-    const props = new Set();
-    let currentProto = proto;
-
-    while (currentProto && currentProto !== Object.prototype) {
-      Object.getOwnPropertyNames(currentProto).forEach((prop) =>
-        props.add(prop)
+    if (!isLitElementComponent) {
+      console.warn(
+        `Warning: Component ${name} may not be a valid LitElement, but attempting to register anyway`
       );
-      currentProto = Object.getPrototypeOf(currentProto);
     }
 
-    // Bind all event handlers
-    props.forEach((prop) => {
-      if (
-        (prop.startsWith("_handle") || prop.startsWith("handle")) &&
-        typeof this[prop] === "function"
-      ) {
-        console.log(`Binding event handler ${prop} for ${this.tagName}`);
-        this[prop] = this[prop].bind(this);
+    if (!customElements.get(name)) {
+      console.log(`Registering component: ${name}`);
+      try {
+        customElements.define(name, component);
+      } catch (error) {
+        console.error(`Failed to register ${name}:`, error.message);
       }
-    });
-  }
-
-  async getUpdateComplete() {
-    console.log(`Getting update complete for ${this.tagName}`);
-    const result = await super.getUpdateComplete();
-    await this._ensureReady();
-    return result;
+    }
   }
 }
 
 // Export a helper function to define components
 export function defineComponent(tagName) {
   return function (target) {
-    if (!customElements.get(tagName)) {
-      console.log(`Registering component: ${tagName}`);
-      customElements.define(tagName, target);
-    } else {
-      console.warn(`Component ${tagName} already registered`);
+    try {
+      if (!customElements.get(tagName)) {
+        console.log(`Registering component: ${tagName}`);
+        customElements.define(tagName, target);
+      } else {
+        console.warn(`Component ${tagName} already registered`);
+      }
+    } catch (error) {
+      console.error(`Failed to register component ${tagName}:`, error);
+      // Try to re-register the component
+      try {
+        customElements.define(tagName, target);
+        console.log(`Successfully re-registered component: ${tagName}`);
+      } catch (retryError) {
+        console.error(
+          `Failed to re-register component ${tagName}:`,
+          retryError
+        );
+      }
     }
   };
+}
+
+// Export a helper function to register components
+export function registerComponent(tagName, component) {
+  if (customElements.get(tagName)) {
+    console.warn(`Component ${tagName} already registered`);
+    return;
+  }
+
+  // Wait for the custom elements registry to be ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      try {
+        console.log(`Registering component: ${tagName}`);
+        customElements.define(tagName, component);
+      } catch (error) {
+        console.error(`Failed to register component ${tagName}:`, error);
+      }
+    });
+  } else {
+    try {
+      console.log(`Registering component: ${tagName}`);
+      customElements.define(tagName, component);
+    } catch (error) {
+      console.error(`Failed to register component ${tagName}:`, error);
+    }
+  }
 }

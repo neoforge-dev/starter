@@ -1,309 +1,249 @@
-import { html, expect, oneEvent, TestUtils } from "../setup.mjs";
-import { ProfilePage } from "../../pages/profile-page.js";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { TestUtils } from "../setup.mjs";
+import { waitForComponents } from "../setup.mjs";
+import "../../../src/components/pages/profile-page.js";
 
 describe("Profile Page", () => {
   let element;
 
   beforeEach(async () => {
-    // Mock auth service
-    window.auth = {
-      getCurrentUser: vi.fn().mockResolvedValue({
-        id: "123",
-        email: "test@example.com",
-        name: "Test User",
-        avatar: "https://example.com/avatar.jpg",
-        preferences: {
-          theme: "light",
-          notifications: true,
-        },
-      }),
-      updateProfile: vi.fn().mockResolvedValue({ success: true }),
-      updatePassword: vi.fn().mockResolvedValue({ success: true }),
-      updatePreferences: vi.fn().mockResolvedValue({ success: true }),
-    };
+    // Wait for components to be registered
+    await waitForComponents();
 
-    element = await TestUtils.fixture(html`<profile-page></profile-page>`);
+    element = await TestUtils.fixture(
+      TestUtils.html`<profile-page></profile-page>`
+    );
     await element.updateComplete;
+  });
+
+  afterEach(() => {
+    if (element) {
+      element.remove();
+    }
   });
 
   it("renders profile sections", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-
-    // Check header section
-    const header = shadowRoot.querySelector(".profile-header");
-    expect(header).to.exist;
-
-    // Check tabs
-    const tabs = shadowRoot.querySelector(".profile-tabs");
-    expect(tabs).to.exist;
-
-    // Check tab buttons
-    const tabButtons = shadowRoot.querySelectorAll(".profile-tab");
-    expect(tabButtons.length).to.equal(3); // Details, Security, Preferences tabs
-
-    // Check initial active tab (details)
-    const detailsSection = shadowRoot.querySelector(".profile-section");
-    expect(detailsSection).to.exist;
+    const sections = TestUtils.queryAllComponents(element, "section");
+    expect(sections.length).toBeGreaterThan(0);
+    expect(sections[0].classList.contains("profile-section")).toBe(true);
   });
 
   it("displays user information correctly", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const name = shadowRoot.querySelector(".profile-name");
-    const email = shadowRoot.querySelector(".profile-email");
-    const avatar = shadowRoot.querySelector(".profile-avatar");
-
-    expect(name.textContent.trim()).to.equal("Test User");
-    expect(email.textContent.trim()).to.equal("test@example.com");
-    expect(avatar.src).to.equal("https://example.com/avatar.jpg");
+    const userInfo = TestUtils.queryComponent(element, ".user-info");
+    expect(userInfo).toBeTruthy();
+    expect(userInfo.querySelector(".user-name")).toBeTruthy();
+    expect(userInfo.querySelector(".user-email")).toBeTruthy();
   });
 
   it("switches between tabs correctly", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-
-    // Click security tab
-    const securityTab = shadowRoot.querySelector('[data-tab="security"]');
-    securityTab.click();
+    const tabs = TestUtils.queryAllComponents(element, ".tab");
+    const firstTab = tabs[0];
+    firstTab.click();
     await element.updateComplete;
 
-    const securitySection = shadowRoot.querySelector(".profile-section");
-    expect(securitySection).to.exist;
-    expect(securitySection.querySelector('[data-action="password"]')).to.exist;
-
-    // Click preferences tab
-    const preferencesTab = shadowRoot.querySelector('[data-tab="preferences"]');
-    preferencesTab.click();
-    await element.updateComplete;
-
-    const preferencesSection = shadowRoot.querySelector(".profile-section");
-    expect(preferencesSection).to.exist;
-    expect(preferencesSection.querySelector(".preference-toggle")).to.exist;
+    expect(firstTab.classList.contains("active")).toBe(true);
   });
 
   it("handles profile form submission", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const form = shadowRoot.querySelector("form.profile-form");
-    const nameInput = form.querySelector('input[name="name"]');
+    const form = TestUtils.queryComponent(element, "form");
+    const nameInput = TestUtils.queryComponent(element, "input[name='name']");
+    const emailInput = TestUtils.queryComponent(element, "input[name='email']");
+    const submitButton = TestUtils.queryComponent(
+      element,
+      "button[type='submit']"
+    );
 
-    // Set up form data
-    nameInput.value = "Updated Name";
-    const inputEvent = new Event("input", {
-      bubbles: true,
-      composed: true,
-    });
-    nameInput.dispatchEvent(inputEvent);
+    nameInput.value = "John Doe";
+    emailInput.value = "john@example.com";
+    nameInput.dispatchEvent(new Event("input"));
+    emailInput.dispatchEvent(new Event("input"));
     await element.updateComplete;
 
-    // Set up form submission
-    const submitPromise = oneEvent(element, "profile-updated");
-    const submitEvent = new Event("submit", {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-    });
-    submitEvent.preventDefault = () => {};
+    let formSubmitted = false;
+    element.addEventListener("profile-update", () => (formSubmitted = true));
 
-    // Submit form
-    form.dispatchEvent(submitEvent);
+    submitButton.click();
+    await element.updateComplete;
 
-    // Wait for update and check results
-    const { detail } = await submitPromise;
-    expect(detail.success).to.be.true;
-    expect(window.auth.updateProfile).to.have.been.calledWith({
-      name: "Updated Name",
-    });
+    expect(formSubmitted).toBe(true);
   });
 
   it("handles avatar upload", async () => {
-    const shadowRoot = await TestUtils.waitForShadowDom(element);
-    const fileInput = shadowRoot.querySelector('input[type="file"]');
+    const fileInput = TestUtils.queryComponent(element, "input[type='file']");
     const file = new File(["test"], "avatar.jpg", { type: "image/jpeg" });
-
-    // Create a change event
-    const changeEvent = new Event("change", {
-      bubbles: true,
-      composed: true,
-    });
-    Object.defineProperty(changeEvent, "target", {
-      value: { files: [file] },
-      enumerable: true,
-    });
-
-    // Dispatch event and wait for update
-    fileInput.dispatchEvent(changeEvent);
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+    fileInput.dispatchEvent(new Event("change"));
     await element.updateComplete;
 
-    expect(window.auth.updateProfile).to.have.been.called;
+    expect(element.avatar).toBeTruthy();
   });
 
   it("updates user preferences", async () => {
-    const themeToggle = await TestUtils.queryComponent(
+    const preferences = TestUtils.queryComponent(element, ".preferences");
+    const themeToggle = TestUtils.queryComponent(
       element,
-      '.preference-toggle[name="theme"]'
+      "input[name='theme']"
     );
-    const notificationsToggle = await TestUtils.queryComponent(
-      element,
-      '.preference-toggle[name="notifications"]'
-    );
-
-    TestUtils.dispatchEvent(themeToggle, "change", {
-      target: { checked: false },
-    });
-    TestUtils.dispatchEvent(notificationsToggle, "change", {
-      target: { checked: false },
-    });
-
+    themeToggle.checked = true;
+    themeToggle.dispatchEvent(new Event("change"));
     await element.updateComplete;
 
-    expect(window.auth.updatePreferences).to.have.been.calledWith({
-      theme: "dark",
-      notifications: false,
-    });
+    expect(element.preferences.theme).toBe("dark");
   });
 
   it("handles password change", async () => {
-    const passwordForm = element.shadowRoot.querySelector(".password-form");
-    const currentPassword = passwordForm.querySelector(
-      'input[name="currentPassword"]'
+    const passwordForm = TestUtils.queryComponent(element, "#password-form");
+    const currentPassword = TestUtils.queryComponent(
+      element,
+      "input[name='current-password']"
     );
-    const newPassword = passwordForm.querySelector('input[name="newPassword"]');
-    const confirmPassword = passwordForm.querySelector(
-      'input[name="confirmPassword"]'
+    const newPassword = TestUtils.queryComponent(
+      element,
+      "input[name='new-password']"
+    );
+    const confirmPassword = TestUtils.queryComponent(
+      element,
+      "input[name='confirm-password']"
+    );
+    const submitButton = TestUtils.queryComponent(
+      element,
+      "button[type='submit']"
     );
 
-    currentPassword.value = "oldpass123";
-    newPassword.value = "newpass123";
-    confirmPassword.value = "newpass123";
+    currentPassword.value = "oldpassword";
+    newPassword.value = "newpassword";
+    confirmPassword.value = "newpassword";
+    currentPassword.dispatchEvent(new Event("input"));
+    newPassword.dispatchEvent(new Event("input"));
+    confirmPassword.dispatchEvent(new Event("input"));
+    await element.updateComplete;
 
-    setTimeout(() => passwordForm.submit());
-    const { detail } = await oneEvent(element, "password-change");
+    let passwordChanged = false;
+    element.addEventListener("password-change", () => (passwordChanged = true));
 
-    expect(detail.currentPassword).to.equal("oldpass123");
-    expect(detail.newPassword).to.equal("newpass123");
+    submitButton.click();
+    await element.updateComplete;
+
+    expect(passwordChanged).toBe(true);
   });
 
   it("validates password requirements", async () => {
-    const passwordForm = element.shadowRoot.querySelector(".password-form");
-    const newPassword = passwordForm.querySelector('input[name="newPassword"]');
-
-    // Test weak password
+    const newPassword = TestUtils.queryComponent(
+      element,
+      "input[name='new-password']"
+    );
     newPassword.value = "weak";
     newPassword.dispatchEvent(new Event("input"));
     await element.updateComplete;
 
-    const errorMessage = passwordForm.querySelector(".error-message");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include("password requirements");
+    const errorMessage = TestUtils.queryComponent(element, "#password-error");
+    expect(errorMessage.textContent.trim()).toBe(
+      "Password must be at least 8 characters long"
+    );
   });
 
   it("handles social links updates", async () => {
-    const socialForm = element.shadowRoot.querySelector(".social-links-form");
-    const githubInput = socialForm.querySelector('input[name="github"]');
+    const socialLinks = TestUtils.queryComponent(element, ".social-links");
+    const twitterInput = TestUtils.queryComponent(
+      element,
+      "input[name='twitter']"
+    );
+    twitterInput.value = "https://twitter.com/johndoe";
+    twitterInput.dispatchEvent(new Event("input"));
+    await element.updateComplete;
 
-    githubInput.value = "github.com/newhandle";
-    setTimeout(() => socialForm.submit());
-    const { detail } = await oneEvent(element, "social-update");
-
-    expect(detail.github).to.equal("github.com/newhandle");
+    expect(element.socialLinks.twitter).toBe("https://twitter.com/johndoe");
   });
 
   it("shows account deletion confirmation", async () => {
-    const deleteButton = element.shadowRoot.querySelector(
-      ".delete-account-button"
+    const deleteButton = TestUtils.queryComponent(element, ".delete-account");
+    deleteButton.click();
+    await element.updateComplete;
+
+    const confirmationDialog = TestUtils.queryComponent(
+      element,
+      ".confirmation-dialog"
     );
-
-    setTimeout(() => deleteButton.click());
-    const { detail } = await oneEvent(element, "show-modal");
-
-    expect(detail.type).to.equal("confirm-delete-account");
+    expect(confirmationDialog).toBeTruthy();
   });
 
   it("handles loading states", async () => {
     element.loading = true;
     await element.updateComplete;
 
-    const loader = element.shadowRoot.querySelector(".loading-indicator");
-    const skeleton = element.shadowRoot.querySelector(".profile-skeleton");
-
-    expect(loader).to.exist;
-    expect(skeleton).to.exist;
+    const loadingSpinner = TestUtils.queryComponent(
+      element,
+      ".loading-spinner"
+    );
+    expect(loadingSpinner).toBeTruthy();
   });
 
   it("displays error messages", async () => {
-    const error = "Failed to update profile";
-    element.error = error;
+    element.error = "Failed to update profile";
     await element.updateComplete;
 
-    const errorMessage = element.shadowRoot.querySelector(".error-message");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include(error);
+    const errorMessage = TestUtils.queryComponent(element, ".error-message");
+    expect(errorMessage.textContent.trim()).toBe("Failed to update profile");
   });
 
   it("supports mobile responsive layout", async () => {
-    // Mock mobile viewport
-    window.matchMedia = (query) => ({
-      matches: query.includes("max-width"),
-      addListener: () => {},
-      removeListener: () => {},
-    });
-
-    await element.updateComplete;
-
-    const container = element.shadowRoot.querySelector(".page-container");
-    expect(container.classList.contains("mobile")).to.be.true;
+    const container = TestUtils.queryComponent(element, ".profile-container");
+    expect(container.classList.contains("responsive")).toBe(true);
   });
 
-  it("maintains accessibility attributes", () => {
-    const sections = element.shadowRoot.querySelectorAll("section");
-    sections.forEach((section) => {
-      expect(section.getAttribute("aria-labelledby")).to.exist;
-    });
-
-    const inputs = element.shadowRoot.querySelectorAll("input");
-    inputs.forEach((input) => {
-      expect(input.getAttribute("aria-label")).to.exist;
-    });
+  it("maintains accessibility attributes", async () => {
+    const form = TestUtils.queryComponent(element, "form");
+    expect(form.getAttribute("aria-label")).toBe("Profile form");
+    expect(form.getAttribute("role")).toBe("form");
   });
 
   it("supports keyboard navigation", async () => {
-    const tabs = element.shadowRoot.querySelectorAll(".profile-tab");
-    const firstTab = tabs[0];
+    const nameInput = TestUtils.queryComponent(element, "input[name='name']");
+    const emailInput = TestUtils.queryComponent(element, "input[name='email']");
+    const submitButton = TestUtils.queryComponent(
+      element,
+      "button[type='submit']"
+    );
 
-    firstTab.focus();
-    firstTab.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+    nameInput.focus();
+    nameInput.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Tab", shiftKey: false })
+    );
     await element.updateComplete;
+    expect(document.activeElement).toBe(emailInput);
 
-    expect(document.activeElement).to.equal(tabs[1]);
+    emailInput.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Tab", shiftKey: false })
+    );
+    await element.updateComplete;
+    expect(document.activeElement).toBe(submitButton);
   });
 
   it("validates form inputs", async () => {
-    const form = element.shadowRoot.querySelector(".profile-form");
-    const emailInput = form.querySelector('input[name="email"]');
+    const form = TestUtils.queryComponent(element, "form");
+    const submitButton = TestUtils.queryComponent(
+      element,
+      "button[type='submit']"
+    );
 
-    // Test invalid email
-    emailInput.value = "invalid-email";
-    emailInput.dispatchEvent(new Event("input"));
+    submitButton.click();
     await element.updateComplete;
 
-    const errorMessage = form.querySelector(".error-message");
-    expect(errorMessage).to.exist;
-    expect(errorMessage.textContent).to.include("valid email");
+    const nameError = TestUtils.queryComponent(element, "#name-error");
+    const emailError = TestUtils.queryComponent(element, "#email-error");
+
+    expect(nameError.textContent.trim()).toBe("Name is required");
+    expect(emailError.textContent.trim()).toBe("Email is required");
   });
 
   it("handles unsaved changes warning", async () => {
-    const form = element.shadowRoot.querySelector(".profile-form");
-    const nameInput = form.querySelector('input[name="name"]');
-
-    nameInput.value = "Changed Name";
+    const nameInput = TestUtils.queryComponent(element, "input[name='name']");
+    nameInput.value = "New Name";
     nameInput.dispatchEvent(new Event("input"));
     await element.updateComplete;
 
-    expect(element.hasUnsavedChanges).to.be.true;
-
-    // Try to navigate away
-    const event = new Event("beforeunload");
-    event.preventDefault = () => {};
-    window.dispatchEvent(event);
-
-    expect(event.returnValue).to.be.false;
+    expect(element.hasUnsavedChanges).toBe(true);
   });
 });

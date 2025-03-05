@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { fixture, html, oneEvent } from "@open-wc/testing-helpers";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { TestUtils } from "../../setup.mjs";
+import { waitForComponents } from "../../setup.mjs";
 import "../../../components/organisms/table/table.js";
 
 describe("NeoTable", () => {
@@ -18,35 +19,68 @@ describe("NeoTable", () => {
   let element;
 
   beforeEach(async () => {
-    element = await fixture(html`
-      <neo-table
-        .columns=${columns}
-        .data=${data}
-        sortable
-        filterable
-        paginated
-        selectable
-      ></neo-table>
-    `);
+    try {
+      // Wait for components to be registered
+      await waitForComponents();
+      element = await TestUtils.fixture(TestUtils.html`
+        <neo-table
+          .columns=${columns}
+          .data=${data}
+          sortable
+          filterable
+          paginated
+          selectable
+        ></neo-table>
+      `);
+      await TestUtils.waitForComponent(element);
+    } catch (error) {
+      console.error("Error in beforeEach:", error);
+      throw error;
+    }
+  });
+
+  afterEach(() => {
+    if (element) {
+      element.remove();
+    }
   });
 
   it("renders with default properties", async () => {
-    expect(element).to.exist;
-    expect(element.shadowRoot.querySelector("table")).to.exist;
+    try {
+      expect(element).to.exist;
+      const table = await TestUtils.queryComponent(element, "table");
+      expect(table).to.exist;
+    } catch (error) {
+      console.error("Error in renders with default properties:", error);
+      throw error;
+    }
   });
 
   it("displays empty message when no data", async () => {
-    element.data = [];
-    await element.updateComplete;
+    try {
+      element.data = [];
+      await element.updateComplete;
 
-    const emptyMessage = element.shadowRoot.querySelector(".empty-message");
-    expect(emptyMessage).to.exist;
-    expect(emptyMessage.textContent).to.equal("No data available");
+      const emptyMessage = await TestUtils.queryComponent(
+        element,
+        ".empty-message"
+      );
+      expect(emptyMessage).to.exist;
+      expect(emptyMessage.textContent).to.equal("No data available");
+    } catch (error) {
+      console.error("Error in displays empty message:", error);
+      throw error;
+    }
   });
 
   it("renders correct number of rows", async () => {
-    const rows = element.shadowRoot.querySelectorAll("tbody tr");
-    expect(rows.length).to.equal(data.length);
+    try {
+      const rows = await TestUtils.queryAllComponents(element, "tbody tr");
+      expect(rows.length).to.equal(data.length);
+    } catch (error) {
+      console.error("Error in renders correct number of rows:", error);
+      throw error;
+    }
   });
 
   it("renders correct number of columns", async () => {

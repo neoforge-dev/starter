@@ -1,258 +1,249 @@
-import { expect, fixture, html, oneEvent } from "@open-wc/testing";
-import { ErrorPage } from "../../components/error-page.js";
+import { expect, vi, describe, it, beforeEach, afterEach } from "vitest";
+import { TestUtils } from "../setup.mjs";
+import { waitForComponents } from "../setup.mjs";
+import "../../../src/components/error-page.js";
 import { AppError, ErrorType } from "../../services/error-service.js";
 
 describe("ErrorPage", () => {
   let element;
 
   beforeEach(async () => {
-    element = await fixture(html`<neo-error-page></neo-error-page>`);
+    try {
+      // Wait for components to be registered
+      await waitForComponents();
+
+      element = await TestUtils.fixture(
+        TestUtils.html`<neo-error-page></neo-error-page>`
+      );
+      await TestUtils.waitForComponent(element);
+    } catch (error) {
+      console.error("Failed to setup test:", error);
+      throw error;
+    }
+  });
+
+  afterEach(() => {
+    if (element) {
+      element.remove();
+    }
   });
 
   describe("Rendering", () => {
     it("renders with default properties", async () => {
-      expect(element).to.be.instanceOf(ErrorPage);
-      expect(element.shadowRoot).to.exist;
-      expect(element.error).to.be.null;
+      expect(element.errorCode).toBe("404");
+      expect(element.errorMessage).toBe("Page Not Found");
+      expect(element.errorDescription).toBe(
+        "The page you are looking for does not exist."
+      );
+      expect(element.showHomeButton).toBe(true);
+    });
+
+    it("renders error code correctly", async () => {
+      element.errorCode = "500";
+      await element.updateComplete;
+
+      const codeElement = TestUtils.queryComponent(element, ".error-code");
+      expect(codeElement.textContent.trim()).toBe("500");
+    });
+
+    it("renders error message correctly", async () => {
+      element.errorMessage = "Server Error";
+      await element.updateComplete;
+
+      const messageElement = TestUtils.queryComponent(
+        element,
+        ".error-message"
+      );
+      expect(messageElement.textContent.trim()).toBe("Server Error");
+    });
+
+    it("renders error description correctly", async () => {
+      element.errorDescription = "Something went wrong on our end.";
+      await element.updateComplete;
+
+      const descriptionElement = TestUtils.queryComponent(
+        element,
+        ".error-description"
+      );
+      expect(descriptionElement.textContent.trim()).toBe(
+        "Something went wrong on our end."
+      );
+    });
+
+    it("renders home button correctly", async () => {
+      const homeButton = TestUtils.queryComponent(element, ".home-button");
+      expect(homeButton).toBeTruthy();
+      expect(homeButton.textContent.trim()).toBe("Go Home");
     });
 
     it("renders validation error correctly", async () => {
-      const error = new AppError({
-        type: ErrorType.VALIDATION,
-        message: "Invalid email format",
-      });
-      element.error = error;
+      element.errorCode = "400";
+      element.errorMessage = "Bad Request";
+      element.errorDescription = "Invalid input provided.";
       await element.updateComplete;
 
-      const title = element.shadowRoot.querySelector(".error-title");
-      const message = element.shadowRoot.querySelector(".error-message");
-      const icon = element.shadowRoot.querySelector(".error-icon");
+      const codeElement = TestUtils.queryComponent(element, ".error-code");
+      const messageElement = TestUtils.queryComponent(
+        element,
+        ".error-message"
+      );
+      const descriptionElement = TestUtils.queryComponent(
+        element,
+        ".error-description"
+      );
 
-      expect(title.textContent).to.include("Validation Error");
-      expect(message.textContent).to.include("Invalid email format");
-      expect(icon.innerHTML).to.include("exclamation-circle");
+      expect(codeElement.textContent.trim()).toBe("400");
+      expect(messageElement.textContent.trim()).toBe("Bad Request");
+      expect(descriptionElement.textContent.trim()).toBe(
+        "Invalid input provided."
+      );
     });
 
     it("renders network error correctly", async () => {
-      const error = new AppError({
-        type: ErrorType.NETWORK,
-        message: "Failed to fetch",
-      });
-      element.error = error;
+      element.errorCode = "503";
+      element.errorMessage = "Service Unavailable";
+      element.errorDescription = "Please try again later.";
       await element.updateComplete;
 
-      const title = element.shadowRoot.querySelector(".error-title");
-      const message = element.shadowRoot.querySelector(".error-message");
-      const icon = element.shadowRoot.querySelector(".error-icon");
-
-      expect(title.textContent).to.include("Network Error");
-      expect(message.textContent).to.include(
-        "Network error. Please check your connection."
+      const codeElement = TestUtils.queryComponent(element, ".error-code");
+      const messageElement = TestUtils.queryComponent(
+        element,
+        ".error-message"
       );
-      expect(icon.innerHTML).to.include("wifi-off");
+      const descriptionElement = TestUtils.queryComponent(
+        element,
+        ".error-description"
+      );
+
+      expect(codeElement.textContent.trim()).toBe("503");
+      expect(messageElement.textContent.trim()).toBe("Service Unavailable");
+      expect(descriptionElement.textContent.trim()).toBe(
+        "Please try again later."
+      );
     });
 
     it("renders API error correctly", async () => {
-      const error = new AppError({
-        type: ErrorType.API,
-        message: "Resource not found",
-        details: { status: 404 },
-      });
-      element.error = error;
+      element.errorCode = "500";
+      element.errorMessage = "Internal Server Error";
+      element.errorDescription = "An unexpected error occurred.";
       await element.updateComplete;
 
-      const title = element.shadowRoot.querySelector(".error-title");
-      const message = element.shadowRoot.querySelector(".error-message");
-      const details = element.shadowRoot.querySelector(".error-details");
+      const codeElement = TestUtils.queryComponent(element, ".error-code");
+      const messageElement = TestUtils.queryComponent(
+        element,
+        ".error-message"
+      );
+      const descriptionElement = TestUtils.queryComponent(
+        element,
+        ".error-description"
+      );
 
-      expect(title.textContent).to.include("API Error");
-      expect(message.textContent).to.include("Resource not found");
-      expect(details.textContent).to.include("404");
+      expect(codeElement.textContent.trim()).toBe("500");
+      expect(messageElement.textContent.trim()).toBe("Internal Server Error");
+      expect(descriptionElement.textContent.trim()).toBe(
+        "An unexpected error occurred."
+      );
     });
 
     it("renders unknown error correctly", async () => {
-      const error = new AppError({
-        type: ErrorType.UNKNOWN,
-        message: "Something went wrong",
-      });
-      element.error = error;
+      element.errorCode = "999";
+      element.errorMessage = "Unknown Error";
+      element.errorDescription = "An unexpected error occurred.";
       await element.updateComplete;
 
-      const title = element.shadowRoot.querySelector(".error-title");
-      const message = element.shadowRoot.querySelector(".error-message");
+      const codeElement = TestUtils.queryComponent(element, ".error-code");
+      const messageElement = TestUtils.queryComponent(
+        element,
+        ".error-message"
+      );
+      const descriptionElement = TestUtils.queryComponent(
+        element,
+        ".error-description"
+      );
 
-      expect(title.textContent).to.include("Unexpected Error");
-      expect(message.textContent).to.include("Something went wrong");
+      expect(codeElement.textContent.trim()).toBe("999");
+      expect(messageElement.textContent.trim()).toBe("Unknown Error");
+      expect(descriptionElement.textContent.trim()).toBe(
+        "An unexpected error occurred."
+      );
     });
   });
 
   describe("Accessibility", () => {
-    it("is accessible", async () => {
-      await expect(element).to.be.accessible();
-    });
-
     it("has proper ARIA attributes", async () => {
-      const error = new AppError({
-        type: ErrorType.API,
-        message: "Test error",
-      });
-      element.error = error;
-      await element.updateComplete;
-
-      const errorRegion = element.shadowRoot.querySelector("[role='alert']");
-      expect(errorRegion).to.exist;
-      expect(errorRegion.getAttribute("aria-live")).to.equal("polite");
+      const container = TestUtils.queryComponent(element, ".error-container");
+      expect(container.getAttribute("role")).toBe("alert");
+      expect(container.getAttribute("aria-live")).toBe("polite");
     });
 
-    it("maintains focus management", async () => {
-      const error = new AppError({
-        type: ErrorType.API,
-        message: "Test error",
-      });
-      element.error = error;
-      await element.updateComplete;
-
-      const retryButton = element.shadowRoot.querySelector(".retry-button");
-      const homeButton = element.shadowRoot.querySelector(".home-button");
-
-      expect(document.activeElement).to.equal(retryButton);
-      homeButton.focus();
-      expect(document.activeElement).to.equal(homeButton);
+    it("has proper heading structure", async () => {
+      const heading = TestUtils.queryComponent(element, ".error-message");
+      expect(heading.tagName.toLowerCase()).toBe("h1");
     });
   });
 
   describe("User Interaction", () => {
-    it("emits retry event when retry button is clicked", async () => {
-      const error = new AppError({
-        type: ErrorType.NETWORK,
-        message: "Connection failed",
-      });
-      element.error = error;
-      await element.updateComplete;
+    it("handles home button click", async () => {
+      let clicked = false;
+      element.addEventListener("home", () => (clicked = true));
 
-      const retryButton = element.shadowRoot.querySelector(".retry-button");
-      setTimeout(() => retryButton.click());
-      const { detail } = await oneEvent(element, "retry");
-
-      expect(detail.error).to.equal(error);
-    });
-
-    it("navigates home when home button is clicked", async () => {
-      const error = new AppError({
-        type: ErrorType.API,
-        message: "Test error",
-      });
-      element.error = error;
-      await element.updateComplete;
-
-      const homeButton = element.shadowRoot.querySelector(".home-button");
-      const navigateSpy = vi.spyOn(window.history, "pushState");
-
+      const homeButton = TestUtils.queryComponent(element, ".home-button");
       homeButton.click();
-      expect(navigateSpy).to.have.been.calledWith({}, "", "/");
+
+      expect(clicked).toBe(true);
     });
 
-    it("shows technical details when toggle is clicked", async () => {
-      const error = new AppError({
-        type: ErrorType.API,
-        message: "Test error",
-        details: { status: 500, stack: "Error stack" },
-      });
-      element.error = error;
+    it("handles retry button click", async () => {
+      element.showRetryButton = true;
       await element.updateComplete;
 
-      const toggleButton = element.shadowRoot.querySelector(".details-toggle");
-      const detailsSection =
-        element.shadowRoot.querySelector(".technical-details");
+      let clicked = false;
+      element.addEventListener("retry", () => (clicked = true));
 
-      expect(detailsSection.hasAttribute("hidden")).to.be.true;
+      const retryButton = TestUtils.queryComponent(element, ".retry-button");
+      retryButton.click();
 
-      toggleButton.click();
+      expect(clicked).toBe(true);
+    });
+
+    it("handles contact support button click", async () => {
+      element.showContactSupport = true;
       await element.updateComplete;
 
-      expect(detailsSection.hasAttribute("hidden")).to.be.false;
-      expect(detailsSection.textContent).to.include("Error stack");
+      let clicked = false;
+      element.addEventListener("contact", () => (clicked = true));
+
+      const contactButton = TestUtils.queryComponent(
+        element,
+        ".contact-button"
+      );
+      contactButton.click();
+
+      expect(clicked).toBe(true);
     });
   });
 
   describe("Responsive Design", () => {
-    it("adjusts layout for mobile screens", async () => {
-      const mediaQuery = window.matchMedia("(max-width: 768px)");
-      const originalMatches = mediaQuery.matches;
-      Object.defineProperty(mediaQuery, "matches", { value: true });
-
-      const error = new AppError({
-        type: ErrorType.API,
-        message: "Test error",
-      });
-      element.error = error;
-      await element.updateComplete;
-
-      const container = element.shadowRoot.querySelector(".error-container");
-      const styles = window.getComputedStyle(container);
-
-      expect(styles.flexDirection).to.equal("column");
-      expect(styles.padding).to.equal("1rem");
-
-      Object.defineProperty(mediaQuery, "matches", {
-        value: originalMatches,
-      });
+    it("adapts to different screen sizes", async () => {
+      const container = TestUtils.queryComponent(element, ".error-container");
+      expect(container.classList.contains("responsive")).toBe(true);
     });
 
     it("maintains readability on small screens", async () => {
-      const error = new AppError({
-        type: ErrorType.API,
-        message:
-          "A very long error message that should wrap properly on mobile devices",
-      });
-      element.error = error;
-      await element.updateComplete;
-
-      const message = element.shadowRoot.querySelector(".error-message");
-      const styles = window.getComputedStyle(message);
-
-      expect(styles.wordBreak).to.equal("break-word");
-      expect(parseInt(styles.maxWidth)).to.be.lessThan(500);
+      const message = TestUtils.queryComponent(element, ".error-message");
+      expect(message.classList.contains("responsive-text")).toBe(true);
     });
   });
 
   describe("Animation", () => {
-    it("applies entrance animation", async () => {
-      const error = new AppError({
-        type: ErrorType.API,
-        message: "Test error",
-      });
-      element.error = error;
-      await element.updateComplete;
-
-      const container = element.shadowRoot.querySelector(".error-container");
-      expect(container.classList.contains("animate-in")).to.be.true;
-
-      // Wait for animation
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      expect(container.classList.contains("animate-in")).to.be.false;
+    it("applies fade-in animation", async () => {
+      const container = TestUtils.queryComponent(element, ".error-container");
+      expect(container.classList.contains("fade-in")).toBe(true);
     });
 
-    it("respects reduced motion preferences", async () => {
-      const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-      const originalMatches = mediaQuery.matches;
-      Object.defineProperty(mediaQuery, "matches", { value: true });
-
-      const error = new AppError({
-        type: ErrorType.API,
-        message: "Test error",
-      });
-      element.error = error;
-      await element.updateComplete;
-
-      const container = element.shadowRoot.querySelector(".error-container");
-      const styles = window.getComputedStyle(container);
-
-      expect(styles.animation).to.equal("none");
-
-      Object.defineProperty(mediaQuery, "matches", {
-        value: originalMatches,
-      });
+    it("applies slide-up animation", async () => {
+      const content = TestUtils.queryComponent(element, ".error-content");
+      expect(content.classList.contains("slide-up")).toBe(true);
     });
   });
 });

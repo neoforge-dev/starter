@@ -1,15 +1,14 @@
-import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import {
-  BaseComponent,
-  defineComponent,
-} from "../components/base-component.js";
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
 
 /**
  * @element faq-page
  * @description FAQ page component with sections, search, and filtering
  */
-@defineComponent("faq-page")
 export class FAQPage extends BaseComponent {
   static properties = {
     sections: { type: Array, state: true },

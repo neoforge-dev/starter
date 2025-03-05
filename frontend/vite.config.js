@@ -104,6 +104,22 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 500,
   },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.mjs"],
+    include: ["src/**/*.test.js"],
+    coverage: {
+      reporter: ["text", "json", "html"],
+      exclude: ["node_modules/", "src/test/"],
+    },
+    esbuild: {
+      target: "es2020",
+      supported: {
+        decorators: true,
+      },
+    },
+  },
   resolve: {
     alias: {
       "@styles": resolve(__dirname, "src/styles"),
@@ -115,6 +131,7 @@ export default defineConfig({
       "lit-html": "lit-html",
       "@lit/reactive-element": "@lit/reactive-element",
       chai: "chai/chai.js",
+      "@": resolve(__dirname, "./src"),
     },
   },
   optimizeDeps: {
@@ -126,11 +143,13 @@ export default defineConfig({
       "lit-element",
       "@web/test-runner",
       "@web/components",
+      "@open-wc/testing-helpers",
     ],
     esbuildOptions: {
       target: "es2022",
       supported: {
         "top-level-await": true,
+        decorators: true,
       },
       plugins: [
         {
@@ -143,26 +162,15 @@ export default defineConfig({
         },
       ],
     },
+    esbuild: {
+      target: "es2020",
+      supported: {
+        decorators: true,
+      },
+    },
   },
   plugins: [
-    criticalCSSPlugin({
-      routes: [
-        "/",
-        "/docs",
-        "/examples",
-        "/auth/login",
-        "/auth/register",
-        "/dashboard",
-      ],
-      dimensions: [
-        { width: 375, height: 812 }, // iPhone X
-        { width: 768, height: 1024 }, // iPad
-        { width: 1280, height: 800 }, // Laptop
-        { width: 1920, height: 1080 }, // Desktop
-      ],
-      minify: true,
-      inlineThreshold: 8192, // 8KB
-    }),
+    criticalCssPlugin(),
     visualizer({
       filename: "dist/stats.html",
       gzipSize: true,
@@ -170,32 +178,4 @@ export default defineConfig({
       open: true,
     }),
   ],
-  test: {
-    environment: "happy-dom",
-    setupFiles: ["./src/test/setup.mjs"],
-    include: ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    deps: {
-      inline: [/^lit/, /@lit/, /^@open-wc/],
-    },
-    globals: true,
-    coverage: {
-      provider: "v8",
-      reporter: ["text", "html"],
-      exclude: [
-        "coverage/**",
-        "dist/**",
-        "**/node_modules/**",
-        "**/*.d.ts",
-        "**/*.test.{js,jsx}",
-        "**/*.spec.{js,jsx}",
-        "**/test/**",
-      ],
-    },
-    transformMode: {
-      web: [/\.js$/],
-    },
-    moduleNameMapper: {
-      "^https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js$": "lit",
-    },
-  },
 });

@@ -11,7 +11,7 @@ describe("ApiClient", () => {
 
   beforeEach(() => {
     originalFetch = window.fetch;
-    client = new ApiClient();
+    client = new ApiClient("/api");
 
     // Default mock response
     mockResponse = {

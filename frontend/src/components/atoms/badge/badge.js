@@ -5,6 +5,7 @@ import {
 } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 import "../../atoms/icon/icon.js";
+import { registerComponent } from "../../base-component.js";
 
 /**
  * Badge component for displaying status, labels, or counts
@@ -20,19 +21,17 @@ import "../../atoms/icon/icon.js";
  * @prop {boolean} outlined - Whether the badge has an outlined style
  */
 export class NeoBadge extends LitElement {
-  static get properties() {
-    return {
-      variant: { type: String, reflect: true },
-      size: { type: String, reflect: true },
-      rounded: { type: Boolean, reflect: true },
-      outlined: { type: Boolean, reflect: true },
-      icon: { type: String, reflect: true },
-      removable: { type: Boolean, reflect: true },
-      title: { type: String, reflect: true },
-      pill: { type: Boolean, reflect: true },
-      disabled: { type: Boolean, reflect: true },
-    };
-  }
+  static properties = {
+    variant: { type: String, reflect: true },
+    size: { type: String, reflect: true },
+    rounded: { type: Boolean, reflect: true },
+    outlined: { type: Boolean, reflect: true },
+    icon: { type: String, reflect: true },
+    removable: { type: Boolean, reflect: true },
+    title: { type: String, reflect: true },
+    pill: { type: Boolean, reflect: true },
+    disabled: { type: Boolean, reflect: true },
+  };
 
   constructor() {
     super();
@@ -269,5 +268,5 @@ export class NeoBadge extends LitElement {
   }
 }
 
-// Register the custom element
-customElements.define("neo-badge", NeoBadge);
+// Register the component
+registerComponent("neo-badge", NeoBadge);

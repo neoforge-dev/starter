@@ -1,10 +1,10 @@
 import { AppError, ErrorType } from "./error-service.js";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+const DEFAULT_API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 export class ApiClient {
-  constructor() {
-    this._baseUrl = API_BASE_URL;
+  constructor(baseUrl = DEFAULT_API_BASE_URL) {
+    this._baseUrl = baseUrl;
     this._defaultHeaders = {
       "Content-Type": "application/json",
       Accept: "application/json",
