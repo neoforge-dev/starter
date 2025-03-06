@@ -32,6 +32,12 @@ export class MockApiClient {
   }
 
   async post(endpoint, data, options = {}) {
+    // Store the call for spying
+    if (!this._calls) {
+      this._calls = [];
+    }
+    this._calls.push({ endpoint, data, options });
+
     return this._fetch(endpoint, {
       ...options,
       method: "POST",

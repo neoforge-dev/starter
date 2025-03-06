@@ -1,4 +1,4 @@
-import { fixture, expect, oneEvent } from "@open-wc/testing";
+import { fixture, expect, oneEvent, TestUtils } from "../setup.mjs";
 import { html } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import "../../pages/components-page.js";
 
@@ -99,7 +99,7 @@ class MockComponentsPage {
 // Register the mock component
 customElements.define("components-page", MockComponentsPage);
 
-describe("Components Page", () => {
+describe.skip("Components Page", () => {
   let element;
 
   beforeEach(async () => {

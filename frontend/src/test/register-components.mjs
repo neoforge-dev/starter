@@ -18,6 +18,7 @@ const components = [
   ["status-page", () => import("../pages/status-page.js")],
   ["tutorials-page", () => import("../pages/tutorials-page.js")],
   ["settings-page", () => import("../pages/settings-page.js")],
+  ["blog-page", () => import("../pages/blog-page.js")],
   ["neo-table", () => import("../components/organisms/table/table.js")]
 ];
 
