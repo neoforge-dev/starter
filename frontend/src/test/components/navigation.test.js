@@ -1,174 +1,44 @@
 import { expect } from "@esm-bundle/chai";
-import { fixture, html } from "@open-wc/testing";
-import "../../components/ui/navigation.js";
+import { NeoNavigation } from "../../components/ui/navigation.js";
 
-class MockNeoNavigation {
-  constructor() {
-    this.items = [];
-    this.currentPath = "";
-    this.expanded = false;
-    this.shadowRoot = this._createShadowRoot();
-    this._handleResize = () => {};
-    this._visible = false;
-  }
-
-  _createShadowRoot() {
-    const root = {
-      querySelectorAll: (selector) => {
-        if (selector === ".nav-item") {
-          return this.items.map((item, index) => ({
-            textContent: item.label,
-            classList: {
-              contains: (cls) =>
-                cls === "active" && item.path === this.currentPath,
-              add: () => {},
-              remove: () => {},
-            },
-            querySelector: (sel) => {
-              if (sel === ".nav-icon") {
-                return { textContent: item.icon };
-              }
-              if (sel === ".nav-label") {
-                return { textContent: item.label };
-              }
-              if (sel === ".nav-children") {
-                return {
-                  querySelectorAll: (childSel) => {
-                    if (childSel === ".nav-child-item") {
-                      return (item.children || []).map((child) => ({
-                        textContent: child.label,
-                        classList: {
-                          contains: (cls) =>
-                            cls === "active" && child.path === this.currentPath,
-                          add: () => {},
-                          remove: () => {},
-                        },
-                        addEventListener: () => {},
-                        getAttribute: (attr) => child.path,
-                      }));
-                    }
-                    return [];
-                  },
-                  style: { display: "none" },
-                };
-              }
-              return null;
-            },
-            addEventListener: () => {},
-            getAttribute: (attr) => item.path,
-          }));
-        }
-        if (selector === ".mobile-toggle") {
-          return [{ addEventListener: () => {} }];
-        }
-        return [];
-      },
-      querySelector: (selector) => {
-        if (selector === ".mobile-menu") {
-          return {
-            classList: {
-              add: () => {},
-              remove: () => {},
-              contains: () => this._visible,
-            },
-          };
-        }
-        return null;
-      },
-      addEventListener: () => {},
-    };
-    return root;
-  }
-
-  addEventListener() {}
-  removeEventListener() {}
-  dispatchEvent() {}
-  remove() {}
-  getAttribute(attr) {
-    if (attr === "current-path") return this.currentPath;
-    return null;
-  }
-}
-
-// Register the mock component
-customElements.define("neo-navigation", MockNeoNavigation);
-
-describe("Navigation Component", () => {
-  let element;
-  const defaultNavItems = [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: "dashboard",
-      path: "/dashboard",
-    },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: "settings",
-      path: "/settings",
-      children: [
-        { id: "profile", label: "Profile", path: "/settings/profile" },
-        { id: "security", label: "Security", path: "/settings/security" },
-      ],
-    },
-    {
-      id: "docs",
-      label: "Documentation",
-      icon: "book",
-      path: "/docs",
-    },
-  ];
-
-  beforeEach(async () => {
-    element = await fixture(html`
-      <neo-navigation .items=${defaultNavItems} current-path="/dashboard">
-      </neo-navigation>
-    `);
-    element.items = defaultNavItems;
-    element.currentPath = "/dashboard";
+describe("NeoNavigation", () => {
+  it("should be defined as a class", () => {
+    expect(NeoNavigation).to.be.a("function");
   });
 
-  afterEach(() => {
-    // Clean up any modals that might have been added to the body
-    document.querySelectorAll("neo-navigation").forEach((nav) => {
-      nav.remove();
-    });
+  it("should have expected static properties", () => {
+    expect(NeoNavigation.properties).to.exist;
+    expect(NeoNavigation.properties.items).to.exist;
+    expect(NeoNavigation.properties.currentPath).to.exist;
+    expect(NeoNavigation.properties.navExpanded).to.exist;
+    expect(NeoNavigation.properties.activeItem).to.exist;
+    expect(NeoNavigation.properties.orientation).to.exist;
+    expect(NeoNavigation.properties.collapsed).to.exist;
   });
 
-  it("should be defined", () => {
-    expect(true).to.be.true;
+  it("should have properties with correct types", () => {
+    expect(NeoNavigation.properties.items.type).to.equal(Array);
+    expect(NeoNavigation.properties.currentPath.type).to.equal(String);
+    expect(NeoNavigation.properties.navExpanded.type).to.equal(Boolean);
+    expect(NeoNavigation.properties.activeItem.type).to.equal(String);
+    expect(NeoNavigation.properties.orientation.type).to.equal(String);
+    expect(NeoNavigation.properties.collapsed.type).to.equal(Boolean);
   });
 
-  it("should render navigation items", async () => {
-    expect(true).to.be.true;
+  it("should have properties that reflect to attributes", () => {
+    expect(NeoNavigation.properties.navExpanded.reflect).to.be.true;
   });
 
-  it("should highlight current path", () => {
-    expect(true).to.be.true;
+  it("should have expected prototype methods", () => {
+    const proto = NeoNavigation.prototype;
+    expect(proto.render).to.be.a("function");
+    expect(proto._handleResize).to.be.a("function");
+    expect(proto._handleKeyDown).to.be.a("function");
   });
 
-  it("should handle nested navigation", () => {
-    expect(true).to.be.true;
-  });
-
-  it("should emit navigation events", () => {
-    expect(true).to.be.true;
-  });
-
-  it("should handle mobile navigation toggle", () => {
-    expect(true).to.be.true;
-  });
-
-  it("should collapse other items when expanding one", () => {
-    expect(true).to.be.true;
-  });
-
-  it("should handle keyboard navigation", () => {
-    expect(true).to.be.true;
-  });
-
-  it("should handle route changes", () => {
-    expect(true).to.be.true;
+  it("should extend from LitElement", () => {
+    // Check if the component extends LitElement by checking its source code
+    const componentString = NeoNavigation.toString();
+    expect(componentString.includes("extends LitElement")).to.be.true;
   });
 });

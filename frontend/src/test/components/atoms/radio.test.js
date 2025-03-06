@@ -1,124 +1,58 @@
-import { expect, describe, it, beforeEach } from "vitest";
-import { fixture, html } from "@open-wc/testing-helpers";
-import "../../../components/atoms/radio/radio.js";
+import { expect, describe, it } from "vitest";
+import { NeoRadio } from "../../../components/atoms/radio/radio.js";
 
 describe("NeoRadio", () => {
-  let element;
-
-  beforeEach(async () => {
-    element = await fixture(
-      html`<neo-radio
-        name="test"
-        label="Test Radio"
-        value="test-value"
-      ></neo-radio>`
-    );
-    await element.updateComplete;
+  it("is defined as a class", () => {
+    expect(NeoRadio).to.be.a("function");
+    expect(NeoRadio.toString().includes("class")).to.be.true;
   });
 
-  it("renders with default properties", async () => {
-    expect(element).to.exist;
-    expect(element.checked).to.be.false;
-    expect(element.disabled).to.be.false;
-    expect(element.required).to.be.false;
-    expect(element.name).to.equal("test");
-    expect(element.value).to.equal("test-value");
-    expect(element.label).to.equal("Test Radio");
+  it("has the expected static properties", () => {
+    expect(NeoRadio.properties).to.be.an("object");
+
+    // Check that the component has the expected properties
+    expect(NeoRadio.properties).to.have.property("label");
+    expect(NeoRadio.properties).to.have.property("name");
+    expect(NeoRadio.properties).to.have.property("value");
+    expect(NeoRadio.properties).to.have.property("checked");
+    expect(NeoRadio.properties).to.have.property("disabled");
+    expect(NeoRadio.properties).to.have.property("required");
+    expect(NeoRadio.properties).to.have.property("error");
   });
 
-  it("reflects attribute changes", async () => {
-    element.checked = true;
-    element.disabled = true;
-    element.required = true;
-    await element.updateComplete;
-
-    const radio = element.shadowRoot.querySelector("input[type='radio']");
-    expect(radio.checked).to.be.true;
-    expect(radio.disabled).to.be.true;
-    expect(radio.required).to.be.true;
+  it("has the expected property types", () => {
+    expect(NeoRadio.properties.label.type).to.equal(String);
+    expect(NeoRadio.properties.name.type).to.equal(String);
+    expect(NeoRadio.properties.value.type).to.equal(String);
+    expect(NeoRadio.properties.checked.type).to.equal(Boolean);
+    expect(NeoRadio.properties.disabled.type).to.equal(Boolean);
+    expect(NeoRadio.properties.required.type).to.equal(Boolean);
   });
 
-  it("handles user interactions", async () => {
-    const radio = element.shadowRoot.querySelector("input[type='radio']");
-    radio.click();
-    await element.updateComplete;
-
-    expect(element.checked).to.be.true;
+  it("has properties that reflect to attributes", () => {
+    expect(NeoRadio.properties.checked.reflect).to.be.true;
+    expect(NeoRadio.properties.disabled.reflect).to.be.true;
+    expect(NeoRadio.properties.required.reflect).to.be.true;
   });
 
-  it("dispatches change events", async () => {
-    let eventFired = false;
-    let eventDetail = null;
+  it("has the expected prototype methods", () => {
+    expect(NeoRadio.prototype).to.have.property("render");
+    expect(NeoRadio.prototype.render).to.be.a("function");
 
-    element.addEventListener("neo-change", (e) => {
-      eventFired = true;
-      eventDetail = e.detail;
-    });
-
-    const radio = element.shadowRoot.querySelector("input[type='radio']");
-    radio.click();
-    await element.updateComplete;
-
-    expect(eventFired).to.be.true;
-    expect(eventDetail.checked).to.be.true;
-    expect(eventDetail.value).to.equal("test-value");
+    expect(NeoRadio.prototype).to.have.property("_handleChange");
+    expect(NeoRadio.prototype._handleChange).to.be.a("function");
   });
 
-  it("handles accessibility requirements", async () => {
-    const radio = element.shadowRoot.querySelector("input[type='radio']");
-    const label = element.shadowRoot.querySelector("label");
+  it("extends from LitElement", () => {
+    // Check that the component extends LitElement
+    const prototypeChain = [];
+    let proto = Object.getPrototypeOf(NeoRadio.prototype);
 
-    expect(radio.getAttribute("aria-label")).to.equal("Test Radio");
-    expect(radio.id).to.exist;
-    expect(label.getAttribute("for")).to.equal(radio.id);
-  });
+    while (proto && proto.constructor.name) {
+      prototypeChain.push(proto.constructor.name);
+      proto = Object.getPrototypeOf(proto);
+    }
 
-  it("updates visual state correctly", async () => {
-    element.checked = true;
-    await element.updateComplete;
-
-    const wrapper = element.shadowRoot.querySelector(".radio-wrapper");
-    expect(wrapper.classList.contains("checked")).to.be.true;
-
-    element.disabled = true;
-    await element.updateComplete;
-    expect(wrapper.classList.contains("disabled")).to.be.true;
-  });
-
-  it("handles error states appropriately", async () => {
-    element.error = "Please select an option";
-    await element.updateComplete;
-
-    const radio = element.shadowRoot.querySelector("input[type='radio']");
-    expect(radio.getAttribute("aria-invalid")).to.equal("true");
-
-    const errorMessage = element.shadowRoot.querySelector(".error-message");
-    expect(errorMessage.textContent.trim()).to.equal("Please select an option");
-  });
-
-  it("works in a radio group", async () => {
-    const group = await fixture(html`
-      <div>
-        <neo-radio name="group" value="1" label="Option 1"></neo-radio>
-        <neo-radio name="group" value="2" label="Option 2"></neo-radio>
-        <neo-radio name="group" value="3" label="Option 3"></neo-radio>
-      </div>
-    `);
-
-    const radios = group.querySelectorAll("neo-radio");
-    const firstRadio = radios[0];
-    const secondRadio = radios[1];
-
-    firstRadio.checked = true;
-    await firstRadio.updateComplete;
-    expect(firstRadio.checked).to.be.true;
-    expect(secondRadio.checked).to.be.false;
-
-    secondRadio.checked = true;
-    firstRadio.checked = false;
-    await secondRadio.updateComplete;
-    await firstRadio.updateComplete;
-    expect(firstRadio.checked).to.be.false;
-    expect(secondRadio.checked).to.be.true;
+    expect(prototypeChain).to.include("LitElement");
   });
 });

@@ -1,158 +1,54 @@
-import { html, fixture, expect } from "@open-wc/testing";
-import "../../../components/atoms/text-input/text-input.js";
-
-class MockNeoTextInput {
-  constructor() {
-    this.value = "";
-    this.placeholder = "";
-    this.label = "";
-    this.helperText = "";
-    this.errorMessage = "";
-    this.type = "text";
-    this.disabled = false;
-    this.required = false;
-    this.clearable = false;
-    this.focused = false;
-    this.shadowRoot = this._createShadowRoot();
-  }
-
-  _createShadowRoot() {
-    return {
-      querySelector: (selector) => {
-        if (selector === "input") {
-          return {
-            type: this.type,
-            value: this.value,
-            placeholder: this.placeholder,
-            disabled: this.disabled,
-            required: this.required,
-            focus: () => {
-              this.focused = true;
-            },
-            blur: () => {
-              this.focused = false;
-            },
-          };
-        }
-        if (selector === "label") {
-          return { textContent: this.label };
-        }
-        if (selector === ".helper-text") {
-          return { textContent: this.helperText };
-        }
-        if (selector === ".error-message") {
-          return { textContent: this.errorMessage };
-        }
-        if (selector === ".password-toggle") {
-          return {
-            addEventListener: () => {},
-            classList: { contains: () => this.type === "password" },
-          };
-        }
-        if (selector === ".clear-button") {
-          return {
-            addEventListener: () => {},
-            classList: { contains: () => this.clearable && this.value },
-          };
-        }
-        return null;
-      },
-      querySelectorAll: (selector) => {
-        if (selector === "[slot]") {
-          return [];
-        }
-        return [];
-      },
-    };
-  }
-
-  addEventListener() {}
-  removeEventListener() {}
-  dispatchEvent() {}
-  getAttribute(attr) {
-    if (attr === "aria-invalid") return this.errorMessage ? "true" : "false";
-    if (attr === "aria-required") return this.required ? "true" : "false";
-    return null;
-  }
-}
-
-// Register the mock component
-customElements.define("neo-text-input", MockNeoTextInput);
-
-describe("BaseComponent", () => {
-  it("should be defined", () => {
-    expect(true).to.be.true;
-  });
-
-  it("should have createRenderRoot method", () => {
-    expect(true).to.be.true;
-  });
-
-  it("should have _bindEventHandlers method", () => {
-    expect(true).to.be.true;
-  });
-
-  it("should have _ensureReady method", () => {
-    expect(true).to.be.true;
-  });
-
-  it("should have static registerComponent method", () => {
-    expect(true).to.be.true;
-  });
-});
+import { expect } from "@esm-bundle/chai";
+import { NeoTextInput } from "../../../components/atoms/text-input/text-input.js";
 
 describe("NeoTextInput", () => {
-  let element;
-
-  beforeEach(async () => {
-    element = await fixture(html`<neo-text-input></neo-text-input>`);
+  it("should be defined as a class", () => {
+    expect(NeoTextInput).to.be.a("function");
   });
 
-  it("renders with default properties", async () => {
-    expect(true).to.be.true;
+  it("should have expected static properties", () => {
+    expect(NeoTextInput.properties).to.exist;
+    expect(NeoTextInput.properties.value).to.exist;
+    expect(NeoTextInput.properties.placeholder).to.exist;
+    expect(NeoTextInput.properties.label).to.exist;
+    expect(NeoTextInput.properties.helper).to.exist;
+    expect(NeoTextInput.properties.error).to.exist;
+    expect(NeoTextInput.properties.type).to.exist;
+    expect(NeoTextInput.properties.disabled).to.exist;
+    expect(NeoTextInput.properties.required).to.exist;
+    expect(NeoTextInput.properties.clearable).to.exist;
   });
 
-  it("reflects properties to attributes", async () => {
-    expect(true).to.be.true;
+  it("should have properties with correct types", () => {
+    expect(NeoTextInput.properties.value.type).to.equal(String);
+    expect(NeoTextInput.properties.placeholder.type).to.equal(String);
+    expect(NeoTextInput.properties.label.type).to.equal(String);
+    expect(NeoTextInput.properties.helper.type).to.equal(String);
+    expect(NeoTextInput.properties.error.type).to.equal(String);
+    expect(NeoTextInput.properties.type.type).to.equal(String);
+    expect(NeoTextInput.properties.disabled.type).to.equal(Boolean);
+    expect(NeoTextInput.properties.required.type).to.equal(Boolean);
+    expect(NeoTextInput.properties.clearable.type).to.equal(Boolean);
   });
 
-  it("renders label when provided", async () => {
-    expect(true).to.be.true;
+  it("should have properties that reflect to attributes", () => {
+    expect(NeoTextInput.properties.disabled.reflect).to.be.true;
+    expect(NeoTextInput.properties.required.reflect).to.be.true;
+    expect(NeoTextInput.properties.type.reflect).to.be.true;
   });
 
-  it("renders helper text when provided", async () => {
-    expect(true).to.be.true;
+  it("should have expected prototype methods", () => {
+    const proto = NeoTextInput.prototype;
+    expect(proto.render).to.be.a("function");
+    expect(proto._handleInput).to.be.a("function");
+    expect(proto._handleChange).to.be.a("function");
+    expect(proto._handleFocus).to.be.a("function");
+    expect(proto._handleBlur).to.be.a("function");
   });
 
-  it("renders error message when provided", async () => {
-    expect(true).to.be.true;
-  });
-
-  it("shows password toggle for password type", async () => {
-    expect(true).to.be.true;
-  });
-
-  it("shows clear button when clearable and has value", async () => {
-    expect(true).to.be.true;
-  });
-
-  it("dispatches neo-input event on input", async () => {
-    expect(true).to.be.true;
-  });
-
-  it("dispatches neo-change event on change", async () => {
-    expect(true).to.be.true;
-  });
-
-  it("updates focused state on focus/blur", async () => {
-    expect(true).to.be.true;
-  });
-
-  it("supports prefix and suffix slots", async () => {
-    expect(true).to.be.true;
-  });
-
-  it("has proper ARIA attributes", async () => {
-    expect(true).to.be.true;
+  it("should extend from LitElement", () => {
+    // Check if the component extends LitElement by checking its source code
+    const componentString = NeoTextInput.toString();
+    expect(componentString.includes("extends LitElement")).to.be.true;
   });
 });
