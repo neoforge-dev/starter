@@ -1,129 +1,119 @@
-# NeoForge Technical Context
+# Tech Context
 
 ## Technologies Used
 
 ### Frontend
-- **Framework**: Lit 4.0 (lightweight web component library)
-- **Languages**: JavaScript (ES6+), HTML, CSS
-- **Testing**: Vitest
-- **Build Tools**: Vite, npm
-- **UI Patterns**: Atomic Design
-- **PWA Features**: Service Workers, Web Manifest
+1. **Core Technologies**
+   - Vanilla JavaScript (ES2020+)
+   - Lit 3.0 for web components
+   - HTML5 and CSS3
+   - Web Components API
+
+2. **Build Tools**
+   - Vite for development and building
+   - ESLint for code linting
+   - Prettier for code formatting
+
+3. **Testing Tools**
+   - Vitest for unit testing
+   - @open-wc/testing for web component testing
+   - Sinon for mocking and spying
+
+4. **Libraries**
+   - lit-html for templating
+   - lit-element for component base classes
+   - page.js for routing
+   - localforage for client-side storage
 
 ### Backend
-- **Framework**: FastAPI (async Python)
-- **Languages**: Python 3.10+
-- **Database ORM**: SQLModel
-- **Database**: PostgreSQL
-- **Caching**: Redis
-- **Testing**: pytest, pytest-asyncio
-- **Authentication**: JWT
-- **API Documentation**: OpenAPI/Swagger (auto-generated)
+1. **Core Technologies**
+   - Python 3.10+
+   - FastAPI for API framework
+   - SQLModel for ORM
+   - Pydantic for data validation
+
+2. **Database**
+   - PostgreSQL 15 for primary database
+   - Redis for caching and queues
+
+3. **Testing Tools**
+   - Pytest for unit and integration testing
+   - Factory Boy for test data generation
+   - Coverage.py for test coverage
+
+4. **Libraries**
+   - Uvicorn for ASGI server
+   - Alembic for database migrations
+   - Python-jose for JWT handling
+   - Passlib for password hashing
 
 ### Infrastructure
-- **Containerization**: Docker
-- **Orchestration**:
-  - Development: Docker Compose
-  - Production: Nomad
-- **CI/CD**: GitHub Actions
-- **Monitoring**: Prometheus, Grafana
-- **CDN**: Cloudflare
-- **Storage**: S3-compatible object storage
+1. **Containerization**
+   - Docker for containerization
+   - Docker Compose for local development
+   - Nomad for container orchestration
+
+2. **CI/CD**
+   - GitHub Actions for CI/CD pipelines
+   - Makefile for common commands
+
+3. **Monitoring**
+   - Prometheus for metrics
+   - Grafana for dashboards
+   - Loki for log aggregation
 
 ## Development Setup
 
 ### Prerequisites
 - Docker and Docker Compose
-- Node.js 16+
+- Node.js 18+ and npm
 - Python 3.10+
-- Git
+- Make
 
-### Local Development Environment
-```bash
-# Clone repository
-git clone https://github.com/your-org/neoforge.git
-cd neoforge
+### Local Development
+1. **Frontend Development**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
 
-# Start development environment
-docker-compose up -d
+2. **Backend Development**
+   ```bash
+   cd backend
+   make setup
+   make dev
+   ```
 
-# Frontend development
-cd frontend
-npm install
-npm run dev
-
-# Backend development (alternative to Docker approach)
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-### Environment Variables
-- `DATABASE_URL`: PostgreSQL connection string
-- `REDIS_URL`: Redis connection string
-- `SECRET_KEY`: JWT secret key
-- `DEBUG`: Enable/disable debug mode
-- `ENVIRONMENT`: Development/Staging/Production
-
-### Common Commands
-```bash
-# Run frontend tests
-cd frontend
-npm run test:unit
-
-# Run backend tests (IMPORTANT: Always use Docker for backend tests)
-cd backend
-make test                # Run all tests
-make test-api            # Run API tests only
-make test-db             # Run database tests only
-make test-core           # Run core module tests only
-make test-coverage       # Run tests with coverage report
-make rebuild-test        # Rebuild test containers and run tests
-make test-with-db        # Create/recreate test database and run tests
-make fix-collation       # Fix PostgreSQL collation issues and run tests
-make init-test-env       # Initialize test environment
-
-# Alternative direct script usage
-cd backend
-./scripts/run_tests_fixed.sh -v                # Run all tests verbosely
-./scripts/run_tests_fixed.sh -v -c             # Run all tests with coverage
-./scripts/run_tests_fixed.sh -v tests/api      # Run API tests only
-./scripts/init_test_env.sh                     # Initialize test environment
-
-# Build frontend for production
-cd frontend
-npm run build
-
-# Database migrations
-cd backend
-alembic upgrade head
-```
+3. **Full Stack Development**
+   ```bash
+   make setup
+   make dev
+   ```
 
 ## Technical Constraints
 
-### Performance Requirements
-- Page load time < 2 seconds
-- API response time < 200ms for standard endpoints
-- Support for 1000+ concurrent users
+1. **Browser Compatibility**
+   - Modern evergreen browsers (Chrome, Firefox, Safari, Edge)
+   - No IE11 support
+   - Progressive enhancement for older browsers
 
-### Browser Support
-- Chrome 90+
-- Firefox 90+
-- Safari 14+
-- Edge 90+
+2. **Performance Targets**
+   - First Contentful Paint < 1.5s
+   - Time to Interactive < 3s
+   - Lighthouse score > 90
 
-### Mobile Support
-- iOS Safari 14+
-- Android Chrome 90+
-- PWA installation support
+3. **Deployment Constraints**
+   - Single Digital Ocean droplet ($10/month)
+   - 2GB RAM, 1 vCPU
+   - 50GB SSD storage
 
-### Security Requirements
-- HTTPS throughout
-- OWASP Top 10 compliance
-- Regular security audits
-- Content Security Policy implementation
+4. **Security Requirements**
+   - HTTPS only
+   - JWT-based authentication
+   - CSRF protection
+   - Content Security Policy
+   - Regular dependency updates
 
 ## Dependencies
 

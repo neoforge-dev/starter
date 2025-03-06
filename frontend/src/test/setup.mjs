@@ -1,6 +1,9 @@
 import { expect, vi, beforeEach, afterEach } from "vitest";
-import { LitElement } from "lit";
+import { LitElement, html } from "lit";
 import registerAllComponents from "./register-components.mjs";
+
+// Export html for use in tests
+export { html };
 
 // Mock environment variables
 vi.mock('import.meta.env', () => ({
