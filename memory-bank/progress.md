@@ -288,9 +288,9 @@
 ## Test Performance
 
 ### Current Statistics
-- **Test Files Passing**: 60 out of 74 (81.1%)
-- **Tests Passing**: 532 out of 644 (82.6%)
-- **Skipped Test Files**: 14 (down from 30)
+- **Test Files Passing**: 61 out of 74 (82.4%)
+- **Tests Passing**: 544 out of 644 (84.5%)
+- **Skipped Test Files**: 13 (down from 30)
 
 ### Fixed Tests
 We've successfully fixed the following tests:
@@ -309,6 +309,7 @@ We've successfully fixed the following tests:
 13. Notification Service (8 tests passing)
 14. Dropdown (11 tests passing)
 15. Spinner (14 tests passing - 7 in each test file)
+16. File Upload (12 tests passing)
 
 ### Testing Improvements
 1. **Pure JavaScript Mocks**: Created pure JavaScript mocks for components instead of relying on custom element registration, making tests more reliable and faster.
@@ -318,4 +319,5 @@ We've successfully fixed the following tests:
 5. **DOM Element Simulation**: Created and managed actual DOM elements in mocks to simulate component behavior.
 6. **Animation Simulation**: Used setTimeout to simulate animations and transitions.
 7. **Service Mocking**: Created standalone service mocks that replicate the API of the actual services.
-8. **Documentation**: Documented the approach for creating effective mocks for future reference. 
+8. **Documentation**: Documented the approach for creating effective mocks for future reference.
+9. **File Validation**: Implemented proper file validation logic in mocks, including size and type validation. 
