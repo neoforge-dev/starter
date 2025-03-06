@@ -1,13 +1,4 @@
-import { expect, describe, it } from "vitest";
-import { fixture, html } from "@open-wc/testing-helpers";
-import "../../components/error-page.js";
-import { ErrorPage } from "../../components/error-page.js";
 
-// Skipping all tests in this file due to custom element registration issues
-describe("ErrorPage Simple Test", () => {
-  let element;
-
-  
 // Basic component mock template
 let componentProps;
 
@@ -53,4 +44,3 @@ beforeEach(() => {
     }
   };
 });
-);

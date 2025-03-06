@@ -3,6 +3,54 @@ import { fixture, html } from "@open-wc/testing-helpers";
 import { visualDiff } from "@web/test-runner-visual-regression";
 import "../../../components/atoms/button/button.js";
 
+
+// Basic component mock template
+let componentProps;
+
+beforeEach(() => {
+  // Create a mock of the component properties
+  componentProps = {
+    // Properties
+    property1: "value1",
+    property2: "value2",
+    
+    // Methods
+    method1: function() {
+      // Implementation
+    },
+    method2: function() {
+      // Implementation
+    },
+    
+    // Event handling
+    addEventListener: function(event, callback) {
+      this[`_${event}Callback`] = callback;
+    },
+    
+    // Shadow DOM
+    shadowRoot: {
+      querySelector: function(selector) {
+        // Return mock elements based on the selector
+        return null;
+      },
+      querySelectorAll: function(selector) {
+        // Return mock elements based on the selector
+        return [];
+      }
+    },
+    
+    // Other properties needed for testing
+    updateComplete: Promise.resolve(true),
+    classList: {
+      contains: function(className) {
+        // Implementation
+        return false;
+      }
+    }
+  };
+});
+
+
 // Add base styles
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
@@ -37,7 +85,7 @@ styleSheet.textContent = `
 document.head.appendChild(styleSheet);
 
 // Skip all tests in this file for now due to custom element registration issues
-describe.skip("neo-button visual regression", () => {
+describe("neo-button visual regression", () => {
   it("primary button renders correctly", async () => {
     const element = await fixture(html`
       <neo-button variant="primary">Primary Button</neo-button>

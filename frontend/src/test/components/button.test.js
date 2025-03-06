@@ -2,8 +2,72 @@ import { expect, describe, it } from "vitest";
 import { fixture, html } from "@open-wc/testing-helpers";
 import "../../components/atoms/button/button.js";
 
+
+// Mock implementation for NeoButton
+let neoButtonProps;
+
+beforeEach(() => {
+  // Create a mock of the NeoButton properties
+  neoButtonProps = {
+    // Properties
+    variant: undefined,
+    type: undefined,
+    reflect: undefined,
+    
+    // Methods
+    properties: function() {
+      // Implementation
+    },
+    styles: function() {
+      // Implementation
+    },
+    _handleClick: function() {
+      // Implementation
+    },
+    if: function() {
+      // Implementation
+    },
+    render: function() {
+      // Implementation
+    },
+    if: function() {
+      // Implementation
+    },
+    if: function() {
+      // Implementation
+    },
+    
+    // Event handling
+    addEventListener: function(event, callback) {
+      this[`_${event}Callback`] = callback;
+    },
+    
+    // Shadow DOM
+    shadowRoot: {
+      querySelector: function(selector) {
+        // Return mock elements based on the selector
+        return null;
+      },
+      querySelectorAll: function(selector) {
+        // Return mock elements based on the selector
+        return [];
+      }
+    },
+    
+    // Other properties needed for testing
+    updateComplete: Promise.resolve(true),
+    classList: {
+      contains: function(className) {
+        // Implementation
+        return false;
+      }
+    }
+  };
+});
+
+
 // Skipping all tests in this file due to custom element registration issues
-describe.skip("NeoButton", () => {
+describe("NeoButton", () => {
   it("renders with text", async () => {
     const el = await fixture(html`<neo-button>Click me</neo-button>`);
     expect(el.textContent.trim()).to.equal("Click me");

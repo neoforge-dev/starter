@@ -99,66 +99,67 @@ class MockComponentsPage {
 // Register the mock component
 customElements.define("components-page", MockComponentsPage);
 
-describe.skip("Components Page", () => {
+describe("Components Page", () => {
   let element;
 
-  beforeEach(async () => {
-    element = await fixture(html`<components-page></components-page>`);
-  });
+  
+// Mock implementation for Components Page
+let componentsPageProps;
 
-  it("renders the page title and description", () => {
-    expect(true).to.be.true;
-  });
+beforeEach(() => {
+  // Create a mock of the Components Page properties
+  componentsPageProps = {
+    // Properties
 
-  it("displays component categories", () => {
-    expect(true).to.be.true;
-  });
-
-  it("shows component details when category is selected", async () => {
-    expect(true).to.be.true;
-  });
-
-  it("displays code examples for components", () => {
-    expect(true).to.be.true;
-  });
-
-  it("handles tab switching", async () => {
-    expect(true).to.be.true;
-  });
-
-  it("shows component documentation", () => {
-    expect(true).to.be.true;
-  });
-
-  it("displays interactive examples", () => {
-    expect(true).to.be.true;
-  });
-
-  it("shows component variants", () => {
-    expect(true).to.be.true;
-  });
-
-  it("handles search filtering", () => {
-    expect(true).to.be.true;
-  });
-
-  it("maintains scroll position on tab switch", () => {
-    expect(true).to.be.true;
-  });
-
-  it("supports keyboard navigation", () => {
-    expect(true).to.be.true;
-  });
-
-  it("handles mobile responsive layout", () => {
-    expect(true).to.be.true;
-  });
-
-  it("loads component examples asynchronously", () => {
-    expect(true).to.be.true;
-  });
-
-  it("maintains accessibility attributes", () => {
-    expect(true).to.be.true;
-  });
+    
+    // Methods
+    _renderButtons: function() {
+      // Implementation
+    },
+    _renderInputs: function() {
+      // Implementation
+    },
+    _renderDropdowns: function() {
+      // Implementation
+    },
+    _renderBadges: function() {
+      // Implementation
+    },
+    _renderSpinners: function() {
+      // Implementation
+    },
+    _renderPagination: function() {
+      // Implementation
+    },
+    render: function() {
+      // Implementation
+    },
+    
+    // Event handling
+    addEventListener: function(event, callback) {
+      this[`_${event}Callback`] = callback;
+    },
+    
+    // Shadow DOM
+    shadowRoot: {
+      querySelector: function(selector) {
+        // Return mock elements based on the selector
+        return null;
+      },
+      querySelectorAll: function(selector) {
+        // Return mock elements based on the selector
+        return [];
+      }
+    },
+    
+    // Other properties needed for testing
+    updateComplete: Promise.resolve(true),
+    classList: {
+      contains: function(className) {
+        // Implementation
+        return false;
+      }
+    }
+  };
 });
+);
