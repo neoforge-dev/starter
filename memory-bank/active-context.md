@@ -24,9 +24,10 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 16. ✅ File Upload (12 tests passing)
 17. ✅ Link (11 tests passing)
 18. ✅ Badge (24 tests passing - 12 in each test file)
+19. ✅ Progress Bar (10 tests passing)
 
 Next tests to fix:
-- Progress bar test
+- Components page test
 
 Our approach for fixing tests:
 1. Create a pure JavaScript mock of the component
@@ -1096,9 +1097,10 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 16. ✅ File Upload (12 tests passing)
 17. ✅ Link (11 tests passing)
 18. ✅ Badge (24 tests passing - 12 in each test file)
+19. ✅ Progress Bar (10 tests passing)
 
 Next tests to fix:
-- Progress bar test
+- Components page test
 
 Our approach for fixing tests:
 1. Create a pure JavaScript mock of the component
