@@ -297,6 +297,3 @@ export class SupportPage extends BaseComponent {
     await this._loadTickets();
   }
 }
-
-// Register the component
-registerComponent("neo-support-page", SupportPage);

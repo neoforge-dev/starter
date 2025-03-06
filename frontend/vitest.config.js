@@ -21,7 +21,7 @@ export default defineConfig({
     // Setup files to run before tests
     setupFiles: [path.resolve(__dirname, "./src/test/test-setup.js")],
     // Include these extensions in test files
-    include: ["src/test/**/*.test.js"],
+    include: ["src/test/**/*.test.{js,mjs}"],
     // Exclude node_modules and other non-test files
     exclude: [
       "**/node_modules/**",

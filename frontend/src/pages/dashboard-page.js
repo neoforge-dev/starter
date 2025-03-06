@@ -1,11 +1,12 @@
 import { LitElement, html, css } from "lit";
+import { BaseComponent } from "../components/base-component.js";
 
 /**
  * Dashboard page component
  * @element dashboard-page
  * @description Main dashboard layout with header and content area
  */
-export class DashboardPage extends LitElement {
+export class DashboardPage extends BaseComponent {
   static properties = {
     stats: { type: Object },
     loading: { type: Boolean },
@@ -431,9 +432,4 @@ export class DashboardPage extends LitElement {
       </div>
     `;
   }
-}
-
-// Register the component
-if (!customElements.get("dashboard-page")) {
-  customElements.define("dashboard-page", DashboardPage);
 }

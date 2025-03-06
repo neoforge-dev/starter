@@ -1,4 +1,8 @@
-import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 
 /**
@@ -173,13 +177,14 @@ export class NeoAlert extends LitElement {
     alert.addEventListener(
       "animationend",
       () => {
-        this._visible = false;
         this.dispatchEvent(
           new CustomEvent("neo-dismiss", {
             bubbles: true,
             composed: true,
+            detail: true,
           })
         );
+        this._visible = false;
       },
       { once: true }
     );

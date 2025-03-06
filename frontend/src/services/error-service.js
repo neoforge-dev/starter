@@ -156,6 +156,22 @@ class ErrorService {
       return error;
     }
 
+    // Check for network errors (Failed to fetch is a common network error message)
+    if (
+      error instanceof TypeError &&
+      (error.message.includes("Failed to fetch") ||
+        error.message.includes("NetworkError") ||
+        error.message.includes("Network error"))
+    ) {
+      return new AppError(
+        "Network error. Please check your connection.",
+        ErrorType.NETWORK,
+        {
+          originalError: error,
+        }
+      );
+    }
+
     if (error instanceof TypeError || error instanceof ReferenceError) {
       return new AppError(error.message, ErrorType.UNKNOWN, {
         originalError: error,
@@ -209,14 +225,19 @@ class ErrorService {
    */
   async _reportError(error) {
     try {
-      await apiClient.post("/errors", {
+      // Create the payload
+      const payload = {
         type: error.type,
         message: error.message,
         details: error.details,
         timestamp: error.timestamp,
-        userAgent: navigator.userAgent,
-        url: window.location.href,
-      });
+        userAgent:
+          typeof navigator !== "undefined" ? navigator.userAgent : "test",
+        url: typeof window !== "undefined" ? window.location.href : "test",
+      };
+
+      // Send the error to the backend
+      await apiClient.post("/errors", payload);
     } catch (err) {
       Logger.error("Failed to report error:", err);
     }

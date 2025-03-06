@@ -20,7 +20,6 @@ if (!globalThis.document) {
   
   globalThis.window = dom.window;
   globalThis.document = dom.window.document;
-  globalThis.customElements = dom.window.customElements;
   globalThis.HTMLElement = dom.window.HTMLElement;
   globalThis.CustomEvent = dom.window.CustomEvent;
   globalThis.Event = dom.window.Event;
@@ -38,51 +37,116 @@ if (!globalThis.document) {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   }));
-}
 
-// Create a simple mock registry with proper async handling
-const registry = new Map();
-const registrationPromises = new Map();
+  // Create a custom elements registry that properly handles inheritance
+  const registry = new Map();
+  const registrationPromises = new Map();
 
-// Mock customElements.define
-customElements.define = (name, constructor) => {
-  try {
-    registry.set(name, constructor);
-    if (registrationPromises.has(name)) {
-      registrationPromises.get(name).resolve(constructor);
+  class MockCustomElementRegistry {
+    define(name, constructor, options = {}) {
+      try {
+        // Check if the constructor is valid
+        if (!constructor || typeof constructor !== 'function') {
+          throw new Error(`Invalid constructor for component ${name}`);
+        }
+
+        // Check if the component is already registered
+        if (registry.has(name)) {
+          // If it's the same constructor, just return
+          if (registry.get(name) === constructor) {
+            console.log(`Mock: Component ${name} is already registered with the same constructor`);
+            return;
+          }
+
+          // Try to register with a new name
+          const newName = `${name}-${Date.now()}`;
+          console.log(`Mock: Component ${name} already registered, using new name ${newName}`);
+          registry.set(newName, constructor);
+          if (registrationPromises.has(newName)) {
+            registrationPromises.get(newName).resolve(constructor);
+          }
+          return;
+        }
+
+        // Create a proper custom element constructor that extends HTMLElement
+        const CustomElementConstructor = class extends HTMLElement {
+          constructor() {
+            super();
+            // Create an instance of the original constructor
+            const instance = new constructor();
+            // Copy all properties and methods
+            Object.getOwnPropertyNames(instance).forEach(prop => {
+              if (prop !== 'constructor') {
+                this[prop] = instance[prop];
+              }
+            });
+            // Copy prototype methods
+            Object.getOwnPropertyNames(constructor.prototype).forEach(prop => {
+              if (prop !== 'constructor') {
+                this[prop] = constructor.prototype[prop];
+              }
+            });
+          }
+        };
+
+        // Copy static properties
+        Object.getOwnPropertyNames(constructor).forEach(prop => {
+          if (prop !== 'prototype' && prop !== 'name' && prop !== 'length') {
+            CustomElementConstructor[prop] = constructor[prop];
+          }
+        });
+
+        // Register the constructor
+        registry.set(name, CustomElementConstructor);
+        console.log(`Mock: Registered component ${name}`);
+
+        // Resolve any pending promises
+        if (registrationPromises.has(name)) {
+          registrationPromises.get(name).resolve(CustomElementConstructor);
+        }
+      } catch (error) {
+        console.error(`Mock: Failed to register component ${name}:`, error);
+        throw error;
+      }
     }
-    console.log(`Mock: Registered component ${name}`);
-  } catch (error) {
-    console.error(`Mock: Failed to register component ${name}:`, error);
-    throw error;
-  }
-};
 
-// Mock customElements.get
-customElements.get = (name) => {
-  return registry.get(name);
-};
+    get(name) {
+      return registry.get(name);
+    }
 
-// Mock customElements.whenDefined
-customElements.whenDefined = (name) => {
-  if (registry.has(name)) {
-    return Promise.resolve(registry.get(name));
+    whenDefined(name) {
+      if (registry.has(name)) {
+        return Promise.resolve(registry.get(name));
+      }
+
+      if (!registrationPromises.has(name)) {
+        registrationPromises.set(name, {});
+        registrationPromises.get(name).promise = new Promise((resolve, reject) => {
+          registrationPromises.get(name).resolve = resolve;
+          registrationPromises.get(name).reject = reject;
+        });
+      }
+
+      return registrationPromises.get(name).promise;
+    }
   }
-  
-  if (!registrationPromises.has(name)) {
-    let resolve;
-    const promise = new Promise(r => { resolve = r; });
-    registrationPromises.set(name, { promise, resolve });
-  }
-  
-  return registrationPromises.get(name).promise;
-};
+
+  // Replace the custom elements registry with our mock
+  globalThis.customElements = new MockCustomElementRegistry();
+}
 
 // Wait for all components to be registered
 export async function waitForComponents() {
-  await registerAllComponents;
+  await registerAllComponents();
   const components = Array.from(registry.keys());
   await Promise.all(components.map(name => customElements.whenDefined(name)));
+}
+
+// Set up the test environment
+export async function setupTestEnvironment() {
+  // Wait for all components to be registered
+  await waitForComponents();
+  return TestUtils;
 }
 
 // Create a mock store for testing

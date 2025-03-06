@@ -1,4 +1,8 @@
-import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  LitElement,
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 export class Toast extends LitElement {
   static get properties() {
@@ -84,22 +88,36 @@ if (!customElements.get("neo-toast")) {
 // Helper function to show toast messages
 export function showToast(message, type = "info", duration = 3000) {
   const toast = document.createElement("neo-toast");
-  
+
   // Ensure body exists before appending
   if (!document.body) {
-    console.error('Document body not available for toast');
+    console.error("Document body not available for toast");
     return;
   }
-  
+
   document.body.appendChild(toast);
 
   toast.message = message;
   toast.type = type;
   toast.duration = duration;
-  toast.show();
+
+  // Check if show method exists before calling it
+  if (typeof toast.show === "function") {
+    toast.show();
+  } else {
+    // Fallback for test environments
+    toast.visible = true;
+    if (duration > 0) {
+      setTimeout(() => {
+        toast.visible = false;
+      }, duration);
+    }
+  }
 
   // Remove the element after it's hidden
   setTimeout(() => {
-    document.body.removeChild(toast);
+    if (document.body.contains(toast)) {
+      document.body.removeChild(toast);
+    }
   }, duration + 300); // Add 300ms for the hide animation
 }

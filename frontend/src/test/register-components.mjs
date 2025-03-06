@@ -25,6 +25,8 @@ const components = [
 // Function to register a single component
 async function registerComponent(name, component) {
   try {
+    let ComponentClass;
+
     if (typeof component === "function") {
       if (component.constructor && component.constructor.name === "AsyncFunction" || 
           component.toString().includes('import(')) {
@@ -32,60 +34,45 @@ async function registerComponent(name, component) {
         try {
           const module = await component();
           // Try different ways to get the component class
-          const ComponentClass = 
+          ComponentClass = 
             module.default || 
             module[name.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join("")] ||
             module[name.charAt(0).toUpperCase() + name.slice(1)];
-          
-          if (ComponentClass && typeof ComponentClass === 'function') {
-            BaseComponent.registerComponent(name, ComponentClass);
-          } else {
-            console.warn(`Could not find component class for ${name}, using placeholder`);
-            // Create a placeholder component for testing if needed
-            class PlaceholderComponent extends LitElement {
-              render() { return html``; }
-            }
-            BaseComponent.registerComponent(name, PlaceholderComponent);
-          }
         } catch (error) {
-          console.error(`Error importing dynamic component ${name}:`, error);
-          // Create a placeholder component for testing if needed
-          class PlaceholderComponent extends LitElement {
-            render() { return html``; }
-          }
-          BaseComponent.registerComponent(name, PlaceholderComponent);
+          console.error(`Failed to load component module for ${name}:`, error);
+          return;
         }
       } else {
-        // If component is a class, register it directly
-        BaseComponent.registerComponent(name, component);
+        // If component is a regular class/function
+        ComponentClass = component;
       }
-    } else {
-      console.warn(`Invalid component type for ${name}, using placeholder`);
-      // Create a placeholder component for testing if needed
-      class PlaceholderComponent extends LitElement {
-        render() { return html``; }
-      }
-      BaseComponent.registerComponent(name, PlaceholderComponent);
     }
+
+    if (!ComponentClass || typeof ComponentClass !== 'function') {
+      console.warn(`Could not find component class for ${name}, using placeholder`);
+      // Create a placeholder component for testing if needed
+      ComponentClass = class PlaceholderComponent extends LitElement {
+        render() { return html``; }
+      };
+    }
+
+    // Register the component
+    await BaseComponent.registerComponent(name, ComponentClass);
   } catch (error) {
     console.error(`Failed to register component ${name}:`, error);
   }
 }
 
 // Function to register all components
-export async function registerAllComponents() {
+async function registerAllComponents() {
   for (const [name, component] of components) {
-    try {
-      await registerComponent(name, component);
-    } catch (error) {
-      console.error(`Error registering ${name}:`, error);
-    }
+    await registerComponent(name, component);
   }
-  return true;
 }
 
-// Register all components immediately
-const registrationPromise = registerAllComponents();
-
-// Export the promise for tests to await
-export { registrationPromise as default }; 
+// Export functions
+export {
+  registerComponent,
+  registerAllComponents,
+  components
+}; 

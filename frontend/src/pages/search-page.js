@@ -1,4 +1,7 @@
-import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import {
   BaseComponent,
   defineComponent,
@@ -9,7 +12,6 @@ import { baseStyles } from "../styles/base.js";
  * @element search-page
  * @description Search page component with results and filters
  */
-@defineComponent("search-page")
 export class SearchPage extends BaseComponent {
   static properties = {
     query: { type: String },
@@ -279,3 +281,6 @@ export class SearchPage extends BaseComponent {
     this._handleSearch();
   }
 }
+
+// Register the component
+defineComponent("search-page", SearchPage);

@@ -48,36 +48,39 @@ export class BaseComponent extends LitElement {
   /**
    * Register a component with the custom elements registry
    * @param {string} name The name of the component
-   * @param {typeof LitElement} component The component class to register
+   * @param {typeof BaseComponent} component The component class
+   * @returns {void}
    */
   static registerComponent(name, component) {
-    // More lenient check for LitElement components
-    const isLitElementComponent =
-      component &&
-      typeof component === "function" &&
-      // Check if it extends LitElement directly
-      (component.prototype instanceof LitElement ||
-        // Or check if it has LitElement's key properties/methods
-        (component.prototype &&
-          typeof component.prototype.render === "function" &&
-          component.prototype.createRenderRoot));
-
-    if (!isLitElementComponent) {
-      console.warn(
-        `Warning: Component ${name} may not be a valid LitElement, but attempting to register anyway`
-      );
-    }
-
-    if (!customElements.get(name)) {
-      console.log(`Registering component: ${name}`);
-      try {
-        customElements.define(name, component);
-      } catch (error) {
-        console.error(`Failed to register ${name}:`, error.message);
+    try {
+      // Validate component
+      if (!component || !(component.prototype instanceof LitElement)) {
+        console.warn(
+          `Component ${name} may not be a valid LitElement, but attempting to register anyway`
+        );
       }
+
+      // Log registration attempt
+      console.log(`Registering component: ${name}`);
+
+      // Check if already registered
+      if (customElements.get(name)) {
+        console.log(`Component ${name} already registered`);
+        return;
+      }
+
+      // Define the custom element
+      customElements.define(name, component);
+      console.log(`Successfully registered component: ${name}`);
+    } catch (error) {
+      console.error(`Failed to register ${name}:`, error);
+      throw error;
     }
   }
 }
+
+// Export the base component
+export default BaseComponent;
 
 // Export a helper function to define components
 export function defineComponent(tagName) {
@@ -107,8 +110,15 @@ export function defineComponent(tagName) {
 
 // Export a helper function to register components
 export function registerComponent(tagName, component) {
+  // Check if the component is already registered
   if (customElements.get(tagName)) {
     console.warn(`Component ${tagName} already registered`);
+    return;
+  }
+
+  // Validate the component class
+  if (!component || typeof component !== "function") {
+    console.error(`Invalid component class for ${tagName}`);
     return;
   }
 
@@ -120,6 +130,17 @@ export function registerComponent(tagName, component) {
         customElements.define(tagName, component);
       } catch (error) {
         console.error(`Failed to register component ${tagName}:`, error);
+        // Try to re-register with a new name
+        try {
+          const newTagName = `${tagName}-${Date.now()}`;
+          console.log(`Attempting to register with new name: ${newTagName}`);
+          customElements.define(newTagName, component);
+        } catch (retryError) {
+          console.error(
+            `Failed to register component with new name:`,
+            retryError
+          );
+        }
       }
     });
   } else {
@@ -128,6 +149,17 @@ export function registerComponent(tagName, component) {
       customElements.define(tagName, component);
     } catch (error) {
       console.error(`Failed to register component ${tagName}:`, error);
+      // Try to re-register with a new name
+      try {
+        const newTagName = `${tagName}-${Date.now()}`;
+        console.log(`Attempting to register with new name: ${newTagName}`);
+        customElements.define(newTagName, component);
+      } catch (retryError) {
+        console.error(
+          `Failed to register component with new name:`,
+          retryError
+        );
+      }
     }
   }
 }

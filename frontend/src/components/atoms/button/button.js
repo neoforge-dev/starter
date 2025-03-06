@@ -1,9 +1,6 @@
-import {
-  LitElement,
-  html,
-  css,
-} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { html, css } from "lit";
 import { baseStyles } from "../../styles/base.js";
+import { BaseComponent } from "../../base-component.js";
 
 /**
  * Button component for user interactions
@@ -15,8 +12,11 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {boolean} disabled - Whether the button is disabled
  * @prop {boolean} loading - Whether the button is in a loading state
  * @prop {boolean} fullWidth - Whether the button should take full width
+ * @prop {string} label - The label of the button
+ * @prop {string} icon - The icon of the button
+ * @prop {boolean} iconOnly - Whether the button is icon only
  */
-export class NeoButton extends LitElement {
+export class NeoButton extends BaseComponent {
   static get properties() {
     return {
       variant: { type: String, reflect: true },
@@ -25,6 +25,9 @@ export class NeoButton extends LitElement {
       disabled: { type: Boolean, reflect: true },
       loading: { type: Boolean, reflect: true },
       fullWidth: { type: Boolean, reflect: true },
+      label: { type: String, reflect: true },
+      icon: { type: String, reflect: true },
+      iconOnly: { type: Boolean, reflect: true },
     };
   }
 
@@ -184,13 +187,11 @@ export class NeoButton extends LitElement {
           }
         }
 
-        /* Slots */
-        ::slotted([slot="prefix"]) {
-          margin-right: calc(var(--spacing-xs) * -1);
-        }
-
-        ::slotted([slot="suffix"]) {
-          margin-left: calc(var(--spacing-xs) * -1);
+        /* Icon */
+        .icon {
+          width: 1em;
+          height: 1em;
+          fill: currentColor;
         }
       `,
     ];
@@ -204,6 +205,9 @@ export class NeoButton extends LitElement {
     this.disabled = false;
     this.loading = false;
     this.fullWidth = false;
+    this.label = "";
+    this.icon = "";
+    this.iconOnly = false;
   }
 
   /**
@@ -234,6 +238,7 @@ export class NeoButton extends LitElement {
       loading: this.loading,
       "full-width": this.fullWidth,
       disabled: isDisabled,
+      "icon-only": this.iconOnly,
     };
 
     // Set host element attributes
@@ -245,27 +250,30 @@ export class NeoButton extends LitElement {
       this.removeAttribute("aria-disabled");
     }
 
+    // Set aria-label for icon-only buttons
+    if (this.iconOnly) {
+      this.setAttribute("aria-label", this.label);
+    } else {
+      this.removeAttribute("aria-label");
+    }
+
     return html`
       <button
         type="${this.type}"
+        ?disabled="${isDisabled}"
+        @click="${this._handleClick}"
         class="${Object.entries(classes)
-          .filter(([, value]) => value)
+          .filter(([_, value]) => value)
           .map(([key]) => key)
           .join(" ")}"
-        ?disabled="${isDisabled}"
-        aria-disabled="${isDisabled ? "true" : "false"}"
-        aria-busy="${this.loading ? "true" : "false"}"
-        @click=${this._handleClick}
       >
-        <slot name="prefix"></slot>
-        <slot></slot>
-        <slot name="suffix"></slot>
-        ${this.loading ? html`<span class="spinner"></span>` : ""}
+        ${this.loading
+          ? html`<div class="spinner"></div>`
+          : html`
+              ${this.icon ? html`<span class="icon">${this.icon}</span>` : ""}
+              ${this.label}
+            `}
       </button>
     `;
   }
-}
-
-if (!customElements.get("neo-button")) {
-  customElements.define("neo-button", NeoButton);
 }

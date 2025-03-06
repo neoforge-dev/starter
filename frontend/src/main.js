@@ -1,6 +1,10 @@
-import {  LitElement, html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  LitElement,
+  html,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "./components/styles/base.js";
 import { lazyLoad } from "./utils/lazy-load.js";
+import registrationPromise from "./register-components.mjs";
 
 // Import critical components
 import "./components/header.js";
@@ -23,6 +27,30 @@ const routes = {
   "/examples": {
     component: "examples-page",
     import: () => import("./pages/examples-page.js"),
+  },
+  "/dashboard": {
+    component: "dashboard-page",
+    import: () => import("./pages/dashboard-page.js"),
+  },
+  "/support": {
+    component: "support-page",
+    import: () => import("./pages/support-page.js"),
+  },
+  "/contact": {
+    component: "contact-page",
+    import: () => import("./pages/contact-page.js"),
+  },
+  "/profile": {
+    component: "profile-page",
+    import: () => import("./pages/profile-page.js"),
+  },
+  "/about": {
+    component: "about-page",
+    import: () => import("./pages/about-page.js"),
+  },
+  "/faq": {
+    component: "faq-page",
+    import: () => import("./pages/faq-page.js"),
   },
 };
 
@@ -53,6 +81,9 @@ const router = {
             <div class="loading-spinner"></div>
           </div>
         `;
+
+        // Wait for component registration
+        await registrationPromise;
 
         // Load component if not already loaded
         if (!customElements.get(route.component)) {
