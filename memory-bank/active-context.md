@@ -16,9 +16,9 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 8. ✅ Form (6 tests passing)
 9. ✅ Input (8 tests passing)
 10. ✅ Button (11 tests passing)
+11. ✅ Card (9 tests passing)
 
 Next tests to fix:
-- Card test
 - Modal test
 - Notification test
 - Dropdown test
@@ -1079,10 +1079,10 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 7. ✅ Blog Page (6 tests passing)
 8. ✅ Form (6 tests passing)
 9. ✅ Input (8 tests passing)
+10. ✅ Button (11 tests passing)
+11. ✅ Card (9 tests passing)
 
 Next tests to fix:
-- Button test
-- Card test
 - Modal test
 - Notification test
 - Dropdown test
