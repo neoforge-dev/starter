@@ -20,9 +20,10 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 12. ✅ Modal (10 tests passing)
 13. ✅ Notification Service (8 tests passing)
 14. ✅ Dropdown (11 tests passing)
+15. ✅ Spinner (14 tests passing - 7 in each test file)
 
 Next tests to fix:
-- Spinner test
+- File upload test
 
 Our approach for fixing tests:
 1. Create a pure JavaScript mock of the component
@@ -1088,9 +1089,10 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 12. ✅ Modal (10 tests passing)
 13. ✅ Notification Service (8 tests passing)
 14. ✅ Dropdown (11 tests passing)
+15. ✅ Spinner (14 tests passing - 7 in each test file)
 
 Next tests to fix:
-- Spinner test
+- File upload test
 
 Our approach for fixing tests:
 1. Create a pure JavaScript mock of the component
