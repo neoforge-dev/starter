@@ -26,9 +26,10 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 18. ✅ Badge (24 tests passing - 12 in each test file)
 19. ✅ Progress Bar (10 tests passing)
 20. ✅ Components Page (13 tests passing)
+21. ✅ Tooltip (11 tests passing)
 
 Next tests to fix:
-- Tooltip test
+- Dashboard page test
 
 Our approach for fixing tests:
 1. Create a pure JavaScript mock of the component
@@ -1100,9 +1101,10 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 18. ✅ Badge (24 tests passing - 12 in each test file)
 19. ✅ Progress Bar (10 tests passing)
 20. ✅ Components Page (13 tests passing)
+21. ✅ Tooltip (11 tests passing)
 
 Next tests to fix:
-- Tooltip test
+- Dashboard page test
 
 Our approach for fixing tests:
 1. Create a pure JavaScript mock of the component
