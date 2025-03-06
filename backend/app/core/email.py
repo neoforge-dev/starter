@@ -4,6 +4,7 @@ import os
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, EmailStr
 from app.core.config import settings
+from app.core.queue import EmailQueue, EmailQueueItem
 
 class EmailContent(BaseModel):
     """Email content structure."""
@@ -14,7 +15,7 @@ class EmailContent(BaseModel):
 
 class EmailService:
     def __init__(self):
-        self.redis = Redis.from_url(settings.redis_url)
+        self.queue = EmailQueue(Redis.from_url(settings.redis_url))
         self.conf = ConnectionConfig(
             MAIL_USERNAME=settings.smtp_user,
             MAIL_PASSWORD=settings.smtp_password.get_secret_value() if settings.smtp_password else None,
@@ -28,11 +29,28 @@ class EmailService:
         self.fastmail = FastMail(self.conf)
 
     async def send_queued_email(self, message: MessageSchema):
-        """Add email to Redis queue"""
+        """Add email to queue using EmailQueue"""
         if not message.template_body:
             raise ValueError("Email template required")
-            
-        await self.redis.rpush("email_queue", message.json())
+        
+        # Connect to the queue if not already connected
+        await self.queue.connect()
+        
+        # Create an EmailQueueItem from the MessageSchema
+        email_item = EmailQueueItem(
+            email_to=message.recipients,
+            subject=message.subject,
+            template_name=message.template_name,
+            template_data=message.template_body,
+            cc=message.cc,
+            bcc=message.bcc,
+            reply_to=message.reply_to
+        )
+        
+        # Enqueue the email
+        email_id = await self.queue.enqueue(email_item)
+        
+        return email_id
 
 async def send_email(*, db, email_id: str, email_content: EmailContent) -> None:
     """Send an email using the queued email service."""

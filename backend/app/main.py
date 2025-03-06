@@ -26,6 +26,7 @@ from app.core.redis import get_redis, redis_client
 from app.api.v1.api import api_router
 from app.api.endpoints import metrics
 from app.worker.email_worker import email_worker
+from app.core.queue import EmailQueue
 from app.api.middleware import setup_security_middleware, setup_validation_middleware
 from app.core.metrics import get_metrics
 
@@ -86,7 +87,12 @@ async def lifespan(app: FastAPI):
     # Initialize metrics
     get_metrics()
     
-    # Start background workers
+    # Initialize email queue
+    email_queue = EmailQueue(redis=redis_client)
+    await email_queue.connect()
+    
+    # Initialize and start email worker
+    email_worker.queue = email_queue
     email_worker.start()
     
     logger.info(
@@ -98,8 +104,9 @@ async def lifespan(app: FastAPI):
     yield
     
     # Cleanup
-    await close_redis()
     email_worker.stop()
+    await email_queue.disconnect()
+    await close_redis()
     
     logger.info("application_shutdown")
 
