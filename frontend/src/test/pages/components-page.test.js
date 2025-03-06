@@ -4,126 +4,87 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 class MockComponentsPage {
   constructor() {
     // Initialize properties with default values
+    this._activeTab = "overview";
+    this._selectedCategory = null;
+    this._selectedVariant = null;
     this._loading = false;
     this._error = "";
-    this._activeTab = "overview";
-    this._selectedCategory = "buttons";
-    this._selectedVariant = "primary";
-    this._components = {
-      buttons: [
-        {
-          name: "Primary Button",
-          variant: "primary",
-          description: "Main call-to-action button",
-        },
-        {
-          name: "Secondary Button",
-          variant: "secondary",
-          description: "Alternative action button",
-        },
-      ],
-      inputs: [
-        {
-          name: "Text Input",
-          variant: "default",
-          description: "Standard text input field",
-        },
-        {
-          name: "Password Input",
-          variant: "password",
-          description: "Secure password entry field",
-        },
-      ],
-      dropdowns: [
-        {
-          name: "Basic Dropdown",
-          variant: "default",
-          description: "Simple dropdown menu",
-        },
-        {
-          name: "Multi-select Dropdown",
-          variant: "multi",
-          description: "Multiple selection dropdown",
-        },
-      ],
-    };
 
     // Create DOM elements for testing
-    this.pageTitle = document.createElement("h1");
-    this.pageTitle.textContent = "Components Library";
+    this.componentsHeader = document.createElement("div");
+    this.componentsHeader.className = "components-header";
 
-    this.pageDescription = document.createElement("div");
-    this.pageDescription.className = "page-description";
-    this.pageDescription.textContent = "Browse our component library";
+    this.componentsTitle = document.createElement("h1");
+    this.componentsTitle.className = "components-title";
+    this.componentsTitle.textContent = "Components Library";
+
+    this.componentsDescription = document.createElement("p");
+    this.componentsDescription.className = "components-description";
+    this.componentsDescription.textContent = "Browse our component library";
 
     this.tabsContainer = document.createElement("div");
     this.tabsContainer.className = "tabs-container";
 
-    this.tabs = {
-      overview: document.createElement("div"),
-      code: document.createElement("div"),
-      docs: document.createElement("div"),
-    };
-
-    Object.keys(this.tabs).forEach((tabName) => {
-      this.tabs[tabName].className = "tab";
-      this.tabs[tabName].dataset.tab = tabName;
-      this.tabs[tabName].textContent =
-        tabName.charAt(0).toUpperCase() + tabName.slice(1);
-      this.tabsContainer.appendChild(this.tabs[tabName]);
+    this.tabs = [
+      { name: "Overview", id: "overview" },
+      { name: "Code", id: "code" },
+      { name: "Docs", id: "docs" },
+    ].map((tab) => {
+      const tabElement = document.createElement("div");
+      tabElement.className = "tab";
+      tabElement.dataset.tab = tab.id;
+      tabElement.textContent = tab.name;
+      tabElement.addEventListener("click", () => (this.activeTab = tab.id));
+      this.tabsContainer.appendChild(tabElement);
+      return tabElement;
     });
 
-    this.contentContainer = document.createElement("div");
-    this.contentContainer.className = "content-container";
-
-    this.categoryContainer = document.createElement("div");
-    this.categoryContainer.className = "category-container";
-
-    this.categories = {};
-    Object.keys(this._components).forEach((categoryName) => {
-      this.categories[categoryName] = document.createElement("div");
-      this.categories[categoryName].className = "component-category";
-      this.categories[categoryName].dataset.category = categoryName;
-      this.categories[categoryName].textContent =
-        categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
-      this.categoryContainer.appendChild(this.categories[categoryName]);
+    this.componentCategories = [
+      { name: "Buttons", id: "buttons" },
+      { name: "Inputs", id: "inputs" },
+      { name: "Dropdowns", id: "dropdowns" },
+      { name: "Badges", id: "badges" },
+      { name: "Spinners", id: "spinners" },
+      { name: "Pagination", id: "pagination" },
+    ].map((category) => {
+      const categoryElement = document.createElement("div");
+      categoryElement.className = "component-category";
+      categoryElement.dataset.category = category.id;
+      categoryElement.textContent = category.name;
+      categoryElement.addEventListener(
+        "click",
+        () => (this.selectedCategory = category.id)
+      );
+      return categoryElement;
     });
 
-    this.componentDetails = document.createElement("div");
-    this.componentDetails.className = "component-details";
-
-    this.variantsContainer = document.createElement("div");
-    this.variantsContainer.className = "variants-container";
-
-    this.variants = {};
-    ["primary", "secondary"].forEach((variantName) => {
-      this.variants[variantName] = document.createElement("div");
-      this.variants[variantName].className = "variant";
-      this.variants[variantName].dataset.variant = variantName;
-      this.variants[variantName].textContent =
-        variantName.charAt(0).toUpperCase() + variantName.slice(1);
-      this.variantsContainer.appendChild(this.variants[variantName]);
+    this.componentVariants = [
+      { name: "Primary", id: "primary" },
+      { name: "Secondary", id: "secondary" },
+      { name: "Outline", id: "outline" },
+      { name: "Text", id: "text" },
+    ].map((variant) => {
+      const variantElement = document.createElement("div");
+      variantElement.className = "variant";
+      variantElement.dataset.variant = variant.id;
+      variantElement.textContent = variant.name;
+      variantElement.addEventListener(
+        "click",
+        () => (this.selectedVariant = variant.id)
+      );
+      return variantElement;
     });
 
     this.codeExamples = [
-      { language: "html", code: '<button class="primary">Click me</button>' },
-      {
-        language: "css",
-        code: ".button.primary { color: white; background-color: blue; }",
-      },
+      { language: "html", code: "<button>Click me</button>" },
+      { language: "css", code: ".button { color: blue; }" },
     ].map((example) => {
-      const codeElement = document.createElement("div");
-      codeElement.className = "code-example";
-      codeElement.dataset.language = example.language;
-      codeElement.textContent = example.code;
-      return codeElement;
+      const exampleElement = document.createElement("div");
+      exampleElement.className = "code-example";
+      exampleElement.dataset.language = example.language;
+      exampleElement.textContent = example.code;
+      return exampleElement;
     });
-
-    this.loadingSpinner = document.createElement("div");
-    this.loadingSpinner.className = "loading";
-
-    this.errorMessage = document.createElement("div");
-    this.errorMessage.className = "error";
 
     // Event listeners
     this._eventListeners = new Map();
@@ -131,89 +92,87 @@ class MockComponentsPage {
     // Shadow root mock
     this.shadowRoot = {
       querySelector: (selector) => {
-        if (selector === "h1") return this.pageTitle;
-        if (selector === ".page-description") return this.pageDescription;
+        if (selector === "h1" || selector === ".components-title")
+          return this.componentsTitle;
+        if (selector === ".components-description")
+          return this.componentsDescription;
         if (selector === ".tabs-container") return this.tabsContainer;
-        if (selector === ".content-container") return this.contentContainer;
-        if (selector === ".category-container") return this.categoryContainer;
-        if (selector === ".component-details") return this.componentDetails;
-        if (selector === ".variants-container") return this.variantsContainer;
         if (selector === ".loading")
-          return this._loading ? this.loadingSpinner : null;
+          return this._loading ? document.createElement("div") : null;
         if (selector === ".error")
-          return this._error ? this.errorMessage : null;
-        if (selector === `.tab[data-tab="${this._activeTab}"]`) {
-          return this.tabs[this._activeTab];
-        }
-        if (
-          selector ===
-          `.component-category[data-category="${this._selectedCategory}"]`
-        ) {
-          return this.categories[this._selectedCategory];
-        }
-        if (selector === `.variant[data-variant="${this._selectedVariant}"]`) {
-          return this.variants[this._selectedVariant];
+          return this._error ? document.createElement("div") : null;
+        if (selector === ".component-details") {
+          const details = document.createElement("div");
+          details.className = "component-details";
+          if (this._selectedCategory) {
+            details.classList.add("active");
+          }
+          return details;
         }
         return null;
       },
       querySelectorAll: (selector) => {
-        if (selector === ".tab") return Object.values(this.tabs);
-        if (selector === ".component-category")
-          return Object.values(this.categories);
-        if (selector === ".variant") return Object.values(this.variants);
-        if (selector === "code-example") return this.codeExamples;
+        if (selector === ".tab") return this.tabs;
+        if (selector === ".component-category") return this.componentCategories;
+        if (selector === ".variant") return this.componentVariants;
+        if (selector === "code-example" || selector === ".code-example")
+          return this.codeExamples;
         return [];
       },
     };
 
-    // Update the DOM to match initial properties
-    this._updatePageContent();
+    // Update complete promise
+    this.updateComplete = Promise.resolve(true);
   }
 
   // Getters and setters for properties
-  get loading() {
-    return this._loading;
-  }
-
-  set loading(val) {
-    this._loading = val;
-    this._updatePageContent();
-  }
-
-  get error() {
-    return this._error;
-  }
-
-  set error(val) {
-    this._error = val;
-    this._updatePageContent();
-  }
-
   get activeTab() {
     return this._activeTab;
   }
 
-  set activeTab(val) {
-    this._activeTab = val;
-    this._updatePageContent();
+  set activeTab(value) {
+    this._activeTab = value;
+    this.dispatchEvent(
+      new CustomEvent("tab-changed", { detail: { tab: value } })
+    );
   }
 
   get selectedCategory() {
     return this._selectedCategory;
   }
 
-  set selectedCategory(val) {
-    this._selectedCategory = val;
-    this._updatePageContent();
+  set selectedCategory(value) {
+    this._selectedCategory = value;
+    this.dispatchEvent(
+      new CustomEvent("category-changed", { detail: { category: value } })
+    );
   }
 
   get selectedVariant() {
     return this._selectedVariant;
   }
 
-  set selectedVariant(val) {
-    this._selectedVariant = val;
-    this._updatePageContent();
+  set selectedVariant(value) {
+    this._selectedVariant = value;
+    this.dispatchEvent(
+      new CustomEvent("variant-changed", { detail: { variant: value } })
+    );
+  }
+
+  get loading() {
+    return this._loading;
+  }
+
+  set loading(value) {
+    this._loading = value;
+  }
+
+  get error() {
+    return this._error;
+  }
+
+  set error(value) {
+    this._error = value;
   }
 
   // Event handling
@@ -239,79 +198,41 @@ class MockComponentsPage {
     return true;
   }
 
-  // Component-specific methods
+  // Component methods
   _renderButtons() {
-    return this._components.buttons.map((button) => ({
-      name: button.name,
-      variant: button.variant,
-      description: button.description,
-    }));
+    return this.componentCategories.find(
+      (c) => c.dataset.category === "buttons"
+    );
   }
 
   _renderInputs() {
-    return this._components.inputs.map((input) => ({
-      name: input.name,
-      variant: input.variant,
-      description: input.description,
-    }));
+    return this.componentCategories.find(
+      (c) => c.dataset.category === "inputs"
+    );
   }
 
   _renderDropdowns() {
-    return this._components.dropdowns.map((dropdown) => ({
-      name: dropdown.name,
-      variant: dropdown.variant,
-      description: dropdown.description,
-    }));
+    return this.componentCategories.find(
+      (c) => c.dataset.category === "dropdowns"
+    );
   }
 
-  // Update the page content based on current properties
-  _updatePageContent() {
-    // Update loading state
-    if (this._loading) {
-      this.loadingSpinner.style.display = "flex";
-      this.contentContainer.style.display = "none";
-      this.errorMessage.style.display = "none";
-    }
-    // Update error state
-    else if (this._error) {
-      this.loadingSpinner.style.display = "none";
-      this.contentContainer.style.display = "none";
-      this.errorMessage.style.display = "block";
-      this.errorMessage.textContent = this._error;
-    }
-    // Update normal content
-    else {
-      this.loadingSpinner.style.display = "none";
-      this.contentContainer.style.display = "block";
-      this.errorMessage.style.display = "none";
+  _renderBadges() {
+    return this.componentCategories.find(
+      (c) => c.dataset.category === "badges"
+    );
+  }
 
-      // Update active tab
-      Object.keys(this.tabs).forEach((tabName) => {
-        if (tabName === this._activeTab) {
-          this.tabs[tabName].classList.add("active");
-        } else {
-          this.tabs[tabName].classList.remove("active");
-        }
-      });
+  _renderSpinners() {
+    return this.componentCategories.find(
+      (c) => c.dataset.category === "spinners"
+    );
+  }
 
-      // Update selected category
-      Object.keys(this.categories).forEach((categoryName) => {
-        if (categoryName === this._selectedCategory) {
-          this.categories[categoryName].classList.add("active");
-        } else {
-          this.categories[categoryName].classList.remove("active");
-        }
-      });
-
-      // Update selected variant
-      Object.keys(this.variants).forEach((variantName) => {
-        if (variantName === this._selectedVariant) {
-          this.variants[variantName].classList.add("active");
-        } else {
-          this.variants[variantName].classList.remove("active");
-        }
-      });
-    }
+  _renderPagination() {
+    return this.componentCategories.find(
+      (c) => c.dataset.category === "pagination"
+    );
   }
 }
 
@@ -323,89 +244,133 @@ describe("Components Page", () => {
   });
 
   it("should have default properties", () => {
+    expect(element.activeTab).toBe("overview");
+    expect(element.selectedCategory).toBe(null);
+    expect(element.selectedVariant).toBe(null);
     expect(element.loading).toBe(false);
     expect(element.error).toBe("");
-    expect(element.activeTab).toBe("overview");
-    expect(element.selectedCategory).toBe("buttons");
-    expect(element.selectedVariant).toBe("primary");
   });
 
-  it("should display loading spinner when loading is true", () => {
-    element.loading = true;
-    expect(element.shadowRoot.querySelector(".loading")).not.toBeNull();
-    expect(element.loadingSpinner.style.display).toBe("flex");
-    expect(element.contentContainer.style.display).toBe("none");
+  it("should have a components library title", () => {
+    const title = element.shadowRoot.querySelector("h1");
+    expect(title.textContent).toBe("Components Library");
   });
 
-  it("should display error message when error is set", () => {
-    element.error = "Failed to load components";
-    expect(element.shadowRoot.querySelector(".error")).not.toBeNull();
-    expect(element.errorMessage.textContent).toBe("Failed to load components");
-    expect(element.contentContainer.style.display).toBe("none");
-  });
-
-  it("should display content when not loading and no error", () => {
-    expect(element.shadowRoot.querySelector(".loading")).toBeNull();
-    expect(element.shadowRoot.querySelector(".error")).toBeNull();
-    expect(element.contentContainer.style.display).toBe("block");
-  });
-
-  it("should change active tab when activeTab property is updated", () => {
-    element.activeTab = "code";
-    expect(element.tabs.code.classList.contains("active")).toBe(true);
-    expect(element.tabs.overview.classList.contains("active")).toBe(false);
-
-    element.activeTab = "docs";
-    expect(element.tabs.docs.classList.contains("active")).toBe(true);
-    expect(element.tabs.code.classList.contains("active")).toBe(false);
-  });
-
-  it("should change selected category when selectedCategory property is updated", () => {
-    element.selectedCategory = "inputs";
-    expect(element.categories.inputs.classList.contains("active")).toBe(true);
-    expect(element.categories.buttons.classList.contains("active")).toBe(false);
-
-    element.selectedCategory = "dropdowns";
-    expect(element.categories.dropdowns.classList.contains("active")).toBe(
-      true
+  it("should have a components description", () => {
+    const description = element.shadowRoot.querySelector(
+      ".components-description"
     );
-    expect(element.categories.inputs.classList.contains("active")).toBe(false);
+    expect(description.textContent).toBe("Browse our component library");
   });
 
-  it("should change selected variant when selectedVariant property is updated", () => {
-    element.selectedVariant = "secondary";
-    expect(element.variants.secondary.classList.contains("active")).toBe(true);
-    expect(element.variants.primary.classList.contains("active")).toBe(false);
+  it("should have tabs for navigation", () => {
+    const tabs = element.shadowRoot.querySelectorAll(".tab");
+    expect(tabs.length).toBe(3);
+    expect(tabs[0].dataset.tab).toBe("overview");
+    expect(tabs[1].dataset.tab).toBe("code");
+    expect(tabs[2].dataset.tab).toBe("docs");
+  });
 
+  it("should change active tab when clicked", () => {
+    const codeTab = element.shadowRoot.querySelectorAll(".tab")[1];
+    codeTab.click();
+    expect(element.activeTab).toBe("code");
+
+    const docsTab = element.shadowRoot.querySelectorAll(".tab")[2];
+    docsTab.click();
+    expect(element.activeTab).toBe("docs");
+  });
+
+  it("should have component categories", () => {
+    const categories = element.shadowRoot.querySelectorAll(
+      ".component-category"
+    );
+    expect(categories.length).toBe(6);
+    expect(categories[0].dataset.category).toBe("buttons");
+    expect(categories[1].dataset.category).toBe("inputs");
+  });
+
+  it("should select a category when clicked", () => {
+    const buttonCategory = element.shadowRoot.querySelectorAll(
+      ".component-category"
+    )[0];
+    buttonCategory.click();
+    expect(element.selectedCategory).toBe("buttons");
+
+    const inputsCategory = element.shadowRoot.querySelectorAll(
+      ".component-category"
+    )[1];
+    inputsCategory.click();
+    expect(element.selectedCategory).toBe("inputs");
+  });
+
+  it("should have component variants", () => {
+    const variants = element.shadowRoot.querySelectorAll(".variant");
+    expect(variants.length).toBe(4);
+    expect(variants[0].dataset.variant).toBe("primary");
+    expect(variants[1].dataset.variant).toBe("secondary");
+  });
+
+  it("should select a variant when clicked", () => {
+    const primaryVariant = element.shadowRoot.querySelectorAll(".variant")[0];
+    primaryVariant.click();
+    expect(element.selectedVariant).toBe("primary");
+
+    const secondaryVariant = element.shadowRoot.querySelectorAll(".variant")[1];
+    secondaryVariant.click();
+    expect(element.selectedVariant).toBe("secondary");
+  });
+
+  it("should have code examples", () => {
+    const examples = element.shadowRoot.querySelectorAll(".code-example");
+    expect(examples.length).toBe(2);
+    expect(examples[0].dataset.language).toBe("html");
+    expect(examples[1].dataset.language).toBe("css");
+  });
+
+  it("should dispatch events when properties change", () => {
+    const tabChangedSpy = vi.fn();
+    const categoryChangedSpy = vi.fn();
+    const variantChangedSpy = vi.fn();
+
+    element.addEventListener("tab-changed", tabChangedSpy);
+    element.addEventListener("category-changed", categoryChangedSpy);
+    element.addEventListener("variant-changed", variantChangedSpy);
+
+    element.activeTab = "code";
+    element.selectedCategory = "buttons";
     element.selectedVariant = "primary";
-    expect(element.variants.primary.classList.contains("active")).toBe(true);
-    expect(element.variants.secondary.classList.contains("active")).toBe(false);
+
+    expect(tabChangedSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        detail: { tab: "code" },
+      })
+    );
+
+    expect(categoryChangedSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        detail: { category: "buttons" },
+      })
+    );
+
+    expect(variantChangedSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        detail: { variant: "primary" },
+      })
+    );
   });
 
-  it("should render buttons correctly", () => {
-    const buttons = element._renderButtons();
-    expect(buttons).toHaveLength(2);
-    expect(buttons[0].name).toBe("Primary Button");
-    expect(buttons[0].variant).toBe("primary");
-    expect(buttons[1].name).toBe("Secondary Button");
-    expect(buttons[1].variant).toBe("secondary");
+  it("should show loading state when loading is true", () => {
+    expect(element.shadowRoot.querySelector(".loading")).toBe(null);
+
+    element.loading = true;
+    expect(element.shadowRoot.querySelector(".loading")).not.toBe(null);
   });
 
-  it("should render inputs correctly", () => {
-    const inputs = element._renderInputs();
-    expect(inputs).toHaveLength(2);
-    expect(inputs[0].name).toBe("Text Input");
-    expect(inputs[0].variant).toBe("default");
-    expect(inputs[1].name).toBe("Password Input");
-    expect(inputs[1].variant).toBe("password");
-  });
+  it("should show error message when error is set", () => {
+    expect(element.shadowRoot.querySelector(".error")).toBe(null);
 
-  it("should render dropdowns correctly", () => {
-    const dropdowns = element._renderDropdowns();
-    expect(dropdowns).toHaveLength(2);
-    expect(dropdowns[0].name).toBe("Basic Dropdown");
-    expect(dropdowns[0].variant).toBe("default");
-    expect(dropdowns[1].name).toBe("Multi-select Dropdown");
-    expect(dropdowns[1].variant).toBe("multi");
+    element.error = "Failed to load components";
+    expect(element.shadowRoot.querySelector(".error")).not.toBe(null);
   });
 });

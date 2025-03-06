@@ -25,7 +25,7 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 17. ✅ Link (11 tests passing)
 18. ✅ Badge (24 tests passing - 12 in each test file)
 19. ✅ Progress Bar (10 tests passing)
-20. ✅ Components Page (10 tests passing)
+20. ✅ Components Page (13 tests passing)
 
 Next tests to fix:
 - Tooltip test
@@ -1099,7 +1099,7 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 17. ✅ Link (11 tests passing)
 18. ✅ Badge (24 tests passing - 12 in each test file)
 19. ✅ Progress Bar (10 tests passing)
-20. ✅ Components Page (10 tests passing)
+20. ✅ Components Page (13 tests passing)
 
 Next tests to fix:
 - Tooltip test
