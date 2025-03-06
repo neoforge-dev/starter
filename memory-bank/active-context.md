@@ -656,3 +656,18 @@ These changes ensure that all tests can now run properly inside Docker container
 2. Continue increasing test coverage to meet the 80% threshold
 3. Create more tests for database operations and API endpoints
 4. Implement better test isolation to reduce dependencies on shared fixtures 
+
+## Recent Changes
+- Fixed the profile-page test that was failing due to import resolution issues with auth-service.js
+- Created a simplified mock implementation for the profile-page test, similar to the approach used for the support-page test
+- Both profile-page and support-page tests are now passing successfully
+
+## Next Steps
+- Consider applying the same simplified mock approach to other page tests that might have similar import issues
+- Address the about-page test issue (using Chai-style assertions instead of Vitest assertions)
+- Fix the badge.test.js timeout issue
+
+## Active Decisions
+- Using simplified mocks for testing to isolate tests from external dependencies
+- Focusing on testing component behavior rather than implementation details
+- Avoiding complex setup and teardown procedures to make tests faster and more maintainable
