@@ -12,9 +12,10 @@ We are currently focused on fixing skipped tests in the frontend. We've successf
 - Data table (9 tests passing)
 - Form Validation (7 tests passing)
 - Tooltip (11 tests passing)
+- Progress bar (10 tests passing)
 
 ### Next Test to Fix
-- Progress bar test
+- Checkbox test
 
 ### Approach for Fixing Tests
 1. Create pure JavaScript mocks for components
