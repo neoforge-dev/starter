@@ -29,9 +29,10 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 21. ✅ Tooltip (11 tests passing)
 22. ✅ Dashboard Page (13 tests passing)
 23. ✅ Data Table (6 tests passing)
+24. ✅ Form Validation (7 tests passing)
 
 Next tests to fix:
-- Form validation test
+- Tooltip test
 
 Our approach for fixing tests:
 1. Create a pure JavaScript mock of the component
@@ -1107,9 +1108,10 @@ We're currently focused on fixing skipped tests in the frontend. We've successfu
 21. ✅ Tooltip (11 tests passing)
 22. ✅ Dashboard Page (13 tests passing)
 23. ✅ Data Table (6 tests passing)
+24. ✅ Form Validation (7 tests passing)
 
 Next tests to fix:
-- Form validation test
+- Tooltip test
 
 Our approach for fixing tests:
 1. Create a pure JavaScript mock of the component
