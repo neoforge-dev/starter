@@ -1,64 +1,65 @@
-import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import {
-  BaseComponent,
-  defineComponent,
-} from "../components/base-component.js";
+  html,
+  css,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
 
 /**
  * @element pricing-page
  * @description Pricing page component with plans and features
  */
-@defineComponent("pricing-page")
 export class PricingPage extends BaseComponent {
-  static styles = [
-    baseStyles,
-    css`
-      :host {
-        display: block;
-        padding: var(--spacing-lg);
-      }
+  static get styles() {
+    return [
+      baseStyles,
+      css`
+        :host {
+          display: block;
+          padding: var(--spacing-lg);
+        }
 
-      .pricing-container {
-        max-width: var(--content-width);
-        margin: 0 auto;
-      }
+        .pricing-container {
+          max-width: var(--content-width);
+          margin: 0 auto;
+        }
 
-      h1 {
-        font-size: var(--font-size-xxl);
-        margin-bottom: var(--spacing-xl);
-        text-align: center;
-      }
+        h1 {
+          font-size: var(--font-size-xxl);
+          margin-bottom: var(--spacing-xl);
+          text-align: center;
+        }
 
-      .pricing-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: var(--spacing-lg);
-      }
+        .pricing-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: var(--spacing-lg);
+        }
 
-      .pricing-card {
-        padding: var(--spacing-lg);
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow-md);
-        text-align: center;
-      }
+        .pricing-card {
+          padding: var(--spacing-lg);
+          border-radius: var(--border-radius);
+          box-shadow: var(--shadow-md);
+          text-align: center;
+        }
 
-      .price {
-        font-size: var(--font-size-xl);
-        font-weight: bold;
-        margin: var(--spacing-md) 0;
-      }
+        .price {
+          font-size: var(--font-size-xl);
+          font-weight: bold;
+          margin: var(--spacing-md) 0;
+        }
 
-      .features {
-        margin: var(--spacing-lg) 0;
-        text-align: left;
-      }
+        .features {
+          margin: var(--spacing-lg) 0;
+          text-align: left;
+        }
 
-      .feature {
-        margin: var(--spacing-sm) 0;
-      }
-    `,
-  ];
+        .feature {
+          margin: var(--spacing-sm) 0;
+        }
+      `,
+    ];
+  }
 
   render() {
     return html`
@@ -100,3 +101,6 @@ export class PricingPage extends BaseComponent {
     `;
   }
 }
+
+// Register the component
+customElements.define("pricing-page", PricingPage);
