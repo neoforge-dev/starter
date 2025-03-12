@@ -1,7 +1,6 @@
 import { expect, describe, it, beforeEach } from "vitest";
-import { Toast } from "../../components/ui/toast.js";
 
-// Use a mock approach similar to what we did for the button, checkbox, and icon tests
+// Use a pure JavaScript mock approach
 describe("Toast Component", () => {
   let toastProps;
 

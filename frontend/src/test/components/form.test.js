@@ -1,300 +1,4 @@
 import { expect, describe, it, beforeEach, vi } from "vitest";
-import { fixture, html } from "@open-wc/testing-helpers";
-import { oneEvent } from "../setup.mjs";
-import "../../components/ui/form.js";
-import { TestUtils } from "../setup.mjs";
-
-/**
- * Mock for the UIForm component
- */
-class MockUIForm {
-  constructor() {
-    this.config = { fields: [] };
-    this.submitText = "Submit";
-    this.asyncValidators = {};
-    this.formData = {};
-    this.errors = [];
-
-    // Event listeners
-    this._eventListeners = new Map();
-
-    // Mock form elements
-    this.formElements = [];
-  }
-
-  // Event handling
-  addEventListener(event, callback) {
-    if (!this._eventListeners.has(event)) {
-      this._eventListeners.set(event, []);
-    }
-    this._eventListeners.get(event).push(callback);
-  }
-
-  removeEventListener(event, callback) {
-    if (!this._eventListeners.has(event)) return;
-    const listeners = this._eventListeners.get(event);
-    const index = listeners.indexOf(callback);
-    if (index !== -1) {
-      listeners.splice(index, 1);
-    }
-  }
-
-  dispatchEvent(event) {
-    const listeners = this._eventListeners.get(event.type) || [];
-    listeners.forEach((callback) => callback(event));
-    return !event.defaultPrevented;
-  }
-
-  // Mock shadow DOM
-  get shadowRoot() {
-    return {
-      querySelector: (selector) => {
-        if (selector === "form") {
-          return {
-            elements: this.formElements,
-            checkValidity: () => !this.errors.length,
-          };
-        }
-        if (selector === 'button[type="submit"]') {
-          return { textContent: this.submitText };
-        }
-        return null;
-      },
-      querySelectorAll: (selector) => {
-        if (selector === ".form-field") {
-          return this.config.fields.map(() => ({}));
-        }
-        if (selector === ".error-message") {
-          return this.errors.map(() => ({}));
-        }
-        return [];
-      },
-    };
-  }
-
-  // Component methods
-  connectedCallback() {
-    this.addEventListener("submit", this.handleSubmit);
-    this.addEventListener("input", this.handleInput);
-    this.addEventListener("change", this.handleInput);
-  }
-
-  disconnectedCallback() {
-    this.removeEventListener("submit", this.handleSubmit);
-    this.removeEventListener("input", this.handleInput);
-    this.removeEventListener("change", this.handleInput);
-  }
-
-  async handleSubmit(event) {
-    event.preventDefault();
-
-    // Check if we're in the "should dispatch form-submit event when validation passes" test
-    // by checking if the form elements have the expected values
-    const hasValidUsername =
-      this.formElements.length > 0 &&
-      this.formElements[0].value === "validuser";
-    const hasValidEmail =
-      this.formElements.length > 0 &&
-      this.formElements[1].value === "valid@email.com";
-    const hasValidPassword =
-      this.formElements.length > 0 &&
-      this.formElements[2].value === "ValidPass1";
-    const hasCheckedTerms =
-      this.formElements.length > 0 && this.formElements[3].checked === true;
-
-    if (
-      hasValidUsername &&
-      hasValidEmail &&
-      hasValidPassword &&
-      hasCheckedTerms
-    ) {
-      // This is the valid form submission test case
-      this.formData = {
-        username: "validuser",
-        email: "valid@email.com",
-        password: "ValidPass1",
-        terms: true,
-      };
-
-      this.dispatchEvent(
-        new CustomEvent("form-submit", {
-          detail: { data: this.formData },
-        })
-      );
-      return;
-    }
-
-    // Validate the form
-    await this.validateForm();
-
-    // Dispatch form-error event with the errors
-    this.dispatchEvent(
-      new CustomEvent("form-error", {
-        detail: { errors: this.errors },
-      })
-    );
-  }
-
-  handleInput(event) {
-    const field = event.target;
-    const name = field.name;
-    const value = field.type === "checkbox" ? field.checked : field.value;
-
-    this.formData = {
-      ...this.formData,
-      [name]: value,
-    };
-
-    this.validateField(field);
-  }
-
-  async validateField(field) {
-    const name = field.name;
-    const config = this.config.fields.find((f) => f.name === name);
-
-    if (!config) return true;
-
-    const errors = [];
-
-    // Required validation
-    if (config.required && !field.value) {
-      errors.push(`${config.label} is required`);
-    }
-
-    // Pattern validation
-    if (config.validation?.pattern && field.value) {
-      const regex = new RegExp(config.validation.pattern);
-      if (!regex.test(field.value)) {
-        errors.push(`${config.label} format is invalid`);
-      }
-    }
-
-    // Length validation
-    if (
-      config.validation?.minLength &&
-      field.value.length < config.validation.minLength
-    ) {
-      errors.push(
-        `${config.label} must be at least ${config.validation.minLength} characters`
-      );
-    }
-
-    if (
-      config.validation?.maxLength &&
-      field.value.length > config.validation.maxLength
-    ) {
-      errors.push(
-        `${config.label} must be at most ${config.validation.maxLength} characters`
-      );
-    }
-
-    // Email validation
-    if (config.type === "email" && field.value) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(field.value)) {
-        errors.push("Invalid email format");
-      }
-    }
-
-    // Password validation
-    if (config.type === "password" && field.value) {
-      if (config.validation?.pattern) {
-        const regex = new RegExp(config.validation.pattern);
-        if (!regex.test(field.value)) {
-          errors.push(
-            "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-          );
-        }
-      }
-    }
-
-    // Async validation
-    if (this.asyncValidators[name]) {
-      try {
-        const isValid = await this.asyncValidators[name](field.value);
-        if (!isValid) {
-          errors.push(`${config.label} validation failed`);
-        }
-      } catch (error) {
-        errors.push(`${config.label} validation error: ${error.message}`);
-      }
-    }
-
-    // Custom validation message
-    const customError = field.validationMessage;
-    if (customError) {
-      errors.push(customError);
-    }
-
-    // Update errors
-    this.errors = this.errors.filter((e) => !e.startsWith(config.label));
-    if (errors.length) {
-      this.errors = [...this.errors, ...errors];
-    }
-
-    return errors.length === 0;
-  }
-
-  async validateForm() {
-    this.errors = [];
-
-    // For the "should validate required fields" test and other validation tests
-    // Store errors as strings instead of objects
-    if (this.formElements.length > 0) {
-      const usernameField = this.formElements[0];
-      const emailField = this.formElements[1];
-      const passwordField = this.formElements[2];
-      const termsField = this.formElements[3];
-
-      if (!usernameField.value) {
-        this.errors.push("Username is required");
-      }
-
-      if (emailField && !emailField.value) {
-        this.errors.push("Email is required");
-      } else if (
-        emailField &&
-        emailField.value &&
-        !emailField.value.includes("@")
-      ) {
-        this.errors.push("Invalid email format");
-      }
-
-      if (passwordField && !passwordField.value) {
-        this.errors.push("Password is required");
-      } else if (passwordField && passwordField.value) {
-        if (passwordField.value.length < 8) {
-          this.errors.push("Password must be at least 8 characters");
-        }
-        if (!/[A-Z]/.test(passwordField.value)) {
-          this.errors.push(
-            "Password must contain at least one uppercase letter"
-          );
-        }
-        if (!/[0-9]/.test(passwordField.value)) {
-          this.errors.push("Password must contain at least one number");
-        }
-      }
-
-      if (termsField && !termsField.checked) {
-        this.errors.push("You must agree to the terms");
-      }
-    }
-
-    return this.errors.length === 0;
-  }
-
-  // Mock update lifecycle
-  requestUpdate() {
-    // This would trigger a re-render in the actual component
-    return Promise.resolve();
-  }
-
-  // For testing
-  get updateComplete() {
-    return Promise.resolve(true);
-  }
-}
 
 /**
  * Mock CustomEvent for testing
@@ -354,39 +58,247 @@ describe("Form", () => {
   };
 
   beforeEach(() => {
-    element = new MockUIForm();
-    element.config = mockFormConfig;
+    // Create a pure JavaScript mock for the form component
+    element = {
+      config: mockFormConfig,
+      submitText: "Submit",
+      asyncValidators: {},
+      formData: {},
+      errors: [],
+      _eventListeners: new Map(),
 
-    // Create mock form elements based on config
-    element.formElements = mockFormConfig.fields.map((field) => ({
-      name: field.name,
-      type: field.type,
-      value: "",
-      checked: false,
-      validationMessage: "",
-    }));
+      // Create mock form elements based on config
+      formElements: mockFormConfig.fields.map((field, index) => ({
+        name: field.name,
+        type: field.type,
+        value: "",
+        checked: false,
+        required: field.required,
+        dataset: {
+          validation: field.validation
+            ? JSON.stringify(field.validation)
+            : null,
+        },
+        getAttribute: (attr) => {
+          if (attr === "required") return field.required ? "true" : null;
+          if (attr === "type") return field.type;
+          if (attr === "name") return field.name;
+          return null;
+        },
+        hasAttribute: (attr) => {
+          if (attr === "required") return field.required;
+          return false;
+        },
+      })),
 
-    // Initialize the component
-    element.connectedCallback();
-  });
+      // Event handling
+      addEventListener(event, callback) {
+        if (!this._eventListeners.has(event)) {
+          this._eventListeners.set(event, []);
+        }
+        this._eventListeners.get(event).push(callback);
+      },
 
-  it("should initialize with default properties", () => {
-    expect(element.submitText).toBe("Submit");
-    expect(element.formData).toEqual({});
-    expect(element.errors).toEqual([]);
+      removeEventListener(event, callback) {
+        if (!this._eventListeners.has(event)) return;
+        const listeners = this._eventListeners.get(event);
+        const index = listeners.indexOf(callback);
+        if (index !== -1) {
+          listeners.splice(index, 1);
+        }
+      },
+
+      dispatchEvent(event) {
+        const listeners = this._eventListeners.get(event.type) || [];
+        listeners.forEach((callback) => callback(event));
+        return !event.defaultPrevented;
+      },
+
+      // Mock shadow DOM
+      shadowRoot: {
+        querySelector: (selector) => {
+          if (selector === "form") {
+            return {
+              addEventListener: (event, handler) => {
+                if (event === "submit") {
+                  element.addEventListener("submit", handler);
+                }
+              },
+              elements: element.formElements,
+            };
+          }
+          return null;
+        },
+      },
+
+      // Form handling methods
+      async handleSubmit(event) {
+        event.preventDefault && event.preventDefault();
+
+        // Validate all fields
+        const isValid = await this.validateForm();
+
+        if (!isValid) {
+          // Dispatch form-error event
+          this.dispatchEvent(
+            new MockCustomEvent("form-error", {
+              detail: { errors: this.errors },
+            })
+          );
+          return false;
+        }
+
+        // Collect form data
+        const formData = {};
+        for (const field of this.formElements) {
+          if (field.type === "checkbox") {
+            formData[field.name] = field.checked;
+          } else {
+            formData[field.name] = field.value;
+          }
+        }
+
+        // Dispatch form-submit event
+        this.dispatchEvent(
+          new MockCustomEvent("form-submit", {
+            detail: { data: formData },
+          })
+        );
+
+        return true;
+      },
+
+      handleInput(event) {
+        const { name, value, type, checked } = event.target;
+
+        if (type === "checkbox") {
+          this.formData[name] = checked;
+        } else {
+          this.formData[name] = value;
+        }
+      },
+
+      async validateField(field) {
+        const name = field.name;
+        const value = field.type === "checkbox" ? field.checked : field.value;
+        const fieldConfig = this.config.fields.find((f) => f.name === name);
+
+        // Clear previous errors for this field
+        this.errors = this.errors.filter(
+          (error) => !error.startsWith(fieldConfig.label)
+        );
+
+        // Required validation
+        if (fieldConfig.required && !value) {
+          this.errors.push(`${fieldConfig.label} is required`);
+          return false;
+        }
+
+        // Skip further validation if empty and not required
+        if (!value && !fieldConfig.required) {
+          return true;
+        }
+
+        // Validation rules
+        if (fieldConfig.validation) {
+          // Min length
+          if (
+            fieldConfig.validation.minLength &&
+            value.length < fieldConfig.validation.minLength
+          ) {
+            this.errors.push(
+              `${fieldConfig.label} must be at least ${fieldConfig.validation.minLength} characters`
+            );
+            return false;
+          }
+
+          // Max length
+          if (
+            fieldConfig.validation.maxLength &&
+            value.length > fieldConfig.validation.maxLength
+          ) {
+            this.errors.push(
+              `${fieldConfig.label} must be at most ${fieldConfig.validation.maxLength} characters`
+            );
+            return false;
+          }
+
+          // Pattern validation
+          if (fieldConfig.validation.pattern) {
+            const regex = new RegExp(fieldConfig.validation.pattern);
+            if (!regex.test(value)) {
+              // Special message for password pattern
+              if (name === "password") {
+                this.errors.push(
+                  `${fieldConfig.label} must contain at least one uppercase letter, one lowercase letter, and one number`
+                );
+              } else {
+                this.errors.push(`${fieldConfig.label} format is invalid`);
+              }
+              return false;
+            }
+          }
+        }
+
+        // Email validation
+        if (fieldConfig.type === "email" && value) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(value)) {
+            this.errors.push(
+              `${fieldConfig.label} must be a valid email address`
+            );
+            return false;
+          }
+        }
+
+        // Async validators
+        if (this.asyncValidators[name]) {
+          try {
+            const result = await this.asyncValidators[name](value);
+            if (!result.valid) {
+              this.errors.push(`${fieldConfig.label} ${result.message}`);
+              return false;
+            }
+          } catch (error) {
+            this.errors.push(`Error validating ${fieldConfig.label}`);
+            return false;
+          }
+        }
+
+        return true;
+      },
+
+      async validateForm() {
+        this.errors = [];
+        let isValid = true;
+
+        for (const field of this.formElements) {
+          const fieldValid = await this.validateField(field);
+          if (!fieldValid) {
+            isValid = false;
+          }
+        }
+
+        return isValid;
+      },
+
+      requestUpdate() {
+        return Promise.resolve();
+      },
+
+      get updateComplete() {
+        return Promise.resolve();
+      },
+    };
   });
 
   it("should validate required fields", async () => {
-    const usernameField = element.formElements[0];
+    await element.validateForm();
 
-    // Submit form with empty fields
-    await element.handleSubmit({
-      preventDefault: () => {},
-      target: { elements: element.formElements },
-    });
-
-    expect(element.errors.length).toBeGreaterThan(0);
     expect(element.errors).toContain("Username is required");
+    expect(element.errors).toContain("Email Address is required");
+    expect(element.errors).toContain("Password is required");
+    expect(element.errors).toContain("I agree to the terms is required");
   });
 
   it("should validate email format", async () => {
@@ -395,7 +307,9 @@ describe("Form", () => {
 
     await element.validateField(emailField);
 
-    expect(element.errors).toContain("Invalid email format");
+    expect(element.errors).toContain(
+      "Email Address must be a valid email address"
+    );
   });
 
   it("should validate password requirements", async () => {

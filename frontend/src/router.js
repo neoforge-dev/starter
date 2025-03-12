@@ -45,12 +45,22 @@ const routes = [
   },
   {
     path: "/community",
-    component: () => import("./pages/community-page.js"),
+    component: "community-page",
+    import: () =>
+      lazyLoad("./pages/community-page.js", "community-page", {
+        fallback: () =>
+          '<div class="loading-fallback">Loading community page...</div>',
+      }),
     public: true,
   },
   {
     path: "/projects",
-    component: () => import("./pages/projects-page.js"),
+    component: "projects-page",
+    import: () =>
+      lazyLoad("./pages/projects-page.js", "projects-page", {
+        fallback: () =>
+          '<div class="loading-fallback">Loading projects page...</div>',
+      }),
     public: true,
   },
   {

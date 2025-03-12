@@ -30,6 +30,27 @@ if (!global.document) {
   global.window = dom.defaultView;
 }
 
+// Performance API polyfill for JSDOM environment
+if (!global.performance || typeof global.performance.now !== "function") {
+  const startTime = Date.now();
+
+  // Create a simple performance object with a now method
+  global.performance = {
+    ...(global.performance || {}),
+    now: () => {
+      return Date.now() - startTime;
+    },
+    mark: () => {},
+    measure: () => {},
+    getEntriesByName: () => [],
+    getEntriesByType: () => [],
+    clearMarks: () => {},
+    clearMeasures: () => {},
+  };
+
+  console.log("Performance API polyfill installed for JSDOM environment");
+}
+
 // Setup required browser APIs
 if (!global.window.customElements) {
   global.window.customElements = {

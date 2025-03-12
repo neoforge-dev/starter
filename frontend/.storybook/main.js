@@ -1,45 +1,81 @@
-import { dirname, join } from "path";
+import { templateLiteralPlugin } from "./plugins/template-literal-plugin.js";
+import autoprefixer from "autoprefixer";
+import postcssPresetEnv from "postcss-preset-env";
+import cssnano from "cssnano";
 
 /** @type { import('@storybook/web-components-vite').StorybookConfig } */
 const config = {
   stories: [
-    "../src/components/atoms/**/*.stories.@(js|jsx|ts|tsx|mdx)",
-    "../src/components/molecules/**/*.stories.@(js|jsx|ts|tsx|mdx)",
-    "../src/components/organisms/**/*.stories.@(js|jsx|ts|tsx|mdx)",
-    "../src/components/templates/**/*.stories.@(js|jsx|ts|tsx|mdx)",
-    "../src/components/pages/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+    "../src/stories/simple-button.stories.js",
   ],
-  addons: [
-    "@storybook/addon-links",
-    "@storybook/addon-essentials",
-    "@storybook/addon-a11y",
-    "@storybook/addon-interactions",
-    "storybook-addon-designs",
-    "@storybook/addon-viewport",
-    "@storybook/addon-storysource",
-  ],
+  addons: ["@storybook/addon-essentials"],
   framework: {
     name: "@storybook/web-components-vite",
     options: {},
   },
   docs: {
     autodocs: true,
-    defaultName: "Documentation",
   },
-  staticDirs: ["../public"],
-  viteFinal: async (config) => {
+  core: {
+    disableTelemetry: true,
+    builder: "@storybook/builder-vite",
+  },
+  features: {
+    storyStoreV7: true,
+  },
+  async viteFinal(config) {
+    // Customize Vite config for Storybook
     return {
       ...config,
+      define: {
+        ...config.define,
+        global: "window",
+      },
+      optimizeDeps: {
+        ...config.optimizeDeps,
+        include: [
+          ...(config.optimizeDeps?.include || []),
+          "lit",
+          "lit-html",
+          "lit-element",
+          "@lit/reactive-element",
+        ],
+        exclude: [...(config.optimizeDeps?.exclude || []), "fsevents", "chart.js"],
+      },
       resolve: {
         ...config.resolve,
-        alias: {
-          ...config.resolve?.alias,
-          "@atoms": join(dirname(".."), "src/components/atoms"),
-          "@molecules": join(dirname(".."), "src/components/molecules"),
-          "@organisms": join(dirname(".."), "src/components/organisms"),
-          "@templates": join(dirname(".."), "src/components/templates"),
-          "@pages": join(dirname(".."), "src/components/pages"),
-          "@tokens": join(dirname(".."), "src/components/tokens"),
+        dedupe: [
+          ...(config.resolve?.dedupe || []),
+          "lit",
+          "lit-html",
+          "lit-element",
+          "@lit/reactive-element",
+        ],
+      },
+      build: {
+        ...config.build,
+        sourcemap: true,
+        commonjsOptions: {
+          ...config.build?.commonjsOptions,
+          include: [/node_modules/],
+        },
+      },
+      css: {
+        postcss: {
+          plugins: [
+            autoprefixer,
+            postcssPresetEnv({
+              stage: 3,
+              features: {
+                "nesting-rules": true,
+                "custom-media-queries": true,
+                "media-query-ranges": true,
+              },
+            }),
+            cssnano({
+              preset: "default",
+            }),
+          ],
         },
       },
     };

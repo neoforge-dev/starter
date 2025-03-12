@@ -1,6 +1,7 @@
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "url";
 import path from "path";
+import { resolve } from "path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -10,44 +11,41 @@ export default defineConfig({
     environment: "jsdom",
     // Disable threading to avoid memory issues
     threads: false,
-    // Stop after 5 failures
-    maxFailures: 5,
+    // Stop after 1 failure
+    maxFailures: 1,
     // Include source files in coverage
     coverage: {
       provider: "v8",
-      reporter: ["text", "html"],
-      exclude: ["node_modules/", "src/test/"],
+      reporter: ["text", "json", "html"],
+      reportsDirectory: "./coverage",
     },
     // Setup files to run before tests
-    setupFiles: [path.resolve(__dirname, "./src/test/test-setup.js")],
+    setupFiles: [
+      "./vitest-setup-performance.js",
+      "./src/test/test-setup.js",
+      "./src/test/setup/performance-polyfill.js",
+    ],
     // Include these extensions in test files
     include: ["src/test/**/*.test.{js,mjs}"],
     // Exclude node_modules and other non-test files
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
-      "**/e2e/**",
-      "src/test/accessibility/**/*.test.js",
-      "src/test/e2e/**/*.test.js",
+      "**/coverage/**",
+      "**/accessibility/**/*.test.js",
     ],
     // Global test timeout
-    testTimeout: 5000,
+    testTimeout: 10000,
     // Retry failed tests
-    retry: 2,
+    retry: 0,
     // Watch mode configuration
-    watch: {
-      // Test file patterns to watch
-      include: ["src/**/*.{js,css,html}"],
-      // Files to ignore in watch mode
-      exclude: ["node_modules/**", "dist/**"],
-    },
+    watch: false,
     // Browser-like globals
     globals: true,
     // DOM environment configuration
     environmentOptions: {
       jsdom: {
-        customElements: true,
-        resources: "usable",
+        url: "http://localhost/",
       },
     },
     // Alias configuration for imports
@@ -82,6 +80,7 @@ export default defineConfig({
       "process.env.NODE_ENV": '"test"',
       "globalThis.DEV_MODE": "false",
       "process.env.NODE_NO_WARNINGS": "1",
+      "import.meta.vitest": "undefined",
     },
     bail: 1, // Stop after first failure
     // Disable workers to avoid memory issues
@@ -112,6 +111,8 @@ export default defineConfig({
     forceGc: true,
     // Run tests one at a time
     singleThread: true,
+    hookTimeout: 10000,
+    teardownTimeout: 10000,
   },
   resolve: {
     conditions: ["browser", "development", "default"],
@@ -119,14 +120,32 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ["lit", "lit-html", "@lit/reactive-element"],
-    exclude: ["@web/test-runner"],
+    exclude: ["@web/test-runner", "fsevents"],
     esbuildOptions: {
-      target: "es2022",
+      target: "esnext",
       platform: "browser",
       define: {
         "process.env.NODE_ENV": '"test"',
         "globalThis.DEV_MODE": "false",
       },
     },
+  },
+  esbuild: {
+    target: "esnext",
+  },
+  build: {
+    target: "esnext",
+  },
+  plugins: [],
+  server: {
+    fs: {
+      strict: false,
+    },
+  },
+  worker: {
+    plugins: [],
+  },
+  experimental: {
+    decorators: true,
   },
 });

@@ -1,8 +1,10 @@
 import { defineConfig } from "vite";
 import { createFilter } from "@rollup/pluginutils";
-import { criticalCSSPlugin } from "./build/plugins/critical-css.js";
 import { resolve } from "path";
 import { visualizer } from "rollup-plugin-visualizer";
+import autoprefixer from "autoprefixer";
+import postcssPresetEnv from "postcss-preset-env";
+import cssnano from "cssnano";
 
 // Plugin to extract critical CSS
 function criticalCssPlugin() {
@@ -77,8 +79,8 @@ export default defineConfig({
     css: {
       postcss: {
         plugins: [
-          require("autoprefixer"),
-          require("postcss-preset-env")({
+          autoprefixer,
+          postcssPresetEnv({
             stage: 3,
             features: {
               "nesting-rules": true,
@@ -86,15 +88,8 @@ export default defineConfig({
               "media-query-ranges": true,
             },
           }),
-          require("cssnano")({
-            preset: [
-              "advanced",
-              {
-                discardComments: { removeAll: true },
-                reduceIdents: false,
-                zindex: false,
-              },
-            ],
+          cssnano({
+            preset: "default",
           }),
         ],
       },
@@ -126,11 +121,6 @@ export default defineConfig({
       "@services": resolve(__dirname, "src/services"),
       "@utils": resolve(__dirname, "src/utils"),
       "@components": resolve(__dirname, "src/components"),
-      lit: "lit",
-      "lit/decorators": "lit/decorators",
-      "lit-html": "lit-html",
-      "@lit/reactive-element": "@lit/reactive-element",
-      chai: "chai/chai.js",
       "@": resolve(__dirname, "./src"),
     },
   },
@@ -142,25 +132,16 @@ export default defineConfig({
       "lit-html",
       "lit-element",
       "@web/test-runner",
-      "@web/components",
       "@open-wc/testing-helpers",
     ],
+    exclude: ["fsevents"],
     esbuildOptions: {
       target: "es2022",
       supported: {
         "top-level-await": true,
         decorators: true,
       },
-      plugins: [
-        {
-          name: "external-lit",
-          setup(build) {
-            build.onResolve({ filter: /^lit.*/ }, (args) => {
-              return { path: args.path, external: true };
-            });
-          },
-        },
-      ],
+      plugins: [],
     },
     esbuild: {
       target: "es2020",

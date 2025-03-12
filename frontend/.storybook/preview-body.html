@@ -1,0 +1,17 @@
+<script>
+  // Disable warnings in the console
+  const originalConsoleWarn = console.warn;
+  console.warn = function (...args) {
+    // Filter out specific warnings
+    if (args[0] && typeof args[0] === "string") {
+      if (
+        args[0].includes("Unable to index files") ||
+        args[0].includes("Expecting Unicode escape sequence") ||
+        args[0].includes("No matching indexer found")
+      ) {
+        return;
+      }
+    }
+    originalConsoleWarn.apply(console, args);
+  };
+</script>

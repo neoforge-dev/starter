@@ -1,9 +1,36 @@
-import { html } from 'lit';
-import { setCustomElementsManifest } from '@storybook/web-components';
-import customElements from '../custom-elements.json';
-import { colors, typography, spacing } from '../src/components/tokens/design-tokens.js';
+import { html } from "lit";
+import { setCustomElementsManifest } from "@storybook/web-components";
 
-setCustomElementsManifest(customElements);
+// Suppress specific warnings
+if (console.warn && !console.warn.__suppressed) {
+  const originalWarn = console.warn;
+  console.warn = function (...args) {
+    // Filter out specific warnings
+    if (args[0] && typeof args[0] === "string") {
+      if (
+        args[0].includes("Unable to index files") ||
+        args[0].includes("Expecting Unicode escape sequence") ||
+        args[0].includes("No matching indexer found")
+      ) {
+        return;
+      }
+    }
+    return originalWarn.apply(console, args);
+  };
+  console.warn.__suppressed = true;
+}
+
+// Import all web components
+try {
+  // This is a dynamic import to avoid errors if the file doesn't exist
+  import("../src/components/index.js").catch(() => {
+    console.log(
+      "No components index file found, skipping automatic component registration"
+    );
+  });
+} catch (e) {
+  console.log("Error importing components:", e);
+}
 
 /** @type { import('@storybook/web-components').Preview } */
 const preview = {
@@ -15,48 +42,22 @@ const preview = {
         date: /Date$/i,
       },
     },
-    backgrounds: {
-      default: 'light',
-      values: [
-        { name: 'light', value: colors.background },
-        { name: 'dark', value: '#1a1a1a' },
-      ],
-    },
-    viewport: {
-      viewports: {
-        mobile: {
-          name: 'Mobile',
-          styles: { width: '360px', height: '640px' },
-        },
-        tablet: {
-          name: 'Tablet',
-          styles: { width: '768px', height: '1024px' },
-        },
-        desktop: {
-          name: 'Desktop',
-          styles: { width: '1280px', height: '800px' },
-        },
+    options: {
+      storySort: {
+        order: ["Introduction", "Atoms", "Molecules", "Organisms", "Pages"],
       },
     },
     docs: {
-      source: { type: 'dynamic' },
-      description: {
-        component: null,
+      source: {
+        state: "open",
       },
     },
   },
   decorators: [
-    (Story) => html\`
-      <style>
-        :root {
-          /* Inject design tokens */
-          ${Object.entries(colors).map(([key, value]) => \`--color-\${key}: \${value};\`).join('\n')}
-          ${Object.entries(typography).map(([key, value]) => \`--typography-\${key}: \${value};\`).join('\n')}
-          ${Object.entries(spacing).map(([key, value]) => \`--spacing-\${key}: \${value};\`).join('\n')}
-        }
-      </style>
-      \${Story()}
-    \`,
+    (Story) => {
+      // Ensure all components are defined before rendering the story
+      return Story();
+    },
   ],
 };
 

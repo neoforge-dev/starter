@@ -1,5 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { oneEvent, TestUtils } from "../setup.mjs";
+
+// Create a custom event class for testing
+class MockCustomEvent {
+  constructor(type, options = {}) {
+    this.type = type;
+    this.detail = options.detail || {};
+    this.bubbles = options.bubbles || false;
+    this.composed = options.composed || false;
+    this.defaultPrevented = false;
+  }
+
+  preventDefault() {
+    this.defaultPrevented = true;
+  }
+}
 
 // Don't import the component directly to avoid registration conflicts
 // import { SettingsPage } from "../../pages/settings-page.js";

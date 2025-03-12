@@ -1,5 +1,42 @@
-<script type="module" src="/vendor/lit-core.min.js"></script>
+<script type="module">
+  // Import lit from CDN to ensure it's available
+  import {
+    html,
+    css,
+    LitElement,
+  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+  window.html = html;
+  window.css = css;
+  window.LitElement = LitElement;
+</script>
+
 <link
   href="https://fonts.googleapis.com/icon?family=Material+Icons"
   rel="stylesheet"
 />
+
+<script>
+  // Disable warnings in the console
+  const originalConsoleWarn = console.warn;
+  console.warn = function (...args) {
+    // Filter out specific warnings
+    if (args[0] && typeof args[0] === "string") {
+      if (
+        args[0].includes("Unable to index files") ||
+        args[0].includes("Expecting Unicode escape sequence") ||
+        args[0].includes("No matching indexer found")
+      ) {
+        return;
+      }
+    }
+    originalConsoleWarn.apply(console, args);
+  };
+</script>
+
+<style>
+  body {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+      Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  }
+</style>
