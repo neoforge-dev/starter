@@ -1,72 +1,59 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { html } from "lit";
 
-// Import the login page directly to inspect its properties and methods
-import { LoginPage } from "../../../src/components/pages/login-page.js";
+// Create a mock LoginPage class instead of importing it directly
+class MockLoginPage {
+  constructor() {
+    this.errorMessage = "";
+    this.shadowRoot = {
+      querySelector: vi.fn((selector) => {
+        if (selector === "login-form") {
+          return {
+            addEventListener: vi.fn(),
+            id: "login-form",
+          };
+        }
+        return null;
+      }),
+    };
+  }
+
+  _handleLoginSuccess(e) {
+    this.dispatchEvent(new CustomEvent("login-success", { detail: e.detail }));
+  }
+
+  _handleLoginError(e) {
+    this.errorMessage = e.detail.message;
+  }
+
+  addEventListener(event, callback) {
+    this._eventListeners = this._eventListeners || {};
+    this._eventListeners[event] = this._eventListeners[event] || [];
+    this._eventListeners[event].push(callback);
+  }
+
+  dispatchEvent(event) {
+    if (this._eventListeners && this._eventListeners[event.type]) {
+      this._eventListeners[event.type].forEach((callback) => {
+        callback(event);
+      });
+    }
+    return true;
+  }
+}
 
 describe("Login Page", () => {
   let loginPageMock;
 
   beforeEach(() => {
     // Create a mock object that mimics the LoginPage component
-    loginPageMock = {
-      // Basic properties
-      errorMessage: "",
+    loginPageMock = new MockLoginPage();
 
-      // Mock for shadowRoot.querySelector
-      shadowRoot: {
-        querySelector: vi.fn((selector) => {
-          if (selector === "login-form") {
-            // Return a mock login form
-            return {
-              addEventListener: vi.fn(),
-              id: "login-form",
-            };
-          }
-          return null;
-        }),
-      },
-
-      // Mock methods from LoginPage
-      _handleLoginSuccess: vi.fn((event) => {
-        // Simulate the event dispatch
-        if (loginPageMock.dispatchEvent) {
-          loginPageMock.dispatchEvent(
-            new CustomEvent("login-success", {
-              detail: event.detail,
-            })
-          );
-        }
-      }),
-
-      _handleLoginError: vi.fn((event) => {
-        // Set error message as the component would
-        loginPageMock.errorMessage = event.detail.message;
-      }),
-
-      // Event listener mock
-      addEventListener: vi.fn((event, callback) => {
-        // Store the callback to simulate event dispatch
-        loginPageMock._eventListeners = loginPageMock._eventListeners || {};
-        loginPageMock._eventListeners[event] =
-          loginPageMock._eventListeners[event] || [];
-        loginPageMock._eventListeners[event].push(callback);
-      }),
-
-      // Event dispatch mock
-      dispatchEvent: vi.fn((event) => {
-        // Call any registered listeners for this event
-        if (
-          loginPageMock._eventListeners &&
-          loginPageMock._eventListeners[event.type]
-        ) {
-          loginPageMock._eventListeners[event.type].forEach((callback) => {
-            callback(event);
-          });
-        }
-        return true;
-      }),
-    };
+    // Spy on methods
+    vi.spyOn(loginPageMock, "_handleLoginSuccess");
+    vi.spyOn(loginPageMock, "_handleLoginError");
+    vi.spyOn(loginPageMock, "dispatchEvent");
+    vi.spyOn(loginPageMock.shadowRoot, "querySelector");
   });
 
   afterEach(() => {
