@@ -1,161 +1,68 @@
 import { expect, describe, it, beforeEach, vi } from "vitest";
+import { createMockComponent } from "../utils/component-mock-utils.js";
 
-/**
- * Mock for the SearchPage component
- */
-class MockSearchPage {
-  constructor() {
-    this.query = "";
-    this.results = [];
-    this.filters = {
-      types: ["documentation", "tutorial", "blog"],
-      categories: ["guides", "advanced", "beginner"],
-      tags: ["beginner", "setup", "advanced", "components"],
-    };
-    this.loading = false;
-    this.selectedFilters = {
-      types: new Set(),
-      categories: new Set(),
-      tags: new Set(),
-    };
+// Create a mock SearchPage component using our utility
+const SearchPage = createMockComponent(
+  "SearchPage",
+  {
+    query: { type: String },
+    results: { type: Array },
+    filters: { type: Object },
+    loading: { type: Boolean },
+    selectedFilters: { type: Object },
+  },
+  {
+    async _initializeFilters() {
+      try {
+        this.filters = await window.search.getFilters();
+      } catch (error) {
+        console.error("Failed to load filters:", error);
+      }
+    },
 
-    // Event listeners
-    this._eventListeners = new Map();
+    _handleInput(e) {
+      this.query = e.target.value;
+      this.dispatchEvent(
+        new CustomEvent("search-input", {
+          detail: { query: this.query },
+          bubbles: true,
+          composed: true,
+        })
+      );
+    },
 
-    // Mock shadow DOM elements
-    this.searchInput = { value: "" };
-    this.searchResults = [];
+    async _handleSearch() {
+      this.loading = true;
+      try {
+        const results = await window.search.search(this.query);
+        this.results = results;
+        // Update mock search results for testing
+        this.searchResults = results.map(() => ({}));
+      } catch (error) {
+        console.error("Search failed:", error);
+        // Properly handle the error without throwing
+        this.results = [];
+        this.searchResults = [];
+      } finally {
+        this.loading = false;
+      }
+    },
 
-    // Mock window.search API
-    window.search = {
-      getFilters: vi.fn().mockResolvedValue({
-        types: ["documentation", "tutorial", "blog"],
-        categories: ["guides", "advanced", "beginner"],
-        tags: ["beginner", "setup", "advanced", "components"],
-      }),
-      search: vi.fn().mockResolvedValue([]),
-    };
+    _isSelected(filterType, value) {
+      return this.selectedFilters[filterType].has(value);
+    },
+
+    _toggleFilter(filterType, value) {
+      const filters = this.selectedFilters[filterType];
+      if (filters.has(value)) {
+        filters.delete(value);
+      } else {
+        filters.add(value);
+      }
+      this._handleSearch();
+    },
   }
-
-  // Event handling
-  addEventListener(event, callback) {
-    if (!this._eventListeners.has(event)) {
-      this._eventListeners.set(event, []);
-    }
-    this._eventListeners.get(event).push(callback);
-  }
-
-  removeEventListener(event, callback) {
-    if (!this._eventListeners.has(event)) return;
-    const listeners = this._eventListeners.get(event);
-    const index = listeners.indexOf(callback);
-    if (index !== -1) {
-      listeners.splice(index, 1);
-    }
-  }
-
-  dispatchEvent(event) {
-    const listeners = this._eventListeners.get(event.type) || [];
-    listeners.forEach((callback) => callback(event));
-    return !event.defaultPrevented;
-  }
-
-  // Mock shadow DOM
-  get shadowRoot() {
-    return {
-      querySelector: (selector) => {
-        if (selector === 'input[type="search"]') {
-          return this.searchInput;
-        }
-        return null;
-      },
-      querySelectorAll: (selector) => {
-        if (selector === ".result-item") {
-          return this.searchResults;
-        }
-        return [];
-      },
-    };
-  }
-
-  // Component methods
-  async _initializeFilters() {
-    try {
-      this.filters = await window.search.getFilters();
-    } catch (error) {
-      console.error("Failed to load filters:", error);
-    }
-  }
-
-  _handleInput(e) {
-    this.query = e.target.value;
-    this.dispatchEvent(
-      new CustomEvent("search-input", {
-        detail: { query: this.query },
-        bubbles: true,
-        composed: true,
-      })
-    );
-  }
-
-  async _handleSearch() {
-    this.loading = true;
-    try {
-      const results = await window.search.search(this.query);
-      this.results = results;
-      // Update mock search results for testing
-      this.searchResults = results.map(() => ({}));
-    } catch (error) {
-      console.error("Search failed:", error);
-      this.results = [];
-      this.searchResults = [];
-    } finally {
-      this.loading = false;
-    }
-  }
-
-  _isSelected(filterType, value) {
-    return this.selectedFilters[filterType].has(value);
-  }
-
-  _toggleFilter(filterType, value) {
-    const filters = this.selectedFilters[filterType];
-    if (filters.has(value)) {
-      filters.delete(value);
-    } else {
-      filters.add(value);
-    }
-    this._handleSearch();
-  }
-
-  // Mock update lifecycle
-  requestUpdate() {
-    // This would trigger a re-render in the actual component
-    return Promise.resolve();
-  }
-
-  // For testing
-  get updateComplete() {
-    return Promise.resolve(true);
-  }
-}
-
-/**
- * Mock CustomEvent for testing
- */
-class MockCustomEvent {
-  constructor(type, options = {}) {
-    this.type = type;
-    this.detail = options.detail || {};
-    this.bubbles = options.bubbles || false;
-    this.composed = options.composed || false;
-    this.defaultPrevented = false;
-  }
-
-  preventDefault() {
-    this.defaultPrevented = true;
-  }
-}
+);
 
 describe("Search Page", () => {
   let element;
@@ -181,8 +88,52 @@ describe("Search Page", () => {
   ];
 
   beforeEach(() => {
-    element = new MockSearchPage();
-    window.search.search = vi.fn().mockResolvedValue(mockResults);
+    // Create a new instance of the SearchPage component
+    element = new SearchPage();
+
+    // Initialize properties
+    element.query = "";
+    element.results = [];
+    element.filters = {
+      types: ["documentation", "tutorial", "blog"],
+      categories: ["guides", "advanced", "beginner"],
+      tags: ["beginner", "setup", "advanced", "components"],
+    };
+    element.loading = false;
+    element.selectedFilters = {
+      types: new Set(),
+      categories: new Set(),
+      tags: new Set(),
+    };
+
+    // Mock search input element
+    element.searchInput = { value: "" };
+    element.searchResults = [];
+
+    // Add custom shadowRoot querySelector implementation
+    element.shadowRoot.querySelector = (selector) => {
+      if (selector === 'input[type="search"]') {
+        return element.searchInput;
+      }
+      return null;
+    };
+
+    element.shadowRoot.querySelectorAll = (selector) => {
+      if (selector === ".result-item") {
+        return element.searchResults;
+      }
+      return [];
+    };
+
+    // Mock window.search API
+    window.search = {
+      getFilters: vi.fn().mockResolvedValue({
+        types: ["documentation", "tutorial", "blog"],
+        categories: ["guides", "advanced", "beginner"],
+        tags: ["beginner", "setup", "advanced", "components"],
+      }),
+      search: vi.fn().mockResolvedValue(mockResults),
+    };
   });
 
   it("should initialize with default properties", async () => {
