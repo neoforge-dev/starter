@@ -1,8 +1,11 @@
-import {  LitElement, html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  LitElement,
+  html,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 import { authStyles } from "../../styles/auth.js";
 import { authService } from "../../services/auth-service.js";
-import { toast } from "../../components/ui/toast.js";
+import { showToast } from "../../components/ui/toast/index.js";
 import "../../components/ui/button.js";
 import "../../components/ui/input.js";
 import "../../components/ui/card.js";
@@ -60,11 +63,11 @@ export class LoginPage extends LitElement {
       this.loading = true;
       this.error = "";
       await authService.login(email, password);
-      toast.success("Successfully logged in!");
+      showToast("Successfully logged in!", "success");
       window.location.href = "/dashboard";
     } catch (error) {
       this.error = error.message || "Failed to login. Please try again.";
-      toast.error(this.error);
+      showToast(this.error, "error");
     } finally {
       this.loading = false;
     }

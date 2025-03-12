@@ -1,8 +1,11 @@
-import {  LitElement, html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {
+  LitElement,
+  html,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 import { authStyles } from "../../styles/auth.js";
 import { authService } from "../../services/auth-service.js";
-import { toast } from "../../components/ui/toast.js";
+import { showToast } from "../../components/ui/toast/index.js";
 import "../../components/ui/button.js";
 import "../../components/ui/input.js";
 import "../../components/ui/card.js";
@@ -53,13 +56,14 @@ export class RegisterPage extends LitElement {
         email,
         password,
       });
-      toast.success(
-        "Registration successful! Please check your email to verify your account."
+      showToast(
+        "Registration successful! Please check your email to verify your account.",
+        "success"
       );
       window.location.href = "/auth/login";
     } catch (error) {
       this.error = error.message || "Failed to register. Please try again.";
-      toast.error(this.error);
+      showToast(this.error, "error");
     } finally {
       this.loading = false;
     }

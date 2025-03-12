@@ -5,7 +5,7 @@ import { showToast } from "../components/ui/toast/index.js";
 import { apiClient } from "./api-client.js";
 
 // Mock dependencies
-vi.mock("../components/ui/toast.js", () => ({
+vi.mock("../components/ui/toast/index.js", () => ({
   showToast: vi.fn(),
 }));
 

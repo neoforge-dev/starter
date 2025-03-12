@@ -1,5 +1,5 @@
 import { store } from "./store.js";
-import { toast } from "../components/ui/toast.js";
+import { showToast } from "../components/ui/toast/index.js";
 
 export class UploadService {
   constructor() {
@@ -52,11 +52,11 @@ export class UploadService {
       upload.status = "complete";
       upload.result = result;
 
-      toast.success("File uploaded successfully");
+      showToast("File uploaded successfully", "success");
     } catch (error) {
       upload.status = "error";
       upload.error = error.message;
-      toast.error("Upload failed: " + error.message);
+      showToast("Upload failed: " + error.message, "error");
     } finally {
       this.activeUploads--;
       this._updateStore();

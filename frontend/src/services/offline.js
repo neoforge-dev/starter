@@ -1,4 +1,4 @@
-import { toast } from "../components/ui/toast.js";
+import { showToast } from "../components/ui/toast/index.js";
 
 export class OfflineManager {
   constructor() {
@@ -12,13 +12,14 @@ export class OfflineManager {
   }
 
   _handleOnline() {
-    toast.success("You are back online");
+    showToast("You are back online", "success");
     this._processSyncQueue();
   }
 
   _handleOffline() {
-    toast.warning(
-      "You are offline. Changes will sync when connection is restored."
+    showToast(
+      "You are offline. Changes will sync when connection is restored.",
+      "warning"
     );
   }
 

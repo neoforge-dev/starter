@@ -1,6 +1,6 @@
 import { LitElement, html } from "lit";
 import { BaseComponent } from "../components/base-component.js";
-import { ErrorPage } from "../components/error-page.js";
+import { ErrorPage } from "../components/error/error-page.js";
 import { LoginForm } from "../components/auth/login-form.js";
 import { LoginPage } from "../components/pages/login-page.js";
 
