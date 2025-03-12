@@ -21,9 +21,8 @@ export default defineConfig({
     },
     // Setup files to run before tests
     setupFiles: [
-      "./vitest-setup-performance.js",
-      "./src/test/test-setup.js",
-      "./src/test/setup/performance-polyfill.js",
+      "./vitest.setup.js",
+      "./src/test/setup/global-performance-polyfill.js",
     ],
     // Include these extensions in test files
     include: ["src/test/**/*.test.{js,mjs}"],
@@ -113,6 +112,19 @@ export default defineConfig({
     singleThread: true,
     hookTimeout: 10000,
     teardownTimeout: 10000,
+    // Disable performance API usage
+    benchmark: {
+      enabled: false,
+    },
+    // Disable performance API usage
+    perfMode: false,
+    worker: {
+      // Include both the worker setup file and the CommonJS version of the performance polyfill
+      setupFiles: [
+        "./vitest-worker-setup.js",
+        "./src/test/setup/global-performance-polyfill.cjs",
+      ],
+    },
   },
   resolve: {
     conditions: ["browser", "development", "default"],
@@ -141,9 +153,6 @@ export default defineConfig({
     fs: {
       strict: false,
     },
-  },
-  worker: {
-    plugins: [],
   },
   experimental: {
     decorators: true,

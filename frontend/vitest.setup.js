@@ -3,6 +3,12 @@
  * This file is loaded before any tests run and sets up the global environment
  */
 
+// Import the global performance polyfill
+import "./src/test/setup/global-performance-polyfill.js";
+
+// Import the worker performance polyfill
+import "./src/test/setup/worker-performance-polyfill.js";
+
 // Performance API polyfill for JSDOM environment
 if (
   typeof globalThis.performance !== "object" ||
@@ -84,3 +90,6 @@ if (!global.fetch) {
       text: () => Promise.resolve(""),
     });
 }
+
+// No need to manually set up performance polyfill here as it's handled by the global polyfill
+console.log("Vitest setup complete with global performance polyfill");

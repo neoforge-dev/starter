@@ -1,23 +1,21 @@
 {
   "env": {
     "browser": true,
-    "es2021": true
+    "es2021": true,
+    "node": true
   },
-  "extends": [
-    "eslint:recommended",
-    "plugin:lit/recommended",
-    "plugin:storybook/recommended",
-    "plugin:storybook/recommended",
-    "plugin:storybook/recommended",
-    "plugin:storybook/recommended"
-  ],
+  "extends": "eslint:recommended",
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
+  "plugins": ["component-registry"],
   "rules": {
-    "no-unused-vars": "warn",
-    "lit/no-invalid-html": "off",
-    "lit/no-property-rename": "off"
+    "component-registry/no-duplicate-components": "warn"
+  },
+  "settings": {
+    "componentRegistry": {
+      "registryPath": "./docs/COMPONENT_REGISTRY.md"
+    }
   }
 }

@@ -1,0 +1,12 @@
+{
+  "name": "eslint-plugin-component-registry",
+  "version": "1.0.0",
+  "description": "ESLint plugin for detecting potential component duplicates",
+  "main": "index.js",
+  "type": "module",
+  "author": "NeoForge Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": ">=7.0.0"
+  }
+}
