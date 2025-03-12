@@ -1,4 +1,4 @@
-import { expect } from "@esm-bundle/chai";
+import { expect, describe, it } from "vitest";
 // Remove the import of the actual component
 // import { NeoTextInput } from "../../../components/atoms/text-input/text-input.js";
 
@@ -33,33 +33,33 @@ class MockNeoTextInput {
 
 describe("NeoTextInput", () => {
   it("should be defined as a class", () => {
-    expect(MockNeoTextInput).to.be.a("function");
+    expect(typeof MockNeoTextInput).toBe("function");
   });
 
   it("should have expected static properties", () => {
-    expect(MockNeoTextInput.properties).to.exist;
-    expect(MockNeoTextInput.properties.value).to.exist;
-    expect(MockNeoTextInput.properties.placeholder).to.exist;
-    expect(MockNeoTextInput.properties.label).to.exist;
-    expect(MockNeoTextInput.properties.helper).to.exist;
-    expect(MockNeoTextInput.properties.error).to.exist;
-    expect(MockNeoTextInput.properties.type).to.exist;
-    expect(MockNeoTextInput.properties.disabled).to.exist;
-    expect(MockNeoTextInput.properties.required).to.exist;
-    expect(MockNeoTextInput.properties.clearable).to.exist;
+    expect(MockNeoTextInput.properties).toBeDefined();
+    expect(MockNeoTextInput.properties.value).toBeDefined();
+    expect(MockNeoTextInput.properties.placeholder).toBeDefined();
+    expect(MockNeoTextInput.properties.label).toBeDefined();
+    expect(MockNeoTextInput.properties.helper).toBeDefined();
+    expect(MockNeoTextInput.properties.error).toBeDefined();
+    expect(MockNeoTextInput.properties.type).toBeDefined();
+    expect(MockNeoTextInput.properties.disabled).toBeDefined();
+    expect(MockNeoTextInput.properties.required).toBeDefined();
+    expect(MockNeoTextInput.properties.clearable).toBeDefined();
   });
 
   it("should initialize with default properties", () => {
     const textInput = new MockNeoTextInput();
-    expect(textInput.value).to.equal("");
-    expect(textInput.placeholder).to.equal("Enter text");
-    expect(textInput.label).to.equal("Text Input");
-    expect(textInput.helper).to.equal("");
-    expect(textInput.error).to.equal("");
-    expect(textInput.type).to.equal("text");
-    expect(textInput.disabled).to.be.false;
-    expect(textInput.required).to.be.false;
-    expect(textInput.readonly).to.be.false;
-    expect(textInput.clearable).to.be.false;
+    expect(textInput.value).toBe("");
+    expect(textInput.placeholder).toBe("Enter text");
+    expect(textInput.label).toBe("Text Input");
+    expect(textInput.helper).toBe("");
+    expect(textInput.error).toBe("");
+    expect(textInput.type).toBe("text");
+    expect(textInput.disabled).toBe(false);
+    expect(textInput.required).toBe(false);
+    expect(textInput.readonly).toBe(false);
+    expect(textInput.clearable).toBe(false);
   });
 });

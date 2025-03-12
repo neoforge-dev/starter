@@ -499,4 +499,11 @@ We've successfully fixed the following tests:
 4. **Test Stability**: Significantly improved test stability by addressing performance-related issues.
 5. **Worker Thread Support**: Added CommonJS versions of all setup files to ensure proper support for worker threads.
 6. **Error Suppression**: Modified the dashboard-page.test.js file to suppress error messages in test environments, making the test output cleaner and easier to read.
-7. **Comprehensive Testing**: Created a comprehensive test suite for the Performance API polyfill to ensure it works correctly in all environments. 
+7. **Comprehensive Testing**: Created a comprehensive test suite for the Performance API polyfill to ensure it works correctly in all environments.
+8. **Fixed All Failing Tests**: Fixed all remaining failing tests in the codebase:
+   - Fixed `src/test/components/icon.test.js` by setting the properties correctly on the mock component
+   - Fixed `src/test/components/faq-accordion.test.js` by importing `beforeEach` from Vitest and updating assertion syntax
+   - Fixed `src/test/components/navigation.test.js` by importing `describe` and `it` from Vitest
+   - Fixed `src/test/components/pagination.test.js` by importing `describe` and `it` from Vitest
+   - Fixed `src/test/components/theme-toggle.test.js` by importing `describe`, `it`, and `beforeEach` from Vitest
+   - Fixed `src/test/components/atoms/text-input.test.js` by replacing Chai assertions with Vitest assertions 

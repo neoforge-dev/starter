@@ -1,4 +1,4 @@
-import { expect } from "vitest";
+import { expect, describe, it } from "vitest";
 import { createMockComponent } from "../utils/component-mock-utils.js";
 
 // Create a mock NeoPagination component using our utility

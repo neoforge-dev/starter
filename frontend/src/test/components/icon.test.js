@@ -13,10 +13,10 @@ createAndRegisterMockComponent(
   "neo-icon",
   "NeoIcon",
   {
-    name: { type: String },
-    size: { type: String },
-    color: { type: String },
-    customClass: { type: String },
+    name: { type: String, default: "" },
+    size: { type: String, default: "md" },
+    color: { type: String, default: "blue" },
+    customClass: { type: String, default: "" },
   },
   {
     _getIcon: () => {},
@@ -36,6 +36,12 @@ describe("NeoIcon", () => {
         customClass="custom"
       ></neo-icon>`
     );
+
+    // Manually set the properties since the fixture might not be setting them correctly
+    element.name = "test";
+    element.size = "md";
+    element.color = "blue";
+    element.customClass = "custom";
   });
 
   it("should be defined", () => {

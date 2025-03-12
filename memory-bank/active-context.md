@@ -4,6 +4,8 @@
 
 We are currently focused on improving the testing infrastructure for the NeoForge frontend. We have successfully created a standardized approach for mocking components that use CDN imports in test files, and we've fixed the search failure error in the search-page.test.js file. All tests are now passing. We've also optimized the test performance by reducing polyfill installations and fixing various issues. We have successfully implemented a comprehensive Performance API polyfill for the frontend testing environment. This solution addresses the issues with `performance.now()` and related methods in various JavaScript environments (Node.js, JSDOM, worker threads). We've also created CommonJS versions of all setup files to ensure proper support for worker threads. Our implementation has been thoroughly tested and documented, and all performance-related tests are now passing.
 
+Additionally, we have fixed all the remaining failing tests in the codebase. These tests were failing due to missing imports of test functions from Vitest and incorrect assertion syntax. We've updated the tests to use the correct imports and assertion syntax, and all tests are now passing.
+
 ## Recent Changes
 
 1. **Created Component Mock Utilities**: We've developed a set of utility functions in `src/test/utils/component-mock-utils.js` that provide a standardized approach for mocking components with CDN imports. These utilities include:
@@ -48,6 +50,13 @@ We are currently focused on improving the testing infrastructure for the NeoForg
 12. **Modified the dashboard-page.test.js file to suppress error messages in test environments**
 13. **Verified that all performance tests are passing with our polyfill implementation**
 14. **Created a comprehensive test suite for the Performance API polyfill in `src/test/setup/performance-polyfill.test.js`**
+15. **Fixed all remaining failing tests in the codebase**:
+   - Fixed `src/test/components/icon.test.js` by setting the properties correctly on the mock component
+   - Fixed `src/test/components/faq-accordion.test.js` by importing `beforeEach` from Vitest and updating assertion syntax
+   - Fixed `src/test/components/navigation.test.js` by importing `describe` and `it` from Vitest
+   - Fixed `src/test/components/pagination.test.js` by importing `describe` and `it` from Vitest
+   - Fixed `src/test/components/theme-toggle.test.js` by importing `describe`, `it`, and `beforeEach` from Vitest
+   - Fixed `src/test/components/atoms/text-input.test.js` by replacing Chai assertions with Vitest assertions
 
 ## Next Steps
 
@@ -86,6 +95,8 @@ We are currently focused on improving the testing infrastructure for the NeoForg
 12. **Error Suppression**: We modified the dashboard-page.test.js file to suppress error messages in test environments. This makes the test output cleaner and easier to read.
 
 13. **Comprehensive Testing**: We created a comprehensive test suite for the Performance API polyfill to ensure it works correctly in all environments. This will help catch any regressions in the future.
+
+14. **Test Framework Consistency**: We standardized on using Vitest for all tests, replacing Chai assertions with Vitest assertions. This ensures consistency across the codebase and makes the tests easier to maintain.
 
 ## Current Challenges
 

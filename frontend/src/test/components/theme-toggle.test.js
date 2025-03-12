@@ -1,4 +1,4 @@
-import { expect } from "vitest";
+import { expect, describe, it, beforeEach } from "vitest";
 import { html } from "lit";
 
 // Skip all tests in this file for now due to custom element registration issues

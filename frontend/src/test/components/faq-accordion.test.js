@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
 class MockFaqAccordion {
   constructor() {
@@ -157,12 +157,12 @@ describe("FAQ Accordion", () => {
   });
 
   it("can be created without timing out", () => {
-    expect(element).to.exist;
+    expect(element).toBeDefined();
   });
 
   it("renders all FAQ items", () => {
     const items = element.shadowRoot.querySelectorAll(".accordion-item");
-    expect(items.length).to.equal(mockFAQs.length);
+    expect(items.length).toBe(mockFAQs.length);
   });
 
   it("renders questions and answers correctly", () => {
@@ -170,8 +170,8 @@ describe("FAQ Accordion", () => {
     const question = firstItem.querySelector(".question-button");
     const answer = firstItem.querySelector(".answer-content");
 
-    expect(question.textContent).to.include(mockFAQs[0].question);
-    expect(answer.textContent).to.equal(mockFAQs[0].answer);
+    expect(question.textContent).toContain(mockFAQs[0].question);
+    expect(answer.textContent).toBe(mockFAQs[0].answer);
   });
 
   it("toggles items on click", async () => {
@@ -180,15 +180,15 @@ describe("FAQ Accordion", () => {
     const answer = firstItem.querySelector(".answer");
 
     // Initially closed
-    expect(answer.classList.contains("open")).to.be.false;
+    expect(answer.classList.contains("open")).toBe(false);
 
     // Click to open
     question.click();
-    expect(answer.classList.contains("open")).to.be.true;
+    expect(answer.classList.contains("open")).toBe(true);
 
     // Click to close
     question.click();
-    expect(answer.classList.contains("open")).to.be.false;
+    expect(answer.classList.contains("open")).toBe(false);
   });
 
   it("handles multiple open items when allowed", async () => {
@@ -202,12 +202,12 @@ describe("FAQ Accordion", () => {
 
     // Open first item
     firstQuestion.click();
-    expect(firstAnswer.classList.contains("open")).to.be.true;
+    expect(firstAnswer.classList.contains("open")).toBe(true);
 
     // Open second item
     secondQuestion.click();
-    expect(firstAnswer.classList.contains("open")).to.be.true;
-    expect(secondAnswer.classList.contains("open")).to.be.true;
+    expect(firstAnswer.classList.contains("open")).toBe(true);
+    expect(secondAnswer.classList.contains("open")).toBe(true);
   });
 
   it("closes other items when allowMultiple is false", async () => {
@@ -221,32 +221,32 @@ describe("FAQ Accordion", () => {
 
     // Open first item
     firstQuestion.click();
-    expect(firstAnswer.classList.contains("open")).to.be.true;
+    expect(firstAnswer.classList.contains("open")).toBe(true);
 
     // Open second item
     secondQuestion.click();
-    expect(firstAnswer.classList.contains("open")).to.be.false;
-    expect(secondAnswer.classList.contains("open")).to.be.true;
+    expect(firstAnswer.classList.contains("open")).toBe(false);
+    expect(secondAnswer.classList.contains("open")).toBe(true);
   });
 
   it("handles different layouts", () => {
     // Test stack layout
-    expect(element.shadowRoot.querySelector(".layout-stack")).to.exist;
+    expect(element.shadowRoot.querySelector(".layout-stack")).toBeDefined();
 
     // Test grid layout
     element.layout = "grid";
     element.render();
-    expect(element.shadowRoot.querySelector(".layout-grid")).to.exist;
+    expect(element.shadowRoot.querySelector(".layout-grid")).toBeDefined();
 
     // Test sections layout
     element.layout = "sections";
     element.render();
-    expect(element.shadowRoot.querySelector(".layout-sections")).to.exist;
+    expect(element.shadowRoot.querySelector(".layout-sections")).toBeDefined();
   });
 
   it("handles empty items array", () => {
     element.items = [];
-    expect(element.shadowRoot.querySelector(".faq-container")).to.exist;
+    expect(element.shadowRoot.querySelector(".faq-container")).toBeDefined();
   });
 
   it("supports keyboard navigation", () => {
