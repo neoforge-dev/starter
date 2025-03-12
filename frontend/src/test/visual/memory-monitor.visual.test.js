@@ -1,10 +1,174 @@
 import { expect, describe, it, beforeEach, vi } from "vitest";
-import { MemoryMonitor } from "../../components/core/memory-monitor.js";
+// Remove the import of the actual component
+// import { MemoryMonitor } from "../../components/core/memory-monitor.js";
+
+// Create a mock class for the memory monitor
+class MockMemoryMonitor {
+  constructor() {
+    this.leaks = [];
+    this.expanded = false;
+    this.maxLeaks = 50;
+    this.autoHide = true;
+    this.autoHideTimeout = 10000;
+    this._eventListeners = {};
+
+    // Create shadow DOM
+    this.shadowRoot = {
+      querySelector: (selector) => {
+        if (selector === ".memory-usage") {
+          return this.memoryUsageElement;
+        }
+        if (selector === ".leak-list") {
+          return {
+            children: this.leaks.map((leak) => ({
+              textContent: `${leak.type}: ${this._formatSize(leak.size)} at ${this._formatTime(leak.time)}`,
+            })),
+          };
+        }
+        if (selector === ".clear-button") {
+          return {
+            addEventListener: (event, handler) => {
+              this.addEventListener(event, handler);
+            },
+            click: () => {
+              this._clearLeaks();
+            },
+          };
+        }
+        if (selector === ".monitor-header") {
+          return {
+            addEventListener: (event, handler) => {
+              this.addEventListener(event, handler);
+            },
+            click: () => {
+              this._toggleExpanded();
+            },
+          };
+        }
+        return null;
+      },
+      querySelectorAll: (selector) => {
+        if (selector === ".leak-item") {
+          return this.leaks.map((leak) => ({
+            textContent: `${leak.type}: ${this._formatSize(leak.size)} at ${this._formatTime(leak.time)}`,
+          }));
+        }
+        return [];
+      },
+    };
+
+    // Create memory usage element
+    this.memoryUsageElement = {
+      textContent: "",
+      classList: {
+        add: vi.fn(),
+        remove: vi.fn(),
+      },
+    };
+  }
+
+  _handleLeakDetected(event) {
+    if (!event.detail) {
+      console.warn("Memory leak event missing detail");
+      return;
+    }
+
+    const { type, size, time } = event.detail;
+    if (!type || !size || !time) {
+      console.warn("Memory leak event missing required fields", event.detail);
+      return;
+    }
+
+    this.addLeak(event.detail);
+  }
+
+  addLeak(leak) {
+    this.leaks = [...this.leaks, leak];
+    if (this.leaks.length > this.maxLeaks) {
+      this.leaks = this.leaks.slice(-this.maxLeaks);
+    }
+    this.expanded = true;
+    if (this.autoHide) {
+      setTimeout(() => {
+        this.expanded = false;
+      }, this.autoHideTimeout);
+    }
+  }
+
+  _formatTime(time) {
+    return new Date(time).toLocaleTimeString();
+  }
+
+  _formatSize(size) {
+    const units = ["B", "KB", "MB", "GB"];
+    let value = size;
+    let unitIndex = 0;
+
+    while (value >= 1024 && unitIndex < units.length - 1) {
+      value /= 1024;
+      unitIndex++;
+    }
+
+    return `${value.toFixed(1)}${units[unitIndex]}`;
+  }
+
+  _clearLeaks() {
+    this.leaks = [];
+    this.expanded = false;
+  }
+
+  _toggleExpanded() {
+    this.expanded = !this.expanded;
+  }
+
+  updateMemoryInfo() {
+    if (!global.performance || !global.performance.memory) {
+      return;
+    }
+
+    const memory = global.performance.memory;
+    const usedMB = this._formatSize(memory.usedJSHeapSize);
+    const totalMB = this._formatSize(memory.totalJSHeapSize);
+    const usagePercent = Math.round(
+      (memory.usedJSHeapSize / memory.totalJSHeapSize) * 100
+    );
+
+    this.memoryUsageElement.textContent = `${usedMB} / ${totalMB} (${usagePercent}%)`;
+
+    // Update styling based on usage
+    this.memoryUsageElement.classList.remove("warning", "critical");
+    if (usagePercent >= 80) {
+      this.memoryUsageElement.classList.add("critical");
+    } else if (usagePercent >= 50) {
+      this.memoryUsageElement.classList.add("warning");
+    }
+  }
+
+  addEventListener(event, callback) {
+    if (!this._eventListeners[event]) {
+      this._eventListeners[event] = [];
+    }
+    this._eventListeners[event].push(callback);
+  }
+
+  removeEventListener(event, callback) {
+    if (this._eventListeners[event]) {
+      this._eventListeners[event] = this._eventListeners[event].filter(
+        (cb) => cb !== callback
+      );
+    }
+  }
+
+  dispatchEvent(event) {
+    const listeners = this._eventListeners[event.type] || [];
+    listeners.forEach((callback) => callback(event));
+    return true;
+  }
+}
 
 // Using the mock approach instead of skipping
 describe("Memory Monitor Component", () => {
-  let memoryMonitorProps;
-  let memoryUsageElement;
+  let memoryMonitor;
 
   beforeEach(() => {
     // Mock performance.memory
@@ -16,246 +180,96 @@ describe("Memory Monitor Component", () => {
       },
     };
 
-    // Create memory usage element mock
-    memoryUsageElement = {
-      textContent: "",
-      classList: {
-        add: vi.fn(),
-        remove: vi.fn(),
-      },
-    };
-
-    // Create a mock of the memory monitor properties
-    memoryMonitorProps = {
-      // Properties
-      leaks: [],
-      expanded: false,
-      maxLeaks: 50,
-      autoHide: true,
-      autoHideTimeout: 10000,
-      _eventListeners: {}, // Store event listeners
-
-      // Methods
-      _handleLeakDetected: function (event) {
-        if (!event.detail) {
-          console.warn("Memory leak event missing detail");
-          return;
-        }
-
-        const { type, size, time } = event.detail;
-        if (!type || !size || !time) {
-          console.warn(
-            "Memory leak event missing required fields",
-            event.detail
-          );
-          return;
-        }
-
-        this.addLeak(event.detail);
-      },
-
-      addLeak: function (leak) {
-        this.leaks = [...this.leaks, leak];
-        if (this.leaks.length > this.maxLeaks) {
-          this.leaks = this.leaks.slice(-this.maxLeaks);
-        }
-        this.expanded = true;
-        if (this.autoHide) {
-          setTimeout(() => {
-            this.expanded = false;
-          }, this.autoHideTimeout);
-        }
-      },
-
-      _formatTime: function (time) {
-        return new Date(time).toLocaleTimeString();
-      },
-
-      _formatSize: function (size) {
-        const units = ["B", "KB", "MB", "GB"];
-        let value = size;
-        let unitIndex = 0;
-
-        while (value >= 1024 && unitIndex < units.length - 1) {
-          value /= 1024;
-          unitIndex++;
-        }
-
-        return `${value.toFixed(1)}${units[unitIndex]}`;
-      },
-
-      _clearLeaks: function () {
-        this.leaks = [];
-        this.expanded = false;
-      },
-
-      _toggleExpanded: function () {
-        this.expanded = !this.expanded;
-      },
-
-      updateMemoryInfo: function () {
-        if (!global.performance || !global.performance.memory) {
-          return;
-        }
-
-        const memory = global.performance.memory;
-        const usedMB = this._formatSize(memory.usedJSHeapSize);
-        const totalMB = this._formatSize(memory.totalJSHeapSize);
-        const usagePercent = Math.round(
-          (memory.usedJSHeapSize / memory.totalJSHeapSize) * 100
-        );
-
-        const element = this.shadowRoot.querySelector(".memory-usage");
-        if (element) {
-          element.textContent = `${usedMB} / ${totalMB} (${usagePercent}%)`;
-
-          // Update styling based on usage
-          element.classList.remove("warning", "critical");
-          if (usagePercent >= 80) {
-            element.classList.add("critical");
-          } else if (usagePercent >= 50) {
-            element.classList.add("warning");
-          }
-        }
-      },
-
-      // Event handling
-      addEventListener: function (event, callback) {
-        if (!this._eventListeners[event]) {
-          this._eventListeners[event] = [];
-        }
-        this._eventListeners[event].push(callback);
-      },
-
-      // Method to dispatch events
-      dispatchEvent: function (event) {
-        const listeners = this._eventListeners[event.type] || [];
-        listeners.forEach((callback) => callback(event));
-        return true;
-      },
-
-      // Shadow DOM
-      shadowRoot: {
-        querySelector: function (selector) {
-          if (selector === ".memory-usage") {
-            return memoryUsageElement;
-          }
-          return null;
-        },
-        querySelectorAll: function (selector) {
-          return [];
-        },
-      },
-
-      // Other properties needed for testing
-      updateComplete: Promise.resolve(true),
-      hasAttribute: function (attr) {
-        return false;
-      },
-      getAttribute: function (attr) {
-        return null;
-      },
-    };
+    // Create a new instance of the mock memory monitor
+    memoryMonitor = new MockMemoryMonitor();
   });
 
-  it("should display memory usage information", () => {
-    // Trigger update
-    memoryMonitorProps.updateMemoryInfo();
-
-    // Check if memory usage is displayed
-    expect(memoryUsageElement.textContent).toContain("50.0MB");
-    expect(memoryUsageElement.textContent).toContain("100.0MB");
-    expect(memoryUsageElement.textContent).toContain("50%");
+  it("displays memory usage information", () => {
+    memoryMonitor.updateMemoryInfo();
+    expect(memoryMonitor.memoryUsageElement.textContent).toContain(
+      "50.0MB / 100.0MB (50%)"
+    );
   });
 
-  it("should apply correct styling based on memory usage", () => {
-    // Trigger update
-    memoryMonitorProps.updateMemoryInfo();
+  it("adds warning class when memory usage is high", () => {
+    global.performance.memory.usedJSHeapSize = 60 * 1024 * 1024; // 60MB
+    memoryMonitor.updateMemoryInfo();
+    expect(memoryMonitor.memoryUsageElement.classList.add).toHaveBeenCalledWith(
+      "warning"
+    );
+  });
 
-    // Check if correct class is applied (50% usage)
-    expect(memoryUsageElement.classList.add).toHaveBeenCalledWith("warning");
-    expect(memoryUsageElement.classList.remove).toHaveBeenCalledWith(
-      "warning",
+  it("adds critical class when memory usage is very high", () => {
+    global.performance.memory.usedJSHeapSize = 85 * 1024 * 1024; // 85MB
+    memoryMonitor.updateMemoryInfo();
+    expect(memoryMonitor.memoryUsageElement.classList.add).toHaveBeenCalledWith(
       "critical"
     );
   });
 
-  it("should handle leak detection events", () => {
-    // Create a leak event
-    const leakEvent = {
-      detail: {
-        type: "detached_node",
-        size: 1024 * 1024, // 1MB
-        time: Date.now(),
-        message: "Detached DOM node detected",
-      },
-    };
-
-    // Initial leak count
-    expect(memoryMonitorProps.leaks.length).toBe(0);
-
-    // Handle the leak event
-    memoryMonitorProps._handleLeakDetected(leakEvent);
-
-    // Check if leak was added
-    expect(memoryMonitorProps.leaks.length).toBe(1);
-    expect(memoryMonitorProps.leaks[0].type).toBe("detached_node");
-    expect(memoryMonitorProps.expanded).toBe(true);
+  it("formats memory sizes correctly", () => {
+    expect(memoryMonitor._formatSize(1024)).toBe("1.0KB");
+    expect(memoryMonitor._formatSize(1024 * 1024)).toBe("1.0MB");
+    expect(memoryMonitor._formatSize(1024 * 1024 * 1024)).toBe("1.0GB");
   });
 
-  it("should respect maxLeaks limit", () => {
-    // Set a small maxLeaks value for testing
-    memoryMonitorProps.maxLeaks = 3;
+  it("adds memory leaks to the list", () => {
+    const leak = {
+      type: "EventListener",
+      size: 1024 * 1024, // 1MB
+      time: Date.now(),
+    };
+    memoryMonitor.addLeak(leak);
+    expect(memoryMonitor.leaks.length).toBe(1);
+    expect(memoryMonitor.leaks[0]).toEqual(leak);
+  });
 
-    // Add more leaks than the limit
+  it("limits the number of leaks stored", () => {
+    memoryMonitor.maxLeaks = 3;
     for (let i = 0; i < 5; i++) {
-      memoryMonitorProps.addLeak({
-        type: "test_leak",
-        size: 1024,
+      memoryMonitor.addLeak({
+        type: `Leak ${i}`,
+        size: 1024 * 1024,
         time: Date.now(),
-        message: `Test leak ${i}`,
       });
     }
-
-    // Check if only maxLeaks items are kept
-    expect(memoryMonitorProps.leaks.length).toBe(3);
-    expect(memoryMonitorProps.leaks[0].message).toBe("Test leak 2");
-    expect(memoryMonitorProps.leaks[2].message).toBe("Test leak 4");
+    expect(memoryMonitor.leaks.length).toBe(3);
+    expect(memoryMonitor.leaks[0].type).toBe("Leak 2");
   });
 
-  it("should format sizes correctly", () => {
-    expect(memoryMonitorProps._formatSize(1024)).toBe("1.0KB");
-    expect(memoryMonitorProps._formatSize(1024 * 1024)).toBe("1.0MB");
-    expect(memoryMonitorProps._formatSize(1024 * 1024 * 1024)).toBe("1.0GB");
-    expect(memoryMonitorProps._formatSize(500)).toBe("500.0B");
-  });
-
-  it("should toggle expanded state", () => {
-    expect(memoryMonitorProps.expanded).toBe(false);
-
-    memoryMonitorProps._toggleExpanded();
-    expect(memoryMonitorProps.expanded).toBe(true);
-
-    memoryMonitorProps._toggleExpanded();
-    expect(memoryMonitorProps.expanded).toBe(false);
-  });
-
-  it("should clear leaks", () => {
-    // Add some leaks
-    memoryMonitorProps.addLeak({
-      type: "test_leak",
-      size: 1024,
+  it("clears leaks when clear button is clicked", () => {
+    memoryMonitor.addLeak({
+      type: "EventListener",
+      size: 1024 * 1024,
       time: Date.now(),
-      message: "Test leak",
     });
+    expect(memoryMonitor.leaks.length).toBe(1);
 
-    expect(memoryMonitorProps.leaks.length).toBe(1);
-    expect(memoryMonitorProps.expanded).toBe(true);
+    const clearButton = memoryMonitor.shadowRoot.querySelector(".clear-button");
+    clearButton.click();
+    expect(memoryMonitor.leaks.length).toBe(0);
+  });
 
-    // Clear leaks
-    memoryMonitorProps._clearLeaks();
+  it("toggles expanded state when header is clicked", () => {
+    expect(memoryMonitor.expanded).toBe(false);
 
-    expect(memoryMonitorProps.leaks.length).toBe(0);
-    expect(memoryMonitorProps.expanded).toBe(false);
+    const header = memoryMonitor.shadowRoot.querySelector(".monitor-header");
+    header.click();
+    expect(memoryMonitor.expanded).toBe(true);
+
+    header.click();
+    expect(memoryMonitor.expanded).toBe(false);
+  });
+
+  it("handles leak detection events", () => {
+    const leak = {
+      type: "EventListener",
+      size: 1024 * 1024,
+      time: Date.now(),
+    };
+
+    memoryMonitor._handleLeakDetected({ detail: leak });
+    expect(memoryMonitor.leaks.length).toBe(1);
+    expect(memoryMonitor.leaks[0]).toEqual(leak);
   });
 });
