@@ -29,6 +29,7 @@ We are currently focused on improving the testing infrastructure for the NeoForg
 
 6. **Optimized Test Performance**: We've optimized the test performance by:
    - Creating a consolidated performance polyfill that reduces redundant installations
+   - Using a global flag to prevent multiple polyfill installations
    - Silencing the Lit dev mode warning by patching the reactive-element.js file
    - Fixing the deprecation warning about missing "main" or "exports" field in the @open-wc/semantic-dom-diff package
    - Eliminating the MaxListenersExceededWarning by increasing the limit
@@ -36,7 +37,7 @@ We are currently focused on improving the testing infrastructure for the NeoForg
 
 ## Next Steps
 
-1. **Optimize Performance**: Continue looking for ways to optimize the performance of our tests, particularly focusing on reducing the number of polyfill installations that are logged during test runs.
+1. **Optimize Performance**: Continue looking for ways to optimize the performance of our tests, particularly focusing on reducing the number of Lit dev mode warning silencing messages that are logged during test runs.
 
 2. **Address Unhandled Errors**: Continue investigating and fixing the unhandled error related to function cloning that occurs during test runs.
 
@@ -58,7 +59,7 @@ We are currently focused on improving the testing infrastructure for the NeoForg
 
 5. **Incremental Refactoring**: We're refactoring our test files incrementally, focusing on one file at a time to ensure that we don't introduce new issues.
 
-6. **Optimized Polyfills**: We've created a consolidated performance polyfill that reduces redundant installations and improves test performance. This approach is more maintainable and easier to understand than having multiple separate polyfills.
+6. **Optimized Polyfills**: We've created a consolidated performance polyfill that reduces redundant installations and improves test performance. This approach is more maintainable and easier to understand than having multiple separate polyfills. We've also added a global flag to prevent multiple installations of the polyfill, significantly reducing the number of installation messages in the test output.
 
 7. **Silence Warnings**: We've decided to silence the Lit dev mode warning by patching the reactive-element.js file. This approach is more reliable than setting NODE_ENV to production, which doesn't always work.
 

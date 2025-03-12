@@ -299,7 +299,7 @@ Located in `src/test/utils/component-mock-utils.js`, these utilities provide a s
 
 #### Performance Polyfill
 
-Located in `src/test/setup/performance-polyfill.js`, this utility provides a polyfill for the Performance API, which is used in our performance tests. The polyfill is optimized to reduce redundant installations and improve test performance.
+Located in `src/test/setup/optimized-performance-polyfill.js`, this utility provides a polyfill for the Performance API, which is used in our performance tests. The polyfill is optimized to reduce redundant installations and improve test performance. We've added a global flag to prevent multiple installations of the polyfill, significantly reducing the number of installation messages in the test output.
 
 #### Package Patches
 
@@ -321,6 +321,7 @@ Our Vitest configuration is located in `vitest.config.js`. It includes:
 We've optimized our test configuration to improve performance and reliability:
 
 - Consolidated polyfills to reduce redundant installations
+- Added a global flag to prevent multiple polyfill installations
 - Silenced warnings to reduce noise in the test output
 - Handled unhandled errors to prevent false positives
 - Increased the MaxListeners limit to eliminate warnings

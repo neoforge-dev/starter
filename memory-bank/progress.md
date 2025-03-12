@@ -478,7 +478,7 @@ We've successfully fixed the following tests:
 
 ## Known Issues
 
-- **Performance Polyfill**: We still see multiple instances of the Performance API polyfill being installed during test runs, although we've reduced the number significantly.
+- **Performance Polyfill**: We've significantly reduced the number of Performance API polyfill installation messages during test runs by using a global flag to prevent multiple installations. However, we still see multiple instances of the Lit dev mode warning silencing message.
 - **Unhandled Error**: We still have an unhandled error related to function cloning during test runs, although it's being properly handled by our custom reporter and doesn't affect the test results.
 - **Memory Usage Test**: The memory usage test in performance.test.js is skipped due to environment limitations. We need to find a way to measure memory usage in a test environment.
 - **Lit Dev Mode Warning**: We've silenced the Lit dev mode warning by patching the reactive-element.js file, but this is a workaround rather than a proper solution. We should investigate why setting NODE_ENV to production doesn't work as expected.
@@ -486,7 +486,7 @@ We've successfully fixed the following tests:
 
 ## Next Steps
 
-1. **Continue Optimizing Test Performance**: Look for ways to further optimize the performance of our tests, particularly focusing on reducing the number of polyfill installations that are logged during test runs.
+1. **Continue Optimizing Test Performance**: Look for ways to further optimize the performance of our tests, particularly focusing on reducing the number of Lit dev mode warning silencing messages that are logged during test runs.
 2. **Address Unhandled Errors**: Continue investigating and fixing the unhandled error related to function cloning that occurs during test runs.
 3. **Improve Test Coverage**: Add more tests for edge cases and error handling in our component mock utilities.
 4. **Refactor Remaining Test Files**: Continue refactoring any remaining test files that could benefit from our new component mock utilities.
