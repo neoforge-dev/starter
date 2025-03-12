@@ -1,37 +1,24 @@
 import { expect } from "vitest";
+import { createMockComponent } from "../utils/component-mock-utils.js";
 
-// Mock NeoNavigation component instead of importing it directly
-// This avoids the ESM URL scheme errors from CDN imports
-class NeoNavigation {
-  static get properties() {
-    return {
-      items: { type: Array },
-      currentPath: { type: String },
-      navExpanded: { type: Boolean, reflect: true },
-      activeItem: { type: String },
-      orientation: { type: String },
-      collapsed: { type: Boolean },
-    };
-  }
-
-  constructor() {
-    this.items = [];
-    this.currentPath = "";
-    this.navExpanded = false;
-    this.activeItem = "";
-    this.orientation = "vertical";
-    this.collapsed = false;
-  }
-
-  render() {}
-
-  _handleResize() {}
-
-  _handleKeyDown() {}
-}
-
-// Mock that the component extends LitElement
-NeoNavigation.toString = () => "class NeoNavigation extends LitElement";
+// Create a mock NeoNavigation component using our utility
+const NeoNavigation = createMockComponent(
+  "NeoNavigation",
+  {
+    items: { type: Array },
+    currentPath: { type: String },
+    navExpanded: { type: Boolean, reflect: true },
+    activeItem: { type: String },
+    orientation: { type: String },
+    collapsed: { type: Boolean },
+  },
+  {
+    render: () => {},
+    _handleResize: () => {},
+    _handleKeyDown: () => {},
+  },
+  "LitElement"
+);
 
 describe("NeoNavigation", () => {
   it("should be defined as a class", () => {

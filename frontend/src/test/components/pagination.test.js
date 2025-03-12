@@ -1,37 +1,25 @@
 import { expect } from "vitest";
+import { createMockComponent } from "../utils/component-mock-utils.js";
 
-// Mock NeoPagination component instead of importing it directly
-// This avoids the ESM URL scheme errors from CDN imports
-class NeoPagination {
-  static properties = {
+// Create a mock NeoPagination component using our utility
+const NeoPagination = createMockComponent(
+  "NeoPagination",
+  {
     currentPage: { type: Number },
     totalPages: { type: Number },
     siblingCount: { type: Number },
     boundaryCount: { type: Number },
     visiblePages: { type: Number },
-  };
-
-  constructor() {
-    this.currentPage = 1;
-    this.totalPages = 10;
-    this.siblingCount = 1;
-    this.boundaryCount = 1;
-    this.visiblePages = 5;
-  }
-
-  render() {}
-
-  _getPageNumbers() {}
-
-  _getRenderedPageNumbers() {}
-
-  handlePageClick() {}
-
-  getVisiblePages() {}
-}
-
-// Mock that the component extends LitElement
-NeoPagination.toString = () => "class NeoPagination extends LitElement";
+  },
+  {
+    render: () => {},
+    _getPageNumbers: () => {},
+    _getRenderedPageNumbers: () => {},
+    handlePageClick: () => {},
+    getVisiblePages: () => {},
+  },
+  "LitElement"
+);
 
 describe("NeoPagination", () => {
   it("should be defined as a class", () => {

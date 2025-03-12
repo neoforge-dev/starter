@@ -1,106 +1,61 @@
 import { expect, describe, it, beforeEach } from "vitest";
 import { html } from "lit";
+import {
+  createMockFixture,
+  createAndRegisterMockComponent,
+} from "../utils/component-mock-utils.js";
 
-// Mock NeoIcon component instead of importing it directly
-// This avoids the ESM URL scheme errors from CDN imports
-class MockNeoIcon extends HTMLElement {
-  static get properties() {
-    return {
-      name: { type: String },
-      size: { type: String },
-      color: { type: String },
-      customClass: { type: String },
-    };
+// Create a mock fixture function
+const fixture = createMockFixture();
+
+// Create and register a mock NeoIcon component
+createAndRegisterMockComponent(
+  "neo-icon",
+  "NeoIcon",
+  {
+    name: { type: String },
+    size: { type: String },
+    color: { type: String },
+    customClass: { type: String },
+  },
+  {
+    _getIcon: () => {},
+    render: () => {},
   }
+);
 
-  constructor() {
-    super();
-    this.name = "";
-    this.size = "md";
-    this.color = "currentColor";
-    this.customClass = "";
-    this.updateComplete = Promise.resolve(true);
-  }
-}
-
-// Register mock component
-customElements.define("neo-icon", MockNeoIcon);
-
-// Mock fixture function
-const fixture = async (template) => {
-  // Create a mock element that simulates the behavior of the fixture function
-  const mockElement = {
-    updateComplete: Promise.resolve(true),
-    style: {},
-    classList: {
-      add: () => {},
-      remove: () => {},
-    },
-    remove: () => {},
-  };
-  return mockElement;
-};
-
-// Skip all tests in this file for now due to custom element registration issues
 describe("NeoIcon", () => {
   let element;
-  let neoIconProps;
 
-  beforeEach(() => {
-    // Create a mock of the NeoIcon properties
-    neoIconProps = {
-      // Properties
-      name: undefined,
-      type: undefined,
-      reflect: undefined,
-
-      // Methods
-      properties: function () {
-        // Implementation
-      },
-      styles: function () {
-        // Implementation
-      },
-      _getIcon: function () {
-        // Implementation
-      },
-      if: function () {
-        // Implementation
-      },
-      render: function () {
-        // Implementation
-      },
-
-      // Event handling
-      addEventListener: function (event, callback) {
-        this[`_${event}Callback`] = callback;
-      },
-
-      // Shadow DOM
-      shadowRoot: {
-        querySelector: function (selector) {
-          // Return mock elements based on the selector
-          return null;
-        },
-        querySelectorAll: function (selector) {
-          // Return mock elements based on the selector
-          return [];
-        },
-      },
-
-      // Other properties needed for testing
-      updateComplete: Promise.resolve(true),
-      classList: {
-        contains: function (className) {
-          // Implementation
-          return false;
-        },
-      },
-    };
+  beforeEach(async () => {
+    element = await fixture(
+      html`<neo-icon
+        name="test"
+        size="md"
+        color="blue"
+        customClass="custom"
+      ></neo-icon>`
+    );
   });
 
   it("should be defined", () => {
-    element = neoIconProps;
     expect(element).toBeDefined();
+  });
+
+  it("should have the correct properties", () => {
+    expect(element.name).toBe("test");
+    expect(element.size).toBe("md");
+    expect(element.color).toBe("blue");
+    expect(element.customClass).toBe("custom");
+  });
+
+  it("should have a shadow root", () => {
+    expect(element.shadowRoot).toBeDefined();
+  });
+
+  it("should have event listeners", () => {
+    expect(element.addEventListener).toBeDefined();
+    expect(element.removeEventListener).toBeDefined();
+    expect(element.dispatchEvent).toBeDefined();
   });
 });

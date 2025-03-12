@@ -6,49 +6,51 @@ import {
   getMemoryMetrics,
   getPaintMetrics,
 } from "../utils/performance-utils.js";
+import {
+  createMockFixture,
+  createAndRegisterMockComponent,
+} from "../utils/component-mock-utils.js";
 
-// Mock fixture function
-const fixture = async (template) => {
-  // Create a mock element that simulates the behavior of the fixture function
-  const mockElement = {
-    updateComplete: Promise.resolve(true),
-    style: {},
-    classList: {
-      add: () => {},
-      remove: () => {},
-    },
-    remove: () => {},
-  };
-  return mockElement;
-};
+// Create a mock fixture function
+const fixture = createMockFixture();
 
-// Mock components instead of importing them directly
-// This avoids the ESM URL scheme errors from CDN imports
-class MockButton extends HTMLElement {
-  constructor() {
-    super();
-    this.updateComplete = Promise.resolve(true);
+// Create mock components using our utility functions
+createAndRegisterMockComponent(
+  "neo-button",
+  "NeoButton",
+  {
+    variant: { type: String },
+    size: { type: String },
+    disabled: { type: Boolean },
+    loading: { type: Boolean },
+  },
+  {
+    handleClick: () => {},
   }
-}
+);
 
-class MockSpinner extends HTMLElement {
-  constructor() {
-    super();
-    this.updateComplete = Promise.resolve(true);
+createAndRegisterMockComponent("neo-spinner", "NeoSpinner", {
+  size: { type: String },
+  color: { type: String },
+  variant: { type: String },
+});
+
+createAndRegisterMockComponent(
+  "neo-input",
+  "NeoInput",
+  {
+    value: { type: String },
+    placeholder: { type: String },
+    disabled: { type: Boolean },
+    required: { type: Boolean },
+    type: { type: String },
+  },
+  {
+    handleInput: () => {},
+    handleFocus: () => {},
+    handleBlur: () => {},
   }
-}
-
-class MockInput extends HTMLElement {
-  constructor() {
-    super();
-    this.updateComplete = Promise.resolve(true);
-  }
-}
-
-// Register mock components
-customElements.define("neo-button", MockButton);
-customElements.define("neo-spinner", MockSpinner);
-customElements.define("neo-input", MockInput);
+);
 
 describe("Component Performance", () => {
   it("button renders within performance budget", async () => {
