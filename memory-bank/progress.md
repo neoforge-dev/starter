@@ -324,6 +324,10 @@ We've successfully fixed the following tests:
 21. Form Validation (7 tests passing)
 22. Tooltip (11 tests passing)
 23. Progress bar (10 tests passing)
+24. Profile page (17 tests passing)
+25. Support page (16 tests passing)
+26. About page (17 tests passing)
+27. Contact page (17 tests passing)
 
 ### Testing Improvements
 1. **Pure JavaScript Mocks**: Created pure JavaScript mocks for components instead of relying on custom element registration, making tests more reliable and faster.
