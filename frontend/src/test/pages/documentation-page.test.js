@@ -1,5 +1,4 @@
 import { expect, describe, it, beforeEach, vi } from "vitest";
-import { DocumentationPage } from "../../pages/documentation-page.js";
 
 // Use a mock approach similar to what we did for the button and checkbox tests
 describe("Documentation Page", () => {
