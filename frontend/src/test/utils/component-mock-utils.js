@@ -96,12 +96,38 @@ export function createMockComponent(
  * @returns {Object} - The mock shadow root
  */
 export function createMockShadowRoot() {
+  const children = [];
+  const attributes = new Map();
+
   return {
     querySelector: (selector) => null,
     querySelectorAll: (selector) => [],
-    appendChild: (child) => {},
-    removeChild: (child) => {},
-    children: [],
+    appendChild: (child) => {
+      children.push(child);
+      return child;
+    },
+    removeChild: (child) => {
+      const index = children.indexOf(child);
+      if (index !== -1) {
+        children.splice(index, 1);
+      }
+      return child;
+    },
+    setAttribute: (name, value) => {
+      attributes.set(name, value);
+    },
+    getAttribute: (name) => {
+      return attributes.get(name) || null;
+    },
+    hasAttribute: (name) => {
+      return attributes.has(name);
+    },
+    removeAttribute: (name) => {
+      attributes.delete(name);
+    },
+    children: children,
+    innerHTML: "",
+    textContent: "",
   };
 }
 
@@ -169,6 +195,87 @@ export function createMockFixture() {
       remove: () => {},
     };
     return mockElement;
+  };
+}
+
+/**
+ * Creates a mock DOM element with common methods
+ * @param {string} tagName - The tag name of the element
+ * @returns {Object} - The mock element
+ */
+export function createMockElement(tagName = "div") {
+  const children = [];
+  const attributes = new Map();
+  const style = {};
+  const classList = createMockClassList();
+
+  return {
+    tagName: tagName.toUpperCase(),
+    nodeName: tagName.toUpperCase(),
+    nodeType: 1,
+    children: children,
+    childNodes: children,
+    classList: classList,
+    style: style,
+    textContent: "",
+    innerHTML: "",
+    outerHTML: `<${tagName}></${tagName}>`,
+
+    // Attributes
+    setAttribute: (name, value) => {
+      attributes.set(name, value);
+    },
+    getAttribute: (name) => {
+      return attributes.get(name) || null;
+    },
+    hasAttribute: (name) => {
+      return attributes.has(name);
+    },
+    removeAttribute: (name) => {
+      attributes.delete(name);
+    },
+
+    // DOM manipulation
+    appendChild: (child) => {
+      children.push(child);
+      return child;
+    },
+    removeChild: (child) => {
+      const index = children.indexOf(child);
+      if (index !== -1) {
+        children.splice(index, 1);
+      }
+      return child;
+    },
+    insertBefore: (newChild, refChild) => {
+      const index = refChild ? children.indexOf(refChild) : -1;
+      if (index !== -1) {
+        children.splice(index, 0, newChild);
+      } else {
+        children.push(newChild);
+      }
+      return newChild;
+    },
+    replaceChild: (newChild, oldChild) => {
+      const index = children.indexOf(oldChild);
+      if (index !== -1) {
+        children[index] = newChild;
+      }
+      return oldChild;
+    },
+
+    // Events
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => true,
+
+    // Element methods
+    remove: () => {},
+    cloneNode: (deep) => createMockElement(tagName),
+
+    // Query methods
+    querySelector: () => null,
+    querySelectorAll: () => [],
   };
 }
 

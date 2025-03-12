@@ -281,8 +281,12 @@ class MockDashboardPage {
       }
       this.loading = false;
     } catch (error) {
-      // Only log error in non-test environments
-      if (process.env.NODE_ENV !== "test") {
+      // Suppress error logging in test environments
+      if (
+        typeof process !== "undefined" &&
+        process.env &&
+        process.env.NODE_ENV !== "test"
+      ) {
         console.error("Error fetching tasks:", error);
       }
       this.error = "Failed to fetch tasks";

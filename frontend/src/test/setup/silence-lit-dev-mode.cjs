@@ -1,76 +1,84 @@
 /**
  * Silence Lit Dev Mode Warning (CommonJS version)
  * 
- * This file directly patches the Lit reactive-element module to silence the dev mode warning.
+ * This utility silences the Lit dev mode warning by patching the reactive-element.js file.
+ * It's specifically designed for worker threads and other environments that require CommonJS.
  */
 
-// Set NODE_ENV to production
-if (typeof process !== "undefined" && process.env) {
-  process.env.NODE_ENV = "production";
-}
+// Global flag to prevent multiple silencing operations
+let isSilenced = false;
 
-// Define a global variable to indicate that we're in production mode
-if (typeof globalThis !== "undefined") {
-  globalThis.DEV_MODE = false;
-  
-  // Create a global flag to track whether the warning has been silenced
-  if (!globalThis.__LIT_DEV_MODE_WARNING_SILENCED__) {
-    globalThis.__LIT_DEV_MODE_WARNING_SILENCED__ = false;
-  }
-}
-
-// Patch the Lit reactive-element module to silence the dev mode warning
+/**
+ * Silence the Lit dev mode warning by patching the reactive-element.js file
+ * 
+ * This function patches the reactive-element.js file to prevent it from
+ * showing the dev mode warning message.
+ * 
+ * @returns {boolean} Whether the silencing was successful
+ */
 function silenceLitDevModeWarning() {
-  // Check if the warning has already been silenced
-  if (typeof globalThis !== "undefined" && globalThis.__LIT_DEV_MODE_WARNING_SILENCED__) {
-    return;
+  // Only silence once
+  if (isSilenced) {
+    return true;
   }
+
+  isSilenced = true;
 
   try {
-    // Try to find the Lit reactive-element module
-    const fs = require('fs');
-    const path = require('path');
-    
-    // Path to the reactive-element.js file
-    const reactiveElementPath = path.resolve(
-      process.cwd(),
-      'node_modules',
-      '@lit',
-      'reactive-element',
-      'development',
-      'reactive-element.js'
-    );
-    
-    // Check if the file exists
-    if (fs.existsSync(reactiveElementPath)) {
-      // Read the file
-      let content = fs.readFileSync(reactiveElementPath, 'utf8');
-      
-      // Replace the issueWarning function with a no-op
-      content = content.replace(
-        /export const issueWarning[\s\S]*?}/,
-        'export const issueWarning = () => {};'
-      );
-      
-      // Write the updated file
-      fs.writeFileSync(reactiveElementPath, content);
-      
-      console.log('Silenced Lit dev mode warning by patching reactive-element.js');
-      
-      // Set the global flag to indicate that the warning has been silenced
-      if (typeof globalThis !== "undefined") {
-        globalThis.__LIT_DEV_MODE_WARNING_SILENCED__ = true;
+    // Set NODE_ENV to production
+    if (typeof process !== "undefined" && process.env) {
+      process.env.NODE_ENV = "production";
+    }
+
+    // Try to find and patch the reactive-element.js file
+    try {
+      // Try to require the lit module
+      const litPath = require.resolve("lit");
+      if (!litPath) {
+        return false;
       }
+
+      // Get the directory containing lit
+      const litDir = litPath.substring(0, litPath.lastIndexOf("/"));
+      const reactiveElementPath = `${litDir}/../@lit/reactive-element/development/reactive-element.js`;
+
+      // Check if the file exists
+      const fs = require("fs");
+      if (!fs.existsSync(reactiveElementPath)) {
+        return false;
+      }
+
+      // Read the file
+      const content = fs.readFileSync(reactiveElementPath, "utf8");
+
+      // Check if the file contains the warning code
+      if (!content.includes("Lit is in dev mode")) {
+        return false;
+      }
+
+      // Create a patched version of the file
+      const patchedContent = content.replace(
+        /console\.warn\(`Lit is in dev mode.*?`\);/s,
+        "// Dev mode warning silenced"
+      );
+
+      // Write the patched file
+      fs.writeFileSync(reactiveElementPath, patchedContent);
+
+      console.log("Silenced Lit dev mode warning by patching reactive-element.js");
+      return true;
+    } catch (error) {
+      // Failed to patch the file
+      return false;
     }
   } catch (error) {
-    console.warn('Could not silence Lit dev mode warning:', error.message);
+    // Failed to silence the warning
+    return false;
   }
 }
 
-// Apply the patch
+// Silence the warning immediately when this module is loaded
 silenceLitDevModeWarning();
 
-// Export the function
-module.exports = {
-  silenceLitDevModeWarning
-}; 
+// Export the function for use in other modules
+module.exports = silenceLitDevModeWarning; 

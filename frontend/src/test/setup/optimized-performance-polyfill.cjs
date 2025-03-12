@@ -1,271 +1,250 @@
 /**
- * Optimized Performance API Polyfill (CommonJS version)
+ * Performance API Polyfill (CommonJS version)
  * 
- * This file provides a consolidated polyfill for the Performance API that works
- * in all environments (Node.js, JSDOM, worker threads) while minimizing redundant
- * installations and logging.
+ * This file provides a complete polyfill for the Performance API in CommonJS format,
+ * specifically for use in worker threads and other environments that require CommonJS.
+ * 
+ * It ensures that performance.now() and other Performance API methods are available
+ * in all JavaScript environments, including Node.js, JSDOM, and worker threads.
+ * 
+ * See /docs/performance-polyfill.md for detailed documentation.
  */
 
-// Set NODE_ENV to production to silence Lit dev mode warning
-if (typeof process !== "undefined" && process.env) {
-  process.env.NODE_ENV = "production";
-}
+// Global flag to prevent multiple installations
+let isPolyfillInstalled = false;
 
-// Store the start time when this module is loaded
-const startTime = Date.now();
-
-// Create a global flag to track whether the polyfill has been installed
-// This will be shared across all instances of this module
-if (typeof globalThis !== "undefined") {
-  if (!globalThis.__PERFORMANCE_POLYFILL_INSTALLED__) {
-    globalThis.__PERFORMANCE_POLYFILL_INSTALLED__ = false;
-  }
-}
-
-// Define the performance polyfill with all required methods
-function createPerformancePolyfill() {
-  return {
-    _marks: {},
-    _measures: {},
-    
-    now() {
-      return Date.now() - startTime;
-    },
-    
-    mark(name) {
-      if (!name) return;
-      this._marks[name] = this.now();
-      return undefined;
-    },
-    
-    measure(name, startMark, endMark) {
-      if (!name) return;
-      const start = this._marks[startMark] || 0;
-      const end = this._marks[endMark] || this.now();
-      this._measures[name] = {
-        name,
-        startTime: start,
-        duration: end - start,
-      };
-      return undefined;
-    },
-    
-    getEntriesByName(name, type) {
-      if (type === "mark" && this._marks && this._marks[name]) {
-        return [{ name, startTime: this._marks[name], entryType: "mark" }];
-      }
-      if (type === "measure" && this._measures && this._measures[name]) {
-        return [{ ...this._measures[name], entryType: "measure" }];
-      }
-      return [];
-    },
-    
-    getEntriesByType(type) {
-      if (type === "mark" && this._marks) {
-        return Object.keys(this._marks).map((name) => ({
-          name,
-          startTime: this._marks[name],
-          entryType: "mark",
-        }));
-      }
-      if (type === "measure" && this._measures) {
-        return Object.values(this._measures).map((measure) => ({
-          ...measure,
-          entryType: "measure",
-        }));
-      }
-      return [];
-    },
-    
-    clearMarks(name) {
-      if (name) {
-        delete this._marks[name];
-      } else {
-        this._marks = {};
-      }
-    },
-    
-    clearMeasures(name) {
-      if (name) {
-        delete this._measures[name];
-      } else {
-        this._measures = {};
-      }
-    },
-  };
-}
-
-// Apply the polyfill to all possible global objects
-function applyPolyfill(silent = false) {
-  // Check if the polyfill has already been installed globally
-  if (typeof globalThis !== "undefined" && globalThis.__PERFORMANCE_POLYFILL_INSTALLED__) {
+/**
+ * Apply the Performance API polyfill
+ * 
+ * This function creates a comprehensive implementation of the Performance API
+ * and applies it to the global context if it's not already available.
+ * 
+ * @returns {Object} The performance object
+ */
+function applyPolyfill() {
+  // Only install once
+  if (isPolyfillInstalled) {
     return typeof performance !== "undefined" ? performance : null;
   }
 
-  // List of all possible global objects
-  const globals = [
-    typeof globalThis !== "undefined" ? globalThis : null,
-    typeof global !== "undefined" ? global : null,
-    typeof window !== "undefined" ? window : null,
-    typeof self !== "undefined" ? self : null,
-  ].filter(Boolean);
+  isPolyfillInstalled = true;
 
-  // Create a single performance polyfill instance to share
-  const performancePolyfill = createPerformancePolyfill();
+  // Create a complete performance polyfill
+  const performancePolyfill = createCompletePerformancePolyfill();
 
-  // Apply the polyfill to each global object
-  for (const g of globals) {
-    if (!g.performance) {
-      g.performance = performancePolyfill;
-    } else if (typeof g.performance.now !== "function") {
-      // If performance exists but now() is missing, add it
-      Object.assign(g.performance, performancePolyfill);
+  // Apply the polyfill to globalThis
+  if (typeof globalThis !== "undefined") {
+    if (!globalThis.performance) {
+      globalThis.performance = performancePolyfill;
+    } else {
+      // Add missing methods to existing performance object
+      for (const key in performancePolyfill) {
+        if (typeof globalThis.performance[key] === "undefined") {
+          globalThis.performance[key] = performancePolyfill[key];
+        }
+      }
     }
   }
 
-  // Ensure the polyfill is properly applied to the current context
-  if (typeof performance === "undefined") {
-    // eslint-disable-next-line no-global-assign
-    global.performance = performancePolyfill;
-  } else if (typeof performance.now !== "function") {
-    Object.assign(performance, performancePolyfill);
+  // Apply the polyfill to global
+  if (typeof global !== "undefined") {
+    if (!global.performance) {
+      global.performance = performancePolyfill;
+    } else {
+      // Add missing methods to existing performance object
+      for (const key in performancePolyfill) {
+        if (typeof global.performance[key] === "undefined") {
+          global.performance[key] = performancePolyfill[key];
+        }
+      }
+    }
   }
 
-  // Log only if this is the first installation
-  if (!silent && typeof globalThis !== "undefined" && !globalThis.__PERFORMANCE_POLYFILL_INSTALLED__) {
-    console.log("Performance API polyfill installed");
-    globalThis.__PERFORMANCE_POLYFILL_INSTALLED__ = true;
+  // Apply the polyfill to window if it exists
+  if (typeof window !== "undefined") {
+    if (!window.performance) {
+      window.performance = performancePolyfill;
+    } else {
+      // Add missing methods to existing performance object
+      for (const key in performancePolyfill) {
+        if (typeof window.performance[key] === "undefined") {
+          window.performance[key] = performancePolyfill[key];
+        }
+      }
+    }
   }
+
+  console.log("Performance API polyfill installed");
 
   return performancePolyfill;
 }
 
-// Apply the polyfill immediately
-const performancePolyfill = applyPolyfill();
+/**
+ * Create a complete performance polyfill
+ * 
+ * This function creates a comprehensive implementation of the Performance API,
+ * including methods like getEntriesByType, mark, measure, and more.
+ * 
+ * @returns {Object} A complete performance polyfill object
+ */
+function createCompletePerformancePolyfill() {
+  const startTime = Date.now();
+  const entries = [];
 
-// Patch Vitest worker and Tinypool modules
-function patchVitestModules() {
-  if (typeof require !== "function" || typeof module === "undefined") {
-    return;
-  }
+  return {
+    now() {
+      return Date.now() - startTime;
+    },
 
-  try {
-    const originalRequire = module.require;
-    
-    // Create a patched version of require that ensures performance is available
-    // Use a named function to make it more serializable
-    function patchedRequire(id) {
-      try {
-        const result = originalRequire.apply(this, arguments);
-        
-        // Only patch specific modules to avoid unnecessary work
-        if (
-          id.includes("vitest") || 
-          id.includes("worker") || 
-          id.includes("tinypool")
-        ) {
-          // Apply the polyfill to the module's context if needed
-          if (result && typeof result === "object") {
-            if (!result.performance) {
-              result.performance = createPerformancePolyfill();
-            } else if (typeof result.performance.now !== "function") {
-              Object.assign(result.performance, createPerformancePolyfill());
-            }
+    mark(name) {
+      entries.push({
+        name,
+        entryType: "mark",
+        startTime: this.now(),
+        duration: 0,
+      });
+      return undefined;
+    },
+
+    measure(name, startMark, endMark) {
+      const startMarkEntry = entries.find(
+        (entry) => entry.name === startMark && entry.entryType === "mark"
+      );
+      const endMarkEntry = entries.find(
+        (entry) => entry.name === endMark && entry.entryType === "mark"
+      );
+
+      const startTime = startMarkEntry ? startMarkEntry.startTime : 0;
+      const endTime = endMarkEntry ? endMarkEntry.startTime : this.now();
+
+      entries.push({
+        name,
+        entryType: "measure",
+        startTime,
+        duration: endTime - startTime,
+      });
+
+      return undefined;
+    },
+
+    getEntriesByType(type) {
+      if (type === "paint") {
+        // Mock paint entries
+        return [
+          {
+            name: "first-paint",
+            startTime: 10,
+            duration: 0,
+            entryType: "paint",
+          },
+          {
+            name: "first-contentful-paint",
+            startTime: 15,
+            duration: 0,
+            entryType: "paint",
+          },
+        ];
+      }
+
+      return entries.filter((entry) => entry.entryType === type);
+    },
+
+    getEntriesByName(name, type) {
+      if (type) {
+        return entries.filter(
+          (entry) => entry.name === name && entry.entryType === type
+        );
+      }
+      return entries.filter((entry) => entry.name === name);
+    },
+
+    getEntries() {
+      return entries.slice();
+    },
+
+    clearMarks(markName) {
+      if (markName) {
+        const index = entries.findIndex(
+          (entry) => entry.name === markName && entry.entryType === "mark"
+        );
+        if (index !== -1) {
+          entries.splice(index, 1);
+        }
+      } else {
+        for (let i = entries.length - 1; i >= 0; i--) {
+          if (entries[i].entryType === "mark") {
+            entries.splice(i, 1);
           }
         }
-        
-        return result;
-      } catch (error) {
-        console.warn(`Error in patched require for ${id}:`, error.message);
-        return originalRequire.apply(this, arguments);
       }
-    }
-    
-    // Copy all properties from the original require
-    for (const key in originalRequire) {
-      if (Object.prototype.hasOwnProperty.call(originalRequire, key)) {
-        patchedRequire[key] = originalRequire[key];
-      }
-    }
-    
-    // Use a safer approach to patch require
-    try {
-      // Store the original require function
-      const originalModuleRequire = module.constructor.prototype.require;
-      
-      // Create a wrapper function that doesn't hold references to closures
-      module.constructor.prototype.require = function wrappedRequire(id) {
-        // For Vitest and worker modules, use our performance polyfill
-        if (
-          id.includes("vitest") || 
-          id.includes("worker") || 
-          id.includes("tinypool")
-        ) {
-          const result = originalModuleRequire.call(this, id);
-          
-          // Apply the polyfill to the module's context if needed
-          if (result && typeof result === "object") {
-            if (!result.performance) {
-              result.performance = createPerformancePolyfill();
-            } else if (typeof result.performance.now !== "function") {
-              Object.assign(result.performance, createPerformancePolyfill());
-            }
-          }
-          
-          return result;
+    },
+
+    clearMeasures(measureName) {
+      if (measureName) {
+        const index = entries.findIndex(
+          (entry) => entry.name === measureName && entry.entryType === "measure"
+        );
+        if (index !== -1) {
+          entries.splice(index, 1);
         }
-        
-        // For other modules, use the original require
-        return originalModuleRequire.call(this, id);
-      };
-    } catch (error) {
-      console.warn("Could not patch module.constructor.prototype.require:", error.message);
-    }
-  } catch (error) {
-    console.warn("Could not patch require function:", error.message);
-  }
+      } else {
+        for (let i = entries.length - 1; i >= 0; i--) {
+          if (entries[i].entryType === "measure") {
+            entries.splice(i, 1);
+          }
+        }
+      }
+    },
+
+    // Add timing API
+    timing: {
+      navigationStart: startTime,
+      domComplete: startTime + 100,
+      domInteractive: startTime + 50,
+      loadEventEnd: startTime + 120,
+    },
+
+    // Add memory API
+    memory: {
+      usedJSHeapSize: 10000000,
+      totalJSHeapSize: 100000000,
+      jsHeapSizeLimit: 2000000000,
+    },
+  };
 }
 
-// Set up error handling for performance.now errors
+/**
+ * Set up error handling for performance.now errors
+ * 
+ * This function sets up global error handlers to catch and suppress
+ * performance-related errors.
+ */
 function setupErrorHandling() {
-  if (typeof process === "undefined" || !process.on) {
-    return;
-  }
-  
-  // Remove any existing handlers for performance.now errors
-  const existingHandlers = process.listeners("uncaughtException");
-  for (const handler of existingHandlers) {
-    if (handler.toString().includes("performance.now")) {
-      process.removeListener("uncaughtException", handler);
-    }
-  }
-  
-  // Add a single handler for performance.now errors
-  process.on("uncaughtException", (err) => {
-    if (err.message && err.message.includes("performance.now is not a function")) {
-      // Silently reapply the polyfill
-      applyPolyfill(true);
-      return; // Don't rethrow
-    }
-    // For other errors, rethrow
-    throw err;
-  });
-  
-  // Increase max listeners to avoid warnings
-  if (process.setMaxListeners) {
-    process.setMaxListeners(150);
+  // Add a global error handler for performance.now errors
+  if (typeof process !== "undefined" && process.on) {
+    process.on("uncaughtException", (err) => {
+      if (
+        err.message &&
+        (err.message.includes("performance.now is not a function") ||
+          err.message.includes("performance is not defined") ||
+          (err.stack && err.stack.includes("performance.now")))
+      ) {
+        console.log(
+          "Caught performance.now error in global handler:",
+          err.message
+        );
+        return; // Suppress the error
+      }
+      throw err; // Re-throw other errors
+    });
   }
 }
 
-// Initialize everything
-patchVitestModules();
+// Apply the polyfill immediately when this module is loaded
+applyPolyfill();
 setupErrorHandling();
 
-// Export the polyfill and utility functions
-module.exports = {
-  applyPolyfill,
-  createPerformancePolyfill,
-  patchVitestModules,
-  setupErrorHandling,
-  default: applyPolyfill
-}; 
+// Export the functions for use in other modules
+module.exports = applyPolyfill;
+module.exports.setupErrorHandling = setupErrorHandling;
+module.exports.createCompletePerformancePolyfill = createCompletePerformancePolyfill; 

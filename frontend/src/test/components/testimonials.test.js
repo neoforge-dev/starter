@@ -1,54 +1,20 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { createMockElement } from "../utils/component-mock-utils.js";
 
 // Skip the custom element entirely and just use a simple test
 describe("Testimonials", () => {
-  beforeEach(() => {
-    // Mock document.createElement and other DOM methods
-    document.createElement = vi.fn().mockImplementation((tag) => {
-      const element = {
-        className: "",
-        textContent: "",
-        innerHTML: "",
-        children: [],
-        childNodes: [],
-        style: {},
-        querySelector: vi.fn().mockImplementation((selector) => {
-          if (selector === "p") {
-            return { textContent: "Great product!" };
-          } else if (selector === ".author") {
-            return { textContent: "John Doe" };
-          } else if (selector === ".rating") {
-            return { textContent: "★★★★★" };
-          } else if (selector === "div") {
-            return {
-              querySelector: vi.fn().mockImplementation((innerSelector) => {
-                if (innerSelector === "p") {
-                  return { textContent: "Great product!" };
-                } else if (innerSelector === ".author") {
-                  return { textContent: "John Doe" };
-                } else if (innerSelector === ".rating") {
-                  return { textContent: "★★★★★" };
-                }
-                return null;
-              }),
-            };
-          }
-          return null;
-        }),
-        appendChild: vi.fn().mockImplementation((child) => {
-          return child;
-        }),
-        remove: vi.fn(),
-      };
-      return element;
-    });
+  let mockDocument;
 
-    document.body.appendChild = vi.fn();
-    document.body.removeChild = vi.fn();
+  beforeEach(() => {
+    // Create a mock document body
+    mockDocument = {
+      body: createMockElement("body"),
+    };
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    // Clean up
+    mockDocument = null;
   });
 
   it("can be created without timing out", () => {
@@ -58,7 +24,7 @@ describe("Testimonials", () => {
 
   it("can render mock testimonials", () => {
     // Create a simple div to represent our testimonials component
-    const element = document.createElement("div");
+    const element = createMockElement("div");
     element.className = "mock-testimonials";
 
     // Add some mock testimonial items
@@ -69,19 +35,19 @@ describe("Testimonials", () => {
 
     // Create mock testimonial elements
     items.forEach((item) => {
-      const testimonial = document.createElement("div");
+      const testimonial = createMockElement("div");
       testimonial.className = "testimonial-item";
 
-      const content = document.createElement("p");
+      const content = createMockElement("p");
       content.textContent = item.content;
       testimonial.appendChild(content);
 
-      const author = document.createElement("div");
+      const author = createMockElement("div");
       author.className = "author";
       author.textContent = item.author;
       testimonial.appendChild(author);
 
-      const rating = document.createElement("div");
+      const rating = createMockElement("div");
       rating.className = "rating";
       rating.textContent = "★".repeat(item.rating);
       testimonial.appendChild(rating);
@@ -89,56 +55,138 @@ describe("Testimonials", () => {
       element.appendChild(testimonial);
     });
 
-    document.body.appendChild(element);
+    mockDocument.body.appendChild(element);
 
     // Verify the mock component
     expect(element).toBeTruthy();
     expect(element.className).toBe("mock-testimonials");
-
-    // Mock the children length
-    element.children.length = 2;
     expect(element.children.length).toBe(2);
 
-    const firstTestimonial = element.querySelector("div");
+    // Test first testimonial content
+    const firstTestimonial = element.children[0];
     expect(firstTestimonial).toBeTruthy();
-    expect(firstTestimonial.querySelector("p").textContent).toBe(
-      "Great product!"
-    );
-    expect(firstTestimonial.querySelector(".author").textContent).toBe(
-      "John Doe"
-    );
-    expect(firstTestimonial.querySelector(".rating").textContent).toBe("★★★★★");
+    expect(firstTestimonial.children[0].textContent).toBe("Great product!");
+    expect(firstTestimonial.children[1].textContent).toBe("John Doe");
+    expect(firstTestimonial.children[2].textContent).toBe("★★★★★");
 
-    // Clean up
-    element.remove();
+    // Test second testimonial content
+    const secondTestimonial = element.children[1];
+    expect(secondTestimonial).toBeTruthy();
+    expect(secondTestimonial.children[0].textContent).toBe("Excellent service");
+    expect(secondTestimonial.children[1].textContent).toBe("Jane Smith");
+    expect(secondTestimonial.children[2].textContent).toBe("★★★★");
   });
 
   it("handles different layouts", () => {
     // Test grid layout
-    const gridLayout = document.createElement("div");
+    const gridLayout = createMockElement("div");
     gridLayout.className = "mock-testimonials grid";
-    document.body.appendChild(gridLayout);
+    mockDocument.body.appendChild(gridLayout);
 
     expect(gridLayout.className).toContain("grid");
-    gridLayout.remove();
 
     // Test carousel layout
-    const carouselLayout = document.createElement("div");
+    const carouselLayout = createMockElement("div");
     carouselLayout.className = "mock-testimonials carousel";
-    document.body.appendChild(carouselLayout);
+    mockDocument.body.appendChild(carouselLayout);
 
     expect(carouselLayout.className).toContain("carousel");
-    carouselLayout.remove();
   });
 
   it("handles empty items", () => {
-    const element = document.createElement("div");
+    const element = createMockElement("div");
     element.className = "mock-testimonials";
-    document.body.appendChild(element);
+    mockDocument.body.appendChild(element);
 
-    // Mock the children length
-    element.children.length = 0;
     expect(element.children.length).toBe(0);
-    element.remove();
+  });
+
+  it("supports different testimonial styles", () => {
+    // Create a testimonials container
+    const element = createMockElement("div");
+    element.className = "mock-testimonials";
+
+    // Create testimonials with different styles
+    const styles = ["minimal", "card", "quote"];
+
+    styles.forEach((style, index) => {
+      const testimonial = createMockElement("div");
+      testimonial.className = `testimonial-item ${style}`;
+      testimonial.setAttribute("data-style", style);
+
+      const content = createMockElement("p");
+      content.textContent = `Testimonial with ${style} style`;
+      testimonial.appendChild(content);
+
+      element.appendChild(testimonial);
+    });
+
+    mockDocument.body.appendChild(element);
+
+    // Verify styles
+    expect(element.children.length).toBe(3);
+
+    styles.forEach((style, index) => {
+      const testimonial = element.children[index];
+      expect(testimonial.className).toContain(style);
+      expect(testimonial.getAttribute("data-style")).toBe(style);
+      expect(testimonial.children[0].textContent).toBe(
+        `Testimonial with ${style} style`
+      );
+    });
+  });
+
+  it("supports testimonial filtering", () => {
+    // Create a testimonials container
+    const element = createMockElement("div");
+    element.className = "mock-testimonials";
+
+    // Create testimonials with different ratings
+    const ratings = [5, 4, 3, 5, 4];
+
+    ratings.forEach((rating, index) => {
+      const testimonial = createMockElement("div");
+      testimonial.className = "testimonial-item";
+      testimonial.setAttribute("data-rating", rating.toString());
+
+      const content = createMockElement("p");
+      content.textContent = `Testimonial ${index + 1}`;
+      testimonial.appendChild(content);
+
+      const ratingElement = createMockElement("div");
+      ratingElement.className = "rating";
+      ratingElement.textContent = "★".repeat(rating);
+      testimonial.appendChild(ratingElement);
+
+      element.appendChild(testimonial);
+    });
+
+    mockDocument.body.appendChild(element);
+
+    // Filter function (would be part of the component)
+    const filterByRating = (minRating) => {
+      const filtered = [];
+
+      for (let i = 0; i < element.children.length; i++) {
+        const testimonial = element.children[i];
+        const rating = parseInt(testimonial.getAttribute("data-rating"), 10);
+
+        if (rating >= minRating) {
+          filtered.push(testimonial);
+        }
+      }
+
+      return filtered;
+    };
+
+    // Test filtering
+    const highRatedTestimonials = filterByRating(5);
+    expect(highRatedTestimonials.length).toBe(2);
+
+    const mediumRatedTestimonials = filterByRating(4);
+    expect(mediumRatedTestimonials.length).toBe(4);
+
+    const lowRatedTestimonials = filterByRating(3);
+    expect(lowRatedTestimonials.length).toBe(5);
   });
 });

@@ -1,54 +1,57 @@
 import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
+import {
+  createMockElement,
+  createMockShadowRoot,
+} from "../utils/component-mock-utils.js";
 
 // Create a simplified mock for the faq-page component
-class MockFAQPage extends HTMLElement {
+class MockFAQPage {
   constructor() {
-    super();
-    this._shadowRoot = {
-      innerHTML: `
-        <div class="faq-container">
-          <h1>Frequently Asked Questions</h1>
-          <div class="faq-content">
-            <div class="faq-section">
-              <h2>General Questions</h2>
-              <div class="faq-item">
-                <div class="faq-question">What is NeoForge?</div>
-                <div class="faq-answer">NeoForge is a modern web development framework.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `,
-      querySelector: (selector) => {
-        if (selector === "h1") {
-          return { textContent: "Frequently Asked Questions" };
-        } else if (selector === ".faq-section") {
-          return {
-            querySelector: (subSelector) => {
-              if (subSelector === "h2") {
-                return { textContent: "General Questions" };
-              }
-              return null;
-            },
-          };
-        } else if (selector === ".faq-question") {
-          return { textContent: "What is NeoForge?" };
-        } else if (selector === ".faq-answer") {
-          return {
-            textContent: "NeoForge is a modern web development framework.",
-          };
-        } else if (selector === ".faq-container") {
-          return {
-            appendChild: vi.fn(),
-          };
-        } else if (selector === ".loading") {
-          return this._loading ? { textContent: "Loading..." } : null;
-        } else if (selector === ".error") {
-          return this._error ? { textContent: this._errorMessage } : null;
-        }
-        return null;
-      },
-    };
+    // Create a mock shadow DOM
+    this.shadowRoot = createMockShadowRoot();
+
+    // Create the FAQ container
+    this.faqContainer = createMockElement("div");
+    this.faqContainer.className = "faq-container";
+
+    // Create the title
+    this.title = createMockElement("h1");
+    this.title.textContent = "Frequently Asked Questions";
+    this.faqContainer.appendChild(this.title);
+
+    // Create the FAQ content
+    this.faqContent = createMockElement("div");
+    this.faqContent.className = "faq-content";
+    this.faqContainer.appendChild(this.faqContent);
+
+    // Create a FAQ section
+    this.faqSection = createMockElement("div");
+    this.faqSection.className = "faq-section";
+    this.faqContent.appendChild(this.faqSection);
+
+    // Create section title
+    this.sectionTitle = createMockElement("h2");
+    this.sectionTitle.textContent = "General Questions";
+    this.faqSection.appendChild(this.sectionTitle);
+
+    // Create a FAQ item
+    this.faqItem = createMockElement("div");
+    this.faqItem.className = "faq-item";
+    this.faqSection.appendChild(this.faqItem);
+
+    // Create question and answer
+    this.question = createMockElement("div");
+    this.question.className = "faq-question";
+    this.question.textContent = "What is NeoForge?";
+    this.faqItem.appendChild(this.question);
+
+    this.answer = createMockElement("div");
+    this.answer.className = "faq-answer";
+    this.answer.textContent = "NeoForge is a modern web development framework.";
+    this.faqItem.appendChild(this.answer);
+
+    // Add the container to the shadow root
+    this.shadowRoot.appendChild(this.faqContainer);
 
     // Mock properties
     this.faqs = [
@@ -62,40 +65,41 @@ class MockFAQPage extends HTMLElement {
     this._loading = false;
     this._error = false;
     this._errorMessage = "";
+    this.loadingElement = null;
+    this.errorElement = null;
 
     // Mock methods
     this.updateComplete = Promise.resolve(true);
-
-    // Mock document.createElement
-    document.createElement = vi.fn().mockImplementation((tag) => {
-      return {
-        className: "",
-        textContent: "",
-        appendChild: vi.fn(),
-      };
-    });
-  }
-
-  // Getter for shadowRoot
-  get shadowRoot() {
-    return this._shadowRoot;
   }
 
   // Mock methods
   showLoading() {
     this._loading = true;
     this._error = false;
+
+    // Create loading element if it doesn't exist
+    if (!this.loadingElement) {
+      this.loadingElement = createMockElement("div");
+      this.loadingElement.className = "loading";
+      this.loadingElement.textContent = "Loading...";
+      this.faqContainer.appendChild(this.loadingElement);
+    }
   }
 
   showError(message) {
     this._error = true;
     this._errorMessage = message;
     this._loading = false;
+
+    // Create error element if it doesn't exist
+    if (!this.errorElement) {
+      this.errorElement = createMockElement("div");
+      this.errorElement.className = "error";
+      this.errorElement.textContent = message;
+      this.faqContainer.appendChild(this.errorElement);
+    }
   }
 }
-
-// Register the mock component
-customElements.define("faq-page", MockFAQPage);
 
 describe("FAQ Page", () => {
   let element;
@@ -103,16 +107,6 @@ describe("FAQ Page", () => {
   beforeEach(() => {
     // Create the element directly
     element = new MockFAQPage();
-    document.body.appendChild = vi.fn();
-    document.body.appendChild(element);
-  });
-
-  afterEach(() => {
-    if (element && element.parentNode) {
-      document.body.removeChild = vi.fn();
-      element.parentNode.removeChild(element);
-    }
-    vi.restoreAllMocks();
   });
 
   it("should have a shadowRoot", () => {
@@ -120,25 +114,21 @@ describe("FAQ Page", () => {
   });
 
   it("should render the FAQ title", () => {
-    const title = element.shadowRoot.querySelector("h1");
-    expect(title).toBeTruthy();
-    expect(title.textContent).toBe("Frequently Asked Questions");
+    expect(element.title).toBeTruthy();
+    expect(element.title.textContent).toBe("Frequently Asked Questions");
   });
 
   it("should render FAQ sections", () => {
-    const section = element.shadowRoot.querySelector(".faq-section");
-    expect(section).toBeTruthy();
-    expect(section.querySelector("h2").textContent).toBe("General Questions");
+    expect(element.faqSection).toBeTruthy();
+    expect(element.sectionTitle).toBeTruthy();
+    expect(element.sectionTitle.textContent).toBe("General Questions");
   });
 
   it("should display FAQ questions and answers", () => {
-    const question = element.shadowRoot.querySelector(".faq-question");
-    const answer = element.shadowRoot.querySelector(".faq-answer");
-
-    expect(question).toBeTruthy();
-    expect(answer).toBeTruthy();
-    expect(question.textContent).toBe("What is NeoForge?");
-    expect(answer.textContent).toBe(
+    expect(element.question).toBeTruthy();
+    expect(element.answer).toBeTruthy();
+    expect(element.question.textContent).toBe("What is NeoForge?");
+    expect(element.answer.textContent).toBe(
       "NeoForge is a modern web development framework."
     );
   });
@@ -146,25 +136,16 @@ describe("FAQ Page", () => {
   it("should show loading state", () => {
     element.showLoading();
 
-    // Mock the loading state
-    element._loading = true;
-
     // Check if loading element is shown
-    const loading = element.shadowRoot.querySelector(".loading");
-    expect(loading).toBeTruthy();
-    expect(loading.textContent).toBe("Loading...");
+    expect(element.loadingElement).toBeTruthy();
+    expect(element.loadingElement.textContent).toBe("Loading...");
   });
 
   it("should show error state", () => {
     element.showError("Failed to load FAQs");
 
-    // Mock the error state
-    element._error = true;
-    element._errorMessage = "Failed to load FAQs";
-
     // Check if error element is shown
-    const error = element.shadowRoot.querySelector(".error");
-    expect(error).toBeTruthy();
-    expect(error.textContent).toBe("Failed to load FAQs");
+    expect(element.errorElement).toBeTruthy();
+    expect(element.errorElement.textContent).toBe("Failed to load FAQs");
   });
 });

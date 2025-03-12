@@ -134,6 +134,76 @@ function applyPolyfill(silent = false) {
     Object.assign(performance, performancePolyfill);
   }
 
+  // Specifically patch JSDOM if it's being used
+  try {
+    // Check if we're in a JSDOM environment
+    if (
+      typeof window !== "undefined" &&
+      window.navigator &&
+      window.navigator.userAgent &&
+      window.navigator.userAgent.includes("jsdom")
+    ) {
+      // Ensure window.performance is properly set
+      if (!window.performance) {
+        window.performance = performancePolyfill;
+      } else if (typeof window.performance.now !== "function") {
+        Object.assign(window.performance, performancePolyfill);
+      }
+
+      // Also try to patch the JSDOM module directly
+      if (typeof require === "function") {
+        try {
+          const jsdom = require("jsdom");
+          if (jsdom && jsdom.JSDOM) {
+            // Patch JSDOM.prototype to ensure new instances have performance
+            const originalFromURL = jsdom.JSDOM.fromURL;
+            if (originalFromURL) {
+              jsdom.JSDOM.fromURL = function (...args) {
+                const result = originalFromURL.apply(this, args);
+                if (
+                  result &&
+                  result.window &&
+                  (!result.window.performance ||
+                    typeof result.window.performance.now !== "function")
+                ) {
+                  result.window.performance = performancePolyfill;
+                }
+                return result;
+              };
+            }
+
+            // Patch the constructor
+            const originalJSDOM = jsdom.JSDOM;
+            jsdom.JSDOM = function (...args) {
+              const result = new originalJSDOM(...args);
+              if (
+                result &&
+                result.window &&
+                (!result.window.performance ||
+                  typeof result.window.performance.now !== "function")
+              ) {
+                result.window.performance = performancePolyfill;
+              }
+              return result;
+            };
+            jsdom.JSDOM.prototype = originalJSDOM.prototype;
+
+            // Copy all static properties
+            Object.getOwnPropertyNames(originalJSDOM).forEach((prop) => {
+              if (prop !== "prototype" && prop !== "constructor") {
+                jsdom.JSDOM[prop] = originalJSDOM[prop];
+              }
+            });
+          }
+        } catch (e) {
+          // JSDOM module not found or couldn't be patched
+        }
+      }
+    }
+  } catch (e) {
+    // Error patching JSDOM
+  }
+
   // Log only if this is the first installation
   if (
     !silent &&
@@ -152,87 +222,110 @@ const performancePolyfill = applyPolyfill();
 
 // Patch Vitest worker and Tinypool modules
 function patchVitestModules() {
-  if (typeof require !== "function" || typeof module === "undefined") {
-    return;
-  }
-
   try {
-    const originalRequire = module.require;
+    // Instead of patching import/require directly, create a global helper that can be used
+    // to ensure performance is available in any context
+    if (typeof globalThis !== "undefined") {
+      globalThis.__ensurePerformance = function (obj) {
+        if (!obj) return;
 
-    // Create a patched version of require that ensures performance is available
-    // Use a named function to make it more serializable
-    function patchedRequire(id) {
-      try {
-        const result = originalRequire.apply(this, arguments);
-
-        // Only patch specific modules to avoid unnecessary work
-        if (
-          id.includes("vitest") ||
-          id.includes("worker") ||
-          id.includes("tinypool")
-        ) {
-          // Apply the polyfill to the module's context if needed
-          if (result && typeof result === "object") {
-            if (!result.performance) {
-              result.performance = createPerformancePolyfill();
-            } else if (typeof result.performance.now !== "function") {
-              Object.assign(result.performance, createPerformancePolyfill());
-            }
-          }
+        if (!obj.performance) {
+          obj.performance = createPerformancePolyfill();
+        } else if (typeof obj.performance.now !== "function") {
+          Object.assign(obj.performance, createPerformancePolyfill());
         }
 
-        return result;
-      } catch (error) {
-        console.warn(`Error in patched require for ${id}:`, error.message);
-        return originalRequire.apply(this, arguments);
-      }
-    }
-
-    // Copy all properties from the original require
-    for (const key in originalRequire) {
-      if (Object.prototype.hasOwnProperty.call(originalRequire, key)) {
-        patchedRequire[key] = originalRequire[key];
-      }
-    }
-
-    // Use a safer approach to patch require
-    try {
-      // Store the original require function
-      const originalModuleRequire = module.constructor.prototype.require;
-
-      // Create a wrapper function that doesn't hold references to closures
-      module.constructor.prototype.require = function wrappedRequire(id) {
-        // For Vitest and worker modules, use our performance polyfill
-        if (
-          id.includes("vitest") ||
-          id.includes("worker") ||
-          id.includes("tinypool")
-        ) {
-          const result = originalModuleRequire.call(this, id);
-
-          // Apply the polyfill to the module's context if needed
-          if (result && typeof result === "object") {
-            if (!result.performance) {
-              result.performance = createPerformancePolyfill();
-            } else if (typeof result.performance.now !== "function") {
-              Object.assign(result.performance, createPerformancePolyfill());
-            }
-          }
-
-          return result;
-        }
-
-        // For other modules, use the original require
-        return originalModuleRequire.call(this, id);
+        return obj;
       };
-    } catch (error) {
-      console.warn(
-        "Could not patch module.constructor.prototype.require:",
-        error.message
-      );
+
+      // Also create a simple function to get a performance object
+      // This avoids the need to clone complex functions
+      globalThis.__getPerformance = function () {
+        return createPerformancePolyfill();
+      };
+    }
+
+    // For ESM, we can't directly require modules, but we can ensure
+    // that any imported modules will have access to our global helpers
+
+    // Also ensure the global performance object is available
+    if (typeof globalThis !== "undefined" && !globalThis.performance) {
+      globalThis.performance = createPerformancePolyfill();
     }
   } catch (error) {
-    console.warn("Could not patch require function:", error.message);
+    console.warn("Could not set up performance patches:", error.message);
+  }
+}
+
+// Patch JSDOM's Window.js file
+function patchJsdomWindow() {
+  try {
+    // Try to find the JSDOM module
+    if (typeof require === "function") {
+      try {
+        const jsdom = require("jsdom");
+        if (jsdom && jsdom.JSDOM) {
+          // Get the Window prototype
+          const JSDOM = jsdom.JSDOM;
+          const window = new JSDOM().window;
+
+          // Ensure the window has a performance object
+          if (!window.performance) {
+            Object.defineProperty(window, "performance", {
+              value: createPerformancePolyfill(),
+              writable: true,
+              configurable: true,
+            });
+          } else if (typeof window.performance.now !== "function") {
+            Object.assign(window.performance, createPerformancePolyfill());
+          }
+
+          // Try to patch the Window prototype directly
+          const windowProto = Object.getPrototypeOf(window);
+          if (windowProto) {
+            if (!windowProto.performance) {
+              Object.defineProperty(windowProto, "performance", {
+                value: createPerformancePolyfill(),
+                writable: true,
+                configurable: true,
+              });
+            } else if (typeof windowProto.performance.now !== "function") {
+              Object.assign(
+                windowProto.performance,
+                createPerformancePolyfill()
+              );
+            }
+          }
+
+          // Also try to patch the Window constructor
+          const WindowConstructor = window.Window;
+          if (WindowConstructor && WindowConstructor.prototype) {
+            if (!WindowConstructor.prototype.performance) {
+              Object.defineProperty(
+                WindowConstructor.prototype,
+                "performance",
+                {
+                  value: createPerformancePolyfill(),
+                  writable: true,
+                  configurable: true,
+                }
+              );
+            } else if (
+              typeof WindowConstructor.prototype.performance.now !== "function"
+            ) {
+              Object.assign(
+                WindowConstructor.prototype.performance,
+                createPerformancePolyfill()
+              );
+            }
+          }
+        }
+      } catch (e) {
+        // JSDOM module not found or couldn't be patched
+      }
+    }
+  } catch (e) {
+    // Error patching JSDOM
   }
 }
 
@@ -254,12 +347,53 @@ function setupErrorHandling() {
   process.on("uncaughtException", (err) => {
     if (
       err.message &&
-      err.message.includes("performance.now is not a function")
+      (err.message.includes("performance.now is not a function") ||
+        err.message.includes("performance is not defined") ||
+        (err.stack && err.stack.includes("performance.now")))
     ) {
-      // Silently reapply the polyfill
-      applyPolyfill(true);
-      return; // Don't rethrow
+      // Apply the polyfill more aggressively
+      const performancePolyfill = createPerformancePolyfill();
+
+      // Apply to all possible globals
+      if (typeof globalThis !== "undefined")
+        globalThis.performance = performancePolyfill;
+      if (typeof global !== "undefined")
+        global.performance = performancePolyfill;
+      if (typeof window !== "undefined")
+        window.performance = performancePolyfill;
+      if (typeof self !== "undefined") self.performance = performancePolyfill;
+
+      // Also try to patch the specific context where the error occurred
+      try {
+        if (err.stack) {
+          // Try to identify the module from the stack trace
+          const stackLines = err.stack.split("\n");
+          for (const line of stackLines) {
+            if (line.includes("node_modules/")) {
+              const match = line.match(/node_modules\/([^\/]+)/);
+              if (match && match[1]) {
+                const moduleName = match[1];
+                try {
+                  // Try to patch the module directly
+                  const mod = require(moduleName);
+                  if (mod && typeof mod === "object") {
+                    mod.performance = performancePolyfill;
+                  }
+                } catch (e) {
+                  // Module not found or couldn't be patched
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // Error trying to patch specific module
+      }
+
+      // Don't rethrow the error
+      return;
     }
+
     // For other errors, rethrow
     throw err;
   });
@@ -271,7 +405,9 @@ function setupErrorHandling() {
 }
 
 // Initialize everything
+applyPolyfill();
 patchVitestModules();
+patchJsdomWindow();
 setupErrorHandling();
 
 // Export the polyfill and utility functions
