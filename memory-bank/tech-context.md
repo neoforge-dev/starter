@@ -268,4 +268,160 @@ httpx==0.24.0
 - **vitest**: Testing framework
 - **@vitest/coverage-c8**: Coverage reporting
 - **eslint**: Linting
-- **prettier**: Code formatting 
+- **prettier**: Code formatting
+
+## Testing Tools
+
+### Vitest
+
+We use Vitest as our testing framework. Vitest is a fast and lightweight testing framework that is compatible with the Jest API. It provides a modern testing experience with features like:
+
+- Fast test execution with parallel runs
+- Watch mode for development
+- Code coverage reporting
+- Snapshot testing
+- Mocking capabilities
+
+### Testing Utilities
+
+We've created several custom testing utilities to make testing our web components easier and more reliable:
+
+#### Component Mock Utilities
+
+Located in `src/test/utils/component-mock-utils.js`, these utilities provide a standardized approach for mocking components with CDN imports:
+
+- `createMockComponent`: Creates a mock component class with specified properties and methods
+- `createMockShadowRoot`: Creates a mock shadow root for testing
+- `createMockClassList`: Creates a mock class list for testing
+- `createMockFixture`: Creates a mock fixture function for testing
+- `registerMockComponent`: Registers a mock component with the custom elements registry
+- `createAndRegisterMockComponent`: Creates and registers a mock component in one step
+
+#### Performance Polyfill
+
+Located in `src/test/setup/performance-polyfill.js`, this utility provides a polyfill for the Performance API, which is used in our performance tests. The polyfill is optimized to reduce redundant installations and improve test performance.
+
+#### Package Patches
+
+Located in `src/test/setup/package-patches.js`, these utilities patch third-party packages to fix issues and improve compatibility:
+
+- `patchSemanticDomDiff`: Fixes the deprecation warning about missing "main" or "exports" field in the @open-wc/semantic-dom-diff package
+- `silenceLitDevModeWarning`: Silences the Lit dev mode warning by patching the reactive-element.js file
+
+### Test Configuration
+
+Our Vitest configuration is located in `vitest.config.js`. It includes:
+
+- Setup files for the test environment
+- Worker configuration for parallel test execution
+- Custom reporter for handling errors
+- Coverage configuration
+- Environment variables
+
+We've optimized our test configuration to improve performance and reliability:
+
+- Consolidated polyfills to reduce redundant installations
+- Silenced warnings to reduce noise in the test output
+- Handled unhandled errors to prevent false positives
+- Increased the MaxListeners limit to eliminate warnings
+
+### Test Documentation
+
+We've created comprehensive documentation for our testing approach, including:
+
+- **Usage Examples**: Examples of how to use our testing utilities
+- **Best Practices**: Best practices for testing web components
+- **Common Issues**: Common issues and solutions when testing web components
+- **Performance Testing**: Guidelines for performance testing web components
+
+This documentation is available in the `frontend/docs/testing` directory.
+
+## Development Setup
+
+### Prerequisites
+
+- Node.js 16.x or higher
+- npm 8.x or higher
+- Git
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-org/neoforge.git
+   cd neoforge
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Run tests:
+   ```bash
+   npm test
+   ```
+
+### Development Workflow
+
+1. Create a new branch for your feature or bug fix:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. Make your changes and commit them:
+   ```bash
+   git add .
+   git commit -m "Your commit message"
+   ```
+
+3. Push your changes to the remote repository:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+4. Create a pull request on GitHub.
+
+5. Wait for the CI/CD pipeline to run tests and build the application.
+
+6. Once the pull request is approved and merged, the changes will be deployed to the staging environment.
+
+## Technical Constraints
+
+- **Browser Compatibility**: We support the latest versions of Chrome, Firefox, Safari, and Edge.
+- **Accessibility**: All components must meet WCAG 2.1 AA standards.
+- **Performance**: All components must meet our performance budgets for rendering time, memory usage, style recalculations, and paint metrics.
+- **Security**: All components must follow security best practices, including input validation, output encoding, and protection against common vulnerabilities.
+- **Testing**: All components must have comprehensive tests, including unit tests, integration tests, and performance tests.
+
+## Dependencies
+
+### Frontend Dependencies
+
+- **Lit**: A lightweight library for building web components
+- **TypeScript**: A typed superset of JavaScript
+- **Vite**: A fast build tool for modern web applications
+- **Vitest**: A fast and lightweight testing framework
+- **ESLint**: A tool for identifying and reporting on patterns in JavaScript
+- **Prettier**: An opinionated code formatter
+- **Husky**: A tool for running scripts before commits
+- **lint-staged**: A tool for running linters on staged files
+- **@open-wc/testing**: A testing library for web components
+- **@open-wc/semantic-dom-diff**: A library for comparing DOM trees
+- **@web/test-runner**: A test runner for web components
+
+### Development Dependencies
+
+- **TypeScript**: A typed superset of JavaScript
+- **Vite**: A fast build tool for modern web applications
+- **Vitest**: A fast and lightweight testing framework
+- **ESLint**: A tool for identifying and reporting on patterns in JavaScript
+- **Prettier**: An opinionated code formatter
+- **Husky**: A tool for running scripts before commits
+- **lint-staged**: A tool for running linters on staged files
+- **@web/dev-server**: A development server for web components 
