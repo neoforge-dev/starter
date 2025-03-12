@@ -1,8 +1,4 @@
 import { expect, describe, it, beforeEach, vi } from "vitest";
-import { fixture, html } from "@open-wc/testing-helpers";
-import { oneEvent, TestUtils } from "../setup.mjs";
-import { html as litHtml } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import "../../pages/search-page.js";
 
 /**
  * Mock for the SearchPage component
