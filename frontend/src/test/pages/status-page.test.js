@@ -1,5 +1,4 @@
-import { expect } from "vitest";
-import { vi } from "vitest";
+import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
 
 // Create a simplified mock for the status-page component using pure JavaScript
 class MockCustomEvent {

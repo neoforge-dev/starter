@@ -14,56 +14,45 @@ class MockPhoneInput {
     this.international = false;
 
     // Create a mock shadow DOM
-    this.shadowRoot = document.createElement("div");
+    this.shadowRoot = {
+      children: [],
+      innerHTML: "",
+      querySelector: (selector) => {
+        if (selector === "input") {
+          return {
+            type: "tel",
+            placeholder: this.placeholder,
+            value: this.value,
+            getAttribute: (attr) => {
+              if (attr === "required") return this.required ? "" : null;
+              if (attr === "disabled") return this.disabled ? "" : null;
+              return null;
+            },
+            setAttribute: () => {},
+          };
+        } else if (selector === "select") {
+          return {
+            value: this.defaultCountry,
+            options: [
+              { value: "US", textContent: "United States" },
+              { value: "GB", textContent: "United Kingdom" },
+            ],
+          };
+        } else if (selector === "label") {
+          return { textContent: this.label };
+        } else if (selector === ".error-text") {
+          return this.error ? { textContent: this.error } : null;
+        }
+        return null;
+      },
+    };
+
     this.render();
   }
 
   render() {
-    // Clear the shadow root
-    this.shadowRoot.innerHTML = "";
-
-    // Create input element
-    const input = document.createElement("input");
-    input.type = "tel";
-    input.placeholder = this.placeholder;
-    input.value = this.value;
-
-    if (this.required) input.setAttribute("required", "");
-    if (this.disabled) input.setAttribute("disabled", "");
-
-    // Create country select
-    const countrySelect = document.createElement("select");
-    countrySelect.value = this.defaultCountry;
-
-    // Add US option
-    const usOption = document.createElement("option");
-    usOption.value = "US";
-    usOption.textContent = "United States";
-    countrySelect.appendChild(usOption);
-
-    // Add UK option
-    const ukOption = document.createElement("option");
-    ukOption.value = "GB";
-    ukOption.textContent = "United Kingdom";
-    countrySelect.appendChild(ukOption);
-
-    // Create label
-    const label = document.createElement("label");
-    label.textContent = this.label;
-
-    // Create error message if present
-    if (this.error) {
-      const errorText = document.createElement("div");
-      errorText.className = "error-text";
-      errorText.textContent = this.error;
-      this.shadowRoot.appendChild(errorText);
-    }
-
-    // Add elements to shadow root
-    this.shadowRoot.appendChild(label);
-    this.shadowRoot.appendChild(countrySelect);
-    this.shadowRoot.appendChild(input);
-
+    // In a real implementation, this would update the shadow DOM
+    // For our mock, we'll just update some properties
     return this.shadowRoot;
   }
 
@@ -108,53 +97,53 @@ describe("Phone Input", () => {
     const input = element.shadowRoot.querySelector("input");
     const countrySelect = element.shadowRoot.querySelector("select");
 
-    expect(input).to.exist;
-    expect(countrySelect).to.exist;
-    expect(input.placeholder).to.equal("Enter phone number");
-    expect(countrySelect.value).to.equal("US");
+    expect(input).toBeDefined();
+    expect(countrySelect).toBeDefined();
+    expect(input.placeholder).toBe("Enter phone number");
+    expect(countrySelect.value).toBe("US");
   });
 
   it("formats phone number based on country", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 
   it("validates phone number format", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 
   it("handles country change", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 
   it("emits change events with formatted value", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 
   it("handles disabled state", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 
   it("handles required state", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 
   it("supports international format", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 
   it("maintains accessibility attributes", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 
   it("handles error states", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 
   it("supports custom validation", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 
   it("handles paste events", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 });

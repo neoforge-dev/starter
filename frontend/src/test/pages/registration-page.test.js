@@ -1,4 +1,4 @@
-import { expect } from "vitest";
+import { expect, describe, it, beforeEach } from "vitest";
 
 // Mock RegistrationPage component instead of importing it directly
 // This avoids the ESM URL scheme errors from CDN imports

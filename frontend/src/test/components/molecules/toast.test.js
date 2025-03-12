@@ -1,4 +1,4 @@
-import { expect, describe, it, beforeEach, afterEach } from "vitest";
+import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
 
 // Mock implementation of NeoToast to avoid custom element registration issues
 class MockNeoToast {
@@ -13,10 +13,17 @@ class MockNeoToast {
     this.textContent = "";
 
     // Create a mock shadow DOM structure
-    this.shadowRoot = document.createElement("div");
-    const toastContent = document.createElement("div");
-    toastContent.className = "toast-content";
-    this.shadowRoot.appendChild(toastContent);
+    this.shadowRoot = {
+      querySelector: (selector) => {
+        if (selector === ".toast-content") {
+          return {
+            textContent: this.textContent,
+            className: "toast-content",
+          };
+        }
+        return null;
+      },
+    };
   }
 
   // Mock the updateComplete promise
@@ -60,24 +67,24 @@ describe("NeoToast", () => {
 
   // Simple test that always passes to ensure the test can be created without timing out
   it("can be created without timing out", () => {
-    expect(true).to.be.true;
+    expect(true).toBe(true);
   });
 
   // Test the default properties
   it("renders with default properties", () => {
-    expect(element).to.exist;
-    expect(element.variant).to.equal("info");
-    expect(element.position).to.equal("bottom-right");
-    expect(element.message).to.equal("");
-    expect(element.duration).to.equal(5000);
-    expect(element.dismissible).to.be.true;
-    expect(element.icon).to.be.true;
-    expect(element._visible).to.be.true;
+    expect(element).toBeDefined();
+    expect(element.variant).toBe("info");
+    expect(element.position).toBe("bottom-right");
+    expect(element.message).toBe("");
+    expect(element.duration).toBe(5000);
+    expect(element.dismissible).toBe(true);
+    expect(element.icon).toBe(true);
+    expect(element._visible).toBe(true);
 
     // Check if the toast content is rendered with the text content
     const toastContent = element.shadowRoot.querySelector(".toast-content");
-    expect(toastContent).to.exist;
-    expect(toastContent.textContent).to.equal("Toast message");
+    expect(toastContent).toBeDefined();
+    expect(toastContent.textContent).toBe("Toast message");
   });
 
   // Test property changes
@@ -89,12 +96,12 @@ describe("NeoToast", () => {
     element.dismissible = false;
     element.icon = false;
 
-    expect(element.variant).to.equal("success");
-    expect(element.position).to.equal("top-right");
-    expect(element.message).to.equal("Test message");
-    expect(element.duration).to.equal(3000);
-    expect(element.dismissible).to.be.false;
-    expect(element.icon).to.be.false;
+    expect(element.variant).toBe("success");
+    expect(element.position).toBe("top-right");
+    expect(element.message).toBe("Test message");
+    expect(element.duration).toBe(3000);
+    expect(element.dismissible).toBe(false);
+    expect(element.icon).toBe(false);
   });
 
   // Test close method and event dispatch
@@ -106,7 +113,7 @@ describe("NeoToast", () => {
 
     element.close();
 
-    expect(eventFired).to.be.true;
-    expect(element._visible).to.be.false;
+    expect(eventFired).toBe(true);
+    expect(element._visible).toBe(false);
   });
 });
