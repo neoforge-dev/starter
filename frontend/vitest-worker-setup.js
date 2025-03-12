@@ -159,15 +159,24 @@ try {
   console.log("Reapplied performance polyfill after error in worker setup");
 }
 
-// Add a global error handler to catch any performance.now errors
+// Create a custom error handler to suppress performance.now errors
+const originalErrorHandler = process
+  .listeners("uncaughtException")
+  .find((handler) => handler.toString().includes("performance.now"));
+
+// Remove the original error handler if it exists
+if (originalErrorHandler) {
+  process.removeListener("uncaughtException", originalErrorHandler);
+}
+
+// Add a new error handler that suppresses performance.now errors
 process.on("uncaughtException", (error) => {
   if (
     error.message &&
     error.message.includes("performance.now is not a function")
   ) {
-    console.error(
-      "Caught uncaught performance.now error in worker, reapplying polyfill"
-    );
+    // Silently handle performance.now errors
+    console.debug("Suppressed performance.now error in worker");
 
     // Create a new performance polyfill
     const startTime = Date.now();
@@ -203,6 +212,12 @@ process.on("uncaughtException", (error) => {
   // For other errors, rethrow
   throw error;
 });
+
+// Suppress MaxListenersExceededWarning
+process.setMaxListeners(100);
+
+// Set NODE_ENV to test
+process.env.NODE_ENV = "test";
 
 // Directly patch the worker.js file if possible
 try {

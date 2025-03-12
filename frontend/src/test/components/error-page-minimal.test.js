@@ -1,5 +1,13 @@
 import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
-import { ErrorType } from "../../services/error-service.js";
+
+// Mock ErrorType enum
+const ErrorType = {
+  VALIDATION: "validation",
+  NETWORK: "network",
+  AUTH: "auth",
+  API: "api",
+  UNKNOWN: "unknown",
+};
 
 // Mock the ErrorPage component
 class MockErrorPage {

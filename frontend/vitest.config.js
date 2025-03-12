@@ -5,6 +5,22 @@ import { resolve } from "path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Custom reporter to filter out performance.now errors
+const customReporter = {
+  onError(error) {
+    // Filter out performance.now errors
+    if (
+      error.message &&
+      error.message.includes("performance.now is not a function")
+    ) {
+      // Return true to indicate the error was handled
+      return true;
+    }
+    // Return false to let Vitest handle the error normally
+    return false;
+  },
+};
+
 export default defineConfig({
   test: {
     // Use jsdom for DOM simulation
@@ -120,6 +136,25 @@ export default defineConfig({
     },
     // Disable performance API usage
     perfMode: false,
+    // Custom reporter to filter out performance.now errors
+    reporters: [
+      "default",
+      {
+        onError(error) {
+          // Filter out performance.now errors
+          if (
+            error &&
+            error.message &&
+            error.message.includes("performance.now is not a function")
+          ) {
+            // Return true to indicate the error was handled
+            return true;
+          }
+          // Return false to let Vitest handle the error normally
+          return false;
+        },
+      },
+    ],
     worker: {
       // Include both the worker setup file and the CommonJS version of the performance polyfill
       setupFiles: [

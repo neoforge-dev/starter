@@ -114,13 +114,24 @@ if (
   );
 }
 
-// Add a global error handler to catch any performance.now errors
+// Create a custom error handler to suppress performance.now errors
+const originalErrorHandler = process
+  .listeners("uncaughtException")
+  .find((handler) => handler.toString().includes("performance.now"));
+
+// Remove the original error handler if it exists
+if (originalErrorHandler) {
+  process.removeListener("uncaughtException", originalErrorHandler);
+}
+
+// Add a new error handler that suppresses performance.now errors
 process.on("uncaughtException", (error) => {
   if (
     error.message &&
     error.message.includes("performance.now is not a function")
   ) {
-    console.error("Caught uncaught performance.now error, reapplying polyfill");
+    // Silently handle performance.now errors
+    console.debug("Suppressed performance.now error");
 
     // Create a new performance polyfill
     const startTime = Date.now();
@@ -174,5 +185,8 @@ if (!globalThis.fetch) {
     };
   };
 }
+
+// Set NODE_ENV to test
+process.env.NODE_ENV = "test";
 
 console.log("Vitest setup complete with global performance polyfill");

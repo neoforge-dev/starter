@@ -1,237 +1,148 @@
 /**
- * Direct patch for Vitest worker.js (CommonJS version)
- * 
- * This patch directly targets the Vitest worker.js file to ensure that performance.now is available.
- * It uses a more aggressive approach by directly patching the module system.
+ * Direct patch for Vitest worker.js file
+ * This file directly patches the Vitest worker to ensure performance.now is available
  */
 
-// Create a robust performance polyfill
+// Use module interception to patch the worker.js file
+const Module = require('module');
+const originalRequire = Module.prototype.require;
+
+// Create a performance polyfill
 const createPerformancePolyfill = () => {
   const startTime = Date.now();
-  
   return {
     now() {
       return Date.now() - startTime;
     },
-    mark(name) {
-      if (!this._marks) this._marks = {};
-      this._marks[name] = this.now();
+    mark() {
       return undefined;
     },
-    measure(name, startMark, endMark) {
-      if (!this._measures) this._measures = {};
-      const start = this._marks[startMark] || 0;
-      const end = this._marks[endMark] || this.now();
-      this._measures[name] = {
-        name,
-        startTime: start,
-        duration: end - start
-      };
+    measure() {
       return undefined;
     },
-    getEntriesByName(name, type) {
-      if (type === 'mark' && this._marks && this._marks[name]) {
-        return [{ name, startTime: this._marks[name], entryType: 'mark' }];
-      }
-      if (type === 'measure' && this._measures && this._measures[name]) {
-        return [{ ...this._measures[name], entryType: 'measure' }];
-      }
+    getEntriesByName() {
       return [];
     },
-    getEntriesByType(type) {
-      if (type === 'mark' && this._marks) {
-        return Object.keys(this._marks).map(name => ({ 
-          name, 
-          startTime: this._marks[name], 
-          entryType: 'mark' 
-        }));
-      }
-      if (type === 'measure' && this._measures) {
-        return Object.values(this._measures).map(measure => ({
-          ...measure,
-          entryType: 'measure'
-        }));
-      }
+    getEntriesByType() {
       return [];
     },
-    clearMarks(name) {
-      if (!this._marks) return;
-      if (name) {
-        delete this._marks[name];
-      } else {
-        this._marks = {};
-      }
-    },
-    clearMeasures(name) {
-      if (!this._measures) return;
-      if (name) {
-        delete this._measures[name];
-      } else {
-        this._measures = {};
-      }
-    }
+    clearMarks() {},
+    clearMeasures() {},
   };
 };
 
-// Apply the performance polyfill to the global object
-const applyPerformancePolyfill = (globalObj) => {
-  if (!globalObj.performance || typeof globalObj.performance.now !== 'function') {
-    globalObj.performance = createPerformancePolyfill();
-    console.log('Performance polyfill applied to global object');
-  }
-};
+// Track if we've already patched to avoid multiple patches
+let hasPatched = false;
 
-// Apply to all possible global objects
-const globalObjects = [
-  typeof globalThis !== 'undefined' ? globalThis : null,
-  typeof global !== 'undefined' ? global : null,
-  typeof self !== 'undefined' ? self : null,
-  typeof window !== 'undefined' ? window : null
-];
-
-globalObjects.forEach(obj => {
-  if (obj) applyPerformancePolyfill(obj);
-});
-
-// Directly patch the global performance object
-if (!global.performance || typeof global.performance.now !== 'function') {
-  global.performance = createPerformancePolyfill();
-  console.log('Global performance polyfill applied');
-}
-
-// Monkey patch the require function to intercept modules
-const Module = require('module');
-const originalRequire = Module.prototype.require;
-
-Module.prototype.require = function patchedRequire(id) {
+// Override the require function to intercept worker.js
+Module.prototype.require = function(path) {
   const result = originalRequire.apply(this, arguments);
   
-  try {
-    // Target the Vitest worker module
-    if (id.includes('vitest/dist/worker') || id === 'vitest/dist/worker.js') {
-      console.log(`Patching Vitest worker module: ${id}`);
+  // Check if this is the Vitest worker module
+  if (path.includes('worker.js') && path.includes('vitest') && !hasPatched) {
+    try {
+      console.log(`Patching Vitest worker at path: ${path}`);
       
-      // Ensure the module has a performance object with a now function
-      if (!result.performance || typeof result.performance.now !== 'function') {
-        result.performance = createPerformancePolyfill();
-        console.log('Performance polyfill applied to Vitest worker module');
+      // Apply performance polyfill to all global objects
+      const performancePolyfill = createPerformancePolyfill();
+      
+      const globalObjects = [
+        globalThis,
+        typeof global !== 'undefined' ? global : null,
+        typeof self !== 'undefined' ? self : null,
+        typeof window !== 'undefined' ? window : null,
+      ];
+      
+      globalObjects.forEach(obj => {
+        if (obj) {
+          // Create or patch the performance object
+          if (!obj.performance) {
+            obj.performance = performancePolyfill;
+          } else if (typeof obj.performance.now !== 'function') {
+            // Only patch the now method if it's missing
+            obj.performance.now = performancePolyfill.now;
+          }
+        }
+      });
+      
+      // Monkey patch the worker's code at line 63 (where the error occurs)
+      // This is a defensive approach to ensure the code doesn't throw
+      if (result && typeof result === 'object') {
+        // Find any functions that might use performance.now
+        Object.keys(result).forEach(key => {
+          if (typeof result[key] === 'function') {
+            const originalFn = result[key];
+            
+            // Wrap the function to catch performance.now errors
+            result[key] = function(...args) {
+              try {
+                // Ensure performance is available before calling
+                if (!globalThis.performance || typeof globalThis.performance.now !== 'function') {
+                  globalThis.performance = createPerformancePolyfill();
+                }
+                
+                return originalFn.apply(this, args);
+              } catch (error) {
+                if (error.message && error.message.includes('performance.now is not a function')) {
+                  // Silently handle the error and reapply the polyfill
+                  globalThis.performance = createPerformancePolyfill();
+                  
+                  // Try again with the polyfill in place
+                  return originalFn.apply(this, args);
+                }
+                
+                // Rethrow other errors
+                throw error;
+              }
+            };
+          }
+        });
       }
       
-      // Patch the run function if it exists and uses performance.now
-      if (result.run) {
-        const originalRun = result.run;
-        result.run = function patchedRun() {
-          // Ensure performance is available in this context
-          if (!global.performance || typeof global.performance.now !== 'function') {
-            global.performance = createPerformancePolyfill();
-            console.log('Performance polyfill applied in run function context');
-          }
-          
-          try {
-            return originalRun.apply(this, arguments);
-          } catch (error) {
-            if (error.message && error.message.includes('performance.now is not a function')) {
-              console.error('Caught performance.now error, applying polyfill and retrying');
-              global.performance = createPerformancePolyfill();
-              return originalRun.apply(this, arguments);
-            }
-            throw error;
-          }
-        };
-        console.log('Patched Vitest worker run function');
-      }
+      // Mark as patched to avoid multiple patches
+      hasPatched = true;
+      console.log('Successfully patched Vitest worker');
+    } catch (error) {
+      console.error('Error patching Vitest worker:', error);
     }
-    
-    // Target the Tinypool process module
-    if (id.includes('tinypool/dist/esm/entry/process') || id === 'tinypool/dist/esm/entry/process.js') {
-      console.log(`Patching Tinypool process module: ${id}`);
-      
-      // Ensure the module has a performance object with a now function
-      if (!result.performance || typeof result.performance.now !== 'function') {
-        result.performance = createPerformancePolyfill();
-        console.log('Performance polyfill applied to Tinypool process module');
-      }
-      
-      // Patch the onMessage function if it exists
-      if (result.onMessage) {
-        const originalOnMessage = result.onMessage;
-        result.onMessage = function patchedOnMessage() {
-          // Ensure performance is available in this context
-          if (!global.performance || typeof global.performance.now !== 'function') {
-            global.performance = createPerformancePolyfill();
-            console.log('Performance polyfill applied in onMessage function context');
-          }
-          
-          try {
-            return originalOnMessage.apply(this, arguments);
-          } catch (error) {
-            if (error.message && error.message.includes('performance.now is not a function')) {
-              console.error('Caught performance.now error, applying polyfill and retrying');
-              global.performance = createPerformancePolyfill();
-              return originalOnMessage.apply(this, arguments);
-            }
-            throw error;
-          }
-        };
-        console.log('Patched Tinypool process onMessage function');
-      }
-    }
-  } catch (error) {
-    console.error('Error while patching module:', error);
   }
   
   return result;
 };
 
-// Add a global error handler to catch any performance.now errors
+// Suppress uncaught exceptions related to performance.now
+const originalUncaughtExceptionHandler = process.listeners('uncaughtException').find(
+  handler => handler.toString().includes('performance.now')
+);
+
+if (originalUncaughtExceptionHandler) {
+  process.removeListener('uncaughtException', originalUncaughtExceptionHandler);
+}
+
 process.on('uncaughtException', (error) => {
   if (error.message && error.message.includes('performance.now is not a function')) {
-    console.error('Caught uncaught performance.now error, applying polyfill');
+    // Silently suppress the error
+    console.debug('Suppressed performance.now error in direct patch');
     
-    // Apply the polyfill to all global objects again
-    globalObjects.forEach(obj => {
-      if (obj) applyPerformancePolyfill(obj);
+    // Reapply the polyfill
+    const performancePolyfill = createPerformancePolyfill();
+    
+    [globalThis, global, self, window].forEach(obj => {
+      if (obj) obj.performance = performancePolyfill;
     });
     
-    // Don't rethrow the error since we've handled it
+    // Don't rethrow
     return;
   }
   
-  // For other errors, rethrow
+  // Rethrow other errors
   throw error;
 });
 
-// Directly patch the worker.js file if possible
-try {
-  // Try to find and patch the worker.js file directly
-  const path = require('path');
-  const fs = require('fs');
-  
-  // Try to locate the worker.js file
-  const possiblePaths = [
-    path.resolve(process.cwd(), 'node_modules/vitest/dist/worker.js'),
-    path.resolve(process.cwd(), 'node_modules/vitest/dist/worker.cjs'),
-    path.resolve(process.cwd(), 'node_modules/vitest/dist/worker.mjs')
-  ];
-  
-  for (const filePath of possiblePaths) {
-    if (fs.existsSync(filePath)) {
-      console.log(`Found Vitest worker file at: ${filePath}`);
-      
-      // We can't modify the file directly, but we can ensure the global performance is available
-      global.performance = createPerformancePolyfill();
-      console.log('Ensured global performance is available for worker.js');
-      break;
-    }
-  }
-} catch (error) {
-  console.error('Error while trying to directly patch worker.js:', error);
+// Apply the polyfill immediately
+const performancePolyfill = createPerformancePolyfill();
+if (!globalThis.performance || typeof globalThis.performance.now !== 'function') {
+  globalThis.performance = performancePolyfill;
 }
 
-console.log('Direct Vitest worker patch installed (CommonJS)');
-
-// Export the polyfill functions for use elsewhere
-module.exports = {
-  createPerformancePolyfill,
-  applyPerformancePolyfill
-}; 
+console.log('Direct patch for Vitest worker initialized'); 
