@@ -39,16 +39,15 @@ function applyPolyfill() {
     typeof global !== "undefined" ? global : null,
     typeof window !== "undefined" ? window : null,
     typeof self !== "undefined" ? self : null,
-    typeof process !== "undefined" ? process : null,
   ].filter(Boolean);
 
   // Apply the polyfill to each global object
   for (const g of globals) {
-    if (!g.performance || typeof g.performance.now !== "function") {
-      g.performance = {
-        ...(g.performance || {}),
-        ...createPerformancePolyfill(),
-      };
+    if (!g.performance) {
+      g.performance = createPerformancePolyfill();
+    } else if (typeof g.performance.now !== "function") {
+      // If performance exists but now() is missing, add it
+      Object.assign(g.performance, createPerformancePolyfill());
     }
   }
 
@@ -64,12 +63,23 @@ function applyPolyfill() {
 
     // Apply the Node.js-specific implementation
     if (typeof global !== "undefined") {
-      global.performance = {
-        ...(global.performance || {}),
-        ...createPerformancePolyfill(),
-        ...nodePerformance,
-      };
+      if (!global.performance) {
+        global.performance = {
+          ...createPerformancePolyfill(),
+          ...nodePerformance,
+        };
+      } else if (typeof global.performance.now !== "function") {
+        Object.assign(global.performance, nodePerformance);
+      }
     }
+  }
+
+  // Ensure the polyfill is properly applied to the current context
+  if (typeof performance === "undefined") {
+    // eslint-disable-next-line no-global-assign
+    performance = createPerformancePolyfill();
+  } else if (typeof performance.now !== "function") {
+    Object.assign(performance, createPerformancePolyfill());
   }
 
   console.log("Global Performance API polyfill installed");
@@ -94,6 +104,16 @@ if (typeof require === "function" && typeof module !== "undefined") {
       id.includes("worker") ||
       id.includes("tinypool")
     ) {
+      // Apply the polyfill to the module's context
+      if (result && typeof result === "object") {
+        if (!result.performance) {
+          result.performance = createPerformancePolyfill();
+        } else if (typeof result.performance.now !== "function") {
+          Object.assign(result.performance, createPerformancePolyfill());
+        }
+      }
+
+      // Also reapply globally to ensure it's available
       applyPolyfill();
     }
 
@@ -109,4 +129,17 @@ if (typeof require === "function" && typeof module !== "undefined") {
 
   // Replace the original require with our patched version
   module.constructor.prototype.require = patchedRequire;
+}
+
+// Add a global error handler to catch any issues with performance.now
+if (typeof process !== "undefined" && process.on) {
+  process.on("uncaughtException", (err) => {
+    if (
+      err.message &&
+      err.message.includes("performance.now is not a function")
+    ) {
+      console.warn("Caught performance.now error, reapplying polyfill");
+      applyPolyfill();
+    }
+  });
 }

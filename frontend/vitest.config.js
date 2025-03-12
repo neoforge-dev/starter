@@ -21,8 +21,10 @@ export default defineConfig({
     },
     // Setup files to run before tests
     setupFiles: [
-      "./vitest.setup.js",
       "./src/test/setup/global-performance-polyfill.js",
+      "./src/test/setup/worker-performance-polyfill.js",
+      "./src/test/setup/direct-patch-vitest-worker.js",
+      "./vitest.setup.js",
     ],
     // Include these extensions in test files
     include: ["src/test/**/*.test.{js,mjs}"],
@@ -121,8 +123,10 @@ export default defineConfig({
     worker: {
       // Include both the worker setup file and the CommonJS version of the performance polyfill
       setupFiles: [
-        "./vitest-worker-setup.js",
         "./src/test/setup/global-performance-polyfill.cjs",
+        "./src/test/setup/worker-performance-polyfill.cjs",
+        "./src/test/setup/direct-patch-vitest-worker.cjs",
+        "./vitest-worker-setup.js",
       ],
     },
   },

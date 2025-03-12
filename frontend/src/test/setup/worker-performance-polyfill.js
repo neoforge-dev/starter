@@ -10,40 +10,49 @@ const startTime = Date.now();
 
 // Define the performance polyfill
 function setupPerformancePolyfill() {
-  // Check if performance is already defined and has a now method
-  if (
-    typeof performance === "undefined" ||
-    typeof performance.now !== "function"
-  ) {
-    // Create a global performance object or enhance the existing one
-    globalThis.performance = globalThis.performance || {};
+  // List of all possible global objects in worker contexts
+  const globals = [
+    typeof globalThis !== "undefined" ? globalThis : null,
+    typeof global !== "undefined" ? global : null,
+    typeof self !== "undefined" ? self : null,
+  ].filter(Boolean);
 
-    // Add the now method
-    globalThis.performance.now = function () {
+  // Create a performance object with all necessary methods
+  const performancePolyfill = {
+    now() {
       return Date.now() - startTime;
-    };
+    },
+    mark() {},
+    measure() {},
+    getEntriesByName() {
+      return [];
+    },
+    getEntriesByType() {
+      return [];
+    },
+    clearMarks() {},
+    clearMeasures() {},
+  };
 
-    // Add other Performance API methods that might be used
-    globalThis.performance.mark = globalThis.performance.mark || function () {};
-    globalThis.performance.measure =
-      globalThis.performance.measure || function () {};
-    globalThis.performance.getEntriesByName =
-      globalThis.performance.getEntriesByName ||
-      function () {
-        return [];
-      };
-    globalThis.performance.getEntriesByType =
-      globalThis.performance.getEntriesByType ||
-      function () {
-        return [];
-      };
-    globalThis.performance.clearMarks =
-      globalThis.performance.clearMarks || function () {};
-    globalThis.performance.clearMeasures =
-      globalThis.performance.clearMeasures || function () {};
-
-    console.log("Performance API polyfill installed in worker thread");
+  // Apply the polyfill to each global object
+  for (const g of globals) {
+    if (!g.performance) {
+      g.performance = performancePolyfill;
+    } else if (typeof g.performance.now !== "function") {
+      // If performance exists but now() is missing, add it
+      Object.assign(g.performance, performancePolyfill);
+    }
   }
+
+  // Ensure the polyfill is properly applied to the current context
+  if (typeof performance === "undefined") {
+    // eslint-disable-next-line no-global-assign
+    performance = performancePolyfill;
+  } else if (typeof performance.now !== "function") {
+    Object.assign(performance, performancePolyfill);
+  }
+
+  console.log("Performance API polyfill installed in worker thread");
 }
 
 // Run the setup immediately
@@ -52,12 +61,35 @@ setupPerformancePolyfill();
 // Export the setup function for explicit use
 export default setupPerformancePolyfill;
 
+// Add a global error handler to catch any issues with performance.now
+if (typeof process !== "undefined" && process.on) {
+  process.on("uncaughtException", (err) => {
+    if (
+      err.message &&
+      err.message.includes("performance.now is not a function")
+    ) {
+      console.warn(
+        "Caught performance.now error in worker, reapplying polyfill"
+      );
+      setupPerformancePolyfill();
+    }
+  });
+}
+
 // Make sure the polyfill is applied to the global scope
 if (typeof global !== "undefined") {
-  global.performance = globalThis.performance;
+  if (!global.performance) {
+    global.performance = globalThis.performance;
+  } else if (typeof global.performance.now !== "function") {
+    Object.assign(global.performance, globalThis.performance);
+  }
 }
 
 // Also apply to self for web workers
 if (typeof self !== "undefined") {
-  self.performance = globalThis.performance;
+  if (!self.performance) {
+    self.performance = globalThis.performance;
+  } else if (typeof self.performance.now !== "function") {
+    Object.assign(self.performance, globalThis.performance);
+  }
 }

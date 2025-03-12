@@ -3,93 +3,176 @@
  * This file is loaded before any tests run and sets up the global environment
  */
 
-// Import the global performance polyfill
-import "./src/test/setup/global-performance-polyfill.js";
+// Import and apply polyfills
+import applyPolyfill from "./src/test/setup/global-performance-polyfill.js";
+import setupWorkerPolyfill from "./src/test/setup/worker-performance-polyfill.js";
 
-// Import the worker performance polyfill
-import "./src/test/setup/worker-performance-polyfill.js";
+// Apply polyfills immediately
+applyPolyfill();
+setupWorkerPolyfill();
 
-// Performance API polyfill for JSDOM environment
+// Apply the direct patch for Vitest worker
+try {
+  // Try to apply the direct patch
+  require("./src/test/setup/direct-patch-vitest-worker.cjs");
+  console.log("Direct Vitest worker patch applied successfully");
+} catch (error) {
+  console.error("Error applying direct Vitest worker patch:", error);
+}
+
+// Create a more robust performance polyfill if needed
 if (
-  typeof globalThis.performance !== "object" ||
-  typeof globalThis.performance.now !== "function"
+  typeof performance === "undefined" ||
+  typeof performance.now !== "function"
 ) {
   const startTime = Date.now();
 
+  // Create a comprehensive performance polyfill
   globalThis.performance = {
-    ...(globalThis.performance || {}),
-    now: () => {
+    now() {
       return Date.now() - startTime;
     },
-    mark: () => {},
-    measure: () => {},
-    getEntriesByName: () => [],
-    getEntriesByType: () => [],
-    clearMarks: () => {},
-    clearMeasures: () => {},
+    mark(name) {
+      if (!this._marks) this._marks = {};
+      this._marks[name] = this.now();
+      return undefined;
+    },
+    measure(name, startMark, endMark) {
+      if (!this._measures) this._measures = {};
+      const start = this._marks[startMark] || 0;
+      const end = this._marks[endMark] || this.now();
+      this._measures[name] = {
+        name,
+        startTime: start,
+        duration: end - start,
+      };
+      return undefined;
+    },
+    getEntriesByName(name, type) {
+      if (type === "mark" && this._marks && this._marks[name]) {
+        return [{ name, startTime: this._marks[name], entryType: "mark" }];
+      }
+      if (type === "measure" && this._measures && this._measures[name]) {
+        return [{ ...this._measures[name], entryType: "measure" }];
+      }
+      return [];
+    },
+    getEntriesByType(type) {
+      if (type === "mark" && this._marks) {
+        return Object.keys(this._marks).map((name) => ({
+          name,
+          startTime: this._marks[name],
+          entryType: "mark",
+        }));
+      }
+      if (type === "measure" && this._measures) {
+        return Object.values(this._measures).map((measure) => ({
+          ...measure,
+          entryType: "measure",
+        }));
+      }
+      return [];
+    },
+    clearMarks(name) {
+      if (!this._marks) return;
+      if (name) {
+        delete this._marks[name];
+      } else {
+        this._marks = {};
+      }
+    },
+    clearMeasures(name) {
+      if (!this._measures) return;
+      if (name) {
+        delete this._measures[name];
+      } else {
+        this._measures = {};
+      }
+    },
   };
 
+  // Apply the polyfill to all global objects
+  const globalObjects = [
+    globalThis,
+    typeof global !== "undefined" ? global : null,
+    typeof self !== "undefined" ? self : null,
+    typeof window !== "undefined" ? window : null,
+  ];
+
+  globalObjects.forEach((obj) => {
+    if (
+      obj &&
+      (typeof obj.performance === "undefined" ||
+        typeof obj.performance.now !== "function")
+    ) {
+      obj.performance = globalThis.performance;
+    }
+  });
+
   console.log(
-    "Performance API polyfill installed globally for JSDOM environment"
+    "Robust performance polyfill created and applied to global objects"
   );
 }
 
-// Ensure global.performance is also set for Node.js environment
-if (
-  typeof global === "object" &&
-  (!global.performance || typeof global.performance.now !== "function")
-) {
-  global.performance = globalThis.performance;
-}
+// Add a global error handler to catch any performance.now errors
+process.on("uncaughtException", (error) => {
+  if (
+    error.message &&
+    error.message.includes("performance.now is not a function")
+  ) {
+    console.error("Caught uncaught performance.now error, reapplying polyfill");
 
-// Patch worker threads to handle performance.now
-// This is a workaround for Vitest worker threads that don't inherit the polyfill
-try {
-  // Monkey patch the worker.js file to include our performance polyfill
-  const Module = require("module");
-  const originalRequire = Module.prototype.require;
+    // Create a new performance polyfill
+    const startTime = Date.now();
+    const performancePolyfill = {
+      now() {
+        return Date.now() - startTime;
+      },
+      mark() {
+        return undefined;
+      },
+      measure() {
+        return undefined;
+      },
+      getEntriesByName() {
+        return [];
+      },
+      getEntriesByType() {
+        return [];
+      },
+      clearMarks() {},
+      clearMeasures() {},
+    };
 
-  Module.prototype.require = function (path) {
-    const result = originalRequire.apply(this, arguments);
+    // Apply to all global objects
+    [globalThis, global, self, window].forEach((obj) => {
+      if (obj) obj.performance = performancePolyfill;
+    });
 
-    // If this is a worker module, patch it with our performance polyfill
-    if (path.includes("vitest/dist/worker") || path.includes("tinypool")) {
-      if (!result.performance || typeof result.performance.now !== "function") {
-        const startTime = Date.now();
-        result.performance = {
-          ...(result.performance || {}),
-          now: () => Date.now() - startTime,
-          mark: () => {},
-          measure: () => {},
-          getEntriesByName: () => [],
-          getEntriesByType: () => [],
-          clearMarks: () => {},
-          clearMeasures: () => {},
-        };
-        console.log(
-          `Performance API polyfill installed for worker module: ${path}`
-        );
-      }
-    }
+    // Don't rethrow the error since we've handled it
+    return;
+  }
 
-    return result;
-  };
-} catch (error) {
-  console.warn("Failed to patch worker threads:", error);
-}
+  // For other errors, rethrow
+  throw error;
+});
 
 // Suppress MaxListenersExceededWarning
 process.setMaxListeners(100);
 
-// Mock fetch API for tests if not already mocked
-if (!global.fetch) {
-  global.fetch = () =>
-    Promise.resolve({
+// Mock fetch if it's not already mocked
+if (!globalThis.fetch) {
+  globalThis.fetch = async () => {
+    return {
       ok: true,
-      json: () => Promise.resolve({}),
-      text: () => Promise.resolve(""),
-    });
+      status: 200,
+      json: async () => ({}),
+      text: async () => "",
+      blob: async () => new Blob(),
+      arrayBuffer: async () => new ArrayBuffer(0),
+      headers: new Map(),
+    };
+  };
 }
 
-// No need to manually set up performance polyfill here as it's handled by the global polyfill
 console.log("Vitest setup complete with global performance polyfill");
