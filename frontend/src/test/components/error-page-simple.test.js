@@ -1,5 +1,16 @@
 import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
-import { ErrorType } from "../../services/error-service.js";
+
+// Define ErrorType enum directly in the test file instead of importing it
+const ErrorType = {
+  NOT_FOUND: "NOT_FOUND",
+  SERVER_ERROR: "SERVER_ERROR",
+  NETWORK_ERROR: "NETWORK_ERROR",
+  AUTHENTICATION_ERROR: "AUTHENTICATION_ERROR",
+  AUTHORIZATION_ERROR: "AUTHORIZATION_ERROR",
+  VALIDATION_ERROR: "VALIDATION_ERROR",
+  TIMEOUT_ERROR: "TIMEOUT_ERROR",
+  UNKNOWN_ERROR: "UNKNOWN_ERROR",
+};
 
 // Mock the ErrorPage component
 class MockErrorPage {
@@ -88,12 +99,12 @@ class MockErrorPage {
   _getErrorTitle() {
     if (!this.error) return this.message;
     switch (this.error.type) {
-      case ErrorType.VALIDATION:
+      case ErrorType.VALIDATION_ERROR:
         return "Validation Error";
-      case ErrorType.NETWORK:
+      case ErrorType.NETWORK_ERROR:
         return "Network Error";
-      case ErrorType.API:
-        return "API Error";
+      case ErrorType.SERVER_ERROR:
+        return "Server Error";
       default:
         return "Unexpected Error";
     }
@@ -102,11 +113,11 @@ class MockErrorPage {
   _getErrorIcon() {
     if (!this.error) return "question-circle";
     switch (this.error.type) {
-      case ErrorType.VALIDATION:
+      case ErrorType.VALIDATION_ERROR:
         return "exclamation-circle";
-      case ErrorType.NETWORK:
+      case ErrorType.NETWORK_ERROR:
         return "wifi-off";
-      case ErrorType.API:
+      case ErrorType.SERVER_ERROR:
         return "server";
       default:
         return "alert-circle";
@@ -227,7 +238,7 @@ describe("ErrorPage Simple Test", () => {
 
   it("should show error details when error is provided", () => {
     element.error = {
-      type: ErrorType.API,
+      type: ErrorType.SERVER_ERROR,
       details: { status: 500, message: "Internal Server Error" },
     };
 
@@ -241,19 +252,19 @@ describe("ErrorPage Simple Test", () => {
 
   it("should display different titles based on error type", () => {
     // Test validation error
-    element.error = { type: ErrorType.VALIDATION };
+    element.error = { type: ErrorType.VALIDATION_ERROR };
     expect(element._getErrorTitle()).toBe("Validation Error");
 
     // Test network error
-    element.error = { type: ErrorType.NETWORK };
+    element.error = { type: ErrorType.NETWORK_ERROR };
     expect(element._getErrorTitle()).toBe("Network Error");
 
-    // Test API error
-    element.error = { type: ErrorType.API };
-    expect(element._getErrorTitle()).toBe("API Error");
+    // Test server error
+    element.error = { type: ErrorType.SERVER_ERROR };
+    expect(element._getErrorTitle()).toBe("Server Error");
 
     // Test unknown error
-    element.error = { type: "UNKNOWN" };
+    element.error = { type: ErrorType.UNKNOWN_ERROR };
     expect(element._getErrorTitle()).toBe("Unexpected Error");
   });
 });
