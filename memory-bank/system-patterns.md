@@ -151,7 +151,7 @@ We've established performance budgets for each of these metrics to ensure that o
 To optimize our tests, we've implemented several strategies:
 
 1. **Consolidated Polyfills**: We've created a consolidated performance polyfill that reduces redundant installations and improves test performance. We've also added a global flag to prevent multiple installations of the polyfill, significantly reducing the number of installation messages in the test output.
-2. **Silenced Warnings**: We've silenced the Lit dev mode warning by patching the reactive-element.js file.
+2. **Silenced Warnings**: We've silenced the Lit dev mode warning by patching the reactive-element.js file. We've also added a global flag to prevent multiple silencing operations, significantly reducing the number of silencing messages in the test output.
 3. **Fixed Deprecation Warnings**: We've fixed the deprecation warning about missing "main" or "exports" field in the @open-wc/semantic-dom-diff package.
 4. **Eliminated MaxListenersExceededWarning**: We've increased the limit to eliminate the MaxListenersExceededWarning.
 5. **Handled Unhandled Errors**: We've created a custom reporter to handle unhandled errors related to function cloning.

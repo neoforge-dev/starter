@@ -31,6 +31,7 @@ We are currently focused on improving the testing infrastructure for the NeoForg
    - Creating a consolidated performance polyfill that reduces redundant installations
    - Using a global flag to prevent multiple polyfill installations
    - Silencing the Lit dev mode warning by patching the reactive-element.js file
+   - Using a global flag to prevent multiple Lit dev mode warning silencing operations
    - Fixing the deprecation warning about missing "main" or "exports" field in the @open-wc/semantic-dom-diff package
    - Eliminating the MaxListenersExceededWarning by increasing the limit
    - Handling the unhandled error related to function cloning
@@ -61,7 +62,7 @@ We are currently focused on improving the testing infrastructure for the NeoForg
 
 6. **Optimized Polyfills**: We've created a consolidated performance polyfill that reduces redundant installations and improves test performance. This approach is more maintainable and easier to understand than having multiple separate polyfills. We've also added a global flag to prevent multiple installations of the polyfill, significantly reducing the number of installation messages in the test output.
 
-7. **Silence Warnings**: We've decided to silence the Lit dev mode warning by patching the reactive-element.js file. This approach is more reliable than setting NODE_ENV to production, which doesn't always work.
+7. **Silence Warnings**: We've decided to silence the Lit dev mode warning by patching the reactive-element.js file. This approach is more reliable than setting NODE_ENV to production, which doesn't always work. We've also added a global flag to prevent multiple silencing operations, significantly reducing the number of silencing messages in the test output.
 
 ## Critical Updates
 

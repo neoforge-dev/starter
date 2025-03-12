@@ -306,7 +306,7 @@ Located in `src/test/setup/optimized-performance-polyfill.js`, this utility prov
 Located in `src/test/setup/package-patches.js`, these utilities patch third-party packages to fix issues and improve compatibility:
 
 - `patchSemanticDomDiff`: Fixes the deprecation warning about missing "main" or "exports" field in the @open-wc/semantic-dom-diff package
-- `silenceLitDevModeWarning`: Silences the Lit dev mode warning by patching the reactive-element.js file
+- `silenceLitDevModeWarning`: Silences the Lit dev mode warning by patching the reactive-element.js file. We've added a global flag to prevent multiple silencing operations, significantly reducing the number of silencing messages in the test output.
 
 ### Test Configuration
 
@@ -322,6 +322,7 @@ We've optimized our test configuration to improve performance and reliability:
 
 - Consolidated polyfills to reduce redundant installations
 - Added a global flag to prevent multiple polyfill installations
+- Added a global flag to prevent multiple Lit dev mode warning silencing operations
 - Silenced warnings to reduce noise in the test output
 - Handled unhandled errors to prevent false positives
 - Increased the MaxListeners limit to eliminate warnings
