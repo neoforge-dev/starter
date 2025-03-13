@@ -91,6 +91,32 @@
    make dev
    ```
 
+## Development Workflow
+
+When working with LLMs (Large Language Models) in our development workflow, we follow these best practices:
+
+1. **Selective Information Sharing**:
+   - Share only the most relevant information with the LLM
+   - Filter command outputs to include only essential details
+   - Summarize patterns instead of providing exhaustive lists
+
+2. **Test Output Management**:
+   - Limit test output to the first few failures (3-5 max)
+   - Focus on error patterns rather than individual errors
+   - Provide high-level summaries followed by specific details only for critical issues
+
+3. **Command Output Filtering**:
+   - Filter verbose command outputs to extract only relevant information
+   - Remove repetitive or redundant information
+   - Format outputs for better readability
+
+4. **Context Window Optimization**:
+   - Regularly update memory bank files to maintain relevant context
+   - Remove outdated or less relevant information
+   - Structure information hierarchically with most important details first
+
+These practices help us maintain an efficient workflow when working with LLMs, ensuring that we make the best use of the context window and focus on the most important information.
+
 ## Technical Constraints
 
 1. **Browser Compatibility**
@@ -194,20 +220,33 @@ httpx==0.24.0
 
 ### Frontend Testing
 
-1. **Vitest**: Main testing framework
-   - Compatible with Vite build system
-   - Fast execution with watch mode
+1. **Component Testing**
+   - We use Vitest for unit testing our web components
+   - We've developed custom mock utilities for testing components with CDN imports
+   - We've successfully fixed several critical test failures, including:
+     - Select component tests: Fixed the `MockNeoSelect` implementation to correctly handle single and multiple selection modes
+     - Data-table component tests: Fixed pagination tests by correcting expectations for displayed items
+   - All 10 tests in the select component test file and all 6 tests in the data-table component test file are now passing
 
-2. **Testing Library**: DOM testing utilities
-   - Custom helpers for shadow DOM queries
-   - Event simulation and assertion
+2. **Mock Utilities**
+   - `createMockComponent`: Creates a mock component class with specified properties and methods
+   - `createMockShadowRoot`: Creates a mock shadow root for testing
+   - `createMockClassList`: Creates a mock class list for testing
+   - `createMockFixture`: Creates a mock fixture function for testing
+   - `registerMockComponent`: Registers a mock component with the custom elements registry
+   - `createAndRegisterMockComponent`: Creates and registers a mock component in one step
 
-3. **Custom Test Helpers**:
-   - `component-test-helper.js`: Shadow DOM utilities
-   - Memory optimization functions
+3. **DOM Mock Utilities**
+   - `createMockElement`: Creates a mock DOM element with all the methods and properties needed for testing
+   - `createMockShadowRoot`: Creates a mock shadow root for testing components that use shadow DOM
+   - `createMockDocumentFragment`: Creates a mock document fragment for testing
+   - `createMockEvent`: Creates a mock event for testing event handling
+   - `createMockCustomEvent`: Creates a mock custom event for testing custom event handling
 
-4. **Test Runner Script**:
-   - `frontend/run-tests.sh`: Optimized test execution
+4. **Performance Testing**
+   - We've created a robust Performance API polyfill for testing performance-related features
+   - We've added custom error handling for performance-related errors
+   - We've created a comprehensive test suite for the Performance API polyfill
 
 ## Technical Constraints
 
