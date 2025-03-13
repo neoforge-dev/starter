@@ -1,239 +1,124 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { createMockElement } from "../utils/component-mock-utils.js";
+import { TestRunner, Assert, ComponentTester } from "../test-utils.js";
+import { DocsPage } from "../../pages/docs-page.js";
+import { describe, it, expect } from "vitest";
 
-// Skip the custom element entirely and just use a simple test
-describe("Documentation Page", () => {
-  let mockDocument;
+const runner = new TestRunner();
 
-  beforeEach(() => {
-    // Create a mock document body
-    mockDocument = {
-      body: createMockElement("body"),
-    };
+runner.describe("DocsPage", () => {
+  let element;
+
+  runner.beforeEach(async () => {
+    element = await ComponentTester.render(DocsPage);
   });
 
-  it("can be created without timing out", () => {
-    // Just a simple test that will always pass
-    expect(true).toBe(true);
+  runner.afterEach(() => {
+    ComponentTester.cleanup();
   });
 
-  it("can render mock documentation page", () => {
-    // Create a simple div to represent our docs page
-    const element = createMockElement("div");
-    element.className = "mock-docs-page";
+  runner.it("should render documentation sections", async () => {
+    const shadowRoot = element.shadowRoot;
+    const sections = shadowRoot.querySelectorAll(".doc-section");
 
-    // Create sidebar
-    const sidebar = createMockElement("div");
-    sidebar.className = "docs-sidebar";
+    Assert.greaterThan(
+      sections.length,
+      0,
+      "Should have documentation sections"
+    );
+    sections.forEach((section) => {
+      const title = section.querySelector("h2, h3");
+      const content = section.querySelector(".content");
 
-    // Create navigation menu
-    const nav = createMockElement("nav");
-    nav.className = "docs-navigation";
-    nav.setAttribute("role", "navigation");
+      Assert.notNull(title, "Section should have a title");
+      Assert.notNull(content, "Section should have content");
+    });
+  });
 
-    // Create menu items
-    const menuItem = createMockElement("div");
-    menuItem.className = "section-item";
-    menuItem.setAttribute("role", "menuitem");
-    menuItem.textContent = "Getting Started";
-    nav.appendChild(menuItem);
+  runner.it("should have working sidebar navigation", async () => {
+    const shadowRoot = element.shadowRoot;
+    const sidebar = shadowRoot.querySelector(".sidebar");
+    const links = sidebar.querySelectorAll("a");
 
-    sidebar.appendChild(nav);
-    element.appendChild(sidebar);
+    Assert.notNull(sidebar, "Sidebar should be present");
+    Assert.greaterThan(links.length, 0, "Should have sidebar navigation links");
 
-    // Create content area
-    const content = createMockElement("div");
-    content.className = "docs-content";
+    for (const link of links) {
+      const targetId = link.getAttribute("href").substring(1);
+      const targetSection = shadowRoot.querySelector(`#${targetId}`);
+      Assert.notNull(targetSection, `Target section ${targetId} should exist`);
 
-    // Create markdown content
-    const markdown = createMockElement("div");
-    markdown.className = "markdown-content";
-    markdown.innerHTML = "<h1>Getting Started</h1><p>Welcome to the docs</p>";
-    content.appendChild(markdown);
+      await ComponentTester.click(link);
+      const scrolledElement = shadowRoot.querySelector(":target");
+      Assert.equal(
+        scrolledElement,
+        targetSection,
+        "Should scroll to target section"
+      );
+    }
+  });
 
-    element.appendChild(content);
+  runner.it("should render code examples", async () => {
+    const shadowRoot = element.shadowRoot;
+    const codeBlocks = shadowRoot.querySelectorAll("pre code");
 
-    // Create table of contents
-    const toc = createMockElement("div");
-    toc.className = "table-of-contents";
-    element.appendChild(toc);
+    Assert.greaterThan(codeBlocks.length, 0, "Should have code examples");
+    codeBlocks.forEach((code) => {
+      Assert.notEqual(
+        code.textContent.trim(),
+        "",
+        "Code block should not be empty"
+      );
+    });
+  });
 
-    mockDocument.body.appendChild(element);
+  runner.it("should have working search functionality", async () => {
+    const shadowRoot = element.shadowRoot;
+    const searchInput = shadowRoot.querySelector('input[type="search"]');
+    const searchResults = shadowRoot.querySelector(".search-results");
 
-    // Verify the mock component
-    expect(element).toBeTruthy();
-    expect(element.children.length).toBe(3);
+    Assert.notNull(searchInput, "Search input should be present");
 
-    // Check sidebar
-    const sidebarElement = element.children[0];
-    expect(sidebarElement.className).toBe("docs-sidebar");
-    expect(sidebarElement.children.length).toBe(1);
+    // Test search functionality
+    await ComponentTester.type(searchInput, "api");
 
-    // Check navigation
-    const navElement = sidebarElement.children[0];
-    expect(navElement.className).toBe("docs-navigation");
-    expect(navElement.getAttribute("role")).toBe("navigation");
-    expect(navElement.children.length).toBe(1);
+    const results = searchResults.querySelectorAll(".result-item");
+    Assert.greaterThan(results.length, 0, "Should show search results");
 
-    // Check menu item
-    const menuItemElement = navElement.children[0];
-    expect(menuItemElement.className).toBe("section-item");
-    expect(menuItemElement.getAttribute("role")).toBe("menuitem");
-    expect(menuItemElement.textContent).toBe("Getting Started");
+    // Clear search
+    await ComponentTester.type(searchInput, "");
+    const clearedResults = searchResults.querySelectorAll(".result-item");
+    Assert.equal(clearedResults.length, 0, "Should clear search results");
+  });
 
-    // Check content area
-    const contentElement = element.children[1];
-    expect(contentElement.className).toBe("docs-content");
-    expect(contentElement.children.length).toBe(1);
+  runner.it("should handle mobile responsive layout", async () => {
+    const shadowRoot = element.shadowRoot;
+    const sidebar = shadowRoot.querySelector(".sidebar");
+    const content = shadowRoot.querySelector(".content");
+    const menuToggle = shadowRoot.querySelector(".menu-toggle");
 
-    // Check markdown content
-    const markdownElement = contentElement.children[0];
-    expect(markdownElement.className).toBe("markdown-content");
-    expect(markdownElement.innerHTML).toBe(
-      "<h1>Getting Started</h1><p>Welcome to the docs</p>"
+    Assert.notNull(menuToggle, "Mobile menu toggle should be present");
+
+    // Test mobile menu toggle
+    await ComponentTester.click(menuToggle);
+    Assert.true(
+      sidebar.classList.contains("show"),
+      "Sidebar should be shown on mobile"
     );
 
-    // Check table of contents
-    const tocElement = element.children[2];
-    expect(tocElement.className).toBe("table-of-contents");
+    await ComponentTester.click(menuToggle);
+    Assert.false(
+      sidebar.classList.contains("show"),
+      "Sidebar should be hidden on mobile"
+    );
   });
+});
 
-  it("supports different documentation sections", () => {
-    // Create a docs page with multiple sections
-    const element = createMockElement("div");
-    element.className = "mock-docs-page";
+// Run tests
+runner.run();
 
-    // Create sidebar
-    const sidebar = createMockElement("div");
-    sidebar.className = "docs-sidebar";
-
-    // Create navigation menu
-    const nav = createMockElement("nav");
-    nav.className = "docs-navigation";
-    nav.setAttribute("role", "navigation");
-
-    // Create menu sections
-    const sections = [
-      { title: "Getting Started", items: ["Installation", "Quick Start"] },
-      { title: "Components", items: ["Buttons", "Forms", "Navigation"] },
-      { title: "Advanced", items: ["Customization", "Performance"] },
-    ];
-
-    sections.forEach((section) => {
-      // Create section header
-      const sectionHeader = createMockElement("h3");
-      sectionHeader.className = "section-header";
-      sectionHeader.textContent = section.title;
-      nav.appendChild(sectionHeader);
-
-      // Create section items
-      section.items.forEach((item) => {
-        const menuItem = createMockElement("div");
-        menuItem.className = "section-item";
-        menuItem.setAttribute("role", "menuitem");
-        menuItem.textContent = item;
-        nav.appendChild(menuItem);
-      });
-    });
-
-    sidebar.appendChild(nav);
-    element.appendChild(sidebar);
-
-    // Create content area
-    const content = createMockElement("div");
-    content.className = "docs-content";
-    element.appendChild(content);
-
-    mockDocument.body.appendChild(element);
-
-    // Verify the navigation structure
-    const navElement = sidebar.children[0];
-
-    // We should have 3 section headers and 7 menu items (total 10 elements)
-    expect(navElement.children.length).toBe(10);
-
-    // Check section headers
-    expect(navElement.children[0].textContent).toBe("Getting Started");
-    expect(navElement.children[3].textContent).toBe("Components");
-    expect(navElement.children[7].textContent).toBe("Advanced");
-
-    // Check menu items
-    expect(navElement.children[1].textContent).toBe("Installation");
-    expect(navElement.children[2].textContent).toBe("Quick Start");
-    expect(navElement.children[4].textContent).toBe("Buttons");
-    expect(navElement.children[5].textContent).toBe("Forms");
-    expect(navElement.children[6].textContent).toBe("Navigation");
-    expect(navElement.children[8].textContent).toBe("Customization");
-    expect(navElement.children[9].textContent).toBe("Performance");
-  });
-
-  it("handles search functionality", () => {
-    // Create a docs page with search
-    const element = createMockElement("div");
-    element.className = "mock-docs-page";
-
-    // Create search component
-    const search = createMockElement("div");
-    search.className = "docs-search";
-
-    // Create search input
-    const searchInput = createMockElement("input");
-    searchInput.setAttribute("type", "search");
-    searchInput.setAttribute("placeholder", "Search documentation...");
-    search.appendChild(searchInput);
-
-    // Create search results
-    const searchResults = createMockElement("div");
-    searchResults.className = "search-results";
-    search.appendChild(searchResults);
-
-    element.appendChild(search);
-    mockDocument.body.appendChild(element);
-
-    // Mock search functionality
-    const mockSearch = (query) => {
-      // Clear previous results
-      while (searchResults.children.length > 0) {
-        searchResults.removeChild(searchResults.children[0]);
-      }
-
-      if (!query) return;
-
-      // Mock search results
-      const results = [
-        { title: "Installation", path: "/docs/installation", score: 0.95 },
-        { title: "Quick Start", path: "/docs/quick-start", score: 0.85 },
-        { title: "API Reference", path: "/docs/api", score: 0.75 },
-      ].filter((result) =>
-        result.title.toLowerCase().includes(query.toLowerCase())
-      );
-
-      // Add results to DOM
-      results.forEach((result) => {
-        const resultItem = createMockElement("a");
-        resultItem.className = "search-result";
-        resultItem.setAttribute("href", result.path);
-        resultItem.textContent = result.title;
-        searchResults.appendChild(resultItem);
-      });
-    };
-
-    // Test search with no query
-    mockSearch("");
-    expect(searchResults.children.length).toBe(0);
-
-    // Test search with query
-    mockSearch("install");
-    expect(searchResults.children.length).toBe(1);
-    expect(searchResults.children[0].textContent).toBe("Installation");
-
-    // Test search with another query
-    mockSearch("quick");
-    expect(searchResults.children.length).toBe(1);
-    expect(searchResults.children[0].textContent).toBe("Quick Start");
-
-    // Test search with query that matches multiple results
-    mockSearch("a");
-    expect(searchResults.children.length).toBe(3);
+// Skip these tests in unit test environment
+describe.skip("Docs Page", () => {
+  it("should render docs page", () => {
+    // This test requires a real browser environment
+    // Skip in unit tests
   });
 });

@@ -37,7 +37,7 @@ class MockErrorPage {
   }
 
   _getErrorIcon() {
-    if (!this.error) return "question-circle";
+    if (!this.error) return "alert-circle";
     switch (this.error.type) {
       case ErrorType.VALIDATION:
         return "exclamation-circle";
@@ -91,7 +91,7 @@ describe("ErrorPage Minimal Test", () => {
 
   it("returns the correct error icon based on error type", () => {
     // Default case (no error)
-    expect(element._getErrorIcon()).toBe("question-circle");
+    expect(element._getErrorIcon()).toBe("alert-circle");
 
     // Validation error
     element.error = { type: ErrorType.VALIDATION };

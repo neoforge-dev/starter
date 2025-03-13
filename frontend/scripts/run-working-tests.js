@@ -1,99 +1,92 @@
 #!/usr/bin/env node
 
 /**
- * Run Working Tests
- *
- * This script runs tests that are known to work correctly.
- * It skips problematic tests that have syntax or memory issues.
+ * Script to run all working tests in the src/test/ directory
+ * This script will:
+ * 1. Find all test files in the src/test/ directory
+ * 2. Run the tests using Vitest
+ * 3. Report the results
  */
 
-import { spawn } from "child_process";
+import { execSync } from "child_process";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "fs";
 
-// Get current file directory
+// Get the current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
+const srcTestDir = path.join(rootDir, "src", "test");
 
-// List of tests known to work
-const workingTests = [
-  "src/test/components/badge.test.js",
-  "src/test/components/theme-transition.test.js",
-  "src/test/services/api-client.test.js",
-  "src/test/components/molecules/modal.test.js",
-  // Add more working tests here
-];
+// Function to find all test files in a directory
+function findTestFiles(directory) {
+  const testFiles = [];
 
-// Skip tests with known issues
-const problematicTests = [
-  "src/test/components/autoform.test.js",
-  "src/test/pages/dashboard-page.test.js",
-  // Add more problematic tests here
-];
+  // Function to recursively search for test files
+  function searchDirectory(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
 
-// Run each test individually to avoid memory issues
-async function runTests() {
-  console.log("Running tests that are known to work...");
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
 
+      if (entry.isDirectory()) {
+        // Recursively search subdirectories
+        searchDirectory(fullPath);
+      } else if (
+        entry.name.endsWith(".test.js") ||
+        entry.name.endsWith(".spec.js")
+      ) {
+        // Add test file to the list
+        testFiles.push(fullPath);
+      }
+    }
+  }
+
+  // Start the search
+  searchDirectory(directory);
+
+  return testFiles;
+}
+
+// Function to run a test file
+function runTestFile(testFile) {
+  try {
+    console.log(`Running test file: ${testFile}`);
+    const relativePath = path.relative(rootDir, testFile);
+    execSync(`npx vitest run ${relativePath}`, { stdio: "inherit" });
+    return true;
+  } catch (error) {
+    console.error(`Error running test file: ${testFile}`);
+    console.error(error.message);
+    return false;
+  }
+}
+
+// Main function
+function main() {
+  console.log("Finding all test files in src/test/ directory...");
+  const testFiles = findTestFiles(srcTestDir);
+  console.log(`Found ${testFiles.length} test files.`);
+
+  console.log("Running tests...");
   let passedTests = 0;
   let failedTests = 0;
 
-  for (const testFile of workingTests) {
-    console.log(`\nRunning test: ${testFile}`);
-
-    try {
-      await new Promise((resolve, reject) => {
-        const testProcess = spawn(
-          "npx",
-          ["vitest", "run", "--bail=1", testFile],
-          {
-            stdio: "inherit",
-            cwd: rootDir,
-            env: {
-              ...process.env,
-              NODE_ENV: "test",
-              NODE_OPTIONS: "--max-old-space-size=4096",
-              NODE_NO_WARNINGS: "1",
-            },
-          }
-        );
-
-        testProcess.on("exit", (code) => {
-          if (code === 0) {
-            passedTests++;
-            resolve();
-          } else {
-            failedTests++;
-            resolve(); // Continue with next test even if this one fails
-          }
-        });
-
-        testProcess.on("error", (err) => {
-          console.error(`Error running test ${testFile}:`, err);
-          failedTests++;
-          resolve(); // Continue with next test
-        });
-      });
-    } catch (error) {
-      console.error(`Error running test ${testFile}:`, error);
+  for (const testFile of testFiles) {
+    const passed = runTestFile(testFile);
+    if (passed) {
+      passedTests++;
+    } else {
       failedTests++;
     }
   }
 
-  console.log("\n---------------------------------");
-  console.log(`Test Summary: ${passedTests} passed, ${failedTests} failed`);
-  console.log("---------------------------------");
-
-  if (failedTests > 0) {
-    process.exit(1);
-  } else {
-    process.exit(0);
-  }
+  console.log(`Test run completed.`);
+  console.log(`Passed: ${passedTests}`);
+  console.log(`Failed: ${failedTests}`);
+  console.log(`Total: ${testFiles.length}`);
 }
 
-runTests().catch((err) => {
-  console.error("Error running tests:", err);
-  process.exit(1);
-});
+// Run the main function
+main();

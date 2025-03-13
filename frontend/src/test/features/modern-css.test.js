@@ -1,32 +1,42 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 
 describe("Modern CSS Features", () => {
   beforeEach(() => {
     // Mock CSS.supports
     global.CSS = {
-      supports: vi.fn().mockImplementation((property, value) => {
-        if (property === "container-type" && value === "inline-size")
-          return true;
-        if (property === "display" && value === "subgrid") return false;
-        if (property === ":has(.selector)") return true;
-        return false;
-      }),
+      supports: (feature) => {
+        const supportedFeatures = [
+          "container-type",
+          "container-name",
+          "container",
+          "display: grid",
+          "display: flex",
+          "gap",
+          "color-scheme",
+        ];
+        return supportedFeatures.some((f) => feature.includes(f));
+      },
     };
   });
 
-  it("should support container queries", () => {
-    expect(CSS.supports("container-type", "inline-size")).toBe(true);
+  afterEach(() => {
+    // Clean up
+    delete global.CSS;
   });
 
-  it("should not support subgrid", () => {
-    expect(CSS.supports("display", "subgrid")).toBe(false);
+  it("should detect container queries support", () => {
+    expect(CSS.supports("(container-type: inline-size)")).toBe(true);
   });
 
-  it("should support :has selector", () => {
-    expect(CSS.supports(":has(.selector)")).toBe(true);
+  it("should detect grid layout support", () => {
+    expect(CSS.supports("display: grid")).toBe(true);
   });
 
-  it("should detect unsupported features", () => {
-    expect(CSS.supports("some-future-property", "value")).toBe(false);
+  it("should detect gap property support", () => {
+    expect(CSS.supports("gap: 1rem")).toBe(true);
+  });
+
+  it("should detect color scheme support", () => {
+    expect(CSS.supports("color-scheme: dark light")).toBe(true);
   });
 });

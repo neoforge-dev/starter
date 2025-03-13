@@ -1,158 +1,146 @@
-#!/usr/bin/env node
+/**
+ * Script to migrate tests from the tests/ directory to the src/test/ directory
+ * This script will:
+ * 1. Create a backup of the tests/ directory
+ * 2. Create the necessary directories in src/test/
+ * 3. Copy and transform the test files from tests/ to src/test/
+ * 4. Update imports and assertions to use Vitest instead of Playwright
+ */
 
-import { readdir, readFile, writeFile, mkdir } from "fs/promises";
-import { join, dirname } from "path";
+import fs from "fs";
+import path from "path";
 import { fileURLToPath } from "url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT_DIR = join(__dirname, "..");
+// Get the current directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, "..");
+const testsDir = path.join(rootDir, "tests");
+const srcTestDir = path.join(rootDir, "src", "test");
+const backupDir = path.join(rootDir, "tests-backup");
 
-const MIGRATIONS = {
-  imports: {
-    "@open-wc/testing": "vitest",
-    chai: "vitest",
-    "@web/test-runner": "vitest",
-    "@web/test-runner-visual-regression": "@playwright/test",
-    "@web/test-runner-commands": "@playwright/test",
-  },
-  assertions: {
-    "expect(.*).to.equal": "expect$1.toBe",
-    "expect(.*).to.be.true": "expect$1.toBe(true)",
-    "expect(.*).to.be.false": "expect$1.toBe(false)",
-    "expect(.*).to.exist": "expect$1.toBeDefined()",
-  },
-  visualTests: {
-    "compareScreenshot\\((.*)\\)":
-      "expect(await page.screenshot()).toMatchSnapshot($1)",
-    "setViewport\\((.*)\\)": "page.setViewportSize($1)",
-  },
-  a11yTests: {
-    "checkA11y\\((.*)\\)": "await checkA11y(page, $1)",
-    "violationFinder\\((.*)\\)":
-      "await checkA11y(page, $1, { includedImpacts: ['critical', 'serious'] })",
-  },
-};
-
-const TEMPLATE_VISUAL = `
-import { test, expect } from '@playwright/test';
-
-test.describe('Visual regression tests', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-  });
-
-  test('component renders correctly', async ({ page }) => {
-    await expect(page.locator('neo-button')).toBeVisible();
-    await expect(page).toHaveScreenshot();
-  });
-});`;
-
-const TEMPLATE_A11Y = `
-import { test, expect } from '@playwright/test';
-import { checkA11y, injectAxe } from '@axe-core/playwright';
-
-test.describe('Accessibility tests', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await injectAxe(page);
-  });
-
-  test('page meets accessibility standards', async ({ page }) => {
-    await checkA11y(page);
-  });
-});`;
-
-async function migrateFile(filePath, type = "component") {
-  let content = await readFile(filePath, "utf-8");
-
-  // Update imports
-  for (const [oldImport, newImport] of Object.entries(MIGRATIONS.imports)) {
-    content = content.replace(
-      new RegExp(`import .* from ['"]${oldImport}['"]`),
-      `import { expect, test, describe, beforeEach, afterEach } from '${newImport}'`
-    );
-  }
-
-  // Update assertions
-  for (const [oldPattern, newPattern] of Object.entries(
-    MIGRATIONS.assertions
-  )) {
-    content = content.replace(new RegExp(oldPattern, "g"), newPattern);
-  }
-
-  if (type === "visual") {
-    for (const [oldPattern, newPattern] of Object.entries(
-      MIGRATIONS.visualTests
-    )) {
-      content = content.replace(new RegExp(oldPattern, "g"), newPattern);
-    }
-  }
-
-  if (type === "a11y") {
-    for (const [oldPattern, newPattern] of Object.entries(
-      MIGRATIONS.a11yTests
-    )) {
-      content = content.replace(new RegExp(oldPattern, "g"), newPattern);
-    }
-  }
-
-  // Update test structure
-  content = content.replace(/it\(/g, "test(");
-
-  await writeFile(filePath, content);
-  console.log(`Migrated ${filePath}`);
+// Create backup directory if it doesn't exist
+if (!fs.existsSync(backupDir)) {
+  fs.mkdirSync(backupDir, { recursive: true });
 }
 
-async function createTemplateIfNeeded(dir, filename, template) {
-  const path = join(dir, filename);
-  try {
-    await readFile(path);
-  } catch {
-    await writeFile(path, template);
-    console.log(`Created template ${path}`);
+// Function to copy a directory recursively
+function copyDirectory(source, destination) {
+  // Create destination directory if it doesn't exist
+  if (!fs.existsSync(destination)) {
+    fs.mkdirSync(destination, { recursive: true });
   }
-}
 
-async function* walkDir(dir) {
-  const files = await readdir(dir, { withFileTypes: true });
-  for (const file of files) {
-    const path = join(dir, file.name);
-    if (file.isDirectory()) {
-      yield* walkDir(path);
-    } else if (file.name.match(/\.(test|spec)\.js$/)) {
-      yield path;
+  // Get all files and directories in the source directory
+  const entries = fs.readdirSync(source, { withFileTypes: true });
+
+  // Copy each file and directory
+  for (const entry of entries) {
+    const sourcePath = path.join(source, entry.name);
+    const destinationPath = path.join(destination, entry.name);
+
+    if (entry.isDirectory()) {
+      // Recursively copy directory
+      copyDirectory(sourcePath, destinationPath);
+    } else {
+      // Copy file
+      fs.copyFileSync(sourcePath, destinationPath);
     }
   }
 }
 
-async function migrateTests() {
-  const testDir = join(ROOT_DIR, "src/test");
+// Function to transform a test file
+function transformTestFile(filePath) {
+  // Read the file
+  let content = fs.readFileSync(filePath, "utf8");
 
-  // Ensure directories exist
-  await mkdir(join(testDir, "visual"), { recursive: true });
-  await mkdir(join(testDir, "accessibility"), { recursive: true });
-
-  // Create template files if needed
-  await createTemplateIfNeeded(
-    join(testDir, "visual"),
-    "basic.test.js",
-    TEMPLATE_VISUAL
-  );
-  await createTemplateIfNeeded(
-    join(testDir, "accessibility"),
-    "basic.test.js",
-    TEMPLATE_A11Y
+  // Replace Playwright imports with Vitest imports
+  content = content.replace(
+    /import\s+{\s*test,\s*expect\s*}\s+from\s+["']@playwright\/test["'];?/g,
+    `import { describe, it, expect, beforeEach, afterEach } from 'vitest';`
   );
 
-  for await (const filePath of walkDir(testDir)) {
-    if (filePath.includes("components/")) {
-      await migrateFile(filePath, "component");
-    } else if (filePath.includes("visual/")) {
-      await migrateFile(filePath, "visual");
-    } else if (filePath.includes("accessibility/")) {
-      await migrateFile(filePath, "a11y");
+  // Replace test.describe with describe
+  content = content.replace(/test\.describe/g, "describe");
+
+  // Replace test.beforeEach with beforeEach
+  content = content.replace(/test\.beforeEach/g, "beforeEach");
+
+  // Replace test.afterEach with afterEach
+  content = content.replace(/test\.afterEach/g, "afterEach");
+
+  // Replace test with it
+  content = content.replace(/test\(/g, "it(");
+
+  // Replace page.goto with JSDOM setup
+  content = content.replace(
+    /await\s+page\.goto\(["']([^"']+)["']\);?/g,
+    `// JSDOM setup - replace with appropriate mock
+// Original: await page.goto('$1');
+document.body.innerHTML = '<div id="app"></div>';`
+  );
+
+  // Replace page.evaluate with direct JavaScript
+  content = content.replace(
+    /await\s+page\.evaluate\(\(\)\s*=>\s*{([^}]+)}\);?/g,
+    `// Direct JavaScript - replace with appropriate mock
+// Original: await page.evaluate(() => {$1});
+$1`
+  );
+
+  // Replace page.locator with document.querySelector
+  content = content.replace(
+    /await\s+page\.locator\(["']([^"']+)["']\);?/g,
+    `document.querySelector('$1')`
+  );
+
+  // Write the transformed content back to the file
+  fs.writeFileSync(filePath, content, "utf8");
+}
+
+// Function to process a directory
+function processDirectory(source, destination) {
+  // Create destination directory if it doesn't exist
+  if (!fs.existsSync(destination)) {
+    fs.mkdirSync(destination, { recursive: true });
+  }
+
+  // Get all files and directories in the source directory
+  const entries = fs.readdirSync(source, { withFileTypes: true });
+
+  // Process each file and directory
+  for (const entry of entries) {
+    const sourcePath = path.join(source, entry.name);
+    const destinationPath = path.join(destination, entry.name);
+
+    if (entry.isDirectory()) {
+      // Recursively process directory
+      processDirectory(sourcePath, destinationPath);
+    } else if (entry.name.endsWith(".js") || entry.name.endsWith(".ts")) {
+      // Copy and transform test file
+      fs.copyFileSync(sourcePath, destinationPath);
+      transformTestFile(destinationPath);
+    } else {
+      // Copy other files as is
+      fs.copyFileSync(sourcePath, destinationPath);
     }
   }
 }
 
-migrateTests().catch(console.error);
+// Main function
+function main() {
+  console.log("Starting test migration...");
+
+  // Backup the tests directory
+  console.log("Backing up tests directory...");
+  copyDirectory(testsDir, backupDir);
+
+  // Process the tests directory
+  console.log("Processing tests directory...");
+  processDirectory(testsDir, srcTestDir);
+
+  console.log("Test migration completed successfully!");
+}
+
+// Run the main function
+main();

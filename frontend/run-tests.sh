@@ -1,10 +1,9 @@
 #!/bin/bash
-
-# Script to run tests with optimized memory settings
+# Script to run tests with optimized memory settings and parallel execution
 # Usage: ./run-tests.sh [test-file-pattern]
 
-# Set Node.js memory limits - use a much lower limit
-export NODE_OPTIONS="--max-old-space-size=256 --expose-gc"
+# Set Node.js memory limits - increased for better performance
+export NODE_OPTIONS="--max-old-space-size=4096 --expose-gc"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -12,32 +11,57 @@ RED='\033[0;31m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}Running tests with optimized memory settings...${NC}"
+echo -e "${YELLOW}Running tests with optimized parallel settings...${NC}"
 
-# Function to run a single test with memory management
-run_single_test() {
-  local test_file=$1
-  echo -e "${YELLOW}Running: ${test_file}${NC}"
+# Function to run tests in parallel batches
+run_tests_parallel() {
+  local test_files=("$@")
+  local batch_size=8  # Number of tests to run in parallel
+  local total=${#test_files[@]}
+  local batches=$(( (total + batch_size - 1) / batch_size ))  # Ceiling division
   
-  # Run test with minimal options
-  NODE_OPTIONS="--max-old-space-size=256 --expose-gc" npx vitest run \
-    --no-coverage \
-    --reporter=basic \
-    --no-watch \
-    --isolate \
-    --pool=forks \
-    --silent \
-    $test_file
+  echo -e "${YELLOW}Running ${total} tests in ${batches} batches of up to ${batch_size} tests each${NC}"
   
-  local result=$?
+  local failed_tests=()
+  local passed_tests=()
   
-  # Force garbage collection
-  node --expose-gc -e "global.gc(); global.gc(); setTimeout(() => {}, 100);"
+  for (( i=0; i<${total}; i+=${batch_size} )); do
+    local end=$(( i + batch_size > total ? total : i + batch_size ))
+    local batch=("${test_files[@]:i:end-i}")
+    
+    echo -e "${YELLOW}Running batch $(( i / batch_size + 1 )) of ${batches}...${NC}"
+    
+    # Join the batch files with spaces
+    local batch_joined=$(printf " %s" "${batch[@]}")
+    batch_joined=${batch_joined:1}  # Remove the leading space
+    
+    # Run the batch with vitest
+    npx vitest run --reporter=basic --no-watch $batch_joined
+    
+    local result=$?
+    if [ $result -eq 0 ]; then
+      passed_tests+=("${batch[@]}")
+      echo -e "${GREEN}Batch $(( i / batch_size + 1 )) passed!${NC}"
+    else
+      failed_tests+=("${batch[@]}")
+      echo -e "${RED}Batch $(( i / batch_size + 1 )) had failures!${NC}"
+    fi
+  done
   
-  # Small delay to ensure cleanup
-  sleep 2
+  # Print summary
+  echo -e "\n${YELLOW}Test Summary:${NC}"
+  echo -e "${GREEN}Passed: ${#passed_tests[@]} tests${NC}"
+  echo -e "${RED}Failed: ${#failed_tests[@]} tests${NC}"
   
-  return $result
+  if [ ${#failed_tests[@]} -gt 0 ]; then
+    echo -e "\n${RED}Failed tests:${NC}"
+    for TEST in "${failed_tests[@]}"; do
+      echo -e "${RED}- ${TEST}${NC}"
+    done
+    return 1
+  fi
+  
+  return 0
 }
 
 # Check if a specific test pattern was provided
@@ -45,53 +69,33 @@ if [ -n "$1" ]; then
   TEST_PATTERN=$1
   echo -e "${YELLOW}Running tests matching: ${TEST_PATTERN}${NC}"
   
-  # Run specific test with memory management
-  run_single_test $TEST_PATTERN
+  # Run specific test
+  npx vitest run --reporter=basic --no-watch $TEST_PATTERN
   
   if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ Test passed: ${TEST_PATTERN}${NC}"
+    echo -e "${GREEN}✓ Tests passed: ${TEST_PATTERN}${NC}"
     echo -e "${GREEN}Tests completed!${NC}"
     exit 0
   else
-    echo -e "${RED}✗ Test failed: ${TEST_PATTERN}${NC}"
+    echo -e "${RED}✗ Tests failed: ${TEST_PATTERN}${NC}"
     echo -e "${RED}Tests failed!${NC}"
     exit 1
   fi
 else
-  # Run all tests in sequence to avoid memory issues
-  echo -e "${YELLOW}Running all tests in sequence...${NC}"
+  # Run all tests in optimized parallel batches
+  echo -e "${YELLOW}Running all tests in parallel batches...${NC}"
   
   # Get all test files
-  TEST_FILES=$(find src/test -name "*.test.js" | grep -v "e2e" | grep -v "accessibility")
+  TEST_FILES=($(find src/test -name "*.test.js" | grep -v "e2e" | grep -v "accessibility"))
   
-  # Run each test file individually
-  FAILED_TESTS=()
-  PASSED_TESTS=()
+  # Run tests in parallel batches
+  run_tests_parallel "${TEST_FILES[@]}"
   
-  for TEST_FILE in $TEST_FILES; do
-    run_single_test $TEST_FILE
-    
-    if [ $? -eq 0 ]; then
-      echo -e "${GREEN}✓ Passed: ${TEST_FILE}${NC}"
-      PASSED_TESTS+=("$TEST_FILE")
-    else
-      echo -e "${RED}✗ Failed: ${TEST_FILE}${NC}"
-      FAILED_TESTS+=("$TEST_FILE")
-    fi
-  done
-  
-  # Print summary
-  echo -e "\n${YELLOW}Test Summary:${NC}"
-  echo -e "${GREEN}Passed: ${#PASSED_TESTS[@]} tests${NC}"
-  echo -e "${RED}Failed: ${#FAILED_TESTS[@]} tests${NC}"
-  
-  if [ ${#FAILED_TESTS[@]} -gt 0 ]; then
-    echo -e "\n${RED}Failed tests:${NC}"
-    for TEST in "${FAILED_TESTS[@]}"; do
-      echo -e "${RED}- ${TEST}${NC}"
-    done
+  if [ $? -eq 0 ]; then
+    echo -e "${GREEN}All tests passed!${NC}"
+    exit 0
+  else
+    echo -e "${RED}Some tests failed!${NC}"
     exit 1
   fi
 fi
-
-echo -e "${GREEN}Tests completed!${NC}" 

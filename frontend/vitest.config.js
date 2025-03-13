@@ -34,7 +34,6 @@ const customReporter = {
       // Suppress these errors by returning false
       return false;
     }
-
     // Let other errors through
     return true;
   },
@@ -94,11 +93,11 @@ export default defineConfig({
       },
     },
     reporters: ["default", customReporter],
-    // Disable threading to avoid memory issues
-    threads: false,
-    // Disable worker threads completely to prevent function cloning issues
-    pool: "forks",
-    isolate: false,
+    // Enable threading for better performance but with consistent settings
+    threads: true,
+    // Use thread-based pooling to improve performance
+    pool: "threads",
+    isolate: true,
     // Global test timeout
     testTimeout: 10000,
     // Coverage configuration
@@ -109,38 +108,35 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
     },
     // Setup files - these are loaded before tests run
-    // The optimized-performance-polyfill.js ensures performance.now is available
-    // in all environments, including JSDOM and worker threads
     setupFiles: [
       "./src/test/setup/optimized-performance-polyfill.js",
       "./src/test/setup/silence-lit-dev-mode.js",
       "./vitest.setup.js",
     ],
-    // Memory management options
-    maxWorkers: 1,
-    maxThreads: 1,
+    // Thread settings - ensure minThreads <= maxThreads
     minThreads: 1,
+    maxThreads: 4,
     // Memory limit
     poolOptions: {
       threads: {
-        singleThread: true,
+        singleThread: false,
+        minThreads: 1,
+        maxThreads: 4
       },
       forks: {
-        singleFork: true,
+        singleFork: false,
       },
       vmThreads: {
-        singleThread: true,
+        singleThread: false,
       },
     },
-    // Force garbage collection between tests
-    forceRerunTriggers: ["**/*.js", "**/*.vue"],
-    // Run tests sequentially to mitigate memory issues
+    // Run tests in parallel to improve performance
     sequence: {
-      concurrent: false,
+      concurrent: true,
     },
-    // Disable function serialization to prevent cloning errors
-    useAtomics: false,
-    // Disable worker threads
+    // Enable function serialization
+    useAtomics: true,
+    // Disable browser testing in headless mode for better performance
     browser: {
       enabled: false,
       headless: true,

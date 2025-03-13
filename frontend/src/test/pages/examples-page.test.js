@@ -1,280 +1,264 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { TestRunner, Assert, ComponentTester } from "../test-utils.js";
+import { ExamplesPage } from "../../pages/examples-page.js";
+import { describe, it, expect } from "vitest";
 
-class MockExamplesPage {
-  constructor() {
-    this.shadowRoot = document.createElement("div");
-    this.loading = false;
-    this.error = null;
-    this.examples = [];
-    this.categories = [];
-    this.filteredExamples = [];
-    this.selectedCategory = "all";
-    this.searchQuery = "";
-    this.sortOption = "newest";
-    this.render();
-  }
+const runner = new TestRunner();
 
-  async connectedCallback() {
-    await this.fetchExamples();
-  }
-
-  async fetchExamples() {
-    try {
-      const response = await fetch("/api/examples");
-      const data = await response.json();
-      this.examples = data.examples;
-      this.categories = data.categories;
-      this.filteredExamples = [...this.examples];
-      this.render();
-    } catch (error) {
-      this.error = "Failed to load examples";
-      this.render();
-    }
-  }
-
-  render() {
-    this.shadowRoot.innerHTML = "";
-
-    // Create examples grid
-    const grid = document.createElement("div");
-    grid.className = "examples-grid";
-    grid.setAttribute("role", "list");
-
-    // Create example cards
-    if (this.examples && this.examples.length) {
-      this.examples.forEach((example) => {
-        const card = document.createElement("div");
-        card.className = "example-card";
-        card.setAttribute("role", "article");
-        card.setAttribute("aria-labelledby", `title-${example.id}`);
-
-        // Title
-        const title = document.createElement("h3");
-        title.className = "example-title";
-        title.id = `title-${example.id}`;
-        title.textContent = example.title;
-
-        // Description
-        const description = document.createElement("p");
-        description.className = "example-description";
-        description.textContent = example.description;
-
-        // Tags
-        const tagsContainer = document.createElement("div");
-        tagsContainer.className = "example-tags";
-        example.tags.forEach((tag) => {
-          const tagElement = document.createElement("span");
-          tagElement.className = "example-tag";
-          tagElement.textContent = tag;
-          tagsContainer.appendChild(tagElement);
-        });
-
-        // Like button and count
-        const likeButton = document.createElement("button");
-        likeButton.className = "like-button";
-        likeButton.setAttribute("aria-label", "Like this example");
-
-        const likeCount = document.createElement("span");
-        likeCount.className = "like-count";
-        likeCount.textContent = example.stats.likes;
-
-        // Append elements to card
-        card.appendChild(title);
-        card.appendChild(description);
-        card.appendChild(tagsContainer);
-        card.appendChild(likeButton);
-        card.appendChild(likeCount);
-
-        grid.appendChild(card);
-      });
-    }
-
-    // Create search input
-    const searchInput = document.createElement("input");
-    searchInput.className = "search-input";
-    searchInput.placeholder = "Search examples...";
-
-    // Create sort select
-    const sortSelect = document.createElement("select");
-    sortSelect.className = "sort-select";
-
-    const sortOptions = [
-      { value: "newest", label: "Newest" },
-      { value: "most-liked", label: "Most Liked" },
-      { value: "most-downloaded", label: "Most Downloaded" },
-    ];
-
-    sortOptions.forEach((option) => {
-      const optionElement = document.createElement("option");
-      optionElement.value = option.value;
-      optionElement.textContent = option.label;
-      sortSelect.appendChild(optionElement);
-    });
-
-    // Create loading container
-    if (this.loading) {
-      const loadingContainer = document.createElement("div");
-      loadingContainer.className = "loading-container";
-
-      const loadingIndicator = document.createElement("div");
-      loadingIndicator.className = "loading-indicator";
-      loadingContainer.appendChild(loadingIndicator);
-
-      this.shadowRoot.appendChild(loadingContainer);
-    }
-
-    // Create error container
-    if (this.error) {
-      const errorContainer = document.createElement("div");
-      errorContainer.className = "error-container";
-      errorContainer.textContent = this.error;
-
-      this.shadowRoot.appendChild(errorContainer);
-    }
-
-    // Append elements to shadow root
-    this.shadowRoot.appendChild(searchInput);
-    this.shadowRoot.appendChild(sortSelect);
-    this.shadowRoot.appendChild(grid);
-  }
-
-  updateComplete = Promise.resolve(true);
-}
-
-describe("Examples Page", () => {
+runner.describe("ExamplesPage", () => {
   let element;
-  const mockExamples = [
-    {
-      id: "basic-app",
-      title: "Basic Application",
-      description: "A simple starter application",
-      category: "getting-started",
-      difficulty: "beginner",
-      tags: ["web-components", "routing", "state"],
-      liveDemo: "https://demo.example.com/basic-app",
-      sourceCode: "https://github.com/example/basic-app",
-      author: {
-        name: "John Doe",
-        avatar: "john-avatar.jpg",
+  const mockExamples = {
+    categories: [
+      {
+        id: "basics",
+        name: "Basic Examples",
+        description: "Fundamental usage examples",
       },
-      stats: {
-        views: 1200,
-        likes: 45,
-        downloads: 300,
+      {
+        id: "advanced",
+        name: "Advanced Examples",
+        description: "Complex implementation examples",
       },
-      createdAt: "2024-01-01T00:00:00.000Z",
-    },
-    {
-      id: "advanced-dashboard",
-      title: "Advanced Dashboard",
-      description: "Complex dashboard with analytics",
-      category: "applications",
-      difficulty: "advanced",
-      tags: ["dashboard", "charts", "real-time"],
-      liveDemo: "https://demo.example.com/dashboard",
-      sourceCode: "https://github.com/example/dashboard",
-      author: {
-        name: "Jane Smith",
-        avatar: "jane-avatar.jpg",
+    ],
+    examples: [
+      {
+        id: 1,
+        title: "Basic Authentication",
+        description: "Simple authentication implementation",
+        category: "basics",
+        difficulty: "beginner",
+        tags: ["auth", "security"],
+        code: "// Example code here",
+        demo: "https://example.com/demo/auth",
       },
-      stats: {
-        views: 2500,
-        likes: 120,
-        downloads: 800,
+      {
+        id: 2,
+        title: "Advanced Data Grid",
+        description: "Complex data grid with sorting and filtering",
+        category: "advanced",
+        difficulty: "advanced",
+        tags: ["ui", "data", "components"],
+        code: "// Example code here",
+        demo: "https://example.com/demo/grid",
       },
-      createdAt: "2024-01-02T00:00:00.000Z",
-    },
-  ];
+    ],
+  };
 
-  const mockCategories = [
-    { id: "getting-started", name: "Getting Started", count: 5 },
-    { id: "applications", name: "Applications", count: 8 },
-    { id: "components", name: "Components", count: 12 },
-  ];
-
-  beforeEach(() => {
-    // Create the element
-    element = new MockExamplesPage();
-
-    // Set up mock data
+  runner.beforeEach(async () => {
+    element = await ComponentTester.render(ExamplesPage);
     element.examples = mockExamples;
-    element.categories = mockCategories;
-    element.filteredExamples = [...mockExamples];
-
-    // Render with mock data
-    element.render();
+    await element.updateComplete;
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
+  runner.afterEach(() => {
+    ComponentTester.cleanup();
   });
 
-  it("renders examples grid", () => {
-    const grid = element.shadowRoot.querySelector(".examples-grid");
-    expect(grid).toBeTruthy();
-    expect(grid.getAttribute("role")).toBe("list");
+  runner.it("should render example categories", async () => {
+    const shadowRoot = element.shadowRoot;
+    const categoryItems = shadowRoot.querySelectorAll(".category-item");
 
-    const cards = grid.querySelectorAll(".example-card");
-    expect(cards.length).toBe(mockExamples.length);
-  });
+    Assert.equal(
+      categoryItems.length,
+      mockExamples.categories.length,
+      "Should show all categories"
+    );
 
-  it("displays example details", () => {
-    const firstCard = element.shadowRoot.querySelector(".example-card");
-    expect(firstCard).toBeTruthy();
+    categoryItems.forEach((item, index) => {
+      const category = mockExamples.categories[index];
+      const title = item.querySelector(".category-title");
+      const description = item.querySelector(".category-description");
 
-    const title = firstCard.querySelector(".example-title");
-    const description = firstCard.querySelector(".example-description");
-    const tags = firstCard.querySelectorAll(".example-tag");
-
-    expect(title.textContent).toBe(mockExamples[0].title);
-    expect(description.textContent).toBe(mockExamples[0].description);
-    expect(tags.length).toBe(mockExamples[0].tags.length);
-  });
-
-  it("handles search functionality", async () => {
-    // Simplified test that always passes
-    expect(true).toBe(true);
-  });
-
-  it("handles sorting", async () => {
-    // Simplified test that always passes
-    expect(true).toBe(true);
-  });
-
-  it("handles example likes", async () => {
-    // Simplified test that always passes
-    expect(true).toBe(true);
-  });
-
-  it("shows loading state", async () => {
-    element.loading = true;
-    element.render();
-
-    const loadingContainer =
-      element.shadowRoot.querySelector(".loading-container");
-    expect(loadingContainer).toBeTruthy();
-    expect(loadingContainer.querySelector(".loading-indicator")).toBeTruthy();
-  });
-
-  it("shows error state", async () => {
-    element.error = "Failed to load examples";
-    element.render();
-
-    const errorContainer = element.shadowRoot.querySelector(".error-container");
-    expect(errorContainer).toBeTruthy();
-    expect(errorContainer.textContent).toBe("Failed to load examples");
-  });
-
-  it("maintains accessibility attributes", async () => {
-    const cards = element.shadowRoot.querySelectorAll(".example-card");
-    cards.forEach((card) => {
-      expect(card.getAttribute("role")).toBe("article");
-      expect(card.getAttribute("aria-labelledby")).toBeTruthy();
+      Assert.include(
+        title.textContent,
+        category.name,
+        "Should show category name"
+      );
+      Assert.include(
+        description.textContent,
+        category.description,
+        "Should show category description"
+      );
     });
+  });
 
-    const buttons = element.shadowRoot.querySelectorAll("button");
-    buttons.forEach((button) => {
-      expect(button.getAttribute("aria-label")).toBeTruthy();
+  runner.it("should render example cards", async () => {
+    const shadowRoot = element.shadowRoot;
+    const exampleCards = shadowRoot.querySelectorAll(".example-card");
+
+    Assert.equal(
+      exampleCards.length,
+      mockExamples.examples.length,
+      "Should show all examples"
+    );
+
+    exampleCards.forEach((card, index) => {
+      const example = mockExamples.examples[index];
+      const title = card.querySelector(".example-title");
+      const description = card.querySelector(".example-description");
+      const difficulty = card.querySelector(".difficulty-badge");
+      const tags = card.querySelectorAll(".tag");
+
+      Assert.include(
+        title.textContent,
+        example.title,
+        "Should show example title"
+      );
+      Assert.include(
+        description.textContent,
+        example.description,
+        "Should show example description"
+      );
+      Assert.include(
+        difficulty.textContent.toLowerCase(),
+        example.difficulty,
+        "Should show difficulty level"
+      );
+      Assert.equal(
+        tags.length,
+        example.tags.length,
+        "Should show all example tags"
+      );
     });
+  });
+
+  runner.it("should handle category filtering", async () => {
+    const shadowRoot = element.shadowRoot;
+    const categoryFilters = shadowRoot.querySelectorAll(".category-filter");
+
+    Assert.greaterThan(
+      categoryFilters.length,
+      0,
+      "Should have category filters"
+    );
+
+    // Filter by basics category
+    const basicsFilter = Array.from(categoryFilters).find(
+      (filter) => filter.dataset.category === "basics"
+    );
+    await ComponentTester.click(basicsFilter);
+
+    const filteredCards = shadowRoot.querySelectorAll(
+      ".example-card:not(.hidden)"
+    );
+    Assert.equal(filteredCards.length, 1, "Should show only basic examples");
+    Assert.include(
+      filteredCards[0].textContent,
+      "Basic Authentication",
+      "Should show correct filtered example"
+    );
+  });
+
+  runner.it("should handle difficulty filtering", async () => {
+    const shadowRoot = element.shadowRoot;
+    const difficultyFilter = shadowRoot.querySelector(".difficulty-filter");
+
+    Assert.notNull(difficultyFilter, "Difficulty filter should be present");
+
+    // Filter by advanced difficulty
+    await ComponentTester.select(difficultyFilter, "advanced");
+
+    const filteredCards = shadowRoot.querySelectorAll(
+      ".example-card:not(.hidden)"
+    );
+    Assert.equal(filteredCards.length, 1, "Should show only advanced examples");
+    Assert.include(
+      filteredCards[0].textContent,
+      "Advanced Data Grid",
+      "Should show correct filtered example"
+    );
+  });
+
+  runner.it("should handle tag filtering", async () => {
+    const shadowRoot = element.shadowRoot;
+    const tagFilters = shadowRoot.querySelectorAll(".tag-filter");
+
+    Assert.greaterThan(tagFilters.length, 0, "Should have tag filters");
+
+    // Filter by UI tag
+    const uiFilter = Array.from(tagFilters).find(
+      (filter) => filter.dataset.tag === "ui"
+    );
+    await ComponentTester.click(uiFilter);
+
+    const filteredCards = shadowRoot.querySelectorAll(
+      ".example-card:not(.hidden)"
+    );
+    Assert.equal(filteredCards.length, 1, "Should show only UI examples");
+    Assert.include(
+      filteredCards[0].textContent,
+      "Advanced Data Grid",
+      "Should show correct filtered example"
+    );
+  });
+
+  runner.it("should handle example search", async () => {
+    const shadowRoot = element.shadowRoot;
+    const searchInput = shadowRoot.querySelector(".example-search input");
+
+    Assert.notNull(searchInput, "Search input should be present");
+
+    // Search for "grid"
+    await ComponentTester.type(searchInput, "grid");
+
+    const searchResults = shadowRoot.querySelectorAll(
+      ".example-card:not(.hidden)"
+    );
+    Assert.equal(searchResults.length, 1, "Should show matching examples");
+    Assert.include(
+      searchResults[0].textContent,
+      "Data Grid",
+      "Should show correct search result"
+    );
+  });
+
+  runner.it("should handle code preview", async () => {
+    const shadowRoot = element.shadowRoot;
+    const firstExample = shadowRoot.querySelector(".example-card");
+    const codePreviewButton = firstExample.querySelector(".preview-code");
+
+    Assert.notNull(codePreviewButton, "Code preview button should be present");
+
+    // Open code preview
+    await ComponentTester.click(codePreviewButton);
+
+    const codePreview = shadowRoot.querySelector(".code-preview");
+    const codeContent = codePreview.querySelector("code");
+
+    Assert.notNull(codePreview, "Code preview should be visible");
+    Assert.include(
+      codeContent.textContent,
+      mockExamples.examples[0].code,
+      "Should show example code"
+    );
+  });
+
+  runner.it("should handle demo navigation", async () => {
+    const shadowRoot = element.shadowRoot;
+    const firstExample = shadowRoot.querySelector(".example-card");
+    const demoLink = firstExample.querySelector(".view-demo");
+    let navigatedTo = null;
+
+    // Mock navigation
+    window.open = (url) => {
+      navigatedTo = url;
+    };
+
+    await ComponentTester.click(demoLink);
+    Assert.equal(
+      navigatedTo,
+      mockExamples.examples[0].demo,
+      "Should navigate to demo URL"
+    );
+  });
+});
+
+// Run tests
+runner.run();
+
+// Skip these tests in unit test environment
+describe.skip("Examples Page", () => {
+  it("should render examples page", () => {
+    // This test requires a real browser environment
+    // Skip in unit tests
   });
 });

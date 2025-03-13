@@ -228,12 +228,23 @@ describe("Component Mock Utilities", () => {
     });
 
     it("should not register a component that is already registered", () => {
+      // Set up the mock for customElements.get BEFORE calling registerMockComponent
       const MockButton = createMockComponent("MockButton");
+
+      // Reset the mock for customElements.define to track new calls
+      customElements.define.mockReset();
+
+      // Mock customElements.get to return the component, indicating it's already registered
       customElements.get = vi.fn().mockReturnValue(MockButton);
 
+      // Now call registerMockComponent
       registerMockComponent("mock-button", MockButton);
 
+      // Verify that define was not called since the component is already registered
       expect(customElements.define).not.toHaveBeenCalled();
+
+      // Clean up the mock
+      customElements.get.mockRestore();
     });
 
     it("should handle errors when registering a component", () => {

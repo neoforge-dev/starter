@@ -1,418 +1,156 @@
-import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { JSDOM } from "jsdom";
 
-// Create a simplified mock for the status-page component using pure JavaScript
-class MockCustomEvent {
-  constructor(type, options = {}) {
-    this.type = type;
-    this.detail = options.detail || {};
-    this.bubbles = options.bubbles || false;
-    this.composed = options.composed || false;
-    this.defaultPrevented = false;
-  }
-
-  preventDefault() {
-    this.defaultPrevented = true;
-  }
-}
-
+// Simple test for status page functionality
 describe("Status Page", () => {
-  let element;
+  let document;
+  let statusPage;
 
   beforeEach(() => {
-    // Create a pure JavaScript mock
-    element = {
-      _eventListeners: new Map(),
+    // Create a fresh DOM for each test
+    const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
+    document = dom.window.document;
 
-      // Mock properties
-      status: {
-        overall: "operational",
-        lastUpdated: "2024-03-15T12:00:00Z",
-        uptime: 99.99,
-        services: [
-          {
-            id: "api",
-            name: "API",
-            status: "operational",
-            uptime: 99.98,
-            incidents: [],
-          },
-          {
-            id: "web",
-            name: "Web Interface",
-            status: "operational",
-            uptime: 99.95,
-            incidents: [],
-          },
-          {
-            id: "database",
-            name: "Database",
-            status: "operational",
-            uptime: 99.99,
-            incidents: [],
-          },
-        ],
-        incidents: [
-          {
-            id: "inc-001",
-            title: "API Latency Issues",
-            status: "resolved",
-            date: "2024-03-14T15:30:00Z",
-            description:
-              "Some users experienced increased latency when using the API.",
-          },
-        ],
-      },
+    // Create a simple status page element
+    statusPage = document.createElement("div");
+    statusPage.id = "status-page";
 
-      loading: false,
-      error: null,
+    // Create shadow root simulation
+    const shadowRoot = document.createElement("div");
+    shadowRoot.id = "shadow-root";
+    statusPage.appendChild(shadowRoot);
 
-      // Mock shadow DOM content
-      _shadowRoot: {
-        innerHTML: `
-          <div class="status-container">
-            <h1>System Status</h1>
-            <div class="status-overview">
-              <div class="status-indicator operational">Operational</div>
-              <div class="uptime">99.99% uptime</div>
-              <div class="last-updated">Last updated: March 15, 2024</div>
-            </div>
-            <div class="services-list">
-              <div class="service-item">
-                <div class="service-name">API</div>
-                <div class="service-status operational">Operational</div>
-              </div>
-              <div class="service-item">
-                <div class="service-name">Web Interface</div>
-                <div class="service-status operational">Operational</div>
-              </div>
-            </div>
-            <div class="incidents-list">
-              <h2>Recent Incidents</h2>
-              <div class="incident-item">
-                <div class="incident-title">API Latency Issues</div>
-                <div class="incident-status resolved">Resolved</div>
-                <div class="incident-time">March 14, 2024</div>
-              </div>
-            </div>
-          </div>
-        `,
+    // Create title
+    const title = document.createElement("h1");
+    title.textContent = "System Status";
+    title.className = "status-title";
+    shadowRoot.appendChild(title);
 
-        // Mock querySelector functionality
-        querySelector: function (selector) {
-          // Simple mock implementation for common selectors
-          if (selector === "h1") {
-            return { textContent: "System Status" };
-          } else if (selector === ".status-overview") {
-            return {
-              querySelector: function (subSelector) {
-                if (subSelector === ".status-indicator") {
-                  return {
-                    textContent: "Operational",
-                    classList: {
-                      contains: (className) => className === "operational",
-                    },
-                  };
-                } else if (subSelector === ".uptime") {
-                  return { textContent: "99.99% uptime" };
-                } else if (subSelector === ".last-updated") {
-                  return { textContent: "Last updated: March 15, 2024" };
-                }
-                return null;
-              },
-            };
-          } else if (selector === ".services-list") {
-            return {
-              querySelectorAll: function (subSelector) {
-                if (subSelector === ".service-item") {
-                  return [
-                    {
-                      querySelector: function (itemSelector) {
-                        if (itemSelector === ".service-name") {
-                          return { textContent: "API" };
-                        } else if (itemSelector === ".service-status") {
-                          return {
-                            textContent: "Operational",
-                            classList: {
-                              contains: (className) =>
-                                className === "operational",
-                            },
-                          };
-                        }
-                        return null;
-                      },
-                    },
-                    {
-                      querySelector: function (itemSelector) {
-                        if (itemSelector === ".service-name") {
-                          return { textContent: "Web Interface" };
-                        } else if (itemSelector === ".service-status") {
-                          return {
-                            textContent: "Operational",
-                            classList: {
-                              contains: (className) =>
-                                className === "operational",
-                            },
-                          };
-                        }
-                        return null;
-                      },
-                    },
-                  ];
-                }
-                return [];
-              },
-            };
-          } else if (selector === ".incidents-list") {
-            return {
-              querySelector: function (subSelector) {
-                if (subSelector === "h2") {
-                  return { textContent: "Recent Incidents" };
-                }
-                return null;
-              },
-              querySelectorAll: function (subSelector) {
-                if (subSelector === ".incident-item") {
-                  return [
-                    {
-                      querySelector: function (itemSelector) {
-                        if (itemSelector === ".incident-title") {
-                          return { textContent: "API Latency Issues" };
-                        } else if (itemSelector === ".incident-status") {
-                          return {
-                            textContent: "Resolved",
-                            classList: {
-                              contains: (className) => className === "resolved",
-                            },
-                          };
-                        } else if (itemSelector === ".incident-time") {
-                          return { textContent: "March 14, 2024" };
-                        }
-                        return null;
-                      },
-                    },
-                  ];
-                }
-                return [];
-              },
-            };
-          } else if (selector === ".loading") {
-            return element.loading ? { textContent: "Loading..." } : null;
-          } else if (selector === ".error") {
-            return element.error ? { textContent: element.error } : null;
-          }
-          return null;
-        },
+    // Create services container
+    const servicesContainer = document.createElement("div");
+    servicesContainer.className = "services-container";
+    shadowRoot.appendChild(servicesContainer);
 
-        querySelectorAll: function (selector) {
-          if (selector === ".service-item") {
-            return [
-              {
-                querySelector: function (itemSelector) {
-                  if (itemSelector === ".service-name") {
-                    return { textContent: "API" };
-                  } else if (itemSelector === ".service-status") {
-                    return {
-                      textContent: "Operational",
-                      classList: {
-                        contains: (className) => className === "operational",
-                      },
-                    };
-                  }
-                  return null;
-                },
-              },
-              {
-                querySelector: function (itemSelector) {
-                  if (itemSelector === ".service-name") {
-                    return { textContent: "Web Interface" };
-                  } else if (itemSelector === ".service-status") {
-                    return {
-                      textContent: "Operational",
-                      classList: {
-                        contains: (className) => className === "operational",
-                      },
-                    };
-                  }
-                  return null;
-                },
-              },
-            ];
-          } else if (selector === ".incident-item") {
-            return [
-              {
-                querySelector: function (itemSelector) {
-                  if (itemSelector === ".incident-title") {
-                    return { textContent: "API Latency Issues" };
-                  } else if (itemSelector === ".incident-status") {
-                    return {
-                      textContent: "Resolved",
-                      classList: {
-                        contains: (className) => className === "resolved",
-                      },
-                    };
-                  } else if (itemSelector === ".incident-time") {
-                    return { textContent: "March 14, 2024" };
-                  }
-                  return null;
-                },
-              },
-            ];
-          }
-          return [];
-        },
-      },
+    // Add to document
+    document.body.appendChild(statusPage);
 
-      // Event handling
-      addEventListener(event, callback) {
-        if (!this._eventListeners.has(event)) {
-          this._eventListeners.set(event, []);
-        }
-        this._eventListeners.get(event).push(callback);
-      },
+    // Add methods to simulate component behavior
+    statusPage.renderServices = (services) => {
+      servicesContainer.innerHTML = "";
 
-      removeEventListener(event, callback) {
-        if (!this._eventListeners.has(event)) return;
-        const listeners = this._eventListeners.get(event);
-        const index = listeners.indexOf(callback);
-        if (index !== -1) {
-          listeners.splice(index, 1);
-        }
-      },
+      if (!services || services.length === 0) {
+        const emptyMessage = document.createElement("p");
+        emptyMessage.className = "empty-message";
+        emptyMessage.textContent = "No services available";
+        servicesContainer.appendChild(emptyMessage);
+        return;
+      }
 
-      dispatchEvent(event) {
-        const listeners = this._eventListeners.get(event.type) || [];
-        listeners.forEach((callback) => callback(event));
-        return !event.defaultPrevented;
-      },
+      services.forEach((service) => {
+        const card = document.createElement("div");
+        card.className = "service-card";
 
-      // Getter for shadowRoot
-      get shadowRoot() {
-        return this._shadowRoot;
-      },
+        const name = document.createElement("h2");
+        name.textContent = service.name;
+        card.appendChild(name);
 
-      // Mock methods
-      showLoading() {
-        this.loading = true;
-        this.error = null;
-      },
+        const status = document.createElement("div");
+        status.className = `status ${service.status}`;
+        status.textContent = service.status;
+        card.appendChild(status);
 
-      showError(message) {
-        this.loading = false;
-        this.error = message;
-      },
+        const description = document.createElement("p");
+        description.textContent = service.description;
+        card.appendChild(description);
 
-      refreshStatus() {
-        // Mock refresh functionality
-        this.dispatchEvent(new MockCustomEvent("status-refreshed"));
-        return Promise.resolve(this.status);
-      },
-
-      subscribeToUpdates(email) {
-        // Mock subscription
-        this.dispatchEvent(
-          new MockCustomEvent("subscribed", { detail: { email } })
-        );
-        return Promise.resolve({ success: true });
-      },
+        servicesContainer.appendChild(card);
+      });
     };
 
-    // Add to document body for test purposes
-    document.body.appendChild = vi.fn();
-    document.body.appendChild(element);
+    statusPage.showLoading = () => {
+      servicesContainer.innerHTML = "";
+      const loading = document.createElement("div");
+      loading.className = "loading-indicator";
+      loading.textContent = "Loading services...";
+      servicesContainer.appendChild(loading);
+    };
+
+    statusPage.showError = (message) => {
+      servicesContainer.innerHTML = "";
+      const error = document.createElement("div");
+      error.className = "error-message";
+      error.textContent = message || "Failed to load services";
+      servicesContainer.appendChild(error);
+    };
   });
 
-  afterEach(() => {
-    if (element) {
-      document.body.removeChild = vi.fn();
-      document.body.removeChild(element);
-    }
-  });
-
-  it("should have a shadowRoot", () => {
-    expect(element.shadowRoot).toBeTruthy();
-  });
-
-  it("should render the status title", () => {
-    const title = element.shadowRoot.querySelector("h1");
-    expect(title).toBeTruthy();
+  it("should have a title", () => {
+    const title = statusPage.querySelector("#shadow-root .status-title");
+    expect(title).toBeDefined();
     expect(title.textContent).toBe("System Status");
   });
 
-  it("should render status overview", () => {
-    const overview = element.shadowRoot.querySelector(".status-overview");
-    expect(overview).toBeTruthy();
-
-    const indicator = overview.querySelector(".status-indicator");
-    expect(indicator).toBeTruthy();
-    expect(indicator.textContent).toBe("Operational");
-    expect(indicator.classList.contains("operational")).toBe(true);
-
-    const uptime = overview.querySelector(".uptime");
-    expect(uptime).toBeTruthy();
-    expect(uptime.textContent).toBe("99.99% uptime");
-  });
-
-  it("should display service statuses", () => {
-    const servicesList = element.shadowRoot.querySelector(".services-list");
-    expect(servicesList).toBeTruthy();
-
-    const serviceItems = servicesList.querySelectorAll(".service-item");
-    expect(serviceItems.length).toBeGreaterThan(0);
-
-    // Check first service
-    const firstService = serviceItems[0];
-    const serviceName = firstService.querySelector(".service-name");
-    expect(serviceName).toBeTruthy();
-    expect(serviceName.textContent).toBe("API");
-
-    const serviceStatus = firstService.querySelector(".service-status");
-    expect(serviceStatus).toBeTruthy();
-    expect(serviceStatus.textContent).toBe("Operational");
-    expect(serviceStatus.classList.contains("operational")).toBe(true);
-  });
-
-  it("should show incident history", () => {
-    const incidentsList = element.shadowRoot.querySelector(".incidents-list");
-    expect(incidentsList).toBeTruthy();
-
-    const incidentTitle = incidentsList.querySelector("h2");
-    expect(incidentTitle).toBeTruthy();
-    expect(incidentTitle.textContent).toBe("Recent Incidents");
-
-    const incidentItems = incidentsList.querySelectorAll(".incident-item");
-    expect(incidentItems.length).toBeGreaterThan(0);
-
-    // Check first incident
-    const firstIncident = incidentItems[0];
-    const incidentName = firstIncident.querySelector(".incident-title");
-    expect(incidentName).toBeTruthy();
-    expect(incidentName.textContent).toBe("API Latency Issues");
-
-    const incidentStatus = firstIncident.querySelector(".incident-status");
-    expect(incidentStatus).toBeTruthy();
-    expect(incidentStatus.textContent).toBe("Resolved");
-    expect(incidentStatus.classList.contains("resolved")).toBe(true);
-  });
-
   it("should show loading state", () => {
-    element.showLoading();
-
-    // Mock the loading state in our shadowRoot implementation
-    element.loading = true;
-
-    const loadingElement = element.shadowRoot.querySelector(".loading");
-    expect(loadingElement).toBeTruthy();
+    statusPage.showLoading();
+    const loading = statusPage.querySelector("#shadow-root .loading-indicator");
+    expect(loading).toBeDefined();
+    expect(loading.textContent).toBe("Loading services...");
   });
 
   it("should show error state", () => {
-    const errorMessage = "Failed to load status data";
-    element.showError(errorMessage);
+    statusPage.showError("Custom error message");
+    const error = statusPage.querySelector("#shadow-root .error-message");
+    expect(error).toBeDefined();
+    expect(error.textContent).toBe("Custom error message");
+  });
 
-    // Mock the error state in our shadowRoot implementation
-    element.error = errorMessage;
+  it("should show default error message", () => {
+    statusPage.showError();
+    const error = statusPage.querySelector("#shadow-root .error-message");
+    expect(error).toBeDefined();
+    expect(error.textContent).toBe("Failed to load services");
+  });
 
-    const errorElement = element.shadowRoot.querySelector(".error");
-    expect(errorElement).toBeTruthy();
-    expect(errorElement.textContent).toBe(errorMessage);
+  it("should show empty state", () => {
+    statusPage.renderServices([]);
+    const emptyMessage = statusPage.querySelector(
+      "#shadow-root .empty-message"
+    );
+    expect(emptyMessage).toBeDefined();
+    expect(emptyMessage.textContent).toBe("No services available");
+  });
+
+  it("should render service cards", () => {
+    const services = [
+      {
+        name: "API Gateway",
+        status: "operational",
+        description: "The main API gateway service",
+      },
+      {
+        name: "Database",
+        status: "degraded",
+        description: "Primary database cluster",
+      },
+    ];
+
+    statusPage.renderServices(services);
+
+    const cards = statusPage.querySelectorAll("#shadow-root .service-card");
+    expect(cards.length).toBe(2);
+
+    // Check first card
+    expect(cards[0].querySelector("h2").textContent).toBe("API Gateway");
+    expect(cards[0].querySelector(".status").textContent).toBe("operational");
+    expect(cards[0].querySelector("p").textContent).toBe(
+      "The main API gateway service"
+    );
+
+    // Check second card
+    expect(cards[1].querySelector("h2").textContent).toBe("Database");
+    expect(cards[1].querySelector(".status").textContent).toBe("degraded");
+    expect(cards[1].querySelector("p").textContent).toBe(
+      "Primary database cluster"
+    );
   });
 });

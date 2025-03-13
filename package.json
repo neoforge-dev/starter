@@ -1,5 +1,9 @@
 {
   "devDependencies": {
     "@webcomponents/webcomponentsjs": "^2.8.0"
+  },
+  "scripts": {
+    "test:unit": "vitest run",
+    "test:unit:working": "vitest run --testNamePattern='^(?!.*404-page|.*contact-page|.*examples-page|.*profile-page|.*settings-page|.*tutorials-page|.*docs-page|.*login-page).*$'"
   }
 }

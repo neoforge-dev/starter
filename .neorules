@@ -1,4 +1,46 @@
-# NeoForge Project Rules and Patterns
+# NeoForge Core Rules
+
+## Development Principles
+- **Minimalism**: Prefer browser-native features over libraries
+- **Performance**: Optimize for initial load and runtime performance
+- **Maintainability**: Write clean, readable, and well-documented code
+- **Testing**: Follow test-driven development practices
+- **Documentation**: Keep Memory Bank updated with all significant changes
+
+## Frontend Patterns
+- **Web Components**: Use Lit for component development (see memory-bank/tech-context.md)
+- **Events**: Use consistent naming and propagation patterns (see memory-bank/system-patterns.md)
+- **Testing**: Follow established testing patterns (see memory-bank/active-context.md)
+
+## Backend Patterns
+- **API Design**: Follow RESTful principles with consistent response formats
+- **Async**: Use async/await patterns throughout
+- **Error Handling**: Standardized error responses (see memory-bank/system-patterns.md)
+
+## LLM Context Management
+- **Selective Output**: Limit test output to essential information (3-5 failures max)
+- **Pattern Recognition**: Summarize patterns instead of listing every instance
+- **Information Hierarchy**: Present most important information first
+- **Concise Reporting**: Filter verbose outputs to extract only relevant details
+
+## Testing Strategy
+- **Incremental Fixes**: Address one issue at a time
+- **Root Cause Analysis**: Understand underlying issues before implementing fixes
+- **Mocking Approach**: Use standardized utilities for mocking components
+
+## Common Commands
+```bash
+# Frontend
+cd frontend && npm run dev     # Start frontend dev server
+npm run test:working           # Run working tests
+npm run test:unit -- --bail 3  # Run unit tests, stop after 3 failures
+
+# Backend
+cd backend && make dev         # Start backend dev server
+make test                      # Run backend tests
+```
+
+For detailed implementation patterns, component examples, and project-specific guidelines, refer to the memory-bank directory.
 
 ## Frontend Development Patterns
 

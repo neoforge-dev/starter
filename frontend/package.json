@@ -24,6 +24,7 @@
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
+    "test:e2e:custom": "playwright test --config=playwright.e2e.config.js",
     "test:watch": "vitest",
     "test:perf": "vitest run src/test/performance/performance.test.js",
     "test:a11y": "playwright test --config=playwright.a11y.config.js",

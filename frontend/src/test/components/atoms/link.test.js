@@ -146,13 +146,21 @@ class MockNeoLink {
       return;
     }
 
-    this.dispatchEvent(
-      new CustomEvent("click", {
-        bubbles: true,
-        composed: true,
-        detail: { originalEvent: e },
-      })
-    );
+    // Create a custom event to dispatch
+    const customEvent = {
+      type: 'click',
+      detail: { originalEvent: e },
+      bubbles: true,
+      composed: true,
+      defaultPrevented: false,
+      preventDefault() {
+        this.defaultPrevented = true;
+      }
+    };
+    
+    // Directly call the event listeners
+    const listeners = this._eventListeners.get('click') || [];
+    listeners.forEach((callback) => callback(customEvent));
   }
 
   // Helper methods for updating the link element
