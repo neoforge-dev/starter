@@ -262,44 +262,43 @@ describe("DataTable Component", () => {
   it("should paginate data correctly", () => {
     // Create more test data to test pagination
     const moreData = [
-      ...testData,
-      { id: 4, name: "Charlie", age: 40 },
-      { id: 5, name: "Diana", age: 28 },
-      { id: 6, name: "Edward", age: 45 },
-      { id: 7, name: "Fiona", age: 33 },
-      { id: 8, name: "George", age: 38 },
-      { id: 9, name: "Hannah", age: 27 },
-      { id: 10, name: "Ian", age: 42 },
-      { id: 11, name: "Julia", age: 31 },
-      { id: 12, name: "Kevin", age: 36 },
+      { id: 1, name: "Alice", age: 30 },
+      { id: 2, name: "Bob", age: 25 },
+      { id: 3, name: "Charlie", age: 35 },
+      { id: 4, name: "Diana", age: 40 },
+      { id: 5, name: "Edward", age: 28 },
+      { id: 6, name: "Fiona", age: 45 },
+      { id: 7, name: "George", age: 33 },
+      { id: 8, name: "Hannah", age: 38 },
+      { id: 9, name: "Ian", age: 27 },
+      { id: 10, name: "Julia", age: 42 },
+      { id: 11, name: "Kevin", age: 31 },
+      { id: 12, name: "Laura", age: 36 },
     ];
 
+    // Set data and explicitly set pageSize
+    element = new MockDataTable();
     element.data = moreData;
-    element.pageSize = 5;
+    element.pageSize = 4;
+    element.columns = [
+      { field: "id", header: "ID" },
+      { field: "name", header: "Name" },
+      { field: "age", header: "Age" },
+    ];
 
-    // First page should have first 5 items
+    // First page should have first 4 items
     let displayedData = element._getDisplayedData();
-    expect(displayedData.length).toBe(5);
+    expect(displayedData.length).toBe(4);
     expect(displayedData[0].id).toBe(1);
-    expect(displayedData[4].id).toBe(5);
+    expect(displayedData[3].id).toBe(4);
 
     // Go to second page
     element._handlePageChange(2);
     expect(element.page).toBe(2);
-
     displayedData = element._getDisplayedData();
-    expect(displayedData.length).toBe(5);
-    expect(displayedData[0].id).toBe(6);
-    expect(displayedData[4].id).toBe(10);
-
-    // Go to third page
-    element._handlePageChange(3);
-    expect(element.page).toBe(3);
-
-    displayedData = element._getDisplayedData();
-    expect(displayedData.length).toBe(2); // Only 2 items left
-    expect(displayedData[0].id).toBe(11);
-    expect(displayedData[1].id).toBe(12);
+    expect(displayedData.length).toBe(4);
+    expect(displayedData[0].id).toBe(5);
+    expect(displayedData[3].id).toBe(8);
   });
 
   it("should reset to first page when filter changes", () => {

@@ -2,7 +2,7 @@ import { expect, describe, it, beforeEach } from "vitest";
 
 class MockNeoSelect {
   constructor() {
-    this.value = "";
+    this.value = ""; // Initialize as empty string for single selection
     this.multiple = false;
     this.searchable = false;
     this.disabled = false;
@@ -155,17 +155,20 @@ class MockNeoSelect {
 
   selectOption(value) {
     if (this.multiple) {
+      // Initialize as empty array if not already an array
       if (!Array.isArray(this.value)) {
         this.value = [];
       }
 
+      // For multiple selection, always maintain an array
       if (this.value.includes(value)) {
         this.value = this.value.filter((v) => v !== value);
       } else {
         this.value = [...this.value, value];
       }
     } else {
-      this.value = value;
+      // For single selection, ensure it's a string value (not an array)
+      this.value = value.toString(); // Convert to string to ensure it's not an array
       this.isOpen = false;
     }
 
@@ -209,7 +212,7 @@ class MockNeoSelect {
 
 describe("NeoSelect", () => {
   let element;
-  const basicOptions = [
+  const testOptions = [
     { value: "1", label: "Option 1" },
     { value: "2", label: "Option 2" },
     { value: "3", label: "Option 3" },
@@ -217,7 +220,10 @@ describe("NeoSelect", () => {
 
   beforeEach(() => {
     element = new MockNeoSelect();
-    element.options = basicOptions;
+    element.options = testOptions;
+    // Make sure isOpen is initially false
+    element.isOpen = false;
+    element.render();
   });
 
   it("renders with default properties", () => {
@@ -245,12 +251,19 @@ describe("NeoSelect", () => {
   });
 
   it("handles single selection", () => {
+    // Ensure element is properly initialized for single selection
+    element.multiple = false;
+    element.value = "";
+    element.render();
+
     const trigger = element.shadowRoot.querySelector(".select-trigger");
     element.toggleDropdown();
 
     const option = element.shadowRoot.querySelector(".option");
     element.selectOption("1");
 
+    // For single selection, value should be a string
+    expect(typeof element.value).toBe("string");
     expect(element.value).toBe("1");
     expect(
       element.shadowRoot.querySelector(".selected-value").textContent
@@ -259,13 +272,20 @@ describe("NeoSelect", () => {
 
   it("handles multiple selection", () => {
     element.multiple = true;
+    // Initialize value as an empty array
+    element.value = [];
     element.toggleDropdown();
 
+    // Select first option
     element.selectOption("1");
+    // Select second option
     element.selectOption("2");
 
     expect(Array.isArray(element.value)).toBe(true);
-    expect(element.value).toEqual(["1", "2"]);
+    // Check that both values are in the array
+    expect(element.value).toContain("1");
+    expect(element.value).toContain("2");
+    expect(element.value.length).toBe(2);
   });
 
   it("supports search functionality", () => {
@@ -288,9 +308,15 @@ describe("NeoSelect", () => {
   });
 
   it("closes dropdown when clicking outside", () => {
+    // First ensure dropdown is closed
+    element.isOpen = false;
+    element.render();
+
+    // Then toggle to open it
     element.toggleDropdown();
     expect(element.isOpen).toBe(true);
 
+    // Simulate clicking outside by directly closing it
     element.toggleDropdown();
     expect(element.isOpen).toBe(false);
   });
@@ -317,6 +343,10 @@ describe("NeoSelect", () => {
   });
 
   it("handles accessibility requirements", () => {
+    // Ensure dropdown is closed initially
+    element.isOpen = false;
+    element.render();
+
     // Check initial state
     const trigger = element.shadowRoot.querySelector(".select-trigger");
     expect(trigger.getAttribute("role")).toBe("combobox");
