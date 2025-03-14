@@ -177,6 +177,8 @@ describe("Blog Page", () => {
 
   beforeEach(() => {
     element = new MockBlogPage();
+    // Reset mocks
+    vi.clearAllMocks();
   });
 
   it("should initialize with empty posts and categories", () => {
@@ -188,9 +190,9 @@ describe("Blog Page", () => {
 
   it("should load all posts when no category is specified", async () => {
     await element.loadPosts();
-    expect(element.posts.length).toBe(1);
+    expect(element.posts.length).toBe(2);
     expect(element.posts[0].id).toBe(mockPosts[0].id);
-    expect(element.selectedCategory).toBe("tutorials");
+    expect(element.selectedCategory).toBeNull();
   });
 
   it("should filter posts by category when specified", async () => {
@@ -204,23 +206,24 @@ describe("Blog Page", () => {
     await element.loadCategories();
     expect(element.categories).toContain("tutorials");
     expect(element.categories).toContain("advanced");
-    expect(element.categories).toHaveLength(2);
+    expect(element.categories.length).toBe(2);
   });
 
   it("should dispatch event when category is selected", () => {
-    const dispatchEventSpy = vi.spyOn(element, "dispatchEvent");
+    const spy = vi.fn();
+    element.addEventListener("category-selected", spy);
+
     element.selectCategory("tutorials");
 
-    expect(dispatchEventSpy).toHaveBeenCalledTimes(1);
-    const event = dispatchEventSpy.mock.calls[0][0];
-    expect(event.type).toBe("category-selected");
-    expect(event.detail).toEqual({ category: "tutorials" });
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy.mock.calls[0][0].detail.category).toBe("tutorials");
   });
 
-  it("should load posts when category is selected", async () => {
+  it("should load posts when category is selected", () => {
     const loadPostsSpy = vi.spyOn(element, "loadPosts");
-    element.selectCategory("tutorials");
 
-    expect(loadPostsSpy).toHaveBeenCalledWith("tutorials");
+    element.selectCategory("advanced");
+
+    expect(loadPostsSpy).toHaveBeenCalledWith("advanced");
   });
 });

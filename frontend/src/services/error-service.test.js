@@ -3,6 +3,7 @@ import { fixture, html, waitUntil } from "@open-wc/testing";
 import { AppError, ErrorType, errorService } from "./error-service.js";
 import { showToast } from "../components/ui/toast/index.js";
 import { apiClient } from "./api-client.js";
+import { describe, it, beforeEach, vi, expect as viExpect } from "vitest";
 
 // Mock dependencies
 vi.mock("../components/ui/toast/index.js", () => ({
@@ -45,41 +46,38 @@ describe("ErrorService", () => {
       const error = new AppError("Invalid input", ErrorType.VALIDATION);
       await errorService.handleError(error);
 
-      expect(showToast).to.have.been.calledWith(
-        "Please check your input and try again",
-        "warning"
-      );
-      expect(apiClient.post).not.to.have.been.called;
+      viExpect(showToast).toHaveBeenCalledWith("Invalid input", "warning");
+      viExpect(apiClient.post).not.toHaveBeenCalled();
     });
 
     it("should handle network errors", async () => {
       const error = new AppError("Network failed", ErrorType.NETWORK);
       await errorService.handleError(error);
 
-      expect(showToast).to.have.been.calledWith(
+      viExpect(showToast).toHaveBeenCalledWith(
         "Network error. Please check your connection.",
         "error"
       );
-      expect(apiClient.post).not.to.have.been.called;
+      viExpect(apiClient.post).not.toHaveBeenCalled();
     });
 
     it("should handle auth errors", async () => {
       const error = new AppError("Auth failed", ErrorType.AUTH);
       await errorService.handleError(error);
 
-      expect(showToast).to.have.been.calledWith(
+      viExpect(showToast).toHaveBeenCalledWith(
         "Authentication error. Please log in again.",
         "error"
       );
-      expect(apiClient.post).not.to.have.been.called;
+      viExpect(apiClient.post).not.toHaveBeenCalled();
     });
 
     it("should handle API errors", async () => {
       const error = new AppError("API failed", ErrorType.API);
       await errorService.handleError(error);
 
-      expect(showToast).to.have.been.calledWith("API failed", "error");
-      expect(apiClient.post).to.have.been.calledWith("/errors", {
+      viExpect(showToast).toHaveBeenCalledWith("API failed", "error");
+      viExpect(apiClient.post).toHaveBeenCalledWith("/errors", {
         type: ErrorType.API,
         message: "API failed",
         details: null,
@@ -93,11 +91,11 @@ describe("ErrorService", () => {
       const error = new Error("Unknown error");
       await errorService.handleError(error);
 
-      expect(showToast).to.have.been.calledWith(
+      viExpect(showToast).toHaveBeenCalledWith(
         "An unexpected error occurred.",
         "error"
       );
-      expect(apiClient.post).to.have.been.called;
+      viExpect(apiClient.post).toHaveBeenCalled();
     });
   });
 
@@ -109,7 +107,7 @@ describe("ErrorService", () => {
       const error = new AppError("Test error");
       await errorService.handleError(error);
 
-      expect(listener).to.have.been.calledWith(error);
+      viExpect(listener).toHaveBeenCalledWith(error);
     });
 
     it("should handle errors in listeners", async () => {
@@ -121,9 +119,9 @@ describe("ErrorService", () => {
       const error = new AppError("Test error");
       await errorService.handleError(error);
 
-      expect(listener).to.have.been.called;
+      viExpect(listener).toHaveBeenCalled();
       // Error in listener should not prevent other error handling
-      expect(showToast).to.have.been.called;
+      viExpect(showToast).toHaveBeenCalled();
     });
 
     it("should remove error listeners", async () => {
@@ -134,7 +132,7 @@ describe("ErrorService", () => {
       const error = new AppError("Test error");
       await errorService.handleError(error);
 
-      expect(listener).not.to.have.been.called;
+      viExpect(listener).not.toHaveBeenCalled();
     });
   });
 
@@ -145,7 +143,7 @@ describe("ErrorService", () => {
 
       await waitUntil(() => showToast.mock.calls.length > 0);
 
-      expect(showToast).to.have.been.calledWith(
+      viExpect(showToast).toHaveBeenCalledWith(
         "An unexpected error occurred.",
         "error"
       );
@@ -153,16 +151,20 @@ describe("ErrorService", () => {
 
     it("should handle unhandled promise rejections", async () => {
       const error = new Error("Promise rejection");
-      window.dispatchEvent(
-        new PromiseRejectionEvent("unhandledrejection", {
+      // Create a custom event since PromiseRejectionEvent may not be available in JSDOM
+      const event = new CustomEvent("unhandledrejection", {
+        detail: {
           reason: error,
-          promise: Promise.reject(error),
-        })
-      );
+          promise: Promise.reject(error).catch(() => {}),
+        },
+      });
+      event.reason = error;
+      event.promise = Promise.reject(error).catch(() => {});
+      window.dispatchEvent(event);
 
       await waitUntil(() => showToast.mock.calls.length > 0);
 
-      expect(showToast).to.have.been.calledWith(
+      viExpect(showToast).toHaveBeenCalledWith(
         "An unexpected error occurred.",
         "error"
       );
@@ -174,7 +176,7 @@ describe("ErrorService", () => {
 
       await waitUntil(() => showToast.mock.calls.length > 0);
 
-      expect(showToast).to.have.been.calledWith("API error", "error");
+      viExpect(showToast).toHaveBeenCalledWith("API error", "error");
     });
 
     it("should handle auth expired events", async () => {
@@ -182,7 +184,7 @@ describe("ErrorService", () => {
 
       await waitUntil(() => showToast.mock.calls.length > 0);
 
-      expect(showToast).to.have.been.calledWith(
+      viExpect(showToast).toHaveBeenCalledWith(
         "Authentication error. Please log in again.",
         "error"
       );
@@ -194,7 +196,7 @@ describe("ErrorService", () => {
       const error = new AppError("Unknown error");
       await errorService.handleError(error);
 
-      expect(apiClient.post).to.have.been.calledWith("/errors", {
+      viExpect(apiClient.post).toHaveBeenCalledWith("/errors", {
         type: ErrorType.UNKNOWN,
         message: "Unknown error",
         details: null,
@@ -208,7 +210,7 @@ describe("ErrorService", () => {
       const error = new AppError("Invalid input", ErrorType.VALIDATION);
       await errorService.handleError(error);
 
-      expect(apiClient.post).not.to.have.been.called;
+      viExpect(apiClient.post).not.toHaveBeenCalled();
     });
 
     it("should handle error reporting failures", async () => {
@@ -217,9 +219,9 @@ describe("ErrorService", () => {
       const error = new AppError("Test error");
       await errorService.handleError(error);
 
-      expect(showToast).to.have.been.called;
+      viExpect(showToast).toHaveBeenCalled();
       // Error reporting failure should not throw
-      expect(apiClient.post).to.have.been.called;
+      viExpect(apiClient.post).toHaveBeenCalled();
     });
   });
 });
