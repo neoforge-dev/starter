@@ -54,12 +54,11 @@ const customReporter = {
       // Suppress these errors by returning false
       return false;
     }
-
     // Let other errors through
     return true;
   },
 
-  // Add a method to handle worker errors
+  // Add a new method to handle worker errors
   onWorkerError(error) {
     // Filter out errors related to performance.now and function cloning
     if (
@@ -75,7 +74,6 @@ const customReporter = {
       // Suppress these errors by returning false
       return false;
     }
-
     // Let other errors through
     return true;
   },
@@ -92,6 +90,7 @@ export default defineConfig({
         pretendToBeVisual: true,
       },
     },
+    globals: true,
     reporters: ["default", customReporter],
     // Enable threading for better performance but with consistent settings
     threads: true,
@@ -100,6 +99,8 @@ export default defineConfig({
     isolate: true,
     // Global test timeout
     testTimeout: 10000,
+    // Exclude old test directories
+    exclude: ["**/tests-old/**", "**/tests-backup-old/**"],
     // Coverage configuration
     coverage: {
       provider: "v8",
@@ -121,47 +122,48 @@ export default defineConfig({
       threads: {
         singleThread: false,
         minThreads: 1,
-        maxThreads: 4
+        maxThreads: 4,
       },
       forks: {
         singleFork: false,
       },
-      vmThreads: {
+    },
+    // Retry failed tests
+    retry: 0,
+    // Bail after a certain number of failures
+    bail: 0,
+    // Silence console output during tests
+    silent: false,
+    // Increase memory limit for workers
+    memoryLimit: "2GB",
+    // Worker configuration
+    workerIsolation: true,
+    workerTimeout: 60000,
+    workerDelay: 0,
+    workerConcurrency: 4,
+    workerIdleTimeout: 60000,
+    workerExitTimeout: 60000,
+    workerMinThreads: 1,
+    workerMaxThreads: 4,
+    workerMinForks: 1,
+    workerMaxForks: 4,
+    workerForks: true,
+    workerIsolate: true,
+    workerPool: "threads",
+    workerPoolOptions: {
+      threads: {
         singleThread: false,
+        minThreads: 1,
+        maxThreads: 4,
       },
-    },
-    // Run tests in parallel to improve performance
-    sequence: {
-      concurrent: true,
-    },
-    // Enable function serialization
-    useAtomics: true,
-    // Disable browser testing in headless mode for better performance
-    browser: {
-      enabled: false,
-      headless: true,
-      name: "chrome",
-    },
-    worker: {
-      // Worker setup files
-      setupFiles: [
-        "./src/test/setup/optimized-performance-polyfill.cjs",
-        "./src/test/setup/silence-lit-dev-mode.cjs",
-      ],
+      forks: {
+        singleFork: false,
+      },
     },
   },
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
-      "~": resolve(__dirname, "./src"),
-      vue: "vue/dist/vue.esm-bundler.js",
-    },
-    extensions: [".js", ".json", ".vue"],
-    target: "esnext",
-  },
-  server: {
-    fs: {
-      strict: false,
     },
   },
 });
