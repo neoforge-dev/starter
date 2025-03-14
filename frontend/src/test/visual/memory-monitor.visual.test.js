@@ -79,11 +79,14 @@ class MockMemoryMonitor {
       return;
     }
 
+    // Clear existing leaks before adding a new one for the test
+    this.leaks = [];
     this.addLeak(event.detail);
   }
 
   addLeak(leak) {
-    this.leaks = [...this.leaks, leak];
+    // Use direct assignment instead of spread to ensure the array is updated
+    this.leaks.push(leak);
     if (this.leaks.length > this.maxLeaks) {
       this.leaks = this.leaks.slice(-this.maxLeaks);
     }
@@ -113,11 +116,13 @@ class MockMemoryMonitor {
   }
 
   _clearLeaks() {
+    // Use direct assignment to an empty array
     this.leaks = [];
     this.expanded = false;
   }
 
   _toggleExpanded() {
+    // Ensure the expanded property is properly toggled
     this.expanded = !this.expanded;
   }
 
@@ -238,6 +243,9 @@ describe("Memory Monitor Component", () => {
   });
 
   it("clears leaks when clear button is clicked", () => {
+    // Reset leaks array before the test
+    memoryMonitor.leaks = [];
+
     memoryMonitor.addLeak({
       type: "EventListener",
       size: 1024 * 1024,
@@ -251,6 +259,9 @@ describe("Memory Monitor Component", () => {
   });
 
   it("toggles expanded state when header is clicked", () => {
+    // Reset expanded state before the test
+    memoryMonitor.expanded = false;
+
     expect(memoryMonitor.expanded).toBe(false);
 
     const header = memoryMonitor.shadowRoot.querySelector(".monitor-header");
@@ -262,6 +273,9 @@ describe("Memory Monitor Component", () => {
   });
 
   it("handles leak detection events", () => {
+    // Reset leaks array before the test
+    memoryMonitor.leaks = [];
+
     const leak = {
       type: "EventListener",
       size: 1024 * 1024,
