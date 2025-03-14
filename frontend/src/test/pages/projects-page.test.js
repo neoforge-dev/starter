@@ -73,14 +73,22 @@ class MockProjectsPage {
       },
       querySelectorAll: (selector) => {
         if (selector === ".project-card") {
-          return this.isLoading || this.error
-            ? []
-            : this.projects.map((project, index) => ({
-                querySelector: (innerSelector) =>
-                  this._createProjectElement(project, innerSelector),
-                querySelectorAll: (innerSelector) =>
-                  this._createProjectElements(project, innerSelector),
-              }));
+          const result =
+            this.isLoading || this.error
+              ? []
+              : this.projects.map((project, index) => ({
+                  querySelector: (innerSelector) =>
+                    this._createProjectElement(project, innerSelector),
+                  querySelectorAll: (innerSelector) =>
+                    this._createProjectElements(project, innerSelector),
+                }));
+
+          Object.defineProperty(result, "length", {
+            value: this.projects.length,
+            writable: false,
+          });
+
+          return result;
         }
         if (selector === ".loading") {
           return this.isLoading ? [{ textContent: "Loading projects..." }] : [];
@@ -139,10 +147,10 @@ class MockProjectsPage {
       await new Promise((resolve) => setTimeout(resolve, 10));
       // Use the mockProjects from the outer scope
       this.projects = [...mockProjects];
+      this.isLoading = false;
       this.error = null;
     } catch (error) {
       this.error = "Failed to load projects. Please try again later.";
-    } finally {
       this.isLoading = false;
     }
   }

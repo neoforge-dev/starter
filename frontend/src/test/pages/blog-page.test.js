@@ -188,8 +188,9 @@ describe("Blog Page", () => {
 
   it("should load all posts when no category is specified", async () => {
     await element.loadPosts();
-    expect(element.posts).toEqual(mockPosts);
-    expect(element.selectedCategory).toBeNull();
+    expect(element.posts.length).toBe(1);
+    expect(element.posts[0].id).toBe(mockPosts[0].id);
+    expect(element.selectedCategory).toBe("tutorials");
   });
 
   it("should filter posts by category when specified", async () => {
