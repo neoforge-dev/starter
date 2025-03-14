@@ -207,3 +207,76 @@ We've created comprehensive documentation for our testing approach, including:
 - **Performance Testing**: Guidelines for performance testing web components
 
 This documentation is available in the `frontend/docs/testing` directory.
+
+### Storybook Documentation
+
+We use Storybook to document and showcase our components in an interactive environment. This provides several benefits:
+
+1. **Interactive Documentation**: Developers can interact with components to understand their behavior
+2. **Visual Testing**: Visual regression testing can be performed using Storybook
+3. **Component Showcase**: Stakeholders can view and interact with components without running the full application
+4. **Development Environment**: Developers can develop components in isolation
+
+#### Story Structure
+
+Our Storybook stories follow a consistent structure:
+
+1. **Default Export**: Contains metadata about the component, including title, component name, and argTypes
+2. **Template Function**: A function that returns the component with the specified props
+3. **Stories**: Variations of the component with different props
+
+Example:
+
+```javascript
+// Default export with metadata
+export default {
+  title: "Atoms/Button",
+  component: "neo-button",
+  argTypes: {
+    variant: {
+      control: { type: "select" },
+      options: ["primary", "secondary", "tertiary"],
+    },
+    // Other argTypes...
+  },
+};
+
+// Template function
+const Template = (args) => html`
+  <neo-button
+    variant="${args.variant}"
+    size="${args.size}"
+    ?disabled="${args.disabled}"
+  >
+    ${args.label}
+  </neo-button>
+`;
+
+// Stories
+export const Primary = Template.bind({});
+Primary.args = {
+  variant: "primary",
+  label: "Primary Button",
+};
+
+export const Secondary = Template.bind({});
+Secondary.args = {
+  variant: "secondary",
+  label: "Secondary Button",
+};
+```
+
+#### Component Coverage
+
+We've created comprehensive Storybook stories for our atom components, including:
+
+- **Button**: All variants, sizes, states, and with icons
+- **Text Input**: All states, including with value, helper text, error, and different input types
+- **Link**: All variants, sizes, underline styles, and states
+- **Icon**: All sizes, colors, and states, plus an icon gallery
+- **Select**: Single and multiple selection, with search, option groups, and different states
+- **Dropdown**: With and without selected values, with icons, and with many options
+- **Tooltip**: Different positions, variants, with and without arrow
+- **Progress Bar**: Different sizes, variants, states, and use cases
+
+These stories provide a comprehensive showcase of our component library and serve as living documentation for developers.

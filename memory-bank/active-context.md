@@ -170,6 +170,14 @@ We are currently focused on fixing failing tests in the NeoForge frontend. After
 
 49. **Fixed the Search Page Tests**: Fixed all 8 tests in the search-page.test.js file, ensuring proper error handling in the search functionality.
 
+50. **Created Stories for Atom Components**: Created comprehensive Storybook stories for several atom components:
+   - **Text Input**: Created a story with examples of all states (default, with value, with helper text, with error, password, email, required, disabled, readonly, clearable, with prefix/suffix)
+   - **Link**: Created a story with examples of all variants (primary, secondary, subtle), sizes (small, medium, large), underline styles (none, hover, always), and states (disabled, external, with prefix/suffix icons)
+   - **Icon**: Created a story with examples of all sizes (small, medium, large, extra large, custom), colors (primary, secondary, success, error, warning), and states (loading, decorative), plus an icon gallery showing all available icons
+   - **Button**: Created a story with examples of all variants (primary, secondary, tertiary, danger, ghost, text), sizes (small, medium, large), states (disabled, loading, full width), and examples with icons and in button groups
+
+51. **Fixed CDN Import in Icons Component**: Updated the icons.js file to use the proper import from the lit package instead of loading it from a CDN, improving reliability and consistency with the rest of the codebase.
+
 ## Next Steps
 
 1. **Document Testing Approach**: Create comprehensive documentation on the testing approach used in the project, including:
