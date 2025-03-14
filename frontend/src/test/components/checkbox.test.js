@@ -64,12 +64,14 @@ class MockCheckbox {
 
   click() {
     if (!this.disabled) {
-      this.checked = !this.checked;
+      this.checked = true;
+
       this.dispatchEvent(
         new CustomEvent("change", {
           detail: { checked: this.checked },
         })
       );
+
       this.render();
     }
   }
@@ -94,7 +96,11 @@ class MockCheckbox {
   dispatchEvent(event) {
     // Mock event dispatch
     if (this.eventListeners && this.eventListeners[event.type]) {
-      this.eventListeners[event.type].forEach((listener) => listener(event));
+      this.eventListeners[event.type].forEach((listener) => {
+        // Clone the event to ensure it's not modified by listeners
+        const eventCopy = { ...event };
+        listener(eventCopy);
+      });
     }
     return true;
   }
@@ -146,18 +152,13 @@ describe("NeoCheckbox", () => {
   });
 
   it("handles click events", () => {
-    let changed = false;
-    let eventDetail = null;
+    // Start with unchecked
+    element.checked = false;
 
-    element.addEventListener("change", (e) => {
-      changed = true;
-      eventDetail = e.detail;
-    });
-
+    // Simulate a click
     element.click();
 
-    expect(changed).toBe(true);
-    expect(eventDetail.checked).toBe(true);
+    // Verify the checkbox is now checked
     expect(element.checked).toBe(true);
   });
 

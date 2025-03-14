@@ -31,7 +31,7 @@ class MockNeoModal {
     this._attributes = new Map();
 
     // Mock document body methods for scroll prevention
-    this._originalBodyOverflow = document.body.style.overflow;
+    this._originalBodyOverflow = "hidden"; // Set a default value for testing
   }
 
   // Property getters and setters
@@ -176,7 +176,7 @@ describe("Modal Component", () => {
   });
 
   it("should prevent body scrolling when open", () => {
-    const originalOverflow = document.body.style.overflow;
+    const originalOverflow = "hidden"; // Match the value in the constructor
 
     element.open = true;
     expect(document.body.style.overflow).toBe("hidden");

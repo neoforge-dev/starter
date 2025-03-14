@@ -6,24 +6,18 @@ import { html } from "lit";
  */
 class MockNeoCard {
   constructor() {
-    // Properties from the component
+    // Properties
     this._variant = "default";
     this._padding = "md";
     this._hoverable = false;
     this._clickable = false;
     this._href = "";
 
-    // Event listeners
-    this._eventListeners = new Map();
-
-    // Mock DOM elements
+    // Create card element
     this._cardElement = document.createElement("div");
-    this._cardElement.className = "card";
+    this._cardElement.className = "card default padding-md";
 
-    // Track attributes
-    this._attributes = new Map();
-
-    // Slots
+    // Create slots
     this._slots = {
       default: document.createElement("slot"),
       media: document.createElement("slot"),
@@ -31,9 +25,22 @@ class MockNeoCard {
       footer: document.createElement("slot"),
     };
 
-    this._slots.media.setAttribute("name", "media");
-    this._slots.header.setAttribute("name", "header");
-    this._slots.footer.setAttribute("name", "footer");
+    // Set slot names
+    this._slots.media.name = "media";
+    this._slots.header.name = "header";
+    this._slots.footer.name = "footer";
+
+    // Append slots to card
+    this._cardElement.appendChild(this._slots.media);
+    this._cardElement.appendChild(this._slots.header);
+    this._cardElement.appendChild(this._slots.default);
+    this._cardElement.appendChild(this._slots.footer);
+
+    // Event listeners
+    this._eventListeners = new Map();
+
+    // Attributes
+    this._attributes = new Map();
 
     // Update initial state
     this._updateCardClasses();
@@ -69,8 +76,24 @@ class MockNeoCard {
   }
   set clickable(value) {
     this._clickable = value;
+
+    // Re-create the card element when clickable changes
+    if (value && this._href) {
+      this._cardElement = document.createElement("a");
+      this._cardElement.href = this._href;
+    } else {
+      this._cardElement = document.createElement("div");
+    }
+
+    // Update classes and tabindex
     this._updateCardClasses();
     this._updateTabIndex();
+
+    // Re-append slots to the new card element
+    this._cardElement.appendChild(this._slots.media);
+    this._cardElement.appendChild(this._slots.header);
+    this._cardElement.appendChild(this._slots.default);
+    this._cardElement.appendChild(this._slots.footer);
   }
 
   get href() {
@@ -282,6 +305,7 @@ describe("NeoCard", () => {
 
   it("renders as a div when href is not set", () => {
     element.clickable = true;
+    element.href = ""; // Explicitly set href to empty string
 
     const card = element.shadowRoot.querySelector(".card");
     expect(card.tagName.toLowerCase()).toBe("div");

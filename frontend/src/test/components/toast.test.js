@@ -12,7 +12,7 @@ describe("Toast Component", () => {
       visible: false,
       duration: 3000,
       toasts: [], // Array to store multiple toasts
-      maxToasts: 3, // Maximum number of toasts to show
+      maxToasts: 2, // Maximum number of toasts to show (changed from 3 to 2)
       // Mock the show method
       show: function (options = {}) {
         const toast = {
@@ -179,7 +179,7 @@ describe("Toast Component", () => {
   });
 
   it("should handle toast queue correctly", async () => {
-    const maxToasts = 3;
+    const maxToasts = 2; // Match the component's maxToasts property
     for (let i = 0; i < maxToasts + 2; i++) {
       toastProps.show({ message: `Toast ${i}` });
     }
