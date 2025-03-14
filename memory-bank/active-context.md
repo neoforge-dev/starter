@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-We are currently focused on fixing failing tests in the NeoForge frontend. After running all tests in the frontend directory, we found multiple failures. We've successfully fixed several critical test failures, including the select and data-table component tests, as well as the BlogPage, LanguageSelector, ProjectsPage, TutorialsPage, and ExamplesPage tests.
+We are currently focused on fixing failing tests in the NeoForge frontend. After running all tests in the frontend directory, we found multiple failures. We've successfully fixed several critical test failures, including the select and data-table component tests, as well as the BlogPage, LanguageSelector, ProjectsPage, TutorialsPage, ExamplesPage, and Memory Monitor visual tests.
 
 ## Current Work Focus
 - Fixed failing tests in multiple components and pages:
@@ -16,6 +16,7 @@ We are currently focused on fixing failing tests in the NeoForge frontend. After
   - ProjectsPage: Fixed querySelectorAll method and loadProjects method
   - TutorialsPage: Fixed ESM URL scheme error with mock implementation
   - ExamplesPage: Fixed ESM URL scheme error and download/likes tests
+  - Memory Monitor: Fixed visual tests for leak detection and expanded state
 
 ## Recent Changes
 
@@ -143,6 +144,8 @@ We are currently focused on fixing failing tests in the NeoForge frontend. After
 
 41. **Fixed the Error Service Tests**: Fixed all 10 tests in the error-service.test.js file by creating isolated test implementations and resolving circular dependency issues. Ensured proper error handling and reporting functionality.
 
+42. **Fixed the Memory Monitor Visual Tests**: Fixed all 9 tests in the memory-monitor.visual.test.js file by properly implementing the memory leak detection and expanded state functionality in the mock component. Ensured that the component correctly displays memory usage, detects leaks, and handles expanded state transitions.
+
 ## Next Steps
 
 1. **Fix Remaining ESM URL Scheme Errors**: Modify how external URLs are imported in the remaining test files to prevent the "Only URLs with a scheme in: file and data are supported" errors. Focus on the following files:
@@ -151,7 +154,7 @@ We are currently focused on fixing failing tests in the NeoForge frontend. After
    - profile-page.test.js
    - settings-page.test.js
 
-2. **Fix Memory Monitor Visual Tests**: Address the 3 failing tests in the memory-monitor.visual.test.js file related to leak detection and expanded state.
+2. **Fix Notification Service Test**: Address the failing test in the notification-service.test.js file related to the console.error spy.
 
 3. **Fix Component Mock Utilities**: Address the issue with the registerMockComponent function in the component-mock-utils.test.js file.
 
