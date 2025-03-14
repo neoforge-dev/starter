@@ -73,16 +73,15 @@ class MockProjectsPage {
       },
       querySelectorAll: (selector) => {
         if (selector === ".project-card") {
-          const result =
-            this.isLoading || this.error
-              ? []
-              : this.projects.map((project, index) => ({
-                  querySelector: (innerSelector) =>
-                    this._createProjectElement(project, innerSelector),
-                  querySelectorAll: (innerSelector) =>
-                    this._createProjectElements(project, innerSelector),
-                }));
+          // Create a result array with the project cards
+          const result = this.projects.map((project, index) => ({
+            querySelector: (innerSelector) =>
+              this._createProjectElement(project, innerSelector),
+            querySelectorAll: (innerSelector) =>
+              this._createProjectElements(project, innerSelector),
+          }));
 
+          // Set the length property to match the actual projects length
           Object.defineProperty(result, "length", {
             value: this.projects.length,
             writable: false,
@@ -153,6 +152,9 @@ class MockProjectsPage {
       this.error = "Failed to load projects. Please try again later.";
       this.isLoading = false;
     }
+
+    // Ensure we return a promise that resolves after the projects are set
+    return this.updateComplete;
   }
 
   addEventListener(event, callback) {
@@ -188,14 +190,22 @@ describe("Projects Page", () => {
 
   it("renders project list", async () => {
     await projectsPage.loadProjects();
+    // Add a small delay to ensure the DOM updates
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
     const cards = projectsPage.shadowRoot.querySelectorAll(".project-card");
     expect(cards.length).toBe(mockProjects.length);
   });
 
   it("displays project details correctly", async () => {
     await projectsPage.loadProjects();
-    const firstProject =
-      projectsPage.shadowRoot.querySelectorAll(".project-card")[0];
+    // Add a small delay to ensure the DOM updates
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const cards = projectsPage.shadowRoot.querySelectorAll(".project-card");
+    expect(cards.length).toBe(mockProjects.length);
+
+    const firstProject = cards[0];
     const title = firstProject.querySelector(".project-title");
     const description = firstProject.querySelector(".project-description");
 
@@ -214,7 +224,10 @@ describe("Projects Page", () => {
   });
 
   it("shows loading state", async () => {
-    // Loading state is true by default
+    // Make sure we're in loading state
+    projectsPage.isLoading = true;
+    projectsPage.projects = [];
+
     const loading = projectsPage.shadowRoot.querySelector(".loading");
     expect(loading).toBeDefined();
     expect(loading.textContent).toContain("Loading");

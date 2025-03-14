@@ -177,6 +177,7 @@ describe("ErrorService", () => {
 
     // Create mock API client
     mockApiClient = new MockApiClient();
+    mockApiClient.calls = []; // Reset calls array
 
     // Create error service instance
     errorService = new ErrorService(mockApiClient);
@@ -294,25 +295,35 @@ describe("ErrorService", () => {
     });
 
     it("reports errors to the backend", async () => {
+      // Create a fresh mock API client for this test
+      const testMockApiClient = new MockApiClient();
+      const testErrorService = new ErrorService(testMockApiClient);
+
       // Set up the response
-      mockApiClient.setResponse("/errors", { success: true });
+      testMockApiClient.setResponse("/errors", { success: true });
 
       const error = new AppError("Test error", ErrorType.API);
-      await errorService._reportError(error);
+      await testErrorService._reportError(error);
 
       // Verify that the API client was called with the correct payload
-      expect(mockApiClient.calls.length).toBe(1);
-      expect(mockApiClient.calls[0].endpoint).toBe("/errors");
-      expect(mockApiClient.calls[0].data.type).toBe(ErrorType.API);
-      expect(mockApiClient.calls[0].data.message).toBe("Test error");
+      expect(testMockApiClient.calls.length).toBe(1);
+      expect(testMockApiClient.calls[0].endpoint).toBe("/errors");
+      expect(testMockApiClient.calls[0].data.type).toBe(ErrorType.API);
+      expect(testMockApiClient.calls[0].data.message).toBe("Test error");
     });
 
     it("handles failed error reporting gracefully", async () => {
+      // Create a fresh mock API client for this test
+      const testMockApiClient = new MockApiClient();
+      const testErrorService = new ErrorService(testMockApiClient);
+
       const reportError = new Error("Failed to report");
-      mockApiClient.setError("/errors", reportError);
+      testMockApiClient.setError("/errors", reportError);
 
       const error = new AppError("Test error", ErrorType.API);
-      await expect(errorService._reportError(error)).resolves.toBeUndefined();
+      await expect(
+        testErrorService._reportError(error)
+      ).resolves.toBeUndefined();
     });
   });
 });

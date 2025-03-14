@@ -201,14 +201,28 @@ describe("Search Page", () => {
   });
 
   it("should handle search failures gracefully", async () => {
+    // Mock console.error to prevent actual error output during tests
+    const originalConsoleError = console.error;
+    console.error = vi.fn();
+
+    // Mock the search function to reject with an error
     window.search.search = vi
       .fn()
       .mockRejectedValue(new Error("Search failed"));
     element.query = "test query";
 
+    // Execute the search
     await element._handleSearch();
 
+    // Verify the component handled the error correctly
     expect(element.results).toEqual([]);
     expect(element.loading).toBe(false);
+    expect(console.error).toHaveBeenCalledWith(
+      "Search failed:",
+      expect.any(Error)
+    );
+
+    // Restore original console.error
+    console.error = originalConsoleError;
   });
 });
