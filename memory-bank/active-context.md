@@ -183,6 +183,11 @@ We are currently focused on fixing failing tests in the NeoForge frontend. After
    - Created a lit-css.js file to fix the issue with the `css` import from the lit package
    - Updated the viteFinal configuration to use the correct path resolution
 
+4. **Fixed Story Files with Escaped Backticks**:
+   - Created a `fix-stories.js` script to fix escaped backticks in story files
+   - Fixed 4 story files with syntax errors related to escaped backticks
+   - Storybook is now running successfully at http://localhost:6006/
+
 ## Next Steps
 
 1. **Fix Storybook Setup**: Address the issues with the Storybook configuration:

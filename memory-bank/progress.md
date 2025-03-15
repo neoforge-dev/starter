@@ -219,6 +219,14 @@ We've run all tests in the frontend directory and identified that most of the cr
 
 7. **Fixed CDN Import in Icons Component**: Updated the icons.js file to use the proper import from the lit package instead of loading it from a CDN, improving reliability and consistency with the rest of the codebase.
 
+8. **Fixed Storybook Setup**: We've successfully fixed the Storybook configuration and made it run properly:
+   - Fixed the `__dirname` definition in the Storybook configuration using `fileURLToPath` from the `url` module
+   - Fixed the `css` import from the lit package by using `@lit/reactive-element/css-tag.js`
+   - Created a `lit-css.js` file to resolve issues with the `css` import
+   - Fixed escaped backticks in story files by creating a `fix-stories.js` script
+   - Patched the `@figspec/components` package to use the correct import for CSS
+   - Storybook is now running successfully at http://localhost:6006/
+
 The remaining issues include:
 
 1. **ESM URL Scheme Errors in Backup Directories**: There are still ESM URL scheme errors in test files located in the tests/ and tests-backup/ directories, but these are not critical for the main application.
