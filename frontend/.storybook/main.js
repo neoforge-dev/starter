@@ -35,10 +35,13 @@ const config = {
         ...config.define,
         global: "window",
       },
+      plugins: [...(config.plugins || []), templateLiteralPlugin()],
       optimizeDeps: {
         ...config.optimizeDeps,
         include: [
-          ...(config.optimizeDeps?.include || []),
+          ...(config.optimizeDeps?.include || []).filter(
+            (dep) => dep !== "chart.js"
+          ),
           "lit",
           "lit-html",
           "lit-element",

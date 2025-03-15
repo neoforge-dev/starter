@@ -1,38 +1,40 @@
-import fs from "fs";
-
 /**
- * Plugin to handle template literals in stories
- * This is needed because Storybook's esbuild has issues with template literals in stories
+ * This plugin handles template literals in story files.
+ * It converts html template literals to function calls to avoid parsing issues.
  */
+
 export function templateLiteralPlugin() {
   return {
     name: "template-literal-plugin",
-    setup(build) {
-      // Process .stories.js files
-      build.onLoad({ filter: /\.stories\.js$/ }, async (args) => {
-        // Read the file
-        const source = fs.readFileSync(args.path, "utf8");
+    enforce: "pre", // Run this plugin before Vite's plugins
+    transform(code, id) {
+      // Only process story files
+      if (!id.includes(".stories.")) {
+        return null;
+      }
 
-        // Replace template literals with string literals
-        // This regex handles multiline template literals with ${} expressions
-        const contents = source.replace(
-          /html`([\s\S]*?)`/g,
-          (match, content) => {
-            // Escape backticks and dollar signs
-            const escaped = content
-              .replace(/`/g, "\\`")
-              .replace(/\${/g, "\\${");
+      try {
+        // Simple approach: replace html` with html(String.raw`
+        // and add a closing ) at the end of the template literal
+        let transformed = code;
 
-            // Return as a string
-            return `html(\`${escaped}\`)`;
-          }
+        // Replace html` with html(String.raw`
+        transformed = transformed.replace(/html`/g, "html(String.raw`");
+
+        // Add closing parenthesis after backtick
+        transformed = transformed.replace(
+          /`(?=(\s*;|\s*,|\s*\)|\s*$|\s*\n))/g,
+          "`)"
         );
 
         return {
-          contents,
-          loader: "js",
+          code: transformed,
+          map: null,
         };
-      });
+      } catch (error) {
+        console.error(`Error transforming ${id}:`, error);
+        return null;
+      }
     },
   };
 }
