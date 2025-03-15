@@ -54,18 +54,18 @@ export default {
   },
 };
 
-const Template = (args) => html\`
+const Template = (args) => html`
   <neo-badge
     variant="${args.variant || 'default'}"
     size="${args.size || 'md'}"
     ?rounded="${args.rounded}"
     ?outlined="${args.outlined}"
   >
-    ${args.prefix ? html\`<neo-icon slot="prefix" name="${args.prefix}"></neo-icon>` : ""}
+    ${args.prefix ? html`<neo-icon slot="prefix" name="${args.prefix}"></neo-icon>` : ""}
     ${args.label || "Badge"}
-    ${args.suffix ? html\`<neo-icon slot="suffix" name="${args.suffix}"></neo-icon>` : ""}
+    ${args.suffix ? html`<neo-icon slot="suffix" name="${args.suffix}"></neo-icon>` : ""}
   </neo-badge>
-\`;
+`;
 
 // Stories
 export const Default = Template.bind({});
@@ -134,7 +134,7 @@ Large.args = {
 };
 
 // Badge Group Example
-export const BadgeGroup = () => html\`
+export const BadgeGroup = () => html`
   <div style="display: flex; gap: 8px; align-items: center;">
     <neo-badge variant="primary">New</neo-badge>
     <neo-badge variant="success">
@@ -150,10 +150,10 @@ export const BadgeGroup = () => html\`
       Error
     </neo-badge>
   </div>
-\`;
+`;
 
 // Status Badges Example
-export const StatusBadges = () => html\`
+export const StatusBadges = () => html`
   <div style="display: grid; gap: 16px;">
     <div style="display: flex; gap: 8px; align-items: center;">
       <neo-badge variant="success" size="sm" rounded>Active</neo-badge>
@@ -168,10 +168,10 @@ export const StatusBadges = () => html\`
       <span>User is offline</span>
     </div>
   </div>
-\`;
+`;
 
 // Notification Badges Example
-export const NotificationBadges = () => html\`
+export const NotificationBadges = () => html`
   <div style="display: flex; gap: 24px;">
     <div style="position: relative; display: inline-block;">
       <neo-icon name="notification" size="lg"></neo-icon>
@@ -207,10 +207,10 @@ export const NotificationBadges = () => html\`
       </neo-badge>
     </div>
   </div>
-\`;
+`;
 
 // Custom Styled Badges Example
-export const CustomStyledBadges = () => html\`
+export const CustomStyledBadges = () => html`
   <div style="display: flex; gap: 8px;">
     <neo-badge
       style="--badge-bg-color: #8B5CF6; --badge-text-color: white;"
@@ -231,4 +231,4 @@ export const CustomStyledBadges = () => html\`
       Badges
     </neo-badge>
   </div>
-\`; 
+`; 

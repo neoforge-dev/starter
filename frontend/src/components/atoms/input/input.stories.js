@@ -80,7 +80,7 @@ const Template = ({
   disabled, 
   error, 
   helper 
-}) => html\`
+}) => html`
   <neo-input
     type=\${ifDefined(type)}
     label=\${ifDefined(label)}
@@ -94,7 +94,7 @@ const Template = ({
     @focus=\${() => console.log('Input focused')}
     @blur=\${() => console.log('Input blurred')}
   ></neo-input>
-\`;
+`;
 
 // Stories
 export const Default = Template.bind({});
@@ -155,7 +155,7 @@ Password.args = {
 };
 
 // Form Field Example
-export const FormField = () => html\`
+export const FormField = () => html`
   <div style="max-width: 300px;">
     <neo-input
       type="email"
@@ -164,10 +164,10 @@ export const FormField = () => html\`
       helper="We'll never share your email"
     ></neo-input>
   </div>
-\`;
+`;
 
 // Input Group Example
-export const InputGroup = () => html\`
+export const InputGroup = () => html`
   <div style="display: grid; gap: 16px; max-width: 300px;">
     <neo-input
       type="text"
@@ -180,10 +180,10 @@ export const InputGroup = () => html\`
       required
     ></neo-input>
   </div>
-\`;
+`;
 
 // Search Input Example
-export const SearchInput = () => html\`
+export const SearchInput = () => html`
   <neo-input
     type="search"
     label="Search"
@@ -195,10 +195,10 @@ export const SearchInput = () => html\`
       <neo-icon name="clear"></neo-icon>
     </neo-button>
   </neo-input>
-\`;
+`;
 
 // Number Input with Controls
-export const NumberInput = () => html\`
+export const NumberInput = () => html`
   <neo-input
     type="number"
     label="Quantity"
@@ -214,4 +214,4 @@ export const NumberInput = () => html\`
       <neo-icon name="add"></neo-icon>
     </neo-button>
   </neo-input>
-\`; 
+`; 

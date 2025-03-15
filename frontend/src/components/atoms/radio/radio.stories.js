@@ -77,7 +77,7 @@ const Template = ({
   required, 
   error, 
   helper 
-}) => html\`
+}) => html`
   <neo-radio
     name=\${ifDefined(name)}
     value=\${ifDefined(value)}
@@ -90,7 +90,7 @@ const Template = ({
   >
     \${label}
   </neo-radio>
-\`;
+`;
 
 // Stories
 export const Default = Template.bind({});
@@ -142,16 +142,16 @@ DisabledChecked.args = {
 };
 
 // Radio Group Example
-export const RadioGroup = () => html\`
+export const RadioGroup = () => html`
   <div style="display: grid; gap: 8px;">
     <neo-radio name="group" value="1" label="Option 1" checked></neo-radio>
     <neo-radio name="group" value="2" label="Option 2"></neo-radio>
     <neo-radio name="group" value="3" label="Option 3"></neo-radio>
   </div>
-\`;
+`;
 
 // Radio Group with Description
-export const RadioGroupWithDescription = () => html\`
+export const RadioGroupWithDescription = () => html`
   <div style="display: grid; gap: 16px;">
     <neo-radio 
       name="plan" 
@@ -182,19 +182,19 @@ export const RadioGroupWithDescription = () => html\`
       </div>
     </neo-radio>
   </div>
-\`;
+`;
 
 // Inline Radio Group
-export const InlineRadioGroup = () => html\`
+export const InlineRadioGroup = () => html`
   <div style="display: flex; gap: 16px; align-items: center;">
     <neo-radio name="inline" value="small" label="Small"></neo-radio>
     <neo-radio name="inline" value="medium" label="Medium" checked></neo-radio>
     <neo-radio name="inline" value="large" label="Large"></neo-radio>
   </div>
-\`;
+`;
 
 // Custom Styled Radio Group
-export const CustomStyledRadioGroup = () => html\`
+export const CustomStyledRadioGroup = () => html`
   <div style="display: grid; gap: 8px;">
     <neo-radio 
       name="custom" 
@@ -215,10 +215,10 @@ export const CustomStyledRadioGroup = () => html\`
       style="--radio-color: var(--color-error);"
     ></neo-radio>
   </div>
-\`;
+`;
 
 // Radio with Description
-export const RadioWithDescription = () => html\`
+export const RadioWithDescription = () => html`
   <div role="radiogroup" aria-label="Select a plan" style="display: grid; gap: 16px;">
     <neo-radio name="plan" value="basic" checked>
       <div style="display: grid; gap: 4px;">
@@ -233,10 +233,10 @@ export const RadioWithDescription = () => html\`
       </div>
     </neo-radio>
   </div>
-\`;
+`;
 
 // Card Radio Example
-export const CardRadio = () => html\`
+export const CardRadio = () => html`
   <div role="radiogroup" aria-label="Select a payment method" style="display: grid; gap: 16px;">
     <label style="
       display: block;
@@ -269,4 +269,4 @@ export const CardRadio = () => html\`
       </div>
     </label>
   </div>
-\`; 
+`; 

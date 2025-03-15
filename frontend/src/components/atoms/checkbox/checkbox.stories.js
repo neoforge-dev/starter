@@ -122,16 +122,16 @@ WithLongLabel.args = {
 };
 
 // Checkbox Group Example
-export const CheckboxGroup = () => html\`
+export const CheckboxGroup = () => html`
   <div style="display: grid; gap: 8px;">
     <neo-checkbox checked>Option 1</neo-checkbox>
     <neo-checkbox>Option 2</neo-checkbox>
     <neo-checkbox>Option 3</neo-checkbox>
   </div>
-\`;
+`;
 
 // Nested Checkbox Example
-export const NestedCheckboxes = () => html\`
+export const NestedCheckboxes = () => html`
   <div style="display: grid; gap: 8px;">
     <neo-checkbox indeterminate>Parent Option</neo-checkbox>
     <div style="margin-left: 24px; display: grid; gap: 8px;">
@@ -140,21 +140,21 @@ export const NestedCheckboxes = () => html\`
       <neo-checkbox checked>Child Option 3</neo-checkbox>
     </div>
   </div>
-\`;
+`;
 
 // Terms and Conditions Example
-export const TermsCheckbox = () => html\`
+export const TermsCheckbox = () => html`
   <neo-checkbox 
     required
     helper="Please read and accept the terms"
   >
     I agree to the <a href="#" style="color: var(--color-primary);">Terms and Conditions</a>
   </neo-checkbox>
-\`;
+`;
 
 // Custom Styling Example
-export const CustomStyled = () => html\`
+export const CustomStyled = () => html`
   <neo-checkbox style="--checkbox-color: var(--color-success); --checkbox-size: 24px;">
     Custom Styled Checkbox
   </neo-checkbox>
-\`; 
+`; 
