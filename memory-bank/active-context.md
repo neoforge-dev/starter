@@ -178,6 +178,11 @@ We are currently focused on fixing failing tests in the NeoForge frontend. After
 
 51. **Fixed CDN Import in Icons Component**: Updated the icons.js file to use the proper import from the lit package instead of loading it from a CDN, improving reliability and consistency with the rest of the codebase.
 
+52. **Fixed Storybook Configuration**: Fixed issues with the Storybook setup:
+   - Added proper `__dirname` definition using `fileURLToPath` from the url module
+   - Created a lit-css.js file to fix the issue with the `css` import from the lit package
+   - Updated the viteFinal configuration to use the correct path resolution
+
 ## Next Steps
 
 1. **Fix Storybook Setup**: Address the issues with the Storybook configuration:
