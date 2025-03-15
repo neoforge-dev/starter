@@ -2,12 +2,16 @@ import { templateLiteralPlugin } from "./plugins/template-literal-plugin.js";
 import autoprefixer from "autoprefixer";
 import postcssPresetEnv from "postcss-preset-env";
 import cssnano from "cssnano";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Get the directory name of the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /** @type { import('@storybook/web-components-vite').StorybookConfig } */
 const config = {
-  stories: [
-    "../src/stories/simple-button.stories.js",
-  ],
+  stories: ["../src/**/*.stories.@(js|jsx|ts|tsx|mdx)"],
   addons: ["@storybook/addon-essentials"],
   framework: {
     name: "@storybook/web-components-vite",
@@ -40,7 +44,11 @@ const config = {
           "lit-element",
           "@lit/reactive-element",
         ],
-        exclude: [...(config.optimizeDeps?.exclude || []), "fsevents", "chart.js"],
+        exclude: [
+          ...(config.optimizeDeps?.exclude || []),
+          "fsevents",
+          "chart.js",
+        ],
       },
       resolve: {
         ...config.resolve,
@@ -51,6 +59,16 @@ const config = {
           "lit-element",
           "@lit/reactive-element",
         ],
+        alias: {
+          ...config.resolve?.alias,
+          "lit/decorators.js": "lit/decorators.js",
+          "lit/directives/": "lit/directives/",
+          "lit/": "lit/",
+          "lit-html/": "lit-html/",
+          "lit-element/": "lit-element/",
+          "@lit/reactive-element/": "@lit/reactive-element/",
+          "lit/css": path.resolve(__dirname, "./lit-css.js"),
+        },
       },
       build: {
         ...config.build,
