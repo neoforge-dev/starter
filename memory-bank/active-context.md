@@ -180,17 +180,26 @@ We are currently focused on fixing failing tests in the NeoForge frontend. After
 
 ## Next Steps
 
-1. **Document Testing Approach**: Create comprehensive documentation on the testing approach used in the project, including:
-   - How to create mock components using the component-mock-utils.js utilities
-   - Best practices for testing web components
-   - Common patterns for handling shadow DOM in tests
-   - How to use the performance polyfills for testing
+1. **Fix Storybook Setup**: Address the issues with the Storybook configuration:
+   - Fix the `__dirname` not defined error in the main.js file
+   - Fix the Unicode escape sequence errors in various story files
+   - Fix the missing default export in the dropdown.stories.js file
+   - Fix the issue with the `css` import from the `lit` package
 
-2. **Improve Test Coverage**: Identify areas of the codebase with low test coverage and add additional tests to improve coverage.
+2. **Continue Fixing Remaining Tests**: Focus on fixing the remaining failing tests in our application code:
+   - Address any issues with component tests
+   - Fix any remaining ESM URL scheme errors
+   - Improve test coverage for edge cases
 
-3. **Optimize Performance**: Address performance issues identified during testing, such as memory leaks and slow rendering.
+3. **Improve Documentation**: Enhance our documentation to make it easier for developers to understand and use our components:
+   - Document the Storybook setup and usage
+   - Create a guide for creating new stories
+   - Document the testing approach and best practices
 
-4. **Refactor Skipped Tests**: Evaluate the skipped tests and determine if they should be refactored to work in the current test environment or if they should remain skipped.
+4. **Optimize Performance**: Improve the performance of our application:
+   - Reduce bundle size
+   - Optimize component initialization
+   - Implement code splitting for large components
 
 ## Active Decisions
 
