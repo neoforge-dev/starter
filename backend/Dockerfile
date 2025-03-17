@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.4
 
 # Base stage with shared dependencies
-FROM python:3.11-slim-bookworm AS base
+FROM python:3.13-slim-bookworm AS base
 
 # Install UV package manager
 RUN pip install --no-cache-dir uv==0.5.29
