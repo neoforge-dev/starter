@@ -29,6 +29,7 @@ from app.worker.email_worker import email_worker
 from app.core.queue import EmailQueue
 from app.api.middleware import setup_security_middleware, setup_validation_middleware
 from app.core.metrics import get_metrics
+from hello import hello
 
 # Set up structured logging
 setup_logging(settings.model_dump())
