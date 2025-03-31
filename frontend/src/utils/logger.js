@@ -16,14 +16,17 @@ class LoggerService {
     this.warn = this.warn.bind(this);
     this.info = this.info.bind(this);
     this.debug = this.debug.bind(this);
+    this.group = this.group.bind(this);
+    this.groupEnd = this.groupEnd.bind(this);
   }
 
   /**
-   * Get the log level from environment or default to 'info'
+   * Get the log level from environment or default to 'info'.
+   * If a log level is stored in localStorage, use that value.
    * @returns {string}
    */
   _getLogLevel() {
-    return window.LOG_LEVEL || 'info';
+    return localStorage.getItem('logLevel') || window.LOG_LEVEL || 'info';
   }
 
   /**
@@ -117,9 +120,25 @@ class LoggerService {
   setLevel(level) {
     if (this.levels[level] !== undefined) {
       this.logLevel = level;
+      localStorage.setItem('logLevel', level); // Persist log level in localStorage
     } else {
       this.warn(`Invalid log level: ${level}`);
     }
+  }
+
+  /**
+   * Start a group of log messages
+   * @param {string} groupName The name of the group
+   */
+  group(groupName) {
+    console.group(groupName);
+  }
+
+  /**
+   * End a group of log messages
+   */
+  groupEnd() {
+    console.groupEnd();
   }
 }
 
