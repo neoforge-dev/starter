@@ -1,4 +1,7 @@
-import {  EventTarget  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { EventTarget } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+// Define event names
+const STATE_CHANGED_EVENT = "state-changed";
 
 export class Store extends EventTarget {
   constructor(initialState = {}) {
@@ -8,7 +11,7 @@ export class Store extends EventTarget {
         const oldValue = target[property];
         target[property] = value;
         this.dispatchEvent(
-          new CustomEvent("state-changed", {
+          new CustomEvent(STATE_CHANGED_EVENT, {
             detail: {
               property,
               value,
@@ -26,16 +29,47 @@ export class Store extends EventTarget {
     return this._state;
   }
 
+  /**
+   * Directly set state properties. Consider using actions for complex updates.
+   * @param {object} updates An object containing key-value pairs to update in the state.
+   */
   setState(updates) {
     Object.entries(updates).forEach(([key, value]) => {
       this._state[key] = value;
     });
   }
 
+  /**
+   * Subscribe to state changes.
+   * @param {function} callback A function to call when the state changes.
+   * @returns {function} A function to unsubscribe from state changes.
+   */
   subscribe(callback) {
     const handler = (e) => callback(e.detail);
-    this.addEventListener("state-changed", handler);
-    return () => this.removeEventListener("state-changed", handler);
+    this.addEventListener(STATE_CHANGED_EVENT, handler);
+    return () => this.removeEventListener(STATE_CHANGED_EVENT, handler);
+  }
+
+  /**
+   * Dispatch an action to update the state.
+   * @param {string} type The type of action to dispatch.
+   * @param {any} payload The payload to pass to the action.
+   */
+  dispatch(type, payload) {
+    if (typeof this.actions[type] === 'function') {
+      this.actions[type](this._state, payload);
+    } else {
+      console.warn(`Action type ${type} is not defined.`);
+    }
+  }
+
+  /**
+   * Define actions to update the state.
+   * @param {object} actions An object containing action functions.
+   * Each function should accept the current state and a payload.
+   */
+  addActions(actions) {
+    this.actions = { ...this.actions, ...actions };
   }
 }
 
@@ -72,4 +106,16 @@ export const store = new Store({
   notifications: [],
   loading: false,
   error: null,
+});
+
+store.addActions({
+  setTheme: (state, theme) => {
+    state.theme = theme;
+  },
+  setLoading: (state, loading) => {
+    state.loading = loading;
+  },
+  setError: (state, error) => {
+    state.error = error;
+  }
 });
