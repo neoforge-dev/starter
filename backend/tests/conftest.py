@@ -14,13 +14,17 @@ import logging
 from pydantic import BaseModel
 
 from app.main import app
-from app.core.config import Settings, settings
+from app.core.config import Settings, get_settings
 from app.db.session import AsyncSessionLocal
 from app.db.base import Base
 from app.core.security import create_access_token
 from app.models.user import User
 from tests.factories import UserFactory
 from app.api.middleware.validation import RequestValidationMiddleware
+
+# Get a logger instance for conftest
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO) # Configure basic logging
 
 # Test database URL - use test database from docker-compose
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@db:5432/test_db"
@@ -34,30 +38,21 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 def test_settings() -> Settings:
-    """Create test settings with test environment."""
-    test_settings = Settings(
-        environment="test",
-        testing=True,
-        database_url_for_env=TEST_DATABASE_URL,
-        secret_key="test_secret_key_replace_in_production_7e1a34bd93b148f0",
-        cors_origins=[],  # Empty list is allowed in test environment
-        redis_url="redis://redis:6379/1",  # Use different Redis DB for tests
-        debug=False,  # Ensure debug is False in tests
-        access_token_expire_minutes=60 * 24 * 7  # 7 days
-    )
-    
-    # Override global settings for tests
-    import app.core.config
-    app.core.config.settings = test_settings
-    app.core.config.get_settings = lambda: test_settings
-    
-    return test_settings
+    """
+    Return the application settings loaded from environment variables 
+    (primarily set in docker-compose.dev.yml for the test service).
+    This ensures tests use the config defined for the container environment.
+    """
+    return get_settings()
 
 @pytest_asyncio.fixture(scope="session")
 async def engine(test_settings):
     """Create a test database engine."""
+    # Ensure the correct DB URL is used (loaded by test_settings)
+    db_url = test_settings.database_url_for_env
+    logger.info(f"Creating test engine with URL: {db_url}")
     engine = create_async_engine(
-        test_settings.database_url_for_env,
+        db_url,
         echo=False,
         pool_pre_ping=True,
         pool_size=5,
@@ -74,6 +69,7 @@ async def engine(test_settings):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
+    logger.info("Test engine disposed")
 
 @pytest_asyncio.fixture(scope="function")
 async def db(engine) -> AsyncGenerator[AsyncSession, None]:
@@ -95,64 +91,64 @@ async def db(engine) -> AsyncGenerator[AsyncSession, None]:
 
 @pytest_asyncio.fixture(scope="function")
 async def redis(test_settings) -> AsyncGenerator[Redis, None]:
-    """Create a test Redis connection."""
-    redis = Redis.from_url(test_settings.redis_url, decode_responses=True)
+    """Create a test Redis connection using settings from the environment."""
+    redis_url = test_settings.redis_url
+    logger.info(f"Connecting to test Redis at: {redis_url}")
+    redis = Redis.from_url(redis_url, decode_responses=True)
     try:
         # Test connection
         await redis.ping()
+        logger.info("Redis connection successful, flushing test DB")
         # Clear test database
         await redis.flushdb()
         yield redis
     except (ConnectionError, TimeoutError) as e:
+        logger.error(f"Redis connection error: {e}", exc_info=True)
         # In test environment, we want to handle Redis errors gracefully
-        yield None
+        yield None # Allow tests to proceed if Redis isn't critical
     finally:
-        try:
-            await redis.close()
-        except:
-            pass
+        if 'redis' in locals() and redis:
+            try:
+                await redis.close()
+                logger.info("Redis connection closed")
+            except Exception as close_exc:
+                logger.error(f"Error closing Redis connection: {close_exc}", exc_info=True)
 
 @pytest_asyncio.fixture(scope="function")
-async def client(test_settings) -> AsyncGenerator[AsyncClient, None]:
-    """Create a test client."""
+async def client(test_settings: Settings) -> AsyncGenerator[AsyncClient, None]:
+    """Create a standard test client using the main application."""
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
     
-    # Import FastAPI app
+    # Import the main app instance directly
     from app.main import app as fastapi_app
-    from app.core.config import Settings
+    from app.core.config import get_settings as app_get_settings
     
-    logger.debug("Setting up test client with app routes:")
+    logger.debug("Setting up standard test client with main app routes:")
     for route in fastapi_app.routes:
         logger.debug(f"Route: {route.path}, methods: {getattr(route, 'methods', None)}")
     
-    # Override app settings with test settings
-    if not hasattr(fastapi_app, "dependency_overrides"):
-        fastapi_app.dependency_overrides = {}
-    fastapi_app.dependency_overrides[Settings] = lambda: test_settings
-    
-    # Explicitly override the get_settings dependency function
-    from app.core.config import get_settings as app_get_settings
-    fastapi_app.dependency_overrides[app_get_settings] = lambda: test_settings
-
-    logger.debug(f"Override settings: {test_settings}")
-    
-    # Override get_settings in all modules that might use it
-    # This might be redundant now but keep for safety
-    import app.core.config
-    app.core.config.settings = test_settings
-    app.core.config.get_settings = lambda: test_settings
-    
-    transport = ASGITransport(app=fastapi_app)
-    logger.debug("Creating AsyncClient with transport")
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        logger.debug("AsyncClient created")
-        yield ac
-    
-    # Clear dependency overrides after test
+    # Ensure dependency overrides are clean before applying
     if hasattr(fastapi_app, "dependency_overrides"):
         fastapi_app.dependency_overrides.clear()
-    logger.debug("Test client cleanup completed")
+    else:
+        fastapi_app.dependency_overrides = {}
+
+    # Override the get_settings dependency to use the environment-loaded settings
+    fastapi_app.dependency_overrides[app_get_settings] = lambda: test_settings
+
+    logger.debug(f"Overriding get_settings for main app. Effective settings: {test_settings}")
+    
+    transport = ASGITransport(app=fastapi_app)
+    logger.debug("Creating AsyncClient with transport for main app")
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        logger.debug("Standard AsyncClient created")
+        yield ac
+    
+    # Clean up dependency overrides after the test run
+    if hasattr(fastapi_app, "dependency_overrides"):
+        fastapi_app.dependency_overrides.clear()
+    logger.debug("Standard test client dependency overrides cleared")
 
 @pytest_asyncio.fixture(scope="function")
 async def regular_user(db: AsyncSession) -> User:

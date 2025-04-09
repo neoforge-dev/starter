@@ -1,15 +1,49 @@
 """Test API dependencies."""
 import pytest
-from fastapi import HTTPException
+import pytest_asyncio # Import pytest_asyncio
+from typing import AsyncGenerator # Import AsyncGenerator
+from fastapi import HTTPException, Depends, FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import jwt
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport # Import AsyncClient, ASGITransport
 
 from app.api import deps
-from app.core.config import settings, Settings
+from app.core.config import settings, Settings, get_settings # Import get_settings
 from app.models.user import User
 from app.models.admin import Admin, AdminRole
 from tests.factories import UserFactory
+from app.main import app # Import the main app instance
+from app.schemas import UserResponse
+from app.api.deps import get_current_user
+from app.models import User # Import User model
+
+# Define a fixture for the test app specific to this module
+@pytest.fixture(scope="module") # Use module scope for efficiency
+def deps_test_app() -> FastAPI:
+    """Create a FastAPI instance with the test endpoint for dependency tests."""
+    test_app = FastAPI()
+    
+    @test_app.get("/test-deps/current-user", response_model=UserResponse)
+    async def read_current_user_test_endpoint(
+        current_user: User = Depends(get_current_user)
+    ):
+        return current_user
+        
+    return test_app
+
+@pytest_asyncio.fixture(scope="function")
+async def deps_test_client(deps_test_app: FastAPI, test_settings: Settings) -> AsyncGenerator[AsyncClient, None]:
+    """Create a test client configured specifically for the deps_test_app."""
+    # Override settings for this specific app instance
+    deps_test_app.dependency_overrides[get_settings] = lambda: test_settings
+    
+    transport = ASGITransport(app=deps_test_app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
+    
+    # Clean up overrides for the specific app instance
+    deps_test_app.dependency_overrides.clear()
+
 
 pytestmark = pytest.mark.asyncio
 
@@ -19,7 +53,8 @@ async def test_get_db(db: AsyncSession):
     assert isinstance(db, AsyncSession)
 
 
-async def test_get_current_user_valid_token(client: AsyncClient, db: AsyncSession, test_settings: Settings):
+# Use the specialized client for these tests
+async def test_get_current_user_valid_token(deps_test_client: AsyncClient, db: AsyncSession, test_settings: Settings):
     """Test getting current user with valid token via endpoint."""
     user = await UserFactory.create(session=db)
     await db.commit()
@@ -36,7 +71,7 @@ async def test_get_current_user_valid_token(client: AsyncClient, db: AsyncSessio
         "Accept": "application/json"
     }
     
-    response = await client.get("/test-deps/current-user", headers=headers)
+    response = await deps_test_client.get("/test-deps/current-user", headers=headers)
     
     assert response.status_code == 200
     data = response.json()
@@ -44,19 +79,19 @@ async def test_get_current_user_valid_token(client: AsyncClient, db: AsyncSessio
     assert data["email"] == user.email
 
 
-async def test_get_current_user_invalid_token(client: AsyncClient):
+async def test_get_current_user_invalid_token(deps_test_client: AsyncClient):
     """Test getting current user with invalid token via endpoint."""
     headers = {
         "Authorization": "Bearer invalid-token",
         "User-Agent": "pytest-test-client",
         "Accept": "application/json"
     }
-    response = await client.get("/test-deps/current-user", headers=headers)
+    response = await deps_test_client.get("/test-deps/current-user", headers=headers)
     assert response.status_code == 401
     assert "Could not validate credentials" in response.json()["detail"]
 
 
-async def test_get_current_user_nonexistent_user(client: AsyncClient, db: AsyncSession, test_settings: Settings):
+async def test_get_current_user_nonexistent_user(deps_test_client: AsyncClient, db: AsyncSession, test_settings: Settings):
     """Test getting current user with token for nonexistent user via endpoint."""
     token = jwt.encode(
         {"sub": "999999"},  # Non-existent user ID
@@ -69,11 +104,11 @@ async def test_get_current_user_nonexistent_user(client: AsyncClient, db: AsyncS
         "Accept": "application/json"
     }
     
-    response = await client.get("/test-deps/current-user", headers=headers)
+    response = await deps_test_client.get("/test-deps/current-user", headers=headers)
     assert response.status_code == 404
 
 
-async def test_get_current_user_inactive_user(client: AsyncClient, db: AsyncSession, test_settings: Settings):
+async def test_get_current_user_inactive_user(deps_test_client: AsyncClient, db: AsyncSession, test_settings: Settings):
     """Test getting current user with inactive user via endpoint."""
     user = await UserFactory.create(session=db, is_active=False)
     await db.commit()
@@ -90,7 +125,8 @@ async def test_get_current_user_inactive_user(client: AsyncClient, db: AsyncSess
         "Accept": "application/json"
     }
     
-    response = await client.get("/test-deps/current-user", headers=headers)
+    response = await deps_test_client.get("/test-deps/current-user", headers=headers)
+    # Inactive user should still be found by get_current_user, but fail in get_current_active_user
     assert response.status_code == 200
 
 

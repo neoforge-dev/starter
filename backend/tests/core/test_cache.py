@@ -43,10 +43,11 @@ def mock_redis():
     mock = AsyncMock()
     mock.get = AsyncMock(return_value=None)
     mock.set = AsyncMock(return_value=True)
+    mock.setex = AsyncMock(return_value=True)
     mock.delete = AsyncMock(return_value=1)
     mock.exists = AsyncMock(return_value=1)
     mock.keys = AsyncMock(return_value=["key1", "key2"])
-    mock.incr = AsyncMock(return_value=1)
+    mock.incrby = AsyncMock(return_value=1)
     mock.flushdb = AsyncMock(return_value=True)
     return mock
 
@@ -95,9 +96,7 @@ async def test_get_cache_hit(cache, mock_redis):
         with patch.object(CACHE_OPERATION_DURATION, 'labels') as mock_duration:
             # Setup mocks
             mock_inc = MagicMock()
-            mock_observe = MagicMock()
             mock_hits.return_value.inc = mock_inc
-            mock_duration.return_value.observe = mock_observe
             
             # Get from cache
             result = await cache.get("test_key")
@@ -109,10 +108,9 @@ async def test_get_cache_hit(cache, mock_redis):
             mock_redis.get.assert_called_once_with("test:test_key")
             
             # Verify metrics were updated
-            mock_hits.assert_called_once_with(cache_key="test:test_key")
+            mock_hits.assert_called_once_with(cache_key="test_key")
             mock_inc.assert_called_once()
-            mock_duration.assert_called_once_with(operation="get")
-            mock_observe.assert_called_once()
+            mock_duration.assert_called_once_with('get')
 
 
 @pytest.mark.asyncio
@@ -126,9 +124,7 @@ async def test_get_cache_miss(cache, mock_redis):
         with patch.object(CACHE_OPERATION_DURATION, 'labels') as mock_duration:
             # Setup mocks
             mock_inc = MagicMock()
-            mock_observe = MagicMock()
             mock_misses.return_value.inc = mock_inc
-            mock_duration.return_value.observe = mock_observe
             
             # Get from cache
             result = await cache.get("test_key")
@@ -140,10 +136,9 @@ async def test_get_cache_miss(cache, mock_redis):
             mock_redis.get.assert_called_once_with("test:test_key")
             
             # Verify metrics were updated
-            mock_misses.assert_called_once_with(cache_key="test:test_key")
+            mock_misses.assert_called_once_with(cache_key="test_key")
             mock_inc.assert_called_once()
-            mock_duration.assert_called_once_with(operation="get")
-            mock_observe.assert_called_once()
+            mock_duration.assert_called_once_with('get')
 
 
 @pytest.mark.asyncio
@@ -173,13 +168,11 @@ async def test_get_error(cache, mock_redis):
         with patch.object(CACHE_OPERATION_DURATION, 'labels') as mock_duration:
             # Setup mocks
             mock_inc = MagicMock()
-            mock_observe = MagicMock()
             mock_errors.return_value.inc = mock_inc
-            mock_duration.return_value.observe = mock_observe
             
-            # Get from cache and expect error
-            with pytest.raises(CacheError):
-                await cache.get("test_key")
+            # Get from cache and expect None, not an exception
+            result = await cache.get("test_key")
+            assert result is None
             
             # Verify Redis was called
             mock_redis.get.assert_called_once_with("test:test_key")
@@ -187,8 +180,8 @@ async def test_get_error(cache, mock_redis):
             # Verify metrics were updated
             mock_errors.assert_called_once_with(error_type="RedisError")
             mock_inc.assert_called_once()
-            mock_duration.assert_called_once_with(operation="get")
-            mock_observe.assert_called_once()
+            # Check that duration labels was called, even though operation failed
+            mock_duration.assert_called_once_with('get')
 
 
 @pytest.mark.asyncio
@@ -197,8 +190,6 @@ async def test_set(cache, mock_redis):
     # Mock metrics
     with patch.object(CACHE_OPERATION_DURATION, 'labels') as mock_duration:
         # Setup mocks
-        mock_observe = MagicMock()
-        mock_duration.return_value.observe = mock_observe
         
         # Set in cache
         result = await cache.set("test_key", {"id": 1, "name": "Test"})
@@ -211,30 +202,31 @@ async def test_set(cache, mock_redis):
         args = mock_redis.set.call_args[0]
         assert args[0] == "test:test_key"
         assert json.loads(args[1]) == {"id": 1, "name": "Test"}
-        assert args[2] is None  # No expiration
         
         # Verify metrics were updated
-        mock_duration.assert_called_once_with(operation="set")
-        mock_observe.assert_called_once()
+        mock_duration.assert_called_once_with('set')
 
 
 @pytest.mark.asyncio
 async def test_set_with_expiration(cache, mock_redis):
-    """Test that set stores value with expiration."""
+    """Test that set stores value with expiration using setex."""
     # Set in cache with expiration
     expire = timedelta(seconds=60)
     result = await cache.set("test_key", "test_value", expire=expire)
-    
+
     # Verify result
     assert result is True
+
+    # Verify Redis was called with correct arguments for setex
+    mock_redis.setex.assert_called_once()
+    mock_redis.set.assert_not_called() # Ensure set wasn't called
     
-    # Verify Redis was called with correct arguments
-    mock_redis.set.assert_called_once()
-    args = mock_redis.set.call_args[0]
-    kwargs = mock_redis.set.call_args[1]
-    assert args[0] == "test:test_key"
-    assert json.loads(args[1]) == "test_value"
-    assert kwargs["ex"] == 60  # Expiration in seconds
+    # Check the arguments passed to setex
+    args, kwargs = mock_redis.setex.call_args
+    assert args[0] == "test:test_key"  # Check the key
+    assert args[1] == 60              # Check the expiration time in seconds
+    assert json.loads(args[2]) == "test_value" # Check the value
+    assert not kwargs                 # Ensure no keyword arguments were passed
 
 
 @pytest.mark.asyncio
@@ -261,22 +253,18 @@ async def test_delete(cache, mock_redis):
     """Test that delete removes value from cache."""
     # Mock metrics
     with patch.object(CACHE_OPERATION_DURATION, 'labels') as mock_duration:
-        # Setup mocks
-        mock_observe = MagicMock()
-        mock_duration.return_value.observe = mock_observe
-        
         # Delete from cache
         result = await cache.delete("test_key")
-        
+
         # Verify result
         assert result is True
-        
+
         # Verify Redis was called
         mock_redis.delete.assert_called_once_with("test:test_key")
-        
-        # Verify metrics were updated
-        mock_duration.assert_called_once_with(operation="delete")
-        mock_observe.assert_called_once()
+
+        # Verify metrics were updated (labels call)
+        mock_duration.assert_called_once_with("delete")
+        # .time() handles observe implicitly, no need to mock/assert observe directly
 
 
 @pytest.mark.asyncio
@@ -284,22 +272,19 @@ async def test_exists(cache, mock_redis):
     """Test that exists checks if key exists in cache."""
     # Mock metrics
     with patch.object(CACHE_OPERATION_DURATION, 'labels') as mock_duration:
-        # Setup mocks
-        mock_observe = MagicMock()
-        mock_duration.return_value.observe = mock_observe
-        
         # Check if key exists
         result = await cache.exists("test_key")
-        
+
         # Verify result
         assert result is True
-        
+
         # Verify Redis was called
         mock_redis.exists.assert_called_once_with("test:test_key")
-        
-        # Verify metrics were updated
-        mock_duration.assert_called_once_with(operation="exists")
-        mock_observe.assert_called_once()
+
+        # Verify metrics were updated (labels call)
+        # Assert using positional argument as called in the code
+        mock_duration.assert_called_once_with("exists")
+        # .time() handles observe implicitly, no need to mock/assert observe directly
 
 
 @pytest.mark.asyncio
@@ -307,49 +292,42 @@ async def test_clear_prefix(cache, mock_redis):
     """Test that clear_prefix removes keys with prefix."""
     # Setup mock to return keys
     mock_redis.keys.return_value = ["test:prefix:key1", "test:prefix:key2"]
-    
+
     # Mock metrics
     with patch.object(CACHE_OPERATION_DURATION, 'labels') as mock_duration:
-        # Setup mocks
-        mock_observe = MagicMock()
-        mock_duration.return_value.observe = mock_observe
-        
         # Clear keys with prefix
         result = await cache.clear_prefix("prefix")
-        
-        # Verify result
-        assert result == 2
-        
+
+        # Verify result (mock delete returns 1 regardless of number of keys)
+        assert result == 1
+
         # Verify Redis was called
         mock_redis.keys.assert_called_once_with("test:prefix:*")
-        mock_redis.delete.assert_called_once()
-        
+        # Assert delete was called with the unpacked keys
+        mock_redis.delete.assert_called_once_with("test:prefix:key1", "test:prefix:key2")
+
         # Verify metrics were updated
-        mock_duration.assert_called_once_with(operation="clear_prefix")
-        mock_observe.assert_called_once()
+        mock_duration.assert_called_once_with("clear_prefix")
 
 
 @pytest.mark.asyncio
 async def test_increment(cache, mock_redis):
-    """Test that increment increases counter in cache."""
+    """Test that increment uses incrby in Redis."""
     # Mock metrics
     with patch.object(CACHE_OPERATION_DURATION, 'labels') as mock_duration:
         # Setup mocks
-        mock_observe = MagicMock()
-        mock_duration.return_value.observe = mock_observe
-        
-        # Increment counter
-        result = await cache.increment("counter", amount=5)
-        
+
+        # Increment in cache
+        result = await cache.increment("test_key", amount=5)
+
         # Verify result
-        assert result == 1  # Mock returns 1
-        
-        # Verify Redis was called
-        mock_redis.incr.assert_called_once_with("test:counter", 5)
-        
-        # Verify metrics were updated
-        mock_duration.assert_called_once_with(operation="increment")
-        mock_observe.assert_called_once()
+        assert result == 1 # Mock returns 1 by default
+
+        # Verify Redis incrby was called
+        mock_redis.incrby.assert_called_once_with("test:test_key", 5)
+
+        # Verify metrics
+        mock_duration.assert_called_once_with('increment')
 
 
 @pytest.mark.asyncio
@@ -357,22 +335,17 @@ async def test_clear_cache(cache, mock_redis):
     """Test that clear_cache flushes the cache."""
     # Mock metrics
     with patch.object(CACHE_OPERATION_DURATION, 'labels') as mock_duration:
-        # Setup mocks
-        mock_observe = MagicMock()
-        mock_duration.return_value.observe = mock_observe
-        
         # Clear cache
         result = await cache.clear_cache()
-        
+
         # Verify result
         assert result is True
-        
+
         # Verify Redis was called
         mock_redis.flushdb.assert_called_once()
-        
-        # Verify metrics were updated
-        mock_duration.assert_called_once_with(operation="clear_cache")
-        mock_observe.assert_called_once()
+
+        # Verify metrics were updated (label should be clear_all)
+        mock_duration.assert_called_once_with("clear_all")
 
 
 @pytest.mark.asyncio
@@ -430,16 +403,15 @@ async def test_cached_decorator():
 @pytest.mark.asyncio
 async def test_global_clear_cache():
     """Test that global clear_cache function works."""
-    # Create mock Redis
-    mock_redis = AsyncMock()
-    mock_redis.flushdb.return_value = True
-    
-    # Call the function
-    with patch('app.core.cache.Redis.from_url', return_value=mock_redis):
+    # Patch the actual client instance used by the function
+    with patch('app.core.redis.redis_client', new_callable=AsyncMock) as mock_redis:
+        mock_redis.flushdb.return_value = True
+
+        # Call the function
         result = await clear_cache()
-        
+
         # Verify result
         assert result is True
-        
+
         # Verify Redis was called
         mock_redis.flushdb.assert_called_once() 

@@ -1,38 +1,22 @@
-# Product Context: NeoForge
+# Product Context: NeoForge (Optimized)
 
-## Vision
-- Modern, efficient, performant, maintainable web app platform.
-
-## Core Problem Solved
-- Reduce tech fatigue, setup time, infra cost for bootstrapped founders/small teams.
-- Balance quality/best practices with dev speed.
+## Goal
+- Efficient, maintainable web platform for bootstrapped founders/small teams.
+- Problem: Reduce tech fatigue, setup time, infra cost; balance quality & speed.
 
 ## Target Users
-- Bootstrapped Founders
-- Solo Devs / Small Startups
-- Side Project Creators
+- Bootstrapped Founders, Solo Devs, Side Projects.
 
-## User Experience Goals
-
-### Developers
-- Quick setup (`make setup`/`dev`)
-- Clear docs/patterns
-- Reliable testing
-- Efficient workflow
-
-### End Users
-- Fast, responsive UI
-- PWA features (offline)
-- Accessible
+## Key UX Goals
+- **Devs**: Quick setup (`make`), clear patterns, reliable tests.
+- **Users**: Fast UI, PWA (offline), accessible.
 
 ## Technical Philosophy
-- Simplicity > Complexity (Vanilla JS, native)
-- Performance First (Load, bundle)
-- Maintainability (Tests, patterns, docs)
+- Simplicity (Vanilla JS), Performance, Maintainability (Tests, Docs).
 
-## Key Success Metrics
-- Dev Setup: < 10 min
-- Test Reliability & Speed: High, < 2 min CI
-- Test Coverage: > 80%
-- Lighthouse: > 90
-- Infra Cost: < $15/month 
+## Key Metrics
+- Dev Setup < 10 min
+- CI Test Time < 2 min
+- Test Coverage > 80%
+- Lighthouse > 90
+- Infra Cost < $15/mo 

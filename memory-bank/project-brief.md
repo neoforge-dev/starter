@@ -1,7 +1,7 @@
-# Project Brief: NeoForge
+# Project Brief: NeoForge (Optimized)
 
 ## Goal
-- Build a modern, scalable, maintainable web application platform (Lit frontend, FastAPI backend).
+- Build a modern, scalable, maintainable web app platform (Lit FE, FastAPI BE).
 
 ## Core Requirements
 
@@ -23,14 +23,14 @@
 - GitHub Actions CI/CD
 - Cloudflare CDN
 
-## Current Sprint Focus (Frontend Reliability)
-- Fix failing component tests.
-- Implement consistent component testing patterns.
-- Ensure reliable CI test execution (< 2 min).
-- Document testing approach.
+## Current Sprint Focus (Backend Reliability / Test Coverage)
+- **BE**: Fix failing tests (Validation Middleware, Cache).
+- **BE**: Increase test coverage towards 80%.
+- **FE**: Address skipped tests systematically.
+- **Docs**: Essential API, setup, testing docs.
 
-## Success Criteria
-- All frontend tests pass consistently.
-- Test coverage > 80%.
-- CI tests run < 2 min.
-- Testing approach documented. 
+## Success Criteria (Current Sprint)
+- Backend tests passing consistently.
+- Test coverage improving towards 80% (BE first).
+- Frontend skipped tests reducing.
+- CI tests reliable (< 2 min). 

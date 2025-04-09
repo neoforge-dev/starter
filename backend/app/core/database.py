@@ -1,6 +1,10 @@
-# Add connection pooling and caching
+"""Database connection pool and query execution."""
+import os
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator, Optional, Any
 from asyncpg import create_pool
 from aiocache import Cache
+import hashlib
 
 async def init_db():
     return await create_pool(

@@ -1,10 +1,11 @@
 from functools import lru_cache
 from typing import Literal, List, Annotated, Optional, Any, Dict, Union
 import json
-from pydantic import Field, SecretStr, field_validator, model_validator, ValidationInfo, BeforeValidator, AnyHttpUrl, EmailStr, ValidationError
+from pydantic import Field, SecretStr, field_validator, model_validator, ValidationInfo, BeforeValidator, AnyHttpUrl, EmailStr, ValidationError, PostgresDsn, RedisDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import logging
 from enum import Enum
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -70,21 +71,13 @@ class Settings(BaseSettings):
         if isinstance(v, Environment):
             return v
         try:
-            v = str(v).lower()
-            if v not in [e.value for e in Environment]:
+            v_lower = str(v).lower()
+            if v_lower not in [e.value for e in Environment]:
                 raise ValueError(f"Invalid environment: {v}. Must be one of {[e.value for e in Environment]}")
-            return Environment(v)
+            return Environment(v_lower)
         except (ValueError, TypeError) as e:
-            raise ValidationError(
-                [
-                    {
-                        "type": "value_error",
-                        "loc": ("environment",),
-                        "msg": str(e),
-                        "input": v,
-                    }
-                ]
-            )
+            # Re-raise as ValueError for Pydantic to handle
+            raise ValueError(str(e))
 
     @field_validator("secret_key", mode="before")
     def validate_secret_key(cls, v: Union[str, SecretStr]) -> SecretStr:
@@ -95,16 +88,8 @@ class Settings(BaseSettings):
             secret_str = str(v)
 
         if len(secret_str) < 32:
-            raise ValidationError(
-                [
-                    {
-                        "type": "value_error",
-                        "loc": ("secret_key",),
-                        "msg": "Secret key must be at least 32 characters long",
-                        "input": "***",
-                    }
-                ]
-            )
+            # Raise ValueError directly; Pydantic V2 will handle it.
+            raise ValueError("Secret key must be at least 32 characters long")
 
         return SecretStr(secret_str)
 
@@ -122,38 +107,22 @@ class Settings(BaseSettings):
             try:
                 v = json.loads(v)
             except json.JSONDecodeError:
-                raise ValidationError(
-                    [
-                        {
-                            "type": "value_error",
-                            "loc": ("cors_origins",),
-                            "msg": "CORS_ORIGINS must be a valid JSON string",
-                            "input": v,
-                        }
-                    ]
-                )
+                raise ValueError("CORS_ORIGINS must be a valid JSON string if provided as a string")
 
-        # Ensure list type
-        if not isinstance(v, list):
-            raise ValidationError(
-                [
-                    {
-                        "type": "value_error",
-                        "loc": ("cors_origins",),
-                        "msg": "CORS_ORIGINS must be a list",
-                        "input": v,
-                    }
-                ]
-            )
+        # Ensure it's a list of strings now
+        if not isinstance(v, list) or not all(isinstance(i, str) for i in v):
+             raise ValueError("CORS_ORIGINS must be a list of strings")
 
-        # Filter empty strings and strip whitespace
-        origins = [origin.strip() for origin in v if origin and origin.strip()]
-
-        # Use default if no origins provided
-        if not origins:
-            return ["http://localhost:3000"]
-
-        return origins
+        # Validate each URL (optional but recommended)
+        validated_origins = []
+        for origin in v:
+            try:
+                validated_url = str(AnyHttpUrl(origin)) # Keep as string
+                validated_origins.append(validated_url)
+            except Exception as e: # Catch Pydantic validation error more specifically if possible
+                raise ValueError(f"Invalid URL in CORS_ORIGINS: {origin} ({e})")
+        
+        return validated_origins
 
     @field_validator("debug", mode="before")
     def validate_debug(cls, v: Union[str, bool], info: ValidationInfo) -> bool:
@@ -207,9 +176,16 @@ class Settings(BaseSettings):
 
         return self
 
+# Cached function to get settings
 @lru_cache()
 def get_settings() -> Settings:
-    """Get cached settings instance."""
-    return Settings()
+    """Return cached settings instance."""
+    # Automatically loads from .env file, environment variables, etc.
+    try:
+        return Settings()
+    except ValidationError as e:
+        # Log error details during startup if validation fails
+        print(f"ERROR: Settings validation failed: {e}")
+        raise
 
 settings = Settings() 

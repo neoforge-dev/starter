@@ -107,7 +107,6 @@ services:
       - COVERAGE_FILE=/tmp/.coverage
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - JWT_SECRET=test-secret-123
       - JWT_ALGORITHM=HS256
     depends_on:
       db:

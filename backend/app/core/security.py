@@ -17,9 +17,7 @@ from app.core.logging import logger
 from app.models import User
 from app.schemas import TokenPayload
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f"{get_settings().api_v1_str}/auth/token"
-)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 
 
 def create_access_token(
@@ -44,9 +42,11 @@ def create_access_token(
         expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
     
     to_encode = {"exp": expire, "sub": str(subject)}
+    secret_value = settings.secret_key.get_secret_value()
+    logger.debug(f"[CREATE_TOKEN] Using Secret Key: {secret_value[:5]}...{secret_value[-5:]}") # Log key safely
     encoded_jwt = jwt.encode(
         to_encode,
-        settings.secret_key.get_secret_value(),
+        secret_value,
         algorithm=settings.algorithm,
     )
     return encoded_jwt
@@ -67,8 +67,10 @@ async def get_current_user(
     )
     try:
         logger.debug("Decoding JWT token...")
+        secret_value = settings.secret_key.get_secret_value()
+        logger.debug(f"[VERIFY_TOKEN] Using Secret Key: {secret_value[:5]}...{secret_value[-5:]}") # Log key safely
         payload = jwt.decode(
-            token, settings.secret_key.get_secret_value(), algorithms=[settings.algorithm]
+            token, secret_value, algorithms=[settings.algorithm]
         )
         logger.debug(f"Token payload decoded: {payload}")
         user_id: str | None = payload.get("sub")

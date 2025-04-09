@@ -281,7 +281,7 @@ async def test_error_handler_middleware_validation_error(client: AsyncClient, re
     """Test handling of validation errors when authorization fails first."""
     # Send request to an endpoint that requires validation and superuser auth,
     # but use regular user headers. The auth dependency should raise 400 first.
-    response = await client.post("/api/v1/users/", json={}, headers=regular_user_headers)
+    response = await client.post(f"{settings.api_v1_str}/users/", json={}, headers=regular_user_headers)
     assert response.status_code == 400 # Expect 400 due to superuser check failing
     # data = response.json()
     # assert "detail" in data
@@ -295,7 +295,7 @@ async def test_error_handler_middleware_database_error(
     """Test handling of database errors (like user not found)."""
     # Send request to an endpoint that requires database access with a non-existent ID
     # This endpoint requires superuser privileges
-    response = await client.get("/api/v1/users/999999", headers=superuser_headers)
+    response = await client.get(f"{settings.api_v1_str}/users/999999", headers=superuser_headers)
     # Now that the superuser can access the endpoint, 
     # it should correctly return 404 from the endpoint logic
     assert response.status_code == 404

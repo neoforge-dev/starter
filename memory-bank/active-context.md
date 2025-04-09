@@ -1,25 +1,25 @@
-# Active Context
+# Active Context (Optimized)
 
-## Current Work Focus
-- **MVP Completion**: Core features, essential functionality (4-week plan).
-- **Test Infra**: Fix critical test issues blocking MVP.
-- **Core Features**: Auth, data management, error handling.
+## Current Focus
+- **Backend Reliability**: Fix failing tests (Validation Middleware, Cache).
+- **Test Coverage**: Increase backend coverage towards 80%.
+- **MVP Features**: Continue core feature dev (Auth, Data Mgmt, Errors) after tests stabilize.
 
 ## Current State
-- **Frontend Tests**: 88 files total, 75 passing, 13 skipped. Critical failures resolved (`table.test.js`, `memory-monitor.test.js`).
-  - `performance.test.js` memory test remains skipped (`test.skip`) - JSDOM limit.
-  - Core test utils stable (`src/test/utils`, `src/test/setup`).
-- **Storybook**: Working (`npm run storybook`). Initial atom stories exist. Fixes applied (`scripts/fix-stories.js`, `vite.config.js`, `scripts/patch-figspec.cjs`).
+- **Backend Tests**: Failing (Validation Middleware: 307 redirects; Cache: metrics assertion). Coverage 65%.
+  - Auth tests passing.
+  - Logging added to `get_current_user`.
+- **Frontend Tests**: ~85% passing (634/694), 60 skipped (incl. memory perf).
+- **Storybook**: Basic setup works.
 
 ## Next Steps (Prioritized)
-1. **Fix Test Infra** (Critical): Resolve polyfill issues, setup env, add user flow tests.
-1. **Address Skipped Tests** (High): Systematically review and enable skipped tests (memory, pages, e2e stubs).
-2. **Core Features** (High): Finish auth, data mgmt, error boundaries, basic offline.
-3. **Documentation** (Medium): Core APIs, setup guides, testing docs.
-4. **Perf/Polish** (Low - Post-MVP): Lazy loading, bundle size, monitoring.
+1. **Fix BE Tests** (Critical): Resolve 307 redirects in validation tests (check endpoint slashes), fix cache metrics test.
+2. **Increase BE Coverage** (High): Add tests for low-coverage areas (endpoints, core logic).
+3. **Address FE Skipped Tests** (Medium): Review/enable skipped FE tests.
+4. **Core Features** (Medium): Continue MVP features once tests pass.
+5. **Docs/Polish** (Low): Deferred post-MVP.
 
-## Active Decisions / Key Patterns Reminders
-- **MVP First**: Essentials only, defer optimizations, clear criteria.
-- **Testing Strategy**: Prioritize user flows, fix blockers, follow Sr. Dev Debug Protocol.
-- **Tech Debt**: Address only MVP blockers, document for later.
-- **Review Process**: Daily tests, Weekly features, Bi-weekly MVP progress.
+## Key Patterns / Reminders
+- MVP First: Essential features, defer optimizations.
+- Test Strategy: Fix blockers first, >80% coverage target.
+- Tech Debt: Only address MVP blockers.
