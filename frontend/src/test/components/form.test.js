@@ -303,7 +303,7 @@ describe("Form", () => {
     vi.spyOn(element, "dispatchEvent");
   });
 
-  it.skip("should validate required fields", async () => {
+  it("should validate required fields", async () => {
     // Set all required fields to empty
     const usernameField = element.formElements[0];
     const emailField = element.formElements[1];
@@ -330,7 +330,7 @@ describe("Form", () => {
     ]);
   });
 
-  it.skip("should validate email format", async () => {
+  it("should validate email format", async () => {
     const emailField = element.formElements[1];
     emailField.value = "invalid-email";
 
@@ -341,7 +341,7 @@ describe("Form", () => {
     );
   });
 
-  it.skip("should validate password requirements", async () => {
+  it("should validate password requirements", async () => {
     const passwordField = element.formElements[2];
     passwordField.value = "weakpassword";
 
@@ -377,7 +377,7 @@ describe("Form", () => {
     expect(element.errors).toContain("Username must be at least 3 characters");
   });
 
-  it.skip("should validate maximum length", async () => {
+  it("should validate maximum length", async () => {
     const usernameField = element.formElements[0];
     usernameField.value = "thisusernameiswaytoolongforavalidusername";
 
@@ -387,10 +387,12 @@ describe("Form", () => {
     await element.validateField(usernameField);
 
     // Check the specific error message
-    expect(element.errors).toEqual(["Username must be at most 20 characters"]);
+    expect(element.errors).toEqual([
+      "Username must be less than 20 characters",
+    ]);
   });
 
-  it.skip("should dispatch form-error event when validation fails", async () => {
+  it("should dispatch form-error event when validation fails", async () => {
     const dispatchEventSpy = vi.spyOn(element, "dispatchEvent");
 
     // Submit form with empty fields
@@ -410,7 +412,7 @@ describe("Form", () => {
     expect(event.detail.errors).toEqual(element.errors);
   });
 
-  it.skip("should dispatch form-submit event when validation passes", async () => {
+  it("should dispatch form-submit event when validation passes", async () => {
     // Set valid values for all fields
     element.formElements[0].value = "validuser";
     element.formElements[1].value = "valid@email.com";
@@ -431,7 +433,7 @@ describe("Form", () => {
     expect(submitEvents.length).toBe(1);
     const event = submitEvents[0][0];
     expect(event.type).toBe("form-submit");
-    expect(event.detail.data).toEqual({
+    expect(event.detail.formData).toEqual({
       username: "validuser",
       email: "valid@email.com",
       password: "ValidPass1",

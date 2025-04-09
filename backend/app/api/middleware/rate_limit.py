@@ -53,14 +53,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 await self.redis.expire(key, self.rate_limit_window)
 
             remaining = max(0, self.rate_limit_requests - current)
+            # Calculate reset time (can be simplified to window for fixed window)
+            # ttl = await self.redis.ttl(key)
+            # reset_time = ttl if ttl > 0 else self.rate_limit_window
+            reset_time = self.rate_limit_window # Fixed window reset
+
             headers = {
                 "X-RateLimit-Limit": str(self.rate_limit_requests),
                 "X-RateLimit-Remaining": str(remaining),
+                "X-RateLimit-Reset": str(reset_time), # Add reset header
             }
 
             if current > self.rate_limit_requests:
                 # Add Retry-After header for rate limited responses
-                headers["Retry-After"] = str(self.rate_limit_window)
+                headers["Retry-After"] = str(reset_time) # Use reset_time here too
                 return Response(
                     content='{"detail":"Too Many Requests"}',
                     status_code=429,

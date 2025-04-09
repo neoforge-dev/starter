@@ -8,7 +8,7 @@ from typing import Annotated, AsyncGenerator
 import time
 
 import structlog
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -29,7 +29,8 @@ from app.worker.email_worker import email_worker
 from app.core.queue import EmailQueue
 from app.api.middleware import setup_security_middleware, setup_validation_middleware
 from app.core.metrics import get_metrics
-from hello import hello
+from app.schemas.user import UserResponse
+from app.api import deps
 
 # Set up structured logging
 setup_logging(settings.model_dump())
@@ -163,6 +164,20 @@ app.include_router(api_router, prefix=settings.api_v1_str)
 
 # Add metrics endpoint
 app.include_router(metrics.router, tags=["monitoring"])
+
+# Add a router specifically for testing dependencies
+# This should ideally only be active in test environments
+if settings.environment == "test":
+    test_deps_router = APIRouter()
+    
+    @test_deps_router.get("/test-deps/current-user", response_model=UserResponse, tags=["test_dependencies"])
+    async def test_get_current_user_dependency(
+        current_user: Annotated[UserResponse, Depends(deps.get_current_user)]
+    ) -> UserResponse:
+        """Test endpoint specifically for testing get_current_user dependency."""
+        return current_user
+        
+    app.include_router(test_deps_router)
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():

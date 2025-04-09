@@ -107,12 +107,14 @@ async def admin_headers(admin_user, test_settings):
     
     access_token = create_access_token(
         subject=str(admin_user.user_id),
+        settings=test_settings,
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "pytest-test-client",
     }
 
 
@@ -124,12 +126,14 @@ async def content_admin_headers(content_admin, test_settings):
     
     access_token = create_access_token(
         subject=str(content_admin.user_id),
+        settings=test_settings,
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "pytest-test-client",
     }
 
 
@@ -141,12 +145,14 @@ async def super_admin_headers(super_admin, test_settings):
     
     access_token = create_access_token(
         subject=str(super_admin.user_id),
+        settings=test_settings,
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "pytest-test-client",
     }
 
 
@@ -158,6 +164,7 @@ async def readonly_admin_headers(readonly_admin, test_settings):
     
     access_token = create_access_token(
         subject=str(readonly_admin.user_id),
+        settings=test_settings,
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {

@@ -155,8 +155,9 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         for header in self.required_headers:
             if header not in request.headers:
                 return JSONResponse(
-                    content={"message": f"{header} header is required"},
-                    status_code=422,
+                    # Return 400 Bad Request for missing required headers
+                    content={"detail": f"{header} header is required"}, 
+                    status_code=400, 
                 )
 
         # Validate Content-Type for POST, PUT, PATCH requests
@@ -164,15 +165,28 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             content_type = request.headers.get("Content-Type", "")
             if not content_type or "application/json" not in content_type.lower():
                 return JSONResponse(
-                    content={"message": "Content-Type must be application/json"},
+                    # Keep 415 for unsupported media type
+                    content={"detail": "Content-Type must be application/json"}, 
                     status_code=415,
                 )
 
             # Check Content-Length header
-            if "Content-Length" not in request.headers:
+            content_length = request.headers.get("Content-Length")
+            if content_length is None:
                 return JSONResponse(
-                    content={"message": "Content-Length header is required"},
-                    status_code=422,
+                    # Return 411 Length Required for missing Content-Length
+                    content={"detail": "Content-Length header required"}, 
+                    status_code=411, 
+                )
+            try:
+                length = int(content_length)
+                # Optionally check if length > 0 if needed
+                # if length <= 0:
+                #    return JSONResponse(...)
+            except ValueError:
+                return JSONResponse(
+                    content={"detail": "Invalid Content-Length header"},
+                    status_code=400, # Bad Request for invalid value
                 )
 
         return None

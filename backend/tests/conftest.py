@@ -11,6 +11,7 @@ from datetime import timedelta
 from sqlalchemy import select
 from fastapi import FastAPI
 import logging
+from pydantic import BaseModel
 
 from app.main import app
 from app.core.config import Settings, settings
@@ -129,9 +130,15 @@ async def client(test_settings) -> AsyncGenerator[AsyncClient, None]:
     if not hasattr(fastapi_app, "dependency_overrides"):
         fastapi_app.dependency_overrides = {}
     fastapi_app.dependency_overrides[Settings] = lambda: test_settings
+    
+    # Explicitly override the get_settings dependency function
+    from app.core.config import get_settings as app_get_settings
+    fastapi_app.dependency_overrides[app_get_settings] = lambda: test_settings
+
     logger.debug(f"Override settings: {test_settings}")
     
     # Override get_settings in all modules that might use it
+    # This might be redundant now but keep for safety
     import app.core.config
     app.core.config.settings = test_settings
     app.core.config.get_settings = lambda: test_settings
@@ -166,7 +173,8 @@ async def regular_user(db: AsyncSession) -> User:
         password="regular123",
         is_active=True
     )
-    await db.refresh(user)  # Ensure we have the latest state
+    await db.commit()
+    await db.refresh(user)  # Ensure we have the latest state including ID
     return user
 
 @pytest_asyncio.fixture(scope="function")
@@ -189,7 +197,8 @@ async def superuser(db: AsyncSession) -> User:
         is_superuser=True,
         is_active=True
     )
-    await db.refresh(user)  # Ensure we have the latest state
+    await db.commit()
+    await db.refresh(user)  # Ensure we have the latest state including ID
     return user
 
 @pytest_asyncio.fixture(scope="function")
@@ -197,12 +206,14 @@ async def regular_user_headers(regular_user: User, test_settings: Settings) -> d
     """Get headers for regular user authentication."""
     access_token = create_access_token(
         subject=regular_user.id,
+        settings=test_settings,
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "pytest-test-client"
     }
 
 @pytest_asyncio.fixture(scope="function")
@@ -210,12 +221,14 @@ async def superuser_headers(superuser: User, test_settings: Settings) -> dict:
     """Get headers for superuser authentication."""
     access_token = create_access_token(
         subject=superuser.id,
+        settings=test_settings,
         expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
     )
     return {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "pytest-test-client"
     }
 
 @pytest.fixture
@@ -223,9 +236,14 @@ def app_with_validation() -> FastAPI:
     """Create a FastAPI app with validation middleware for testing."""
     app = FastAPI()
     
+    # Define a simple model for the test endpoint body
+    class TestPostBody(BaseModel):
+        message: str
+        
     @app.post("/test-post")
-    async def test_post():
-        return {"detail": [{"msg": "application/json"}]}
+    # Expect the model in the body to trigger content-type validation
+    async def test_post(body: TestPostBody):
+        return {"received": body.model_dump()}
     
     app.add_middleware(RequestValidationMiddleware)
     return app 

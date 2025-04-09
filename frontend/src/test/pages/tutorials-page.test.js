@@ -329,7 +329,7 @@ describe("TutorialsPage", () => {
     });
   });
 
-  it.skip("should handle category filtering", async () => {
+  it("should handle category filtering", async () => {
     const shadowRoot = element.shadowRoot;
     const categoryFilters = shadowRoot.querySelectorAll(".category-filter");
 
@@ -348,7 +348,7 @@ describe("TutorialsPage", () => {
     expect(filteredCards[0].textContent).toContain("Quick Start Guide");
   });
 
-  it.skip("should handle difficulty filtering", async () => {
+  it("should handle difficulty filtering", async () => {
     const shadowRoot = element.shadowRoot;
     const difficultyFilter = shadowRoot.querySelector(".difficulty-filter");
 
@@ -364,7 +364,7 @@ describe("TutorialsPage", () => {
     expect(filteredCards[0].textContent).toContain("Advanced Performance");
   });
 
-  it.skip("should handle tutorial search", async () => {
+  it("should handle tutorial search", async () => {
     const shadowRoot = element.shadowRoot;
     const searchInput = shadowRoot.querySelector(".tutorial-search input");
 

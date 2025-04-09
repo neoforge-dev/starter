@@ -6,18 +6,26 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import ValidationError
 
-from app.core.config import settings
+from app.core.config import Settings, get_settings
 from app.core.auth import verify_password
 from app.crud.user import user as user_crud
 from app.db.session import get_db
 from app.schemas.user import UserResponse
+from app.core.logging import logger
+from app.models import User
+from app.schemas import TokenPayload
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.api_v1_str}/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"{get_settings().api_v1_str}/auth/token"
+)
 
 
 def create_access_token(
-    subject: Union[str, Any], expires_delta: Optional[timedelta] = None
+    subject: Union[str, Any], 
+    settings: Settings,
+    expires_delta: Optional[timedelta] = None
 ) -> str:
     """
     Create JWT access token.
@@ -25,6 +33,7 @@ def create_access_token(
     Args:
         subject: Token subject (usually user ID)
         expires_delta: Optional token expiration time
+        settings: Application settings dependency
         
     Returns:
         Encoded JWT token
@@ -32,7 +41,7 @@ def create_access_token(
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.now(UTC) + timedelta(minutes=15)
+        expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
     
     to_encode = {"exp": expire, "sub": str(subject)}
     encoded_jwt = jwt.encode(
@@ -44,44 +53,66 @@ def create_access_token(
 
 
 async def get_current_user(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    token: Annotated[str, Depends(oauth2_scheme)],
-) -> UserResponse:
-    """
-    Get current user from token.
-    
-    Args:
-        db: Database session
-        token: JWT token
-        
-    Returns:
-        Current user
-        
-    Raises:
-        HTTPException: If token is invalid or user not found
-    """
+    token: str = Depends(oauth2_scheme),
+    settings: Settings = Depends(get_settings),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Gets the current user based on the provided token."""
+    logger.debug(f"Attempting to get current user with token: {token[:10]}...")
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
+        logger.debug("Decoding JWT token...")
         payload = jwt.decode(
-            token,
-            settings.secret_key.get_secret_value(),
-            algorithms=[settings.algorithm],
+            token, settings.secret_key.get_secret_value(), algorithms=[settings.algorithm]
         )
-        user_id: str = payload.get("sub")
+        logger.debug(f"Token payload decoded: {payload}")
+        user_id: str | None = payload.get("sub")
         if user_id is None:
+            logger.warning("User ID ('sub') not found in token payload.")
             raise credentials_exception
-    except JWTError:
+        logger.debug(f"User ID from token: {user_id}")
+        # Validate payload structure (optional but good practice)
+        try:
+             token_data = TokenPayload(sub=user_id)
+             logger.debug(f"Token payload validated: {token_data}")
+        except ValidationError as e:
+            logger.warning(f"Token payload validation failed: {e}")
+            raise credentials_exception
+
+
+    except JWTError as e:
+        logger.warning(f"JWTError during token decoding: {e}")
         raise credentials_exception
-    
+    except Exception as e: # Catch unexpected errors during decoding/validation
+        logger.error(f"Unexpected error during token processing: {e}", exc_info=True)
+        raise credentials_exception
+
+
     try:
-        user = await user_crud.get(db, id=int(user_id))
+        user_id_int = int(token_data.sub) # Convert sub to int
+        logger.debug(f"Attempting to fetch user with ID: {user_id_int}")
+        user = await user_crud.get(db, id=user_id_int)
+        logger.debug(f"User lookup result: {'Found' if user else 'Not Found'}")
     except ValueError:
+        logger.warning(f"Could not convert user ID '{token_data.sub}' to integer.")
         raise credentials_exception
-        
+    except Exception as e:
+        # Log unexpected errors during user retrieval
+        logger.error(f"Error retrieving user by ID {user_id_int}: {e}", exc_info=True)
+        # Raise a generic 500 for unexpected DB errors, but maybe keep 401 for auth flow?
+        raise credentials_exception # Or consider status.HTTP_500_INTERNAL_SERVER_ERROR
+
     if user is None:
-        raise credentials_exception
+        logger.warning(f"User with ID {user_id_int} not found in DB.")
+        # Raise 404 specifically when user is not found
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # Add detailed log before returning
+    logger.info(f"get_current_user returning User ID: {user.id}, Email: {user.email}, Is Superuser: {user.is_superuser}") 
+    logger.debug(f"Returning user: {user.email}, ID: {user.id}") # Keep debug log
     return user 

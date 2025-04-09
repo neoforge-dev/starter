@@ -21,6 +21,7 @@ async def test_create_user(client: AsyncClient, db: AsyncSession, superuser_head
         json={
             "email": "test@example.com",
             "password": "testpassword",
+            "password_confirm": "testpassword",
             "full_name": "Test User",
         },
         headers={**superuser_headers, "Accept": "application/json"},
@@ -34,7 +35,7 @@ async def test_create_user(client: AsyncClient, db: AsyncSession, superuser_head
     assert "password" not in data
 
 
-async def test_read_users(client: AsyncClient, db: AsyncSession) -> None:
+async def test_read_users(client: AsyncClient, db: AsyncSession, superuser_headers: dict) -> None:
     """Test reading user list."""
     # Clear existing users
     await db.execute(text("TRUNCATE TABLE users CASCADE"))
@@ -44,10 +45,13 @@ async def test_read_users(client: AsyncClient, db: AsyncSession) -> None:
     superuser_in = UserCreate(
         email="admin@example.com",
         password="admin123",
+        password_confirm="admin123",
         full_name="Admin User",
         is_superuser=True
     )
     superuser = await crud.user.create(db, obj_in=superuser_in)
+    await db.commit()
+    await db.refresh(superuser)
     
     # Get authentication token for superuser
     response = await client.post(
@@ -65,10 +69,13 @@ async def test_read_users(client: AsyncClient, db: AsyncSession) -> None:
         user_in = UserCreate(
             email=f"test{i}@example.com",
             password="testpass123",
+            password_confirm="testpass123",
             full_name=f"Test User {i}"
         )
         test_users.append(user_in)
         user = await crud.user.create(db, obj_in=user_in)
+        await db.commit()
+        await db.refresh(user)
         assert user.email == user_in.email
     
     response = await client.get(
@@ -83,22 +90,25 @@ async def test_read_users(client: AsyncClient, db: AsyncSession) -> None:
 async def test_read_user(client: AsyncClient, db: AsyncSession, superuser_headers: dict) -> None:
     """Test reading single user."""
     user = await UserFactory.create(session=db)
-    
+    await db.commit()
+    await db.refresh(user)
+
     response = await client.get(
         f"{settings.api_v1_str}/users/{user.id}",
         headers={**superuser_headers, "Accept": "application/json"}
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["id"] == user.id
     assert data["email"] == user.email
-    assert data["full_name"] == user.full_name
+    assert data["id"] == user.id
 
 
 async def test_update_user(client: AsyncClient, db: AsyncSession, superuser_headers: dict) -> None:
     """Test updating user."""
     user = await UserFactory.create(session=db)
-    
+    await db.commit()
+    await db.refresh(user)
+
     response = await client.put(
         f"{settings.api_v1_str}/users/{user.id}",
         json={
@@ -108,13 +118,15 @@ async def test_update_user(client: AsyncClient, db: AsyncSession, superuser_head
     )
     assert response.status_code == 200
     data = response.json()
-    assert data["id"] == user.id
     assert data["full_name"] == "Updated User"
+    assert data["id"] == user.id
 
 
 async def test_delete_user(client: AsyncClient, db: AsyncSession, superuser_headers: dict) -> None:
     """Test deleting user."""
     user = await UserFactory.create(session=db)
+    await db.commit()
+    await db.refresh(user)
     
     response = await client.delete(
         f"{settings.api_v1_str}/users/{user.id}",

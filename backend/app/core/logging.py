@@ -55,4 +55,7 @@ def setup_logging(config: Dict[str, Any]) -> None:
 
     # Set log level based on config
     log_level = logging.DEBUG if config.get("debug", False) else logging.INFO
-    logging.getLogger().setLevel(log_level) 
+    logging.getLogger().setLevel(log_level)
+
+# Create a logger instance to be used throughout the application
+logger = structlog.get_logger() 

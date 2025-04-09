@@ -247,10 +247,9 @@ runner.describe("DashboardPage", () => {
 // Run tests
 runner.run();
 
-// Skip these tests in unit test environment
+// Re-skipping this suite. Tests use a custom runner (TestRunner) which is not
+// automatically discovered by Vitest. Requires refactoring or TestRunner integration fix.
 describe.skip("Dashboard Page", () => {
-  it("should render dashboard layout", () => {
-    // This test requires a real browser environment
-    // Skip in unit tests
-  });
+  it.todo("placeholder to prevent 'no tests found' error when skipped");
+  // Original tests are defined above using runner.describe/it
 });

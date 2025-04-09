@@ -336,7 +336,7 @@ describe("ExamplesPage", () => {
     });
   });
 
-  it.skip("should handle category filtering", async () => {
+  it("should handle category filtering", async () => {
     const shadowRoot = element.shadowRoot;
     const categoryFilters = shadowRoot.querySelectorAll(".category-filter");
 
@@ -355,7 +355,7 @@ describe("ExamplesPage", () => {
     expect(filteredCards[0].textContent).toContain("Hello World Component");
   });
 
-  it.skip("should handle difficulty filtering", async () => {
+  it("should handle difficulty filtering", async () => {
     const shadowRoot = element.shadowRoot;
     const difficultyFilter = shadowRoot.querySelector(".difficulty-filter");
 
@@ -371,7 +371,7 @@ describe("ExamplesPage", () => {
     expect(filteredCards[0].textContent).toContain("Advanced State Management");
   });
 
-  it.skip("should handle example search", async () => {
+  it("should handle example search", async () => {
     const shadowRoot = element.shadowRoot;
     const searchInput = shadowRoot.querySelector(".example-search input");
 
