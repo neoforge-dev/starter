@@ -68,7 +68,8 @@ describe("Component Performance", () => {
     expect(layout.duration).toBeLessThan(16);
   });
 
-  // Skip memory test since it's not supported in the test environment
+  // Skip memory test as performance.memory is not reliably available or accurate in JSDOM.
+  // True memory analysis requires a real browser environment (e.g., via E2E tests or manual profiling).
   it.skip("maintains stable memory usage", async () => {
     const initialMetrics = await getMemoryMetrics();
 

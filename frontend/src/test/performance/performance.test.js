@@ -72,7 +72,8 @@ describe("Button Component Performance", () => {
     expect(avgRenderTime).toBeLessThan(THRESHOLDS.RENDER_TIME);
   });
 
-  // Skip this test as performance.memory is not reliably available or accurate in JSDOM
+  // Skip this test as performance.memory is not reliably available or accurate in JSDOM.
+  // True memory analysis requires a real browser environment (e.g., via E2E tests or manual profiling).
   test.skip("memory usage", async () => {
     try {
       // Create a button component
