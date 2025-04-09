@@ -1,5 +1,12 @@
-import { html } from "lit";
 import { setCustomElementsManifest } from "@storybook/web-components";
+import { html, css, LitElement } from "lit";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
+
+// Import global styles
+import "../src/styles/global.css";
+
+// Make lit available to stories
+window.lit = { html, css, LitElement, unsafeHTML };
 
 // Suppress specific warnings
 if (console.warn && !console.warn.__suppressed) {
@@ -32,33 +39,46 @@ try {
   console.log("Error importing components:", e);
 }
 
-/** @type { import('@storybook/web-components').Preview } */
-const preview = {
-  parameters: {
-    actions: { argTypesRegex: "^on[A-Z].*" },
-    controls: {
-      matchers: {
-        color: /(background|color)$/i,
-        date: /Date$/i,
-      },
-    },
-    options: {
-      storySort: {
-        order: ["Introduction", "Atoms", "Molecules", "Organisms", "Pages"],
-      },
-    },
-    docs: {
-      source: {
-        state: "open",
-      },
+// Define default parameters
+export const parameters = {
+  actions: { argTypesRegex: "^on[A-Z].*" },
+  controls: {
+    matchers: {
+      color: /(background|color)$/i,
+      date: /Date$/,
     },
   },
-  decorators: [
-    (Story) => {
-      // Ensure all components are defined before rendering the story
-      return Story();
+  docs: {
+    source: {
+      state: "open",
     },
-  ],
+  },
+  options: {
+    storySort: {
+      order: [
+        "Introduction",
+        "Atoms",
+        "Molecules",
+        "Organisms",
+        "Templates",
+        "Pages",
+      ],
+    },
+  },
+};
+
+// Define decorators
+export const decorators = [
+  (Story) => {
+    // Add any global decorators here
+    return Story();
+  },
+];
+
+/** @type { import('@storybook/web-components').Preview } */
+const preview = {
+  parameters: parameters,
+  decorators: decorators,
 };
 
 export default preview;

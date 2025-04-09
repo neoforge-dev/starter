@@ -33,10 +33,31 @@
   };
 </script>
 
+<script>
+  // Polyfill for lit css import
+  if (!window.litCssPolyfill) {
+    window.litCssPolyfill = true;
+
+    // Create a mock css function if it doesn't exist
+    if (!window.css) {
+      window.css = function (...args) {
+        return args;
+      };
+    }
+
+    // Patch the lit module if needed
+    if (window.lit && !window.lit.css) {
+      window.lit.css = window.css;
+    }
+  }
+</script>
+
 <style>
   body {
     font-family:
-      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
-      Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+      sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    margin: 0;
+    padding: 0;
   }
 </style>

@@ -5,11 +5,12 @@
  * It imports the CommonJS version of the global performance polyfill.
  */
 
-// Import the global performance polyfill
-const globalPolyfill = require("./src/test/setup/global-performance-polyfill.cjs");
+const {
+  installPolyfill,
+} = require("./src/test/setup/unified-performance-polyfill.js");
 
-// Apply the polyfill immediately
-globalPolyfill();
+// Install performance polyfill in worker
+installPolyfill();
 
 // Apply the direct patch for Vitest worker
 try {

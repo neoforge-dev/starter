@@ -1,233 +1,146 @@
-import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import "./toast.js";
+import { html } from "lit";
+import { ToastService } from "../../../services/toast-service.js"; // Adjust path as needed
+import "./toast.js"; // Assuming toast component is defined here
+import "../../atoms/button/button.js";
 
 export default {
   title: "Molecules/Toast",
-  component: "neo-toast",
+  component: "neo-toast", // The underlying component tag
   argTypes: {
-    variant: {
-      control: "select",
-      options: ["info", "success", "warning", "error"],
-      description: "Visual style of the toast",
-    },
-    position: {
-      control: "select",
-      options: ["top-left", "top-right", "bottom-left", "bottom-right"],
-      description: "Position on screen",
-    },
+    // Args for triggering toast via ToastService
     message: {
       control: "text",
-      description: "Toast message",
+      description: "Content/message of the toast",
+      table: { category: "Toast Trigger" },
+    },
+    type: {
+      control: { type: "select" },
+      options: ["info", "success", "warning", "error"],
+      description: "Type of the toast (info, success, warning, error)",
+      table: { category: "Toast Trigger" },
     },
     duration: {
-      control: "number",
-      description: "Duration in milliseconds before auto-dismiss",
+      control: { type: "number", min: 0 },
+      description: "Duration in ms (0 = persistent until closed)",
+      table: { category: "Toast Trigger" },
     },
-    dismissible: {
-      control: "boolean",
-      description: "Whether the toast can be dismissed manually",
+    // Args for the neo-toast element itself (less common to set directly)
+    toastId: {
+      control: "text",
+      description: "(Internal) ID of the toast message",
+      table: { category: "neo-toast Props" },
     },
-    icon: {
-      control: "boolean",
-      description: "Whether to show the variant icon",
+    toastType: {
+      control: "text",
+      description: "(Internal) Type of the toast message",
+      table: { category: "neo-toast Props" },
+    },
+    toastMessage: {
+      control: "text",
+      description: "(Internal) Message content of the toast",
+      table: { category: "neo-toast Props" },
     },
   },
+  parameters: {
+    docs: {
+      description: {
+        component:
+          "Displays brief, temporary notifications (toasts). Usually triggered via the ToastService rather than direct element usage.",
+      },
+      source: {
+        code: `
+// Import the service
+import { ToastService } from './path/to/toast-service.js';
+
+// Trigger a toast
+ToastService.show({ message: 'Item saved!', type: 'success', duration: 3000 });
+        `,
+      },
+    },
+    // Add a container for toasts to appear in Storybook
+    layout: "centered",
+  },
+  // Add a decorator to ensure the toast container exists
+  decorators: [
+    (Story) => html`
+      <div
+        id="toast-container"
+        style="position: fixed; top: 1rem; right: 1rem; z-index: 1000;"
+      ></div>
+      ${Story()}
+    `,
+  ],
 };
 
-const Template = (args) => html`
-  <div>
-    <neo-toast
-      variant=${args.variant || "info"}
-      position=${args.position || "top-right"}
-      message=${args.message || "Toast message"}
-      duration=${args.duration || 5000}
-      ?dismissible=${args.dismissible}
-      ?icon=${args.icon}
-      @neo-dismiss=${() => console.log("Toast dismissed")}
-    ></neo-toast>
-    <button
-      @click=${(e) => {
-        const toast = e.target.previousElementSibling;
-        toast._visible = true;
-      }}
-    >
-      Show Toast
-    </button>
-  </div>
-`;
+// Template focused on triggering toasts via the service
+const Template = ({ message, type, duration }) => {
+  const showToast = () => {
+    ToastService.show({ message, type, duration });
+  };
 
-// Basic examples
+  return html`
+    <neo-button @click=${showToast}>Show Toast</neo-button>
+    <p style="margin-top: 1rem; font-size: 0.8rem; color: grey;">
+      (Click button to trigger toast with current args)
+    </p>
+  `;
+};
+
 export const Default = Template.bind({});
 Default.args = {
-  message: "This is a default info toast.",
-};
-
-// Variants
-export const Info = Template.bind({});
-Info.args = {
-  variant: "info",
-  message: "This is an informational message.",
+  message: "This is an informational toast.",
+  type: "info",
+  duration: 3000,
 };
 
 export const Success = Template.bind({});
 Success.args = {
-  variant: "success",
-  message: "Operation completed successfully!",
+  message: "Action completed successfully!",
+  type: "success",
+  duration: 3000,
 };
 
 export const Warning = Template.bind({});
 Warning.args = {
-  variant: "warning",
-  message: "Please review your changes before proceeding.",
+  message: "Warning: Please check details.",
+  type: "warning",
+  duration: 5000,
 };
 
 export const Error = Template.bind({});
 Error.args = {
-  variant: "error",
-  message: "An error occurred while saving changes.",
+  message: "An error occurred.",
+  type: "error",
+  duration: 0, // Persistent until manually closed
 };
 
-// Positions
-export const TopLeft = Template.bind({});
-TopLeft.args = {
-  position: "top-left",
-  message: "Toast in top-left position",
-};
-
-export const TopRight = Template.bind({});
-TopRight.args = {
-  position: "top-right",
-  message: "Toast in top-right position",
-};
-
-export const BottomLeft = Template.bind({});
-BottomLeft.args = {
-  position: "bottom-left",
-  message: "Toast in bottom-left position",
-};
-
-export const BottomRight = Template.bind({});
-BottomRight.args = {
-  position: "bottom-right",
-  message: "Toast in bottom-right position",
-};
-
-// Features
-export const NonDismissible = Template.bind({});
-NonDismissible.args = {
-  dismissible: false,
-  message: "This toast cannot be dismissed manually.",
-};
-
-export const NoIcon = Template.bind({});
-NoIcon.args = {
-  icon: false,
-  message: "This toast doesn't show an icon.",
-};
-
-export const LongDuration = Template.bind({});
-LongDuration.args = {
-  duration: 10000,
-  message: "This toast will stay visible for 10 seconds.",
-};
-
-export const NoDuration = Template.bind({});
-NoDuration.args = {
+export const PersistentInfo = Template.bind({});
+PersistentInfo.args = {
+  message: "This toast stays until closed.",
+  type: "info",
   duration: 0,
-  message: "This toast will not auto-dismiss.",
 };
 
-// Use cases
-export const SaveSuccess = () => html`
-  <div>
-    <neo-toast
-      variant="success"
-      message="Changes saved successfully!"
-      duration="3000"
-    ></neo-toast>
-    <button
-      @click=${(e) => {
-        const toast = e.target.previousElementSibling;
-        toast._visible = true;
-      }}
-    >
-      Save Changes
-    </button>
-  </div>
-`;
+// Example showing multiple toasts
+export const MultipleToasts = () => {
+  const showMultiple = () => {
+    ToastService.show({ message: "First toast (success)", type: "success" });
+    setTimeout(() => {
+      ToastService.show({
+        message: "Second toast (error, persistent)",
+        type: "error",
+        duration: 0,
+      });
+    }, 500);
+    setTimeout(() => {
+      ToastService.show({ message: "Third toast (info)", type: "info" });
+    }, 1000);
+  };
 
-export const ValidationError = () => html`
-  <div>
-    <neo-toast
-      variant="error"
-      message="Please fill in all required fields."
-      position="bottom-right"
-    ></neo-toast>
-    <button
-      @click=${(e) => {
-        const toast = e.target.previousElementSibling;
-        toast._visible = true;
-      }}
-    >
-      Submit Form
-    </button>
-  </div>
-`;
-
-export const NetworkStatus = () => html`
-  <div style="display: flex; gap: 8px;">
-    <neo-toast
-      variant="warning"
-      message="You are currently offline. Changes will be saved locally."
-      position="top-left"
-      duration="0"
-    ></neo-toast>
-    <button
-      @click=${(e) => {
-        const toast = e.target.previousElementSibling;
-        toast._visible = true;
-      }}
-    >
-      Go Offline
-    </button>
-    <button
-      @click=${(e) => {
-        const toast = e.target.previousElementSibling.previousElementSibling;
-        toast.close();
-      }}
-    >
-      Go Online
-    </button>
-  </div>
-`;
-
-export const MultipleToasts = () => html`
-  <div style="display: flex; gap: 8px;">
-    <neo-toast
-      variant="info"
-      message="Downloading file..."
-      position="bottom-right"
-      duration="0"
-    ></neo-toast>
-    <neo-toast
-      variant="success"
-      message="File downloaded successfully!"
-      position="bottom-right"
-      duration="3000"
-    ></neo-toast>
-    <button
-      @click=${(e) => {
-        const downloadToast =
-          e.target.previousElementSibling.previousElementSibling;
-        downloadToast._visible = true;
-        setTimeout(() => {
-          downloadToast.close();
-          const successToast = e.target.previousElementSibling;
-          successToast._visible = true;
-        }, 2000);
-      }}
-    >
-      Download File
-    </button>
-  </div>
-`;
+  return html`
+    <neo-button @click=${showMultiple}>Show Multiple Toasts</neo-button>
+  `;
+};
+MultipleToasts.parameters = {
+  controls: { hideNoControlsWarning: true },
+};

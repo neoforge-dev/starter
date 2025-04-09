@@ -1,27 +1,25 @@
 # Active Context
 
 ## Current Work Focus
-- **Frontend Reliability**: Ensure all frontend tests pass consistently and CI runs efficiently (< 2 min).
-- **Storybook**: Maintain and expand Storybook coverage for components.
+- **MVP Completion**: Core features, essential functionality (4-week plan).
+- **Test Infra**: Fix critical test issues blocking MVP.
+- **Core Features**: Auth, data management, error handling.
 
 ## Current State
-- **Frontend Tests**: All 85 test files pass (or are explicitly skipped).
-  - `performance.test.js` memory test is now explicitly skipped (`test.skip`) due to JSDOM limitations.
-  - Investigation into the previously suppressed "could not be cloned" error did not reveal the error during test runs; reverting suppression in `vitest.config.js` as it may be intermittent or resolved.
-  - Core testing utilities (mocking, polyfills) are stable (`src/test/utils`, `src/test/setup`).
-- **Storybook**: Setup is working (`npm run storybook`).
-  - Initial stories for core atom components exist.
-  - Escaped backtick issues resolved (`scripts/fix-stories.js`).
-  - Build/import issues resolved (`vite.config.js`, `scripts/patch-figspec.cjs`).
+- **Frontend Tests**: 88 files total, 75 passing, 13 skipped. Critical failures resolved (`table.test.js`, `memory-monitor.test.js`).
+  - `performance.test.js` memory test remains skipped (`test.skip`) - JSDOM limit.
+  - Core test utils stable (`src/test/utils`, `src/test/setup`).
+- **Storybook**: Working (`npm run storybook`). Initial atom stories exist. Fixes applied (`scripts/fix-stories.js`, `vite.config.js`, `scripts/patch-figspec.cjs`).
 
-## Next Steps
-
-1.  **Expand Storybook Coverage**: Add stories for molecule, organism, and page components (Priority: High).
-2.  **Documentation**: Update/create guides for testing, mocking, and Storybook usage (Priority: Medium).
-3.  **Revisit Intermittent Errors**: If the "could not be cloned" error reappears consistently, reinvestigate (Priority: Low).
+## Next Steps (Prioritized)
+1. **Fix Test Infra** (Critical): Resolve polyfill issues, setup env, add user flow tests.
+1. **Address Skipped Tests** (High): Systematically review and enable skipped tests (memory, pages, e2e stubs).
+2. **Core Features** (High): Finish auth, data mgmt, error boundaries, basic offline.
+3. **Documentation** (Medium): Core APIs, setup guides, testing docs.
+4. **Perf/Polish** (Low - Post-MVP): Lazy loading, bundle size, monitoring.
 
 ## Active Decisions / Key Patterns Reminders
-
-- **Frontend Testing**: Use custom JS mocks (see `src/test/utils/`) instead of relying on CDN loads or `customElements.define` in tests.
-- **LLM Context**: Provide concise, filtered info. Summarize test failures (first 3-5), focus on patterns.
-- **Test Skipping**: Use `it.skip()` or `test.skip()` strategically for complex/blocking issues (like JSDOM limitations), document the reason clearly, and plan to revisit if feasible.
+- **MVP First**: Essentials only, defer optimizations, clear criteria.
+- **Testing Strategy**: Prioritize user flows, fix blockers, follow Sr. Dev Debug Protocol.
+- **Tech Debt**: Address only MVP blockers, document for later.
+- **Review Process**: Daily tests, Weekly features, Bi-weekly MVP progress.

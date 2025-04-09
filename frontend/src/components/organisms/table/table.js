@@ -443,7 +443,7 @@ export class NeoTable extends LitElement {
                     this.currentPage * this.pageSize,
                     this.filteredData.length
                   )}
-                  of ${this.filteredData.length} entries
+                  of ${this.data.length} entries
                 </div>
                 <div class="page-controls">
                   <button

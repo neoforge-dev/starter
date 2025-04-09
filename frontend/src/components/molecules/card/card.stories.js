@@ -1,206 +1,159 @@
-import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import "./card.js";
+import { html } from "lit";
+import "./card.js"; // Assuming card component is defined here
+// Import other components if needed for slotted content examples
+import "../../atoms/button/button.js";
+// import '../../atoms/icon/icon.js';
 
 export default {
   title: "Molecules/Card",
   component: "neo-card",
   argTypes: {
-    variant: {
-      control: "select",
-      options: ["default", "outlined", "elevated"],
-      description: "Visual style of the card",
+    header: {
+      control: "text",
+      description: "Optional card header text (prop)",
     },
-    padding: {
-      control: "select",
-      options: ["none", "sm", "md", "lg"],
-      description: "Padding size",
+    footer: {
+      control: "text",
+      description: "Optional card footer text (prop)",
     },
-    hoverable: {
+    imageUrl: {
+      control: "text",
+      description: "URL for an optional image at the top of the card",
+    },
+    imageAlt: {
+      control: "text",
+      description: "Alt text for the card image",
+    },
+    noPadding: {
       control: "boolean",
-      description: "Whether to show hover effects",
+      description: "Remove default padding from the card body",
     },
     clickable: {
       control: "boolean",
-      description: "Whether the card is clickable",
+      description: "Make the entire card clickable (adds hover effect)",
     },
     href: {
       control: "text",
-      description: "URL for clickable cards",
+      description: "URL to navigate to if the card is clickable",
+    },
+    // Default slot control (for simple text)
+    content: {
+      control: "text",
+      description: "Main content for the card body (default slot)",
+      table: { category: "Slots" }, // Indicate this controls slot content
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        component: "A flexible content container component.",
+      },
+      // Optional: Document slots explicitly if needed
+      // slots: {
+      //   '': { description: 'Default slot for card body content.' },
+      //   header: { description: 'Slot for custom header content.' },
+      //   footer: { description: 'Slot for custom footer content.' },
+      // },
     },
   },
 };
 
-const Template = (args) => html`
-  <div style="width: 300px;">
-    <neo-card
-      variant=${args.variant || "default"}
-      padding=${args.padding || "md"}
-      ?hoverable=${args.hoverable}
-      ?clickable=${args.clickable}
-      href=${args.href || ""}
-    >
-      ${args.content || "Card content"}
-    </neo-card>
-  </div>
+// Template for stories primarily controlled by props/args
+const Template = ({
+  header,
+  footer,
+  imageUrl,
+  imageAlt,
+  noPadding,
+  clickable,
+  href,
+  content,
+}) => html`
+  <neo-card
+    header=${header || ""}
+    footer=${footer || ""}
+    imageUrl=${imageUrl || ""}
+    imageAlt=${imageAlt || ""}
+    ?no-padding=${noPadding}
+    ?clickable=${clickable}
+    href=${href || ""}
+  >
+    ${content || "This is the main content area of the card."}
+  </neo-card>
 `;
 
-// Basic examples
 export const Default = Template.bind({});
 Default.args = {
-  content: "A simple card with default styling",
+  header: "Card Header",
+  footer: "Card Footer",
+  content: "This card has a header, footer, and default body content.",
 };
 
-export const Outlined = Template.bind({});
-Outlined.args = {
-  variant: "outlined",
-  content: "An outlined card",
+export const Simple = Template.bind({});
+Simple.args = {
+  content: "This is a simple card with only body content.",
 };
 
-export const Elevated = Template.bind({});
-Elevated.args = {
-  variant: "elevated",
-  content: "An elevated card with stronger shadow",
-};
-
-// Interactive states
-export const Hoverable = Template.bind({});
-Hoverable.args = {
-  hoverable: true,
-  content: "Hover over me to see the effect",
+export const WithImage = Template.bind({});
+WithImage.args = {
+  header: "Image Card",
+  imageUrl: "https://via.placeholder.com/400x200",
+  imageAlt: "Placeholder image",
+  content: "This card features an image at the top.",
+  footer: "Image Footer",
 };
 
 export const Clickable = Template.bind({});
 Clickable.args = {
+  header: "Clickable Card",
+  content: "This entire card is clickable and has hover effects.",
   clickable: true,
   href: "#",
-  content: "Click me - I'm a link!",
 };
 
-// Padding variations
 export const NoPadding = Template.bind({});
 NoPadding.args = {
-  padding: "none",
-  content: "A card without padding",
+  header: "No Padding Card",
+  content: "The body of this card has no internal padding.",
+  noPadding: true,
 };
 
-export const LargePadding = Template.bind({});
-LargePadding.args = {
-  padding: "lg",
-  content: "A card with large padding",
+// Story demonstrating custom slots directly
+export const CustomHeaderFooterSlots = () => html`
+  <neo-card>
+    <div slot="header">Custom <strong>Header</strong> Slot</div>
+    Main body content for the card with custom slots.
+    <div slot="footer">
+      <neo-button size="small">Action</neo-button>
+    </div>
+  </neo-card>
+`;
+CustomHeaderFooterSlots.parameters = {
+  controls: { hideNoControlsWarning: true }, // Hide controls as they aren't used
 };
 
-// Use cases
-export const MediaCard = () => html`
-  <div style="width: 300px;">
-    <neo-card padding="none" hoverable>
-      <img
-        slot="media"
-        src="https://picsum.photos/300/200"
-        alt="Random image"
-      />
-      <div style="padding: 16px;">
-        <h3 style="margin: 0 0 8px 0;">Card Title</h3>
-        <p style="margin: 0; color: var(--color-text-secondary);">
-          A card with a media element and some content.
-        </p>
-      </div>
-    </neo-card>
-  </div>
-`;
-
-export const HeaderFooterCard = () => html`
-  <div style="width: 300px;">
-    <neo-card>
-      <div slot="header">
-        <h3 style="margin: 0;">Card Header</h3>
-      </div>
-      <p style="margin: 0;">
-        This is the main content area of the card. It can contain any content
-        you want.
-      </p>
-      <div
-        slot="footer"
-        style="display: flex; justify-content: flex-end; gap: 8px;"
-      >
-        <button>Cancel</button>
-        <button>Save</button>
-      </div>
-    </neo-card>
-  </div>
-`;
-
-export const ProfileCard = () => html`
-  <div style="width: 300px;">
-    <neo-card variant="elevated" hoverable>
-      <div style="text-align: center;">
-        <img
-          src="https://picsum.photos/100/100"
-          alt="Profile"
-          style="border-radius: 50%; margin-bottom: 16px;"
-        />
-        <h3 style="margin: 0 0 8px 0;">John Doe</h3>
-        <p style="margin: 0 0 16px 0; color: var(--color-text-secondary);">
-          Software Engineer
-        </p>
-        <div style="display: flex; justify-content: center; gap: 8px;">
-          <button>Follow</button>
-          <button>Message</button>
-        </div>
-      </div>
-    </neo-card>
-  </div>
-`;
-
-export const StatisticsCard = () => html`
-  <div style="width: 300px;">
-    <neo-card variant="outlined">
-      <div slot="header">
-        <h3 style="margin: 0;">Statistics</h3>
-      </div>
-      <div
-        style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;"
-      >
-        <div>
-          <div style="font-size: 24px; font-weight: bold;">2,451</div>
-          <div style="color: var(--color-text-secondary);">Views</div>
-        </div>
-        <div>
-          <div style="font-size: 24px; font-weight: bold;">89</div>
-          <div style="color: var(--color-text-secondary);">Comments</div>
-        </div>
-        <div>
-          <div style="font-size: 24px; font-weight: bold;">129</div>
-          <div style="color: var(--color-text-secondary);">Shares</div>
-        </div>
-        <div>
-          <div style="font-size: 24px; font-weight: bold;">$2.1k</div>
-          <div style="color: var(--color-text-secondary);">Revenue</div>
-        </div>
-      </div>
-    </neo-card>
-  </div>
-`;
-
-export const CardGrid = () => html`
-  <div
-    style="
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 16px;
-      padding: 16px;
-    "
+// Story demonstrating complex slotted content
+export const ComplexContent = () => html`
+  <neo-card
+    header="Complex Card Header Prop"
+    imageUrl="https://via.placeholder.com/400x200"
+    imageAlt="Placeholder image"
   >
-    <neo-card hoverable>
-      <h3 style="margin: 0 0 8px 0;">Card 1</h3>
-      <p style="margin: 0;">Some content for card 1.</p>
-    </neo-card>
-    <neo-card hoverable>
-      <h3 style="margin: 0 0 8px 0;">Card 2</h3>
-      <p style="margin: 0;">Some content for card 2.</p>
-    </neo-card>
-    <neo-card hoverable>
-      <h3 style="margin: 0 0 8px 0;">Card 3</h3>
-      <p style="margin: 0;">Some content for card 3.</p>
-    </neo-card>
-  </div>
+    <h4>Sub-heading in Default Slot</h4>
+    <p>Some paragraph text explaining the content further.</p>
+    <ul>
+      <li>List item 1</li>
+      <li>List item 2</li>
+    </ul>
+    <div
+      slot="footer"
+      style="display: flex; justify-content: space-between; align-items: center;"
+    >
+      <span>Footer Info via Slot</span>
+      <neo-button variant="primary">Go</neo-button>
+    </div>
+  </neo-card>
 `;
+ComplexContent.parameters = {
+  controls: { hideNoControlsWarning: true },
+};

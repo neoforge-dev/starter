@@ -58,3 +58,4 @@ logs/
 tmp/
 .env*
 !.env.example 
+.aider*

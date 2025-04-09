@@ -37,7 +37,7 @@
     "analyze": "cem analyze --litelement",
     "analyze:watch": "cem analyze --litelement --watch",
     "docs:custom-elements": "npm run analyze && custom-elements-manifest-to-markdown -i docs/custom-elements.json -o docs/COMPONENTS.md",
-    "postinstall": "patch-package",
+    "postinstall": "patch-package && node scripts/patch-figspec.cjs",
     "setup:component-registry": "node scripts/setup-component-registry.js",
     "lint:components": "eslint src --ext .js --rule 'component-registry/no-duplicate-components: warn'"
   },

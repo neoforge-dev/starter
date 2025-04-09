@@ -1,229 +1,164 @@
-import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import { ifDefined } from "lit/directives/if-defined.js";
+import { html } from "lit";
 import "./text-input.js";
-import "../icon/icon.js";
 
 export default {
   title: "Atoms/Text Input",
   component: "neo-text-input",
+  tags: ["autodocs"],
   argTypes: {
     type: {
-      control: "select",
+      control: { type: "select" },
       options: ["text", "email", "password", "number", "tel", "url"],
-      description: "Type of the input field",
     },
-    label: {
-      control: "text",
-      description: "Label text for the input",
-    },
-    value: {
-      control: "text",
-      description: "Current value of the input",
-    },
-    placeholder: {
-      control: "text",
-      description: "Placeholder text when input is empty",
-    },
-    helper: {
-      control: "text",
-      description: "Helper text displayed below the input",
-    },
-    error: {
-      control: "text",
-      description: "Error message to display",
-    },
-    disabled: {
-      control: "boolean",
-      description: "Whether the input is disabled",
-    },
-    required: {
-      control: "boolean",
-      description: "Whether the input is required",
-    },
-    readonly: {
-      control: "boolean",
-      description: "Whether the input is read-only",
-    },
-    clearable: {
-      control: "boolean",
-      description: "Whether to show a clear button when input has value",
-    },
-    onInput: { action: "neo-input" },
-    onChange: { action: "neo-change" },
-  },
-  parameters: {
-    design: {
-      type: "figma",
-      url: "https://www.figma.com/file/...",
-    },
-    docs: {
-      description: {
-        component:
-          "A versatile text input component that supports various types, states, and validations.",
-      },
-    },
-    a11y: {
-      config: {
-        rules: [
-          {
-            id: "label",
-            enabled: true,
-          },
-          {
-            id: "aria-label",
-            enabled: true,
-          },
-        ],
-      },
-    },
+    label: { control: "text" },
+    value: { control: "text" },
+    placeholder: { control: "text" },
+    helper: { control: "text" },
+    error: { control: "text" },
+    disabled: { control: "boolean" },
+    required: { control: "boolean" },
+    readonly: { control: "boolean" },
+    clearable: { control: "boolean" },
+    onInput: { action: "input" },
+    onChange: { action: "change" },
   },
 };
 
-const Template = (args) => html`
-  <neo-text-input
-    type=${ifDefined(args.type)}
-    label=${ifDefined(args.label)}
-    .value=${ifDefined(args.value)}
-    placeholder=${ifDefined(args.placeholder)}
-    helper=${ifDefined(args.helper)}
-    error=${ifDefined(args.error)}
-    ?disabled=${args.disabled}
-    ?required=${args.required}
-    ?readonly=${args.readonly}
-    ?clearable=${args.clearable}
-    @neo-input=${args.onInput}
-    @neo-change=${args.onChange}
-  >
-    ${args.prefix ? html`<span slot="prefix">${args.prefix}</span>` : ""}
-    ${args.suffix ? html`<span slot="suffix">${args.suffix}</span>` : ""}
-  </neo-text-input>
-`;
+// Base template for all stories
+const Template = (args) => {
+  return html`
+    <neo-text-input
+      .type=${args.type}
+      .label=${args.label}
+      .value=${args.value}
+      .placeholder=${args.placeholder}
+      .helper=${args.helper}
+      .error=${args.error}
+      ?disabled=${args.disabled}
+      ?required=${args.required}
+      ?readonly=${args.readonly}
+      ?clearable=${args.clearable}
+      @neo-input=${args.onInput}
+      @neo-change=${args.onChange}
+    ></neo-text-input>
+  `;
+};
 
-// Basic Examples
+// Default text input
 export const Default = Template.bind({});
 Default.args = {
-  label: "Username",
-  placeholder: "Enter your username",
-  helper: "Choose a unique username",
+  type: "text",
+  label: "Name",
+  value: "",
+  placeholder: "Enter your name",
+  helper: "",
+  error: "",
+  disabled: false,
+  required: false,
+  readonly: false,
+  clearable: false,
 };
 
+// Text input with value
 export const WithValue = Template.bind({});
 WithValue.args = {
-  label: "Email",
-  value: "user@example.com",
-  type: "email",
+  ...Default.args,
+  value: "John Doe",
 };
 
+// Text input with helper text
+export const WithHelperText = Template.bind({});
+WithHelperText.args = {
+  ...Default.args,
+  helper: "Enter your full name as it appears on your ID",
+};
+
+// Text input with error
 export const WithError = Template.bind({});
 WithError.args = {
-  label: "Password",
-  type: "password",
-  value: "weak",
-  error: "Password must be at least 8 characters long",
-  required: true,
+  ...Default.args,
+  error: "Name is required",
+  value: "",
 };
 
-// States
-export const Disabled = Template.bind({});
-Disabled.args = {
-  label: "Disabled Input",
-  value: "Cannot edit this",
-  disabled: true,
-};
-
-export const ReadOnly = Template.bind({});
-ReadOnly.args = {
-  label: "Read Only Input",
-  value: "Cannot edit this",
-  readonly: true,
-};
-
-// Input Types
+// Password input
 export const Password = Template.bind({});
 Password.args = {
-  label: "Password",
+  ...Default.args,
   type: "password",
-  value: "secretpassword",
-  helper: "Must be at least 8 characters",
+  label: "Password",
+  placeholder: "Enter your password",
+  helper: "Password must be at least 8 characters",
 };
 
-export const Number = Template.bind({});
-Number.args = {
-  label: "Age",
-  type: "number",
-  placeholder: "Enter your age",
+// Email input
+export const Email = Template.bind({});
+Email.args = {
+  ...Default.args,
+  type: "email",
+  label: "Email",
+  placeholder: "Enter your email",
+};
+
+// Required input
+export const Required = Template.bind({});
+Required.args = {
+  ...Default.args,
   required: true,
+  label: "Username (required)",
 };
 
-// With Icons
-export const WithPrefixIcon = Template.bind({});
-WithPrefixIcon.args = {
-  label: "Search",
-  placeholder: "Search...",
-  prefix: html`<neo-icon name="search"></neo-icon>`,
-  clearable: true,
+// Disabled input
+export const Disabled = Template.bind({});
+Disabled.args = {
+  ...Default.args,
+  disabled: true,
+  value: "John Doe",
+  label: "Name (disabled)",
 };
 
-export const WithSuffixIcon = Template.bind({});
-WithSuffixIcon.args = {
-  label: "Calendar",
-  value: "2024-03-15",
-  suffix: html`<neo-icon name="calendar_today"></neo-icon>`,
+// Readonly input
+export const Readonly = Template.bind({});
+Readonly.args = {
+  ...Default.args,
   readonly: true,
+  value: "John Doe",
+  label: "Name (readonly)",
 };
 
-// Advanced Examples
-export const SearchInput = Template.bind({});
-SearchInput.args = {
-  placeholder: "Search...",
-  prefix: html`<neo-icon name="search"></neo-icon>`,
+// Clearable input
+export const Clearable = Template.bind({});
+Clearable.args = {
+  ...Default.args,
+  clearable: true,
+  value: "John Doe",
+  label: "Name (clearable)",
+};
+
+// Input with prefix and suffix
+export const WithPrefixAndSuffix = (args) => {
+  return html`
+    <neo-text-input
+      .type=${args.type}
+      .label=${args.label}
+      .value=${args.value}
+      .placeholder=${args.placeholder}
+      .helper=${args.helper}
+      ?clearable=${args.clearable}
+      @neo-input=${args.onInput}
+      @neo-change=${args.onChange}
+    >
+      <span slot="prefix">@</span>
+      <span slot="suffix">.com</span>
+    </neo-text-input>
+  `;
+};
+
+WithPrefixAndSuffix.args = {
+  type: "text",
+  label: "Username",
+  value: "",
+  placeholder: "username",
+  helper: "Enter your username without the @ symbol",
   clearable: true,
 };
-
-export const LoginForm = () => html`
-  <div
-    style="display: flex; flex-direction: column; gap: 1rem; max-width: 300px;"
-  >
-    <neo-text-input
-      label="Email"
-      type="email"
-      required
-      placeholder="Enter your email"
-      helper="We'll never share your email"
-    >
-      <neo-icon slot="prefix" name="mail"></neo-icon>
-    </neo-text-input>
-
-    <neo-text-input
-      label="Password"
-      type="password"
-      required
-      placeholder="Enter your password"
-      helper="Must be at least 8 characters"
-    >
-      <neo-icon slot="prefix" name="lock"></neo-icon>
-    </neo-text-input>
-  </div>
-`;
-
-export const InputGroup = () => html`
-  <div style="display: flex; gap: 1rem;">
-    <neo-text-input
-      type="number"
-      label="Width"
-      value="100"
-      style="width: 120px;"
-    >
-      <span slot="suffix">px</span>
-    </neo-text-input>
-
-    <neo-text-input
-      type="number"
-      label="Height"
-      value="100"
-      style="width: 120px;"
-    >
-      <span slot="suffix">px</span>
-    </neo-text-input>
-  </div>
-`;

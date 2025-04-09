@@ -71,6 +71,7 @@ const config = {
           "lit-element/": "lit-element/",
           "@lit/reactive-element/": "@lit/reactive-element/",
           "lit/css": path.resolve(__dirname, "./lit-css.js"),
+          "lit/static-html.js": path.resolve(__dirname, "./lit-css.js"),
         },
       },
       build: {

@@ -1,208 +1,143 @@
-import {  html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import { ifDefined } from "lit/directives/if-defined.js";
+import { html } from "lit";
 import "./select.js";
-
-const basicOptions = [
-  { value: "1", label: "Option 1" },
-  { value: "2", label: "Option 2" },
-  { value: "3", label: "Option 3" },
-  { value: "4", label: "Option 4" },
-  { value: "5", label: "Option 5" },
-];
-
-const groupedOptions = [
-  {
-    group: true,
-    label: "Fruits",
-    options: [
-      { value: "apple", label: "Apple" },
-      { value: "banana", label: "Banana" },
-      { value: "orange", label: "Orange" },
-    ],
-  },
-  {
-    group: true,
-    label: "Vegetables",
-    options: [
-      { value: "carrot", label: "Carrot" },
-      { value: "broccoli", label: "Broccoli" },
-      { value: "spinach", label: "Spinach" },
-    ],
-  },
-];
 
 export default {
   title: "Atoms/Select",
   component: "neo-select",
+  tags: ["autodocs"],
   argTypes: {
-    options: {
-      control: "object",
-      description: "Array of options or option groups",
-    },
-    value: {
-      control: "text",
-      description: "Selected value(s)",
-    },
-    label: {
-      control: "text",
-      description: "Label text for the select",
-    },
-    placeholder: {
-      control: "text",
-      description: "Placeholder text when no option is selected",
-    },
-    helper: {
-      control: "text",
-      description: "Helper text displayed below the select",
-    },
-    error: {
-      control: "text",
-      description: "Error message to display",
-    },
-    multiple: {
-      control: "boolean",
-      description: "Enable multiple selection",
-    },
-    searchable: {
-      control: "boolean",
-      description: "Enable search functionality",
-    },
-    disabled: {
-      control: "boolean",
-      description: "Disable the select",
-    },
-    required: {
-      control: "boolean",
-      description: "Mark the select as required",
-    },
-    "neo-change": {
-      action: "neo-change",
-      description: "Triggered when selection changes",
-    },
-  },
-  parameters: {
-    docs: {
-      description: {
-        component:
-          "A customizable select component that supports single and multiple selection, option groups, search functionality, and keyboard navigation.",
-      },
-    },
+    options: { control: "object" },
+    value: { control: "text" },
+    label: { control: "text" },
+    placeholder: { control: "text" },
+    helper: { control: "text" },
+    error: { control: "text" },
+    multiple: { control: "boolean" },
+    searchable: { control: "boolean" },
+    disabled: { control: "boolean" },
+    required: { control: "boolean" },
+    onChange: { action: "changed" },
   },
 };
 
-const Template = (args) => html`
-  <neo-select
-    .options="${args.options}"
-    .value="${ifDefined(args.value)}"
-    label="${ifDefined(args.label)}"
-    placeholder="${ifDefined(args.placeholder)}"
-    helper="${ifDefined(args.helper)}"
-    error="${ifDefined(args.error)}"
-    ?multiple="${args.multiple}"
-    ?searchable="${args.searchable}"
-    ?disabled="${args.disabled}"
-    ?required="${args.required}"
-    @neo-change="${args["neo-change"]}"
-  ></neo-select>
-`;
+// Base template for all stories
+const Template = (args) => {
+  return html`
+    <neo-select
+      .options=${args.options}
+      .value=${args.value}
+      .label=${args.label}
+      .placeholder=${args.placeholder}
+      .helper=${args.helper}
+      .error=${args.error}
+      ?multiple=${args.multiple}
+      ?searchable=${args.searchable}
+      ?disabled=${args.disabled}
+      ?required=${args.required}
+      @change=${args.onChange}
+    ></neo-select>
+  `;
+};
 
+// Default select
 export const Default = Template.bind({});
 Default.args = {
-  options: basicOptions,
-  label: "Basic Select",
-  placeholder: "Choose an option",
+  options: [
+    { label: "Option 1", value: "option1" },
+    { label: "Option 2", value: "option2" },
+    { label: "Option 3", value: "option3" },
+  ],
+  value: "",
+  label: "Select an option",
+  placeholder: "Choose from the list",
+  helper: "",
+  error: "",
+  multiple: false,
+  searchable: false,
+  disabled: false,
+  required: false,
 };
 
-export const WithValue = Template.bind({});
-WithValue.args = {
+// Select with preselected value
+export const WithSelectedValue = Template.bind({});
+WithSelectedValue.args = {
   ...Default.args,
-  value: "2",
+  value: "option2",
 };
 
-export const WithHelper = Template.bind({});
-WithHelper.args = {
+// Multiple select
+export const MultipleSelect = Template.bind({});
+MultipleSelect.args = {
   ...Default.args,
-  helper: "Select one option from the list",
+  value: ["option1", "option3"],
+  multiple: true,
 };
 
+// Searchable select
+export const SearchableSelect = Template.bind({});
+SearchableSelect.args = {
+  ...Default.args,
+  options: [
+    { label: "Apple", value: "apple" },
+    { label: "Banana", value: "banana" },
+    { label: "Cherry", value: "cherry" },
+    { label: "Date", value: "date" },
+    { label: "Elderberry", value: "elderberry" },
+    { label: "Fig", value: "fig" },
+    { label: "Grape", value: "grape" },
+    { label: "Honeydew", value: "honeydew" },
+  ],
+  searchable: true,
+  label: "Search for a fruit",
+};
+
+// Disabled select
+export const DisabledSelect = Template.bind({});
+DisabledSelect.args = {
+  ...Default.args,
+  disabled: true,
+};
+
+// Select with error
 export const WithError = Template.bind({});
 WithError.args = {
   ...Default.args,
   error: "Please select a valid option",
 };
 
-export const Required = Template.bind({});
-Required.args = {
+// Select with helper text
+export const WithHelperText = Template.bind({});
+WithHelperText.args = {
   ...Default.args,
-  required: true,
-  label: "Required Select",
+  helper: "Choose the option that best fits your needs",
 };
 
-export const Disabled = Template.bind({});
-Disabled.args = {
-  ...Default.args,
-  disabled: true,
-  value: "1",
-};
-
-export const MultipleSelect = Template.bind({});
-MultipleSelect.args = {
-  ...Default.args,
-  multiple: true,
-  label: "Multiple Select",
-  placeholder: "Choose one or more options",
-  value: ["1", "3"],
-};
-
-export const SearchableSelect = Template.bind({});
-SearchableSelect.args = {
-  ...Default.args,
+// Select with option groups
+export const WithOptionGroups = Template.bind({});
+WithOptionGroups.args = {
+  options: [
+    {
+      label: "Fruits",
+      options: [
+        { label: "Apple", value: "apple" },
+        { label: "Banana", value: "banana" },
+        { label: "Cherry", value: "cherry" },
+      ],
+    },
+    {
+      label: "Vegetables",
+      options: [
+        { label: "Carrot", value: "carrot" },
+        { label: "Broccoli", value: "broccoli" },
+        { label: "Spinach", value: "spinach" },
+      ],
+    },
+  ],
+  value: "",
+  label: "Select a food item",
+  placeholder: "Choose a fruit or vegetable",
+  multiple: false,
   searchable: true,
-  label: "Searchable Select",
-  placeholder: "Search and select an option",
+  disabled: false,
+  required: false,
 };
-
-export const GroupedOptions = Template.bind({});
-GroupedOptions.args = {
-  options: groupedOptions,
-  label: "Food Categories",
-  placeholder: "Select a food item",
-};
-
-export const SearchableGrouped = Template.bind({});
-SearchableGrouped.args = {
-  ...GroupedOptions.args,
-  searchable: true,
-  label: "Searchable Grouped Select",
-};
-
-export const MultipleSearchableGrouped = Template.bind({});
-MultipleSearchableGrouped.args = {
-  ...SearchableGrouped.args,
-  multiple: true,
-  label: "Multiple Searchable Grouped Select",
-  value: ["apple", "carrot"],
-};
-
-// Form example with multiple selects
-export const FormExample = () => html`
-  <div style="max-width: 400px; padding: 20px;">
-    <h3>Create Recipe</h3>
-    <div style="display: flex; flex-direction: column; gap: 16px;">
-      <neo-select
-        .options="${groupedOptions}"
-        label="Main Ingredient"
-        required
-        helper="Select the primary ingredient"
-      ></neo-select>
-
-      <neo-select
-        .options="${groupedOptions}"
-        label="Additional Ingredients"
-        multiple
-        searchable
-        helper="Select additional ingredients (optional)"
-      ></neo-select>
-    </div>
-  </div>
-`;

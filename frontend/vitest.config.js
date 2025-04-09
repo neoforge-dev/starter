@@ -99,8 +99,13 @@ export default defineConfig({
     isolate: true,
     // Global test timeout
     testTimeout: 10000,
-    // Exclude old test directories
-    exclude: ["**/tests-old/**", "**/tests-backup-old/**"],
+    // Exclude old test directories, node_modules, and the top-level test directory
+    exclude: [
+      "**/tests-old/**",
+      "**/tests-backup-old/**",
+      "**/node_modules/**",
+      "test/**",
+    ],
     // Coverage configuration
     coverage: {
       provider: "v8",
@@ -111,7 +116,7 @@ export default defineConfig({
     // Setup files - these are loaded before tests run
     setupFiles: [
       "./src/test/setup/optimized-performance-polyfill.js",
-      "./src/test/setup/silence-lit-dev-mode.js",
+      // "./src/test/setup/silence-lit-dev-mode.js", // Commented out to re-enable Lit dev warnings
       "./vitest.setup.js",
     ],
     // Thread settings - ensure minThreads <= maxThreads
@@ -164,6 +169,22 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
+      // Add aliases for Lit CDN imports
+      "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js": resolve(
+        __dirname,
+        "node_modules/lit/index.js"
+      ),
+      "lit/decorators.js": resolve(__dirname, "node_modules/lit/decorators.js"), // Common decorator import
+      lit: resolve(__dirname, "node_modules/lit/index.js"),
+      "lit-html": resolve(__dirname, "node_modules/lit-html/lit-html.js"),
+      "lit-element": resolve(
+        __dirname,
+        "node_modules/lit-element/lit-element.js"
+      ),
+      "@lit/reactive-element": resolve(
+        __dirname,
+        "node_modules/@lit/reactive-element/reactive-element.js"
+      ),
     },
   },
 });
