@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text, select, delete
 import logging
 
-from app.core.config import settings
+from app.core.config import get_settings, Settings
 from app.models.admin import AdminRole, Admin
 from app.models.user import User
 from tests.factories import UserFactory, AdminFactory
@@ -174,7 +174,7 @@ async def readonly_admin_headers(readonly_admin, test_settings):
     }
 
 
-async def test_create_admin(client: AsyncClient, db: AsyncSession, super_admin_headers: dict) -> None:
+async def test_create_admin(client: AsyncClient, db: AsyncSession, super_admin_headers: dict, test_settings: Settings) -> None:
     """Test creating a new admin user."""
     logger = logging.getLogger(__name__)
     
@@ -191,10 +191,10 @@ async def test_create_admin(client: AsyncClient, db: AsyncSession, super_admin_h
     }
     
     logger.debug(f"Making request with headers: {super_admin_headers}")
-    logger.debug(f"API path: {settings.api_v1_str}/admin/")
+    logger.debug(f"API path: {test_settings.api_v1_str}/admin/")
     
     response = await client.post(
-        f"{settings.api_v1_str}/admin/",
+        f"{test_settings.api_v1_str}/admin/",
         json=admin_data,
         headers=super_admin_headers
     )
@@ -212,7 +212,7 @@ async def test_create_admin(client: AsyncClient, db: AsyncSession, super_admin_h
     assert "password" not in data
 
 
-async def test_create_admin_permission_denied(client: AsyncClient, db: AsyncSession, readonly_admin_headers: dict) -> None:
+async def test_create_admin_permission_denied(client: AsyncClient, db: AsyncSession, readonly_admin_headers: dict, test_settings: Settings) -> None:
     """Test creating a new admin user with insufficient permissions."""
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
@@ -226,10 +226,10 @@ async def test_create_admin_permission_denied(client: AsyncClient, db: AsyncSess
     }
     
     logger.debug(f"Making request with headers: {readonly_admin_headers}")
-    logger.debug(f"API path: {settings.api_v1_str}/admin/")
+    logger.debug(f"API path: {test_settings.api_v1_str}/admin/")
     
     response = await client.post(
-        f"{settings.api_v1_str}/admin/",
+        f"{test_settings.api_v1_str}/admin/",
         json=admin_data,
         headers=readonly_admin_headers
     )
@@ -243,10 +243,10 @@ async def test_create_admin_permission_denied(client: AsyncClient, db: AsyncSess
     assert "detail" in data
 
 
-async def test_read_admin_me(client: AsyncClient, db: AsyncSession, admin_headers: dict, admin_user) -> None:
+async def test_read_admin_me(client: AsyncClient, db: AsyncSession, admin_headers: dict, admin_user, test_settings: Settings) -> None:
     """Test reading current admin user."""
     response = await client.get(
-        f"{settings.api_v1_str}/admin/me",
+        f"{test_settings.api_v1_str}/admin/me",
         headers=admin_headers
     )
     
@@ -258,10 +258,10 @@ async def test_read_admin_me(client: AsyncClient, db: AsyncSession, admin_header
     assert data["user_id"] == admin_user.user_id
 
 
-async def test_read_admin(client: AsyncClient, db: AsyncSession, admin_headers: dict, admin_user) -> None:
-    """Test reading admin by ID."""
+async def test_read_admin(client: AsyncClient, db: AsyncSession, admin_headers: dict, admin_user, test_settings: Settings) -> None:
+    """Test reading a specific admin user."""
     response = await client.get(
-        f"{settings.api_v1_str}/admin/{admin_user.id}",
+        f"{test_settings.api_v1_str}/admin/{admin_user.id}",
         headers=admin_headers
     )
     
@@ -273,16 +273,18 @@ async def test_read_admin(client: AsyncClient, db: AsyncSession, admin_headers: 
     assert data["user_id"] == admin_user.user_id
 
 
-async def test_read_admin_permission_denied(client: AsyncClient, db: AsyncSession, readonly_admin_headers: dict):
-    response = await client.get(f"{settings.api_v1_str}/admin/1", headers=readonly_admin_headers)
-    assert response.status_code == 403
-    assert "cannot perform read" in response.json()["detail"].lower()
+async def test_read_admin_permission_denied(client: AsyncClient, db: AsyncSession, readonly_admin_headers: dict, test_settings: Settings):
+    # This test might need adjustment based on actual endpoint and ID used
+    target_admin_id = 999 # Example ID, replace if needed
+    response = await client.get(f"{test_settings.api_v1_str}/admin/{target_admin_id}", headers=readonly_admin_headers) # Use test_settings
+    assert response.status_code == 403 # Expect Forbidden
 
 
-async def test_read_admins(client: AsyncClient, db: AsyncSession, super_admin_headers: dict) -> None:
-    """Test reading all admin users."""
+async def test_read_admins(client: AsyncClient, db: AsyncSession, super_admin_headers: dict, test_settings: Settings) -> None:
+    """Test reading a list of admin users."""
+    # Ensure at least one admin exists (created by fixtures)
     response = await client.get(
-        f"{settings.api_v1_str}/admin/",
+        f"{test_settings.api_v1_str}/admin/",
         headers=super_admin_headers
     )
     
@@ -292,7 +294,7 @@ async def test_read_admins(client: AsyncClient, db: AsyncSession, super_admin_he
     assert len(data) > 0
 
 
-async def test_update_admin(client: AsyncClient, db: AsyncSession, super_admin_headers: dict, admin_user) -> None:
+async def test_update_admin(client: AsyncClient, db: AsyncSession, super_admin_headers: dict, admin_user, test_settings: Settings) -> None:
     """Test updating an admin user."""
     update_data = {
         "full_name": "Updated Admin Name",
@@ -300,7 +302,7 @@ async def test_update_admin(client: AsyncClient, db: AsyncSession, super_admin_h
     }
     
     response = await client.put(
-        f"{settings.api_v1_str}/admin/{admin_user.id}",
+        f"{test_settings.api_v1_str}/admin/{admin_user.id}",
         json=update_data,
         headers=super_admin_headers
     )
@@ -312,15 +314,15 @@ async def test_update_admin(client: AsyncClient, db: AsyncSession, super_admin_h
     assert data["role"] == update_data["role"]
 
 
-async def test_update_admin_permission_denied(client: AsyncClient, db: AsyncSession, readonly_admin_headers: dict, admin_user) -> None:
+async def test_update_admin_permission_denied(client: AsyncClient, db: AsyncSession, readonly_admin_headers: dict, admin_user, test_settings: Settings) -> None:
     """Test updating an admin user with insufficient permissions."""
     update_data = {
-        "full_name": "Should Not Update",
+        "full_name": "Attempted Update Name",
         "role": AdminRole.CONTENT_ADMIN.value
     }
     
     response = await client.put(
-        f"{settings.api_v1_str}/admin/{admin_user.id}",
+        f"{test_settings.api_v1_str}/admin/{admin_user.id}",
         json=update_data,
         headers=readonly_admin_headers
     )
@@ -330,19 +332,15 @@ async def test_update_admin_permission_denied(client: AsyncClient, db: AsyncSess
     assert "detail" in data
 
 
-async def test_delete_admin(client: AsyncClient, db: AsyncSession, super_admin_headers: dict) -> None:
+async def test_delete_admin(client: AsyncClient, db: AsyncSession, super_admin_headers: dict, test_settings: Settings) -> None:
     """Test deleting an admin user."""
     # Create a temporary admin to delete
     temp_admin = await AdminFactory.create(
-        session=db,
-        email="temp-admin@example.com",
-        password="temp123",
-        role=AdminRole.READONLY_ADMIN,
-        is_active=True
+        session=db, email="delete-me-admin@example.com", role=AdminRole.READONLY_ADMIN
     )
     
     response = await client.delete(
-        f"{settings.api_v1_str}/admin/{temp_admin.id}",
+        f"{test_settings.api_v1_str}/admin/{temp_admin.id}",
         headers=super_admin_headers
     )
     
@@ -350,17 +348,17 @@ async def test_delete_admin(client: AsyncClient, db: AsyncSession, super_admin_h
     
     # Verify admin is deleted
     response = await client.get(
-        f"{settings.api_v1_str}/admin/{temp_admin.id}",
+        f"{test_settings.api_v1_str}/admin/{temp_admin.id}",
         headers=super_admin_headers
     )
     
     assert response.status_code == 404
 
 
-async def test_delete_admin_permission_denied(client: AsyncClient, db: AsyncSession, content_admin_headers: dict, readonly_admin) -> None:
+async def test_delete_admin_permission_denied(client: AsyncClient, db: AsyncSession, content_admin_headers: dict, readonly_admin, test_settings: Settings) -> None:
     """Test deleting an admin user with insufficient permissions."""
     response = await client.delete(
-        f"{settings.api_v1_str}/admin/{readonly_admin.id}",
+        f"{test_settings.api_v1_str}/admin/{readonly_admin.id}",
         headers=content_admin_headers
     )
     

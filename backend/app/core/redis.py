@@ -40,7 +40,7 @@ current_settings = get_settings()
 
 # Create an optimized connection pool
 pool = BlockingConnectionPool.from_url(
-    current_settings.redis_url,
+    str(current_settings.redis_url),
     decode_responses=True,
     max_connections=20 if not current_settings.testing else 5,
     timeout=20 if not current_settings.testing else 5,

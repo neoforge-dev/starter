@@ -27,7 +27,8 @@ from app.api.v1.api import api_router
 from app.api.endpoints import metrics
 from app.worker.email_worker import email_worker
 from app.core.queue import EmailQueue
-from app.api.middleware import setup_middleware
+# Import specific middleware setup functions
+from app.api.middleware import setup_security_middleware, setup_validation_middleware
 from app.core.metrics import get_metrics
 from app.schemas.user import UserResponse
 from app.api import deps
@@ -153,8 +154,9 @@ if get_settings().cors_origins:
         allow_headers=["*"],
     )
 
-# Set up security middleware before validation
-setup_middleware(app)
+# Set up security and validation middleware
+setup_security_middleware(app)
+setup_validation_middleware(app)
 
 # Add API router
 app.include_router(api_router, prefix=get_settings().api_v1_str)

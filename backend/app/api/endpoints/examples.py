@@ -1,10 +1,12 @@
 """Example endpoints demonstrating monitoring and caching features."""
 from datetime import timedelta
-from typing import List
+from typing import List, Any
 
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
+import structlog
 
 from app.api.deps import MonitoredDB
 from app.core.cache import cached
@@ -14,8 +16,10 @@ from app.schemas.user import UserResponse
 
 router = APIRouter(prefix="/examples", tags=["examples"])
 
+logger = structlog.get_logger()
+
 @router.get("/cached-users", response_model=List[UserResponse])
-@cached(expire=timedelta(minutes=5))
+@cached(ttl=timedelta(minutes=5))
 async def get_cached_users(db: MonitoredDB) -> List[UserResponse]:
     """
     Get all users with caching.

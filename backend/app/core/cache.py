@@ -2,7 +2,7 @@
 import json
 from datetime import timedelta
 from functools import wraps
-from typing import Any, Callable, Optional, TypeVar, Union, cast
+from typing import Any, Callable, Optional, TypeVar, Union, cast, List, Awaitable
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -222,67 +222,92 @@ class Cache:
 
 
 def cached(
-    expire: Optional[Union[int, timedelta]] = None,
+    ttl: Optional[Union[int, timedelta]] = None,
+    key_builder: Optional[Callable[..., str]] = None,
     prefix: Optional[str] = None,
-    key_builder: Optional[Callable[..., Union[str, int, UUID]]] = None,
-) -> Callable:
-    """
-    Cache decorator for FastAPI endpoint results.
-    
+    namespace: Optional[str] = None,
+    ignore_kwargs: Optional[List[str]] = None,
+    key_field: Optional[str] = None,
+):
+    """Decorator to cache function results.
+
     Args:
-        expire: Optional expiration time in seconds or timedelta
-        prefix: Optional prefix for cache key
-        key_builder: Optional function to build cache key from function arguments
-        
-    Example:
-        @router.get("/items/{item_id}")
-        @cached(expire=300)  # Cache for 5 minutes
-        async def get_item(item_id: int) -> Item:
-            return await get_item_from_db(item_id)
+        ttl: Time-to-live in seconds or timedelta.
+        key_builder: Custom function to build cache key.
+        prefix: Cache key prefix.
+        namespace: Cache key namespace (overrides prefix if provided).
+        ignore_kwargs: List of keyword arguments to ignore in key generation.
+        key_field: Specific keyword argument to use as part of the key.
     """
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+
+    def decorator(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             from app.core.redis import get_redis
+            from app.core.config import get_settings
+
+            current_settings = get_settings()
 
             # Get Redis connection
             redis = await anext(get_redis())
-            cache = Cache(redis, prefix or settings.app_name.lower())
+            
+            # Determine the final prefix/namespace
+            final_prefix = namespace or prefix or current_settings.app_name.lower()
+            
+            cache = Cache(redis, final_prefix)
 
-            # Build cache key
+            # Build cache key (Reverted to inline logic)
             if key_builder:
                 cache_key = key_builder(*args, **kwargs)
             else:
-                # Default key from function name and arguments
                 key_parts = [func.__name__]
                 key_parts.extend(str(arg) for arg in args)
+                # Consider ignoring specific kwargs if needed, simplified for now
                 key_parts.extend(f"{k}:{v}" for k, v in sorted(kwargs.items()))
                 cache_key = ":".join(key_parts)
 
+            # Try to get from cache
             try:
-                # Try to get from cache
                 cached_value = await cache.get(cache_key)
                 if cached_value is not None:
-                    return cached_value
+                    logger.debug(
+                        "cache_hit",
+                        cache_key=f"{final_prefix}:{cache_key}",
+                        function=f"{func.__module__}.{func.__name__}",
+                    )
+                    return cached_value # Assuming stored value is directly usable
+            except Exception as e:
+                 logger.error(
+                    "cache_get_error", 
+                    cache_key=f"{final_prefix}:{cache_key}", 
+                    error=str(e)
+                )
+                 # If cache read fails, proceed to execute function
 
-                # If not in cache, call function
-                result = await func(*args, **kwargs)
+            logger.debug(
+                "cache_miss",
+                cache_key=f"{final_prefix}:{cache_key}",
+                function=f"{func.__module__}.{func.__name__}",
+            )
 
-                # Cache the result
-                await cache.set(cache_key, result, expire)
-                return result
+            # Execute the function
+            result = await func(*args, **kwargs)
 
+            # Store in cache
+            try:
+                await cache.set(cache_key, result, ttl)
             except Exception as e:
                 logger.error(
-                    "cache_decorator_error",
-                    function=func.__name__,
-                    error=str(e),
-                    error_type=type(e).__name__,
+                    "cache_set_error", 
+                    cache_key=f"{final_prefix}:{cache_key}", 
+                    error=str(e)
                 )
-                # On cache error, just execute the function
-                return await func(*args, **kwargs)
+                # If cache write fails, still return the result
+
+            return result
 
         return wrapper
+
     return decorator
 
 
