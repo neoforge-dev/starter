@@ -228,7 +228,7 @@ async def superuser_headers(superuser: User, test_settings: Settings) -> dict:
     }
 
 @pytest.fixture
-def app_with_validation() -> FastAPI:
+def app_with_validation(test_settings: Settings) -> FastAPI:
     """Create a FastAPI app with validation middleware for testing."""
     app = FastAPI()
     
@@ -241,5 +241,6 @@ def app_with_validation() -> FastAPI:
     async def test_post(body: TestPostBody):
         return {"received": body.model_dump()}
     
-    app.add_middleware(RequestValidationMiddleware)
+    # Pass settings to the middleware
+    app.add_middleware(RequestValidationMiddleware, settings=test_settings)
     return app 

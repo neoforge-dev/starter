@@ -114,9 +114,37 @@ class Cache:
         Returns:
             True if successful, False otherwise
         """
+        serialized_value = None
         try:
-            if isinstance(value, BaseModel):
-                value = value.model_dump()
+            # Handle lists containing Pydantic models
+            if isinstance(value, list):
+                serialized_value = [
+                    item.model_dump() if isinstance(item, BaseModel) else item
+                    for item in value
+                ]
+            # Handle single Pydantic model
+            elif isinstance(value, BaseModel):
+                serialized_value = value.model_dump()
+            # Handle other JSON-serializable types
+            else:
+                serialized_value = value
+
+            # Ensure the final value is JSON serializable before dumping
+            # This basic check might need enhancement for deeply nested structures
+            try:
+                # Use default=str to handle datetime objects and other non-serializable types
+                json_string = json.dumps(serialized_value, default=str)
+            except TypeError as json_err:
+                logger.error(
+                    "cache_set_serialization_error",
+                    key=key,
+                    error=str(json_err),
+                    value_type=type(value).__name__,
+                    serialized_type=type(serialized_value).__name__,
+                    exc_info=True,
+                )
+                CACHE_ERRORS.labels(error_type="SerializationError").inc()
+                return False
 
             with CACHE_OPERATION_DURATION.labels("set").time():
                 if expire:
@@ -125,10 +153,10 @@ class Cache:
                     await self.redis.setex(
                         self._get_key(key),
                         expire,
-                        json.dumps(value),
+                        json_string, # Use the serialized string
                     )
                 else:
-                    await self.redis.set(self._get_key(key), json.dumps(value))
+                    await self.redis.set(self._get_key(key), json_string)
             return True
 
         except Exception as e:

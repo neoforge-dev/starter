@@ -78,7 +78,7 @@ def test_settings_default_values():
     assert settings.database_url_for_env == "postgresql+asyncpg://postgres:postgres@db:5432/app"
     assert settings.debug is True # Assert True for debug in test env
     assert settings.testing is False # Default testing is False
-    assert settings.redis_url == "redis://redis:6379/0"
+    assert str(settings.redis_url) == "redis://redis:6379/0"
     assert settings.environment == Environment.DEVELOPMENT
     assert settings.cors_origins == ["http://localhost:3000/"] # Default includes trailing slash now
     assert settings.access_token_expire_minutes == 10080 # 7 days
@@ -112,7 +112,7 @@ def test_settings_custom_values():
     assert settings.rate_limit_window == 120
     assert settings.api_v1_str == "/api/v2"
     assert settings.database_url_for_env == "postgresql+asyncpg://user:pass@host:5432/db"
-    assert settings.redis_url == "redis://custom:6379/1"
+    assert str(settings.redis_url) == "redis://custom:6379/1"
     assert settings.access_token_expire_minutes == 1440
 
 

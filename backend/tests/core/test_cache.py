@@ -365,16 +365,16 @@ async def test_cached_decorator():
         MockCache.return_value = mock_cache
         
         # Define a cached function
-        @cached(expire=60)
-        async def test_func(a, b):
-            return a + b
+        @cached(ttl=60)
+        async def test_func(a: int, b: str = "default") -> dict:
+            return {"result": a + len(b)}
         
         # Call the function
         with patch('app.core.cache.Redis.from_url', return_value=mock_redis):
-            result = await test_func(1, 2)
+            result = await test_func(1, "test")
             
             # Verify result
-            assert result == 3
+            assert result == {"result": 5}
             
             # Verify cache was checked
             mock_cache.get.assert_called_once()
@@ -385,13 +385,13 @@ async def test_cached_decorator():
             # Set up mock for second call (cache hit)
             mock_cache.get.reset_mock()
             mock_cache.set.reset_mock()
-            mock_cache.get.return_value = 3  # Second call: cache hit
+            mock_cache.get.return_value = {"result": 5}  # Second call: cache hit
             
             # Call the function again
-            result = await test_func(1, 2)
+            result = await test_func(1, "test")
             
             # Verify result
-            assert result == 3
+            assert result == {"result": 5}
             
             # Verify cache was checked
             mock_cache.get.assert_called_once()

@@ -80,14 +80,18 @@ async def test_error_handler_middleware(client: AsyncClient):
     assert data["redis_status"] == "healthy" # Assuming test Redis is healthy
 
 
-async def test_error_handler_middleware_validation_error(client: AsyncClient, test_user_headers: dict):
+async def test_error_handler_middleware_validation_error(
+    client: AsyncClient, 
+    regular_user_headers: dict, 
+    test_settings: Settings
+):
     """Test handling of validation errors."""
     # Example: Try to create an item with invalid data (requires authentication)
     invalid_item_data = {"name": 123} # Invalid type for name
     response = await client.post(
-        f"{get_settings().api_v1_str}/items/", 
+        f"{test_settings.api_v1_str}/items/", 
         json=invalid_item_data,
-        headers=test_user_headers
+        headers=regular_user_headers
     )
     assert response.status_code == 422 # Unprocessable Entity for validation errors
     data = response.json()
@@ -100,6 +104,7 @@ async def test_error_handler_middleware_validation_error(client: AsyncClient, te
 async def test_rate_limit_middleware_no_redis_connection(
     app_with_middleware: FastAPI,
     client: AsyncClient,
+    test_settings: Settings
 ):
     """Test behavior when Redis connection fails."""
     # Add test route to test app
@@ -108,7 +113,7 @@ async def test_rate_limit_middleware_no_redis_connection(
         return {"message": "success"}
     
     # Set invalid Redis URL
-    settings.redis_url = "redis://invalid:6379/0"
+    test_settings.redis_url = "redis://invalid:6379/0"
     
     # Create a new client using the test app
     transport = ASGITransport(app=app_with_middleware)

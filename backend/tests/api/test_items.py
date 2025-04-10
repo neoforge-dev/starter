@@ -67,7 +67,7 @@ async def test_create_item(client: AsyncClient, db: AsyncSession, test_user_head
     assert "owner_id" in data
 
 
-async def test_read_item(client: AsyncClient, db: AsyncSession, test_user: UserFactory, test_user_headers: Dict[str, str], test_settings: Settings) -> None:
+async def test_read_item(client: AsyncClient, db: AsyncSession, test_user: User, test_user_headers: Dict[str, str], test_settings: Settings) -> None:
     """Test reading a specific item."""
     item = await ItemFactory.create(session=db, owner_id=test_user.id, title="Specific Item")
     await db.commit()
@@ -82,10 +82,13 @@ async def test_read_item(client: AsyncClient, db: AsyncSession, test_user: UserF
     assert data["owner_id"] == test_user.id
 
 
-async def test_read_items(client: AsyncClient, db: AsyncSession, test_user: UserFactory, test_user_headers: Dict[str, str], test_settings: Settings) -> None:
+async def test_read_items(client: AsyncClient, db: AsyncSession, test_user: User, test_user_headers: Dict[str, str], test_settings: Settings) -> None:
     """Test reading multiple items."""
-    # Create items for the test user
-    ItemFactory.create_batch(session=db, size=3, owner_id=test_user.id)
+    # Create items individually for the test user
+    for _ in range(3):
+        await ItemFactory.create(session=db, owner_id=test_user.id)
+    # ItemFactory.create_batch(session=db, size=3, owner_id=test_user.id)
+    await db.commit() # Ensure items are committed before API call
     
     response = await client.get(
         f"{test_settings.api_v1_str}/items/",
@@ -99,9 +102,10 @@ async def test_read_items(client: AsyncClient, db: AsyncSession, test_user: User
     # Verify that all returned items belong to the test user
     for item in data:
         assert item["owner_id"] == test_user.id
+    # await db.commit() # Removed potentially redundant commit
 
 
-async def test_update_item(client: AsyncClient, db: AsyncSession, test_user: UserFactory, test_user_headers: Dict[str, str], test_settings: Settings) -> None:
+async def test_update_item(client: AsyncClient, db: AsyncSession, test_user: User, test_user_headers: Dict[str, str], test_settings: Settings) -> None:
     """Test updating an item."""
     item = await ItemFactory.create(session=db, owner_id=test_user.id, title="Original Item Title")
     await db.commit()
@@ -124,7 +128,7 @@ async def test_update_item(client: AsyncClient, db: AsyncSession, test_user: Use
     assert item.title == update_data["title"]
 
 
-async def test_delete_item(client: AsyncClient, db: AsyncSession, test_user: UserFactory, test_user_headers: Dict[str, str], test_settings: Settings) -> None:
+async def test_delete_item(client: AsyncClient, db: AsyncSession, test_user: User, test_user_headers: Dict[str, str], test_settings: Settings) -> None:
     """Test deleting an item."""
     item = await ItemFactory.create(session=db, owner_id=test_user.id)
     item_id = item.id
@@ -136,9 +140,12 @@ async def test_delete_item(client: AsyncClient, db: AsyncSession, test_user: Use
     )
     assert response.status_code == 204
     
-    # Verify deletion in DB
-    result = await db.get(Item, item_id)
-    assert result is None
+    # Verify deletion by trying to fetch the item via API (should 404)
+    get_response = await client.get(
+        f"{test_settings.api_v1_str}/items/{item_id}",
+        headers=test_user_headers
+    )
+    assert get_response.status_code == 404
 
 
 async def test_read_item_not_found(client: AsyncClient, db: AsyncSession, test_user_headers: Dict[str, str], test_settings: Settings) -> None:
