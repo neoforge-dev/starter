@@ -65,27 +65,6 @@ class Settings(BaseSettings):
             raise ValueError("Secret key must be at least 32 characters long")
         return SecretStr(secret_value)
 
-    @field_validator("cors_origins", mode="before")
-    def validate_cors_origins(cls, v: Union[str, List[str]], info: ValidationInfo) -> List[str]:
-        # Get current testing status from validation context
-        testing = info.data.get("testing", False)
-        
-        if isinstance(v, str):
-            try:
-                v = json.loads(v)
-            except json.JSONDecodeError:
-                raise ValueError("CORS_ORIGINS must be a valid JSON string")
-
-        if not isinstance(v, list):
-            raise ValueError("CORS_ORIGINS must be a list")
-
-        # Clear CORS origins in test mode
-        if testing:
-            return []
-
-        # Validate each origin
-        return [str(origin) for origin in v] if v else ["http://localhost:3000"]
-
     @field_validator("debug", mode="before")
     def validate_debug(cls, v: Union[str, bool]) -> bool:
         if isinstance(v, str):
@@ -109,15 +88,16 @@ class Settings(BaseSettings):
     def validate_all(self) -> "Settings":
         # Force test settings when environment is test
         if self.environment == "test":
+            # Ensure these overrides happen *after* individual fields are validated
             self.testing = True
             self.debug = False
-            self.cors_origins = []
-        
-        # Add back SMTP validation
+            self.cors_origins = [] # Ensure this override is correctly placed and executed
+
+        # SMTP validation
         if bool(self.smtp_user) != bool(self.smtp_password):
             logger.error("SMTP settings mismatch")
             raise ValueError("SMTP user and password must both be set or both be None")
-        
+
         return self
 
 def verify_settings():
