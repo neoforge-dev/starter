@@ -34,9 +34,3 @@ def create_celery_app(settings: Settings) -> Celery:
         task_default_routing_key='default',
     )
     return celery
-
-# Get settings instance once
-current_settings = get_settings()
-
-# Create the app instance using the factory
-celery_app = create_celery_app(current_settings) 

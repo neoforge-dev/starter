@@ -5,6 +5,9 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, EmailStr
 from app.core.config import Settings, get_settings
 from app.core.queue import EmailQueue, EmailQueueItem
+import logging
+
+logger = logging.getLogger(__name__)
 
 class EmailContent(BaseModel):
     """Email content structure."""
@@ -15,7 +18,9 @@ class EmailContent(BaseModel):
 
 class EmailService:
     def __init__(self, settings_obj: Settings):
-        self.queue = EmailQueue(Redis.from_url(settings_obj.redis_url))
+        # Explicitly convert RedisDsn to string for Redis.from_url
+        redis_url_str = str(settings_obj.redis_url)
+        self.queue = EmailQueue(Redis.from_url(redis_url_str))
         self.conf = ConnectionConfig(
             # Let ConnectionConfig load these from environment (patched in tests)
             # MAIL_USERNAME=settings_obj.smtp_user,
@@ -29,15 +34,12 @@ class EmailService:
         )
         self.fastmail = FastMail(self.conf)
 
-    async def send_queued_email(self, message: MessageSchema, template_name: str, template_body: Dict[str, Any]):
+    async def enqueue_email(self, message: MessageSchema, template_name: str, template_body: Dict[str, Any]):
         """Add email to queue using EmailQueue"""
         if not template_body:
             raise ValueError("Email template body required")
         if not template_name:
              raise ValueError("Email template name required")
-        
-        # Connect to the queue if not already connected
-        await self.queue.connect()
         
         # Create an EmailQueueItem from the MessageSchema
         email_item = EmailQueueItem(
@@ -52,20 +54,29 @@ class EmailService:
         
         # Enqueue the email
         email_id = await self.queue.enqueue(email_item)
-        
+        logger.info(f"Email enqueued with ID: {email_id}")
         return email_id
 
+    async def _send_direct_email(self, message: MessageSchema, template_name: str):
+        """Send email directly using FastMail."""
+        try:
+            await self.fastmail.send_message(message, template_name=template_name)
+            logger.info(f"Email sent successfully to {message.recipients}")
+        except Exception as e:
+            logger.error(f"Error sending email directly: {e}")
+            raise
+
 async def send_email(*, db, email_id: str, email_content: EmailContent, settings: Settings) -> None:
-    """Send an email using the queued email service."""
+    """Send a dequeued email directly using the email service."""
     service = EmailService(settings)
     message = MessageSchema(
         subject=email_content.subject,
         recipients=[email_content.to],
         template_body=email_content.template_data,
-        template_name=email_content.template_name,
         subtype="html"
     )
-    await service.send_queued_email(message, email_content.template_name, email_content.template_data)
+    await service._send_direct_email(message, template_name=email_content.template_name)
+    logger.info(f"Dequeued email {email_id} sent via send_email function.")
 
 async def send_test_email(
     email_to: str,
@@ -84,7 +95,7 @@ async def send_test_email(
         subtype="html"
     )
     template_body_data = template_data or {"message": "This is a test email"}
-    await service.send_queued_email(message, template_name, template_body_data)
+    await service.enqueue_email(message, template_name, template_body_data)
 
 async def send_reset_password_email(
     email_to: str,
@@ -107,7 +118,7 @@ async def send_reset_password_email(
         subtype="html"
     )
     template_body_data = message.template_body
-    await service.send_queued_email(message, "reset_password.html", template_body_data)
+    await service.enqueue_email(message, "reset_password.html", template_body_data)
 
 async def send_new_account_email(
     email_to: str,
@@ -130,7 +141,7 @@ async def send_new_account_email(
         subtype="html"
     )
     template_body_data = message.template_body
-    await service.send_queued_email(message, "welcome.html", template_body_data)
+    await service.enqueue_email(message, "welcome.html", template_body_data)
 
 async def send_admin_alert_email(
     admin_emails: List[str],
@@ -153,4 +164,4 @@ async def send_admin_alert_email(
         subtype="html"
     )
     template_body_data = message.template_body
-    await service.send_queued_email(message, "admin_alert.html", template_body_data) 
+    await service.enqueue_email(message, "admin_alert.html", template_body_data) 

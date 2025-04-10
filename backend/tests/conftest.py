@@ -22,6 +22,9 @@ from app.models.user import User
 from tests.factories import UserFactory
 from app.api.middleware.validation import RequestValidationMiddleware
 
+# Import get_settings specifically for cache clearing
+from app.core.config import get_settings as core_get_settings
+
 # Get a logger instance for conftest
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO) # Configure basic logging
@@ -243,4 +246,10 @@ def app_with_validation(test_settings: Settings) -> FastAPI:
     
     # Pass settings to the middleware
     app.add_middleware(RequestValidationMiddleware, settings=test_settings)
-    return app 
+    return app
+
+@pytest.fixture(autouse=True)
+def clear_settings_cache():
+    """Fixture to automatically clear the get_settings cache before each test."""
+    core_get_settings.cache_clear()
+    logger.debug("Cleared get_settings() cache") 

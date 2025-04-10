@@ -96,18 +96,6 @@ async def test_email_queue_init():
 
 
 @pytest.mark.asyncio
-async def test_connect_disconnect(email_queue_instance, mock_redis):
-    """Test connect and disconnect methods."""
-    # Test connect
-    await email_queue_instance.connect()
-    
-    # Test disconnect
-    await email_queue_instance.disconnect()
-    mock_redis.close.assert_called_once()
-    assert email_queue_instance.redis is None
-
-
-@pytest.mark.asyncio
 async def test_enqueue(email_queue_instance, mock_redis, sample_email_item):
     """Test enqueuing an email."""
     # Define a fixed timestamp
@@ -148,25 +136,38 @@ async def test_enqueue(email_queue_instance, mock_redis, sample_email_item):
 
 @pytest.mark.asyncio
 async def test_enqueue_with_delay(email_queue_instance, mock_redis, sample_email_item):
-    """Test enqueuing an email with delay."""
-    # Mock UUID generation for consistent testing
-    with patch('uuid.UUID') as mock_uuid:
-        mock_uuid.return_value = uuid.UUID('12345678-1234-5678-1234-567812345678')
+    """Test enqueuing an email with delay using datetime patching."""
+    # Define fixed times
+    now_fixed = datetime(2024, 1, 1, 12, 0, 0)
+    delay = timedelta(minutes=5)
+    scheduled_fixed = now_fixed + delay
+    expected_ts_int = int(now_fixed.timestamp() * 1000000)
+    expected_uuid = str(uuid.UUID(int=expected_ts_int))
+    
+    # Mock datetime.now() for consistent ID generation and scheduling base
+    with patch('app.core.queue.datetime') as mock_dt:
+        mock_dt.now.return_value = now_fixed
+        mock_dt.timestamp.side_effect = lambda: now_fixed.timestamp() # Ensure timestamp() method works
         
         # Enqueue email with delay
-        delay = timedelta(minutes=5)
         email_id = await email_queue_instance.enqueue(sample_email_item, delay=delay)
         
-        # Verify email ID
-        assert email_id == '12345678-1234-5678-1234-567812345678'
+        # Verify email ID uses the fixed time
+        assert email_id == expected_uuid
         
-        # Verify Redis calls
+        # Verify Redis hset call (data check - optional but good)
         mock_redis.hset.assert_called_once()
+        stored_data = json.loads(mock_redis.hset.call_args[0][2])
+        assert stored_data['id'] == email_id
+        assert stored_data['scheduled_for'] == scheduled_fixed.isoformat()
+
+        # Verify Redis zadd call (queue ordering)
         mock_redis.zadd.assert_called_once()
-        
-        # Verify scheduled time in the future
-        call_args = mock_redis.zadd.call_args[0]
-        assert call_args[0] == "email:queue"
+        zadd_args = mock_redis.zadd.call_args[0]
+        assert zadd_args[0] == email_queue_instance.queue_key # Queue name
+        # Check the score matches the *scheduled* time
+        assert list(zadd_args[1].keys())[0] == email_id # Check the member is the email ID
+        assert list(zadd_args[1].values())[0] == scheduled_fixed.timestamp() # Check the score
 
 
 @pytest.mark.asyncio

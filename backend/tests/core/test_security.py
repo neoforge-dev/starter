@@ -40,11 +40,12 @@ def test_create_access_token():
     # Verify the subject
     assert payload["sub"] == subject
     
-    # Verify the expiration time (should be about 15 minutes from now)
+    # Verify the expiration time (should match settings.access_token_expire_minutes)
     exp_time = datetime.fromtimestamp(payload["exp"], tz=UTC)
     now = datetime.now(UTC)
-    assert (exp_time - now).total_seconds() > 14 * 60  # At least 14 minutes
-    assert (exp_time - now).total_seconds() < 16 * 60  # At most 16 minutes
+    expected_delta_seconds = current_settings.access_token_expire_minutes * 60
+    # Allow for slight timing differences (e.g., +/- 10 seconds)
+    assert abs((exp_time - now).total_seconds() - expected_delta_seconds) < 10
 
 
 def test_create_access_token_with_expiration():

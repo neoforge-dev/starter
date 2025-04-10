@@ -14,6 +14,8 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 import time
 from redis.exceptions import ConnectionError, TimeoutError
+# Import the base class for patching
+from redis.asyncio import Redis as AsyncRedis
 
 from app.core.redis import (
     MonitoredRedis,
@@ -37,54 +39,78 @@ def mock_redis():
 @pytest.mark.asyncio
 async def test_monitored_redis_execute_command_success():
     """Test that MonitoredRedis.execute_command increments metrics on success."""
-    # Create a mock Redis client
-    mock_super_execute = AsyncMock(return_value="OK")
-    
-    # Create a MonitoredRedis instance with mocked super().execute_command
-    with patch.object(MonitoredRedis, 'execute_command', return_value=mock_super_execute):
-        with patch.object(REDIS_OPERATIONS, 'labels') as mock_labels:
-            with patch.object(REDIS_OPERATION_DURATION, 'labels') as mock_duration_labels:
-                # Setup mocks
-                mock_inc = AsyncMock()
-                mock_observe = AsyncMock()
-                mock_labels.return_value.inc = mock_inc
-                mock_duration_labels.return_value.observe = mock_observe
-                
-                # Call the method
-                result = await redis_client.execute_command("GET", "key")
-                
-                # Verify metrics were incremented
-                mock_labels.assert_called_once_with(operation="GET")
-                mock_inc.assert_called_once()
-                mock_duration_labels.assert_called_once_with(operation="GET")
-                mock_observe.assert_called_once()
+    # Mock the base Redis class's execute_command method
+    with patch.object(AsyncRedis, 'execute_command', new_callable=AsyncMock) as mock_base_execute:
+        mock_base_execute.return_value = "OK"
+
+        # Mock the metric objects directly
+        with patch('app.core.redis.REDIS_OPERATIONS', new_callable=MagicMock) as mock_ops_counter, \
+             patch('app.core.redis.REDIS_ERRORS', new_callable=MagicMock) as mock_err_counter, \
+             patch('app.core.redis.REDIS_OPERATION_DURATION', new_callable=MagicMock) as mock_duration_hist:
+
+            # Setup return values for the chained metric calls
+            mock_ops_labeled = MagicMock()
+            mock_ops_counter.labels.return_value = mock_ops_labeled
+            mock_duration_labeled = MagicMock()
+            mock_duration_hist.labels.return_value = mock_duration_labeled
+
+            # Instantiate MonitoredRedis
+            monitored_client = MonitoredRedis(connection_pool=MagicMock())
+
+            # Call the method under test on the instance
+            # This will call the *real* MonitoredRedis.execute_command,
+            # which in turn calls the *mocked* base_execute
+            result = await monitored_client.execute_command("GET", "key")
+            assert result == "OK" # Check return value
+
+            # Verify the base class method was called
+            mock_base_execute.assert_called_once_with("GET", "key")
+
+            # Verify metrics were interacted with correctly
+            mock_ops_counter.labels.assert_called_once_with(operation="GET")
+            mock_ops_labeled.inc.assert_called_once()
+            mock_duration_hist.labels.assert_called_once_with(operation="GET")
+            mock_duration_labeled.observe.assert_called_once()
+            mock_err_counter.labels.assert_not_called()
 
 
 @pytest.mark.asyncio
 async def test_monitored_redis_execute_command_error():
     """Test that MonitoredRedis.execute_command increments error metrics on failure."""
-    # Create a mock Redis client that raises an exception
-    mock_super_execute = AsyncMock(side_effect=ConnectionError("Connection refused"))
-    
-    # Create a MonitoredRedis instance with mocked super().execute_command
-    with patch.object(MonitoredRedis, 'execute_command', side_effect=ConnectionError("Connection refused")):
-        with patch.object(REDIS_ERRORS, 'labels') as mock_error_labels:
-            with patch.object(REDIS_OPERATION_DURATION, 'labels') as mock_duration_labels:
-                # Setup mocks
-                mock_inc = AsyncMock()
-                mock_observe = AsyncMock()
-                mock_error_labels.return_value.inc = mock_inc
-                mock_duration_labels.return_value.observe = mock_observe
-                
-                # Call the method and expect an exception
-                with pytest.raises(ConnectionError):
-                    await redis_client.execute_command("GET", "key")
-                
-                # Verify error metrics were incremented
-                mock_error_labels.assert_called_once_with(error_type="ConnectionError")
-                mock_inc.assert_called_once()
-                mock_duration_labels.assert_called_once_with(operation="GET")
-                mock_observe.assert_called_once()
+    # Mock the base class method to raise an error
+    test_exception = ConnectionError("Connection refused")
+    with patch.object(AsyncRedis, 'execute_command', new_callable=AsyncMock) as mock_base_execute:
+        mock_base_execute.side_effect = test_exception
+
+        # Mock the metric objects directly
+        with patch('app.core.redis.REDIS_OPERATIONS', new_callable=MagicMock) as mock_ops_counter, \
+             patch('app.core.redis.REDIS_ERRORS', new_callable=MagicMock) as mock_err_counter, \
+             patch('app.core.redis.REDIS_OPERATION_DURATION', new_callable=MagicMock) as mock_duration_hist:
+
+            # Setup return values for the chained metric calls
+            mock_err_labeled = MagicMock()
+            mock_err_counter.labels.return_value = mock_err_labeled
+            mock_duration_labeled = MagicMock()
+            mock_duration_hist.labels.return_value = mock_duration_labeled
+
+            # Instantiate MonitoredRedis
+            monitored_client = MonitoredRedis(connection_pool=MagicMock())
+
+            # Call the method and expect an exception
+            with pytest.raises(ConnectionError):
+                # This will call the *real* MonitoredRedis.execute_command,
+                # which in turn calls the *mocked* base_execute
+                await monitored_client.execute_command("SET", "key", "value")
+
+            # Verify the base class method was called
+            mock_base_execute.assert_called_once_with("SET", "key", "value")
+
+            # Verify error metrics were incremented
+            mock_err_counter.labels.assert_called_once_with(error_type="ConnectionError")
+            mock_err_labeled.inc.assert_called_once()
+            mock_duration_hist.labels.assert_called_once_with(operation="SET")
+            mock_duration_labeled.observe.assert_called_once()
+            mock_ops_counter.labels.assert_not_called()
 
 
 @pytest.mark.asyncio

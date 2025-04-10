@@ -12,6 +12,7 @@ from app.core.email_templates import (
     TemplateError,
     get_template_env,
     render_template,
+    _cached_env,
 )
 
 @pytest.fixture
@@ -242,30 +243,43 @@ def test_template_error_handling(validator: TemplateValidator):
             )
         assert "Error rendering template test_template: Variable not found" in str(exc_info.value)
 
-def test_custom_template_filters(validator: TemplateValidator):
-    """Test custom template filters."""
-    # Create template with custom filter
-    template = """
-    {{ name | upper }}
-    {{ amount | currency }}
-    {{ date | format_date }}
-    """
+def test_custom_template_filters(validator: TemplateValidator, template_dir: Path):
+    """Test custom template filters using the render_template function."""
+    # Clear the global cache to ensure the correct env is created
+    global _cached_env
+    _cached_env = None 
     
-    with patch('jinja2.Environment.get_template') as mock_get_template:
-        mock_template = MagicMock()
-        mock_template.render.return_value = template
-        mock_get_template.return_value = mock_template
-        
-        html = render_template(
-            "test_template_with_filters",
-            {
-                "name": "John",
-                "amount": 100.50,
-                "date": "2024-03-15"
-            }
+    # Create a temporary template file using custom filters
+    filter_template_content = """
+    <!DOCTYPE html>
+    <html>
+    <body>
+        <p>Upper: {{ name | upper }}</p>
+        <p>Currency: {{ amount | currency }}</p>
+        <p>Date: {{ date | format_date }}</p>
+    </body>
+    </html>
+    """
+    (template_dir / "email" / "filter_test.html").write_text(filter_template_content)
+    
+    # Get the environment specifically for the test directory
+    test_env = get_template_env(template_dir=template_dir)
+    
+    # Render using the test-specific environment
+    try:
+        # Load using the relative path within the loader's searchpath
+        template = test_env.get_template("email/filter_test.html") 
+        html = template.render(
+            name="John Doe",
+            amount=123.45,
+            date="2024-01-01"
         )
-        
-        assert "JOHN" in html
-        assert "$100.50" in html
-        assert "March 15, 2024" in html
-        assert "Formatted Date" in html 
+    except jinja2.TemplateNotFound:
+        pytest.fail(f"Template email/filter_test.html not found in {template_dir}")
+    except Exception as e:
+        pytest.fail(f"Error rendering template: {e}")
+
+    # Assert that the filters were applied correctly based on get_template_env
+    assert "Upper: JOHN DOE" in html
+    assert "Currency: $123.45" in html
+    assert "Date: Formatted Date" in html # Using the placeholder value from get_template_env 

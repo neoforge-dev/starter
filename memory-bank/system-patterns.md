@@ -26,3 +26,9 @@
 - **Use**: Interactive docs, visual test aid.
 - **Structure**: Meta -> Template -> Stories.
 - **Fixes**: See `scripts/fix-stories.js`, `vite.config.js`, `scripts/patch-figspec.cjs`.
+
+### Email System (Backend)
+- **Queuing**: Uses `EmailQueue` (Redis-based: sorted set for scheduled/status, hash for data).
+- **Enqueuing**: Functions like `send_reset_password_email` call `EmailService.enqueue_email`.
+- **Processing**: `EmailWorker` (background task) dequeues emails via `EmailQueue.dequeue`.
+- **Sending**: Worker calls `send_email`, which uses `EmailService._send_direct_email` (FastMail) for actual dispatch.

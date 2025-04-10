@@ -145,23 +145,14 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_all(self) -> "Settings":
-        """Validate all settings."""
-        # Handle test mode settings first
-        if self.testing or self.environment == Environment.TEST:
-            # Use object.__setattr__ to bypass validation and prevent recursion
-            object.__setattr__(self, "debug", False)
-            object.__setattr__(self, "cors_origins", [])
-            object.__setattr__(self, "environment", Environment.TEST)
-            object.__setattr__(self, "testing", True)
-            
-            # Set a default secret_key for test mode if not provided
-            if not hasattr(self, "secret_key") or not self.secret_key:
-                test_secret = "test_secret_key_replace_in_production_7e1a34bd93b148f0"
-                object.__setattr__(self, "secret_key", SecretStr(test_secret))
-            
-            return self
+        """Validate settings after initial loading. Primarily handles SMTP check."""
+        # Test overrides (debug, cors, testing, environment) are now handled 
+        # primarily by environment variables set in the test environment (docker-compose.dev.yml)
+        # and potentially explicit instantiation in tests (e.g., Settings(testing=True))
+        # We no longer force overrides here based on self.environment.
 
-        # Validate SMTP settings
+        # Validate SMTP settings (only relevant if not in a test context typically)
+        # We can keep this check, assuming test env won't set SMTP_USER without password.
         if self.smtp_user and not self.smtp_password:
             raise ValidationError(
                 [

@@ -4,6 +4,7 @@ from typing import Optional
 from app.db.session import AsyncSessionLocal
 from app.core.email import send_email
 from app.core.queue import EmailQueue
+from app.core.config import get_settings
 
 try:
     from app.models.email_content import EmailContent
@@ -49,6 +50,7 @@ class EmailWorker:
                     db=db,
                     email_id=email_id,
                     email_content=email_content,
+                    settings=get_settings()
                 )
                 
             # Mark as completed
