@@ -20,20 +20,21 @@ from app.core.security import (
     get_current_user,
     oauth2_scheme,
 )
-from app.core.config import settings
+from app.core.config import Settings, get_settings
 
 
 def test_create_access_token():
     """Test that create_access_token creates a valid JWT token."""
+    current_settings = get_settings()
     # Create a token with a specific subject
     subject = "test_user_123"
-    token = create_access_token(subject=subject)
+    token = create_access_token(subject=subject, settings=current_settings)
     
     # Decode the token and verify its contents
     payload = jwt.decode(
         token,
-        settings.secret_key.get_secret_value(),
-        algorithms=[settings.algorithm],
+        current_settings.secret_key.get_secret_value(),
+        algorithms=[current_settings.algorithm],
     )
     
     # Verify the subject
@@ -48,16 +49,17 @@ def test_create_access_token():
 
 def test_create_access_token_with_expiration():
     """Test that create_access_token respects custom expiration time."""
+    current_settings = get_settings()
     # Create a token with a specific subject and expiration
     subject = "test_user_123"
     expires_delta = timedelta(hours=1)
-    token = create_access_token(subject=subject, expires_delta=expires_delta)
+    token = create_access_token(subject=subject, settings=current_settings, expires_delta=expires_delta)
     
     # Decode the token and verify its contents
     payload = jwt.decode(
         token,
-        settings.secret_key.get_secret_value(),
-        algorithms=[settings.algorithm],
+        current_settings.secret_key.get_secret_value(),
+        algorithms=[current_settings.algorithm],
     )
     
     # Verify the subject
@@ -71,14 +73,14 @@ def test_create_access_token_with_expiration():
 
 
 @pytest.mark.asyncio
-async def test_get_current_user_valid_token():
+async def test_get_current_user_valid_token(test_settings: Settings):
     """Test that get_current_user returns the user when token is valid."""
     # Create a mock user
     mock_user = MagicMock()
     mock_user.id = 123
     
     # Create a valid token
-    token = create_access_token(subject=mock_user.id)
+    token = create_access_token(subject=mock_user.id, settings=test_settings)
     
     # Mock the database session and user_crud.get
     mock_db = AsyncMock()
@@ -119,11 +121,12 @@ async def test_get_current_user_invalid_token():
 @pytest.mark.asyncio
 async def test_get_current_user_missing_subject():
     """Test that get_current_user raises HTTPException when subject is missing."""
+    current_settings = get_settings()
     # Create a token without a subject
     token = jwt.encode(
         {"exp": datetime.now(UTC) + timedelta(minutes=15)},  # No 'sub' field
-        settings.secret_key.get_secret_value(),
-        algorithm=settings.algorithm,
+        current_settings.secret_key.get_secret_value(),
+        algorithm=current_settings.algorithm,
     )
     
     # Mock the database session
@@ -139,10 +142,10 @@ async def test_get_current_user_missing_subject():
 
 
 @pytest.mark.asyncio
-async def test_get_current_user_user_not_found():
+async def test_get_current_user_user_not_found(test_settings: Settings):
     """Test that get_current_user raises HTTPException when user is not found."""
     # Create a valid token
-    token = create_access_token(subject=123)
+    token = create_access_token(subject=123, settings=test_settings)
     
     # Mock the database session and user_crud.get
     mock_db = AsyncMock()

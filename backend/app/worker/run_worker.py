@@ -12,14 +12,17 @@ import asyncio
 import signal
 import sys
 import structlog
-from app.core.config import settings
+from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.core.redis import redis_client
 from app.core.queue import EmailQueue
 from app.worker.email_worker import EmailWorker
 
+# Get settings once
+current_settings = get_settings()
+
 # Set up structured logging
-setup_logging(settings.model_dump())
+setup_logging(current_settings.model_dump())
 logger = structlog.get_logger()
 
 # Create email worker
@@ -40,7 +43,6 @@ async def init():
     
     # Initialize email queue
     email_queue = EmailQueue(redis=redis_client)
-    await email_queue.connect()
     
     # Initialize and start email worker
     email_worker = EmailWorker(queue=email_queue)
@@ -48,7 +50,7 @@ async def init():
     
     logger.info(
         "email_worker_started",
-        environment=settings.environment,
+        environment=current_settings.environment,
     )
 
 async def shutdown():
@@ -60,7 +62,6 @@ async def shutdown():
         logger.info("Email worker stopped")
     
     if email_queue:
-        await email_queue.disconnect()
         logger.info("Email queue disconnected")
     
     await redis_client.close()

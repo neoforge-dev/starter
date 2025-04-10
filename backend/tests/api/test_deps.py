@@ -8,7 +8,7 @@ from jose import jwt
 from httpx import AsyncClient, ASGITransport # Import AsyncClient, ASGITransport
 
 from app.api import deps
-from app.core.config import settings, Settings, get_settings # Import get_settings
+from app.core.config import Settings, get_settings # Removed global settings
 from app.models.user import User
 from app.models.admin import Admin, AdminRole
 from tests.factories import UserFactory
@@ -130,11 +130,11 @@ async def test_get_current_user_inactive_user(deps_test_client: AsyncClient, db:
     assert response.status_code == 200
 
 
-async def test_get_current_active_user(client: AsyncClient, regular_user_headers: dict, regular_user: User):
+async def test_get_current_active_user(client: AsyncClient, regular_user_headers: dict, regular_user: User, test_settings: Settings):
     """Test getting current active user."""
     # This dependency relies on get_current_user, so we test via an endpoint
     # We'll use the existing /users/me endpoint which uses get_current_active_user implicitly
-    response = await client.get(f"{settings.api_v1_str}/users/me", headers=regular_user_headers)
+    response = await client.get(f"{test_settings.api_v1_str}/users/me", headers=regular_user_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == regular_user.id
@@ -158,7 +158,7 @@ async def test_get_current_active_user_inactive(client: AsyncClient, db: AsyncSe
     }
     
     # Use the /users/me endpoint which depends on get_current_active_user
-    response = await client.get(f"{settings.api_v1_str}/users/me", headers=headers)
+    response = await client.get(f"{test_settings.api_v1_str}/users/me", headers=headers)
     assert response.status_code == 400
     assert "Inactive user" in response.json()["detail"]
 

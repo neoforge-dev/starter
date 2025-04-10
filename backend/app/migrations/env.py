@@ -5,7 +5,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
-from app.core.config import settings
+from app.core.config import get_settings
 from app.models.admin import Admin  # noqa
 from app.models.user import User  # noqa
 from app.models.item import Item  # noqa
@@ -20,8 +20,9 @@ target_metadata = SQLModel.metadata
 
 def get_url() -> str:
     """Get database URL from settings."""
+    current_settings = get_settings()
     # Replace asyncpg with psycopg2 for synchronous migrations
-    return str(settings.database_url).replace("postgresql+asyncpg", "postgresql")
+    return str(current_settings.database_url).replace("postgresql+asyncpg", "postgresql")
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""

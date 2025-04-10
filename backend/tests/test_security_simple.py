@@ -2,18 +2,20 @@
 from datetime import datetime, timedelta, UTC
 from jose import jwt
 
-from app.core.config import settings
+from app.core.config import get_settings
 from app.core.security import create_access_token
 
 
 def test_create_access_token():
     """Test creating a JWT access token."""
+    current_settings = get_settings()
+    
     # Test with default expiration
-    token = create_access_token(subject="test-user")
+    token = create_access_token(subject="test-user", settings=current_settings)
     payload = jwt.decode(
         token,
-        settings.secret_key.get_secret_value(),
-        algorithms=[settings.algorithm],
+        current_settings.secret_key.get_secret_value(),
+        algorithms=[current_settings.algorithm],
     )
     assert payload["sub"] == "test-user"
     # Verify expiration is set and is in the future
@@ -23,11 +25,11 @@ def test_create_access_token():
     
     # Test with custom expiration
     custom_expires = timedelta(minutes=30)
-    token = create_access_token(subject="test-user", expires_delta=custom_expires)
+    token = create_access_token(subject="test-user", settings=current_settings, expires_delta=custom_expires)
     payload = jwt.decode(
         token,
-        settings.secret_key.get_secret_value(),
-        algorithms=[settings.algorithm],
+        current_settings.secret_key.get_secret_value(),
+        algorithms=[current_settings.algorithm],
     )
     assert payload["sub"] == "test-user"
     # Verify expiration is set and is in the future

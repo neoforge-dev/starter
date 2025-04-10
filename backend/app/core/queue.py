@@ -7,7 +7,7 @@ from uuid import UUID
 from redis.asyncio import Redis
 from pydantic import BaseModel, EmailStr, ConfigDict
 
-from app.core.config import settings
+from app.core.config import Settings, get_settings
 from app.core.redis import redis_client
 
 
@@ -39,9 +39,17 @@ class QueuedEmail(EmailQueueItem):
 class EmailQueue:
     """Redis-based email queue with efficient lookups."""
     
-    def __init__(self, redis=None):
-        """Initialize queue."""
+    def __init__(self, redis: Optional[Redis] = None):
+        """Initialize queue, ensuring a Redis client is available."""
+        # Use the provided client, or the globally configured one
         self.redis = redis or redis_client
+        if not self.redis:
+            # This case should ideally not happen if redis_client is configured correctly
+            # but as a fallback, create one using fetched settings.
+            logger.warning("Redis client not provided or globally configured, creating fallback instance.")
+            current_settings = get_settings()
+            self.redis = Redis.from_url(current_settings.redis_url, decode_responses=True)
+        
         # Sorted sets for queue ordering (stores only IDs)
         self.queue_key = "email:queue"
         self.processing_key = "email:processing"
@@ -49,17 +57,6 @@ class EmailQueue:
         self.failed_key = "email:failed"
         # Hash set for O(1) email data lookups
         self.email_data_key = "email:data"
-    
-    async def connect(self) -> None:
-        """Connect to Redis."""
-        if not self.redis:
-            self.redis = Redis.from_url(settings.redis_url)
-    
-    async def disconnect(self) -> None:
-        """Disconnect from Redis."""
-        if self.redis:
-            await self.redis.close()
-            self.redis = None
     
     async def enqueue(
         self,
@@ -252,24 +249,24 @@ class EmailQueue:
     
     async def get_queue_size(self) -> int:
         """Get number of emails in queue."""
-        await self.connect()
         return await self.redis.zcard(self.queue_key)
     
     async def get_processing_size(self) -> int:
         """Get number of emails being processed."""
-        await self.connect()
         return await self.redis.zcard(self.processing_key)
     
     async def get_completed_size(self) -> int:
         """Get number of completed emails."""
-        await self.connect()
         return await self.redis.zcard(self.completed_key)
     
     async def get_failed_size(self) -> int:
         """Get number of failed emails."""
-        await self.connect()
         return await self.redis.zcard(self.failed_key)
 
 
 # Create global queue instance
-email_queue = EmailQueue() 
+try:
+    email_queue = EmailQueue()
+except Exception as e:
+    logger.error("Failed to initialize global email_queue instance", error=str(e))
+    email_queue = None # Ensure it's None if init fails 

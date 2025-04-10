@@ -53,57 +53,57 @@ async def test_init_db(mock_create_pool):
 
 @pytest.mark.skip(reason="Requires rework: Patch target for DB interaction needs verification.")
 @patch('app.core.database.cache')
-@patch('app.core.database.db')
 @pytest.mark.asyncio
-async def test_cached_query_cache_miss(mock_db, mock_cache):
+async def test_cached_query_cache_miss(mock_cache):
     """Test cached query with cache miss."""
     # Setup
+    mock_pool = AsyncMock()
     query = "SELECT * FROM users"
     expected_result = [{"id": 1, "name": "Test User"}]
     key = hashlib.sha256(query.encode()).hexdigest()
     
     mock_cache.get = AsyncMock(return_value=None)
     mock_cache.set = AsyncMock()
-    mock_db.fetch = AsyncMock(return_value=expected_result)
+    mock_pool.fetch = AsyncMock(return_value=expected_result)
     
     # Execute
-    result = await cached_query(query)
+    result = await cached_query(mock_pool, query)
     
     # Verify
     mock_cache.get.assert_called_once_with(key)
-    mock_db.fetch.assert_called_once_with(query)
+    mock_pool.fetch.assert_called_once_with(query)
     mock_cache.set.assert_called_once_with(key, expected_result, ttl=300)
     assert result == expected_result
 
 
 @patch('app.core.database.cache')
-@patch('app.core.database.db')
 @pytest.mark.asyncio
-async def test_cached_query_cache_hit(mock_db, mock_cache):
+async def test_cached_query_cache_hit(mock_cache):
     """Test cached query with cache hit."""
     # Setup
+    mock_pool = AsyncMock()
     query = "SELECT * FROM users"
     expected_result = [{"id": 1, "name": "Test User"}]
     key = hashlib.sha256(query.encode()).hexdigest()
     
     mock_cache.get = AsyncMock(return_value=expected_result)
-    mock_db.fetch = AsyncMock()
+    mock_pool.fetch = AsyncMock()
     
     # Execute
-    result = await cached_query(query)
+    result = await cached_query(mock_pool, query)
     
     # Verify
     mock_cache.get.assert_called_once_with(key)
-    mock_db.fetch.assert_not_called()
+    mock_pool.fetch.assert_not_called()
     assert result == expected_result
 
 
 @patch('app.core.database.cache')
-@patch('app.core.database.db')
 @pytest.mark.asyncio
-async def test_cached_query_custom_ttl(mock_db, mock_cache):
+async def test_cached_query_custom_ttl(mock_cache):
     """Test cached query with custom TTL."""
     # Setup
+    mock_pool = AsyncMock()
     query = "SELECT * FROM users"
     expected_result = [{"id": 1, "name": "Test User"}]
     key = hashlib.sha256(query.encode()).hexdigest()
@@ -111,58 +111,58 @@ async def test_cached_query_custom_ttl(mock_db, mock_cache):
     
     mock_cache.get = AsyncMock(return_value=None)
     mock_cache.set = AsyncMock()
-    mock_db.fetch = AsyncMock(return_value=expected_result)
+    mock_pool.fetch = AsyncMock(return_value=expected_result)
     
     # Execute
-    result = await cached_query(query, ttl=custom_ttl)
+    result = await cached_query(mock_pool, query, ttl=custom_ttl)
     
     # Verify
     mock_cache.get.assert_called_once_with(key)
-    mock_db.fetch.assert_called_once_with(query)
+    mock_pool.fetch.assert_called_once_with(query)
     mock_cache.set.assert_called_once_with(key, expected_result, ttl=custom_ttl)
     assert result == expected_result
 
 
 @patch('app.core.database.cache')
-@patch('app.core.database.db')
 @pytest.mark.asyncio
-async def test_cached_query_db_error(mock_db, mock_cache):
+async def test_cached_query_db_error(mock_cache):
     """Test cached query with database error."""
     # Setup
+    mock_pool = AsyncMock()
     query = "SELECT * FROM users"
     key = hashlib.sha256(query.encode()).hexdigest()
     
     mock_cache.get = AsyncMock(return_value=None)
-    mock_db.fetch = AsyncMock(side_effect=Exception("Database error"))
+    mock_pool.fetch = AsyncMock(side_effect=Exception("Database error"))
     
     # Execute and verify exception is propagated
     with pytest.raises(Exception) as excinfo:
-        await cached_query(query)
+        await cached_query(mock_pool, query)
     
     # Verify
     assert "Database error" in str(excinfo.value)
     mock_cache.get.assert_called_once_with(key)
-    mock_db.fetch.assert_called_once_with(query)
+    mock_pool.fetch.assert_called_once_with(query)
 
 
 @patch('app.core.database.cache')
-@patch('app.core.database.db')
 @pytest.mark.asyncio
-async def test_cached_query_cache_error(mock_db, mock_cache):
+async def test_cached_query_cache_error(mock_cache):
     """Test cached query with cache error."""
     # Setup
+    mock_pool = AsyncMock()
     query = "SELECT * FROM users"
     expected_result = [{"id": 1, "name": "Test User"}]
     key = hashlib.sha256(query.encode()).hexdigest()
     
     mock_cache.get = AsyncMock(side_effect=Exception("Cache error"))
-    mock_db.fetch = AsyncMock(return_value=expected_result)
+    mock_pool.fetch = AsyncMock(return_value=expected_result)
     
     # Execute and verify exception is propagated
     with pytest.raises(Exception) as excinfo:
-        await cached_query(query)
+        await cached_query(mock_pool, query)
     
     # Verify
     assert "Cache error" in str(excinfo.value)
     mock_cache.get.assert_called_once_with(key)
-    mock_db.fetch.assert_not_called() 
+    mock_pool.fetch.assert_not_called() 

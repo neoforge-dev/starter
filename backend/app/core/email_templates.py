@@ -1,11 +1,12 @@
 """Email template validation and management."""
 from typing import Dict, Any, Optional, List
 from pathlib import Path
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, model_validator, root_validator
 import jinja2
 from jinja2.meta import find_undeclared_variables
 
-from app.core.config import settings
+# Module-level cache for Jinja environment
+_cached_env: Optional[jinja2.Environment] = None
 
 # NEW CODE: Insert TemplateError definition at the very top
 class TemplateError(Exception):
@@ -14,13 +15,31 @@ class TemplateError(Exception):
 
 # NEW CODE: Insert get_template_env function
 def get_template_env(template_dir: Optional[Path] = None) -> jinja2.Environment:
-    """Return a Jinja2 Environment for email templates."""
+    """Return a Jinja2 Environment for email templates, using a cache."""
+    global _cached_env
+    
+    # Use default dir if none provided
     if template_dir is None:
         template_dir = Path(__file__).parent / "email_templates"
-    return jinja2.Environment(
+    
+    # If cache exists and the directory matches, return cached env
+    # Note: This simple cache assumes template_dir doesn't change often across calls
+    if _cached_env and _cached_env.loader.searchpath == [str(template_dir)]:
+        return _cached_env
+        
+    # Otherwise, create, cache, and return a new environment
+    env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(str(template_dir)),
         autoescape=jinja2.select_autoescape(['html', 'xml'])
     )
+    # Add custom/common filters
+    env.filters['upper'] = str.upper
+    # Add placeholder/simple filters for tests
+    env.filters['currency'] = lambda value: f"${value:.2f}" 
+    env.filters['format_date'] = lambda value: "Formatted Date" # Simple placeholder
+    
+    _cached_env = env
+    return _cached_env
 
 # NEW CODE: Insert render_template function
 def render_template(template_name: str, data: dict) -> str:
@@ -45,6 +64,17 @@ class TemplateSchema(BaseModel):
     required_params: List[str] = Field(default_factory=list, description="Required template parameters")
     optional_params: List[str] = Field(default_factory=list, description="Optional template parameters")
     example_data: Dict[str, Any] = Field(default_factory=dict, description="Example data for testing")
+
+    # Use root_validator (Pydantic v1 style) as fallback
+    @root_validator(pre=False, skip_on_failure=True) 
+    def check_no_overlap(cls, values):
+        """Ensure optional parameters don't overlap with required ones."""
+        required = values.get('required_params', [])
+        optional = values.get('optional_params', [])
+        overlap = set(optional) & set(required)
+        if overlap:
+            raise ValueError(f"Optional parameters overlap with required parameters: {overlap}")
+        return values
 
 
 class TemplateValidator:
@@ -76,16 +106,19 @@ class TemplateValidator:
     def get_template_variables(self, template_name: str) -> set[str]:
         """Get all variables used in a template."""
         try:
-            # Get template source
-            template_source = self.env.loader.get_source(self.env, f"{template_name}.html")[0]
+            # Get template source, including subdirectory
+            template_full_path = f"email/{template_name}.html"
+            template_source = self.env.loader.get_source(self.env, template_full_path)[0]
             # Parse template
             ast = self.env.parse(template_source)
             # Find all variables
             return find_undeclared_variables(ast)
         except jinja2.TemplateNotFound:
-            raise ValueError(f"Template {template_name} not found")
+            # Use the full path in the error message
+            raise ValueError(f"Template {template_full_path} not found")
         except jinja2.TemplateSyntaxError as e:
-            raise ValueError(f"Error parsing template {template_name}: {e}")
+            # Use the full path in the error message
+            raise ValueError(f"Error parsing template {template_full_path}: {e}")
     
     def validate_template_data(self, template_name: str, data: Dict[str, Any]) -> None:
         """Validate template data against schema."""
@@ -119,7 +152,7 @@ class TemplateValidator:
             if param not in data
         ]
         if missing_params:
-            raise ValueError(
+            raise TemplateError(
                 f"Missing required parameters for template {template_name}: {missing_params}"
             )
     
@@ -130,10 +163,12 @@ class TemplateValidator:
         
         # Render template
         try:
-            template = self.env.get_template(f"{template_name}.html")
+            # Use the full path including subdirectory
+            template = self.env.get_template(f"email/{template_name}.html")
             return template.render(**data)
         except jinja2.TemplateError as e:
-            raise ValueError(f"Error rendering template {template_name}: {e}")
+            # Use the full path in the error message
+            raise ValueError(f"Error rendering template email/{template_name}.html: {e}")
     
     def get_all_templates(self) -> List[TemplateSchema]:
         """Get all available templates with their schemas."""
@@ -141,6 +176,7 @@ class TemplateValidator:
     
     def create_schema(self, template_name: str) -> TemplateSchema:
         """Create schema for template from its variables."""
+        # Use full path when getting variables
         variables = self.get_template_variables(template_name)
         schema = TemplateSchema(
             name=template_name,

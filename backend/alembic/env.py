@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-from app.core.config import settings
+from app.core.config import get_settings
 from app.db.base import Base
 
 # this is the Alembic Config object, which provides
@@ -25,7 +25,8 @@ target_metadata = Base.metadata
 
 def get_url():
     """Get database URL from settings."""
-    return str(settings.database_url_for_env).replace("postgresql+asyncpg", "postgresql")
+    current_settings = get_settings()
+    return str(current_settings.database_url_for_env).replace("postgresql+asyncpg", "postgresql")
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""

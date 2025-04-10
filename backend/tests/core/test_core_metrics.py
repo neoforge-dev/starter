@@ -1,19 +1,14 @@
 """Test core metrics functionality."""
 import pytest
 from prometheus_client import REGISTRY, CollectorRegistry
-from app.core.metrics import get_metrics
+from app.core.metrics import get_metrics, reset_metrics
 
 @pytest.fixture(autouse=True)
 def clear_registry():
-    """Clear Prometheus registry before each test."""
-    collectors = list(REGISTRY._collector_to_names.keys())
-    for collector in collectors:
-        REGISTRY.unregister(collector)
+    """Clear Prometheus registry and metrics cache before/after each test."""
+    reset_metrics()
     yield
-    # Clean up after test
-    collectors = list(REGISTRY._collector_to_names.keys())
-    for collector in collectors:
-        REGISTRY.unregister(collector)
+    reset_metrics()
 
 def test_initial_metrics_creation():
     """Test initial creation of metrics."""
@@ -72,4 +67,5 @@ def test_http_metrics_functionality():
     assert REGISTRY.get_sample_value("http_requests_total", labels_200) == 1.0
     # Note: Use _count and _sum suffixes for Histograms
     assert REGISTRY.get_sample_value("http_request_duration_seconds_count", duration_labels) == 2.0
-    assert REGISTRY.get_sample_value("http_request_duration_seconds_sum", duration_labels) == 0.3 
+    # Use pytest.approx for floating-point comparison
+    assert REGISTRY.get_sample_value("http_request_duration_seconds_sum", duration_labels) == pytest.approx(0.3) 

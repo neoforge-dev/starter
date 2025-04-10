@@ -9,7 +9,7 @@ from starlette.types import ASGIApp
 import structlog
 from pydantic import ValidationError, BaseModel, create_model
 from app.core.metrics import get_metrics
-from app.core.config import settings
+from app.core.config import Settings, get_settings
 
 logger = structlog.get_logger()
 
@@ -24,9 +24,10 @@ class ValidationErrorModel(create_model('ValidationErrorModel',
 class RequestValidationMiddleware(BaseHTTPMiddleware):
     """Middleware for validating requests."""
     
-    def __init__(self, app: ASGIApp):
+    def __init__(self, app: ASGIApp, settings: Settings):
         """Initialize middleware."""
         super().__init__(app)
+        self.settings = settings
         # Initialize metrics at middleware startup
         self.metrics = get_metrics()
         # Define required headers
@@ -38,10 +39,10 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         self.public_endpoints = {
             "/health",
             "/health/detailed",
-            f"{settings.api_v1_str}/auth/token",
-            f"{settings.api_v1_str}/auth/register",
-            f"{settings.api_v1_str}/auth/verify",
-            f"{settings.api_v1_str}/auth/reset-password",
+            f"{self.settings.api_v1_str}/auth/token",
+            f"{self.settings.api_v1_str}/auth/register",
+            f"{self.settings.api_v1_str}/auth/verify",
+            f"{self.settings.api_v1_str}/auth/reset-password",
         }
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
@@ -71,7 +72,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 return response
 
             # For API endpoints, validate request body first
-            if endpoint.startswith(settings.api_v1_str):
+            if endpoint.startswith(self.settings.api_v1_str):
                 # Validate request headers
                 validation_error = await self._validate_headers(request)
                 if validation_error:
@@ -137,8 +138,8 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                     "level": "error",
                     "logger": logger.name,
                     "timestamp": time.time(),
-                    "environment": settings.environment,
-                    "app_version": settings.version,
+                    "environment": self.settings.environment,
+                    "app_version": self.settings.version,
                 })
             )
             return JSONResponse(
@@ -194,6 +195,10 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 
 def setup_validation_middleware(app: FastAPI) -> None:
     """Set up validation middleware."""
-    app.add_middleware(RequestValidationMiddleware)
+    # NOTE: This setup function might become obsolete if main.py uses the consolidated setup_middleware.
+    # It should NOT fetch settings here; the caller (setup_middleware) should do that.
+    # For now, leave it as is, but ensure it's not the primary setup path.
+    current_settings = get_settings() # Fetch settings temporarily for standalone use potential
+    app.add_middleware(RequestValidationMiddleware, settings=current_settings)
     
     logger.info("request_validation_middleware_configured") 

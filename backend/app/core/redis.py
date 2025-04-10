@@ -9,7 +9,7 @@ from redis.exceptions import ConnectionError, TimeoutError
 import structlog
 from prometheus_client import Counter, Histogram
 
-from app.core.config import settings
+from app.core.config import Settings, get_settings
 from app.core.metrics import get_metrics
 
 logger = structlog.get_logger()
@@ -35,16 +35,19 @@ retry_strategy = Retry(
     3,  # Maximum 3 retries
 )
 
+# Get settings instance once
+current_settings = get_settings()
+
 # Create an optimized connection pool
 pool = BlockingConnectionPool.from_url(
-    settings.redis_url,
+    current_settings.redis_url,
     decode_responses=True,
-    max_connections=20 if not settings.testing else 5,  # Fewer connections for testing
-    timeout=20 if not settings.testing else 5,  # Shorter timeout for testing
-    retry_on_timeout=True,  # Retry on timeout
-    retry_on_error=[ConnectionError, TimeoutError],  # Retry on these errors
-    retry=retry_strategy,  # Use our retry strategy
-    health_check_interval=30 if not settings.testing else 5,  # More frequent health checks in testing
+    max_connections=20 if not current_settings.testing else 5,
+    timeout=20 if not current_settings.testing else 5,
+    retry_on_timeout=True,
+    retry_on_error=[ConnectionError, TimeoutError],
+    retry=retry_strategy,
+    health_check_interval=30 if not current_settings.testing else 5,
 )
 
 # Create a global Redis client with monitoring
@@ -95,7 +98,9 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
         yield redis_client
     except Exception as e:
         logger.error("redis_connection_error", error=str(e))
-        if not settings.testing:  # Don't raise in test environment
+        # Fetch settings inside the function for conditional logic
+        s = get_settings()
+        if not s.testing: # Use fetched settings
             raise
 
 

@@ -5,10 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import AsyncAdaptedQueuePool, NullPool
 
-from app.core.config import settings
+from app.core.config import Settings, get_settings
 from app.db.base_class import Base
 
-def get_engine_args() -> Dict[str, Any]:
+def get_engine_args(settings: Settings) -> Dict[str, Any]:
     """Get database engine arguments based on environment."""
     common_args = {
         "echo": settings.debug,
@@ -53,10 +53,13 @@ def get_engine_args() -> Dict[str, Any]:
 
     return common_args
 
+# Get settings instance once
+current_settings = get_settings()
+
 # Create async engine with timezone support and optimized pooling
 engine = create_async_engine(
-    settings.database_url_for_env,
-    **get_engine_args(),
+    current_settings.database_url_for_env,
+    **get_engine_args(current_settings),
 )
 
 # Create async session factory with optimized settings

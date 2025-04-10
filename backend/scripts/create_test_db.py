@@ -7,7 +7,7 @@ import asyncpg
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 
-from app.core.config import settings
+from app.core.config import get_settings
 
 
 async def create_database() -> None:
@@ -67,8 +67,9 @@ async def drop_database() -> None:
 
 async def create_tables() -> None:
     """Create all tables in test database."""
+    current_settings = get_settings()
     # Create async engine for test database
-    engine = create_async_engine(settings.database_url_for_env)
+    engine = create_async_engine(current_settings.database_url_for_env)
     
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)

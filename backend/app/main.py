@@ -18,7 +18,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
-from app.core.config import settings
+from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.session import get_db, engine
 from app.db.base import Base
@@ -27,13 +27,13 @@ from app.api.v1.api import api_router
 from app.api.endpoints import metrics
 from app.worker.email_worker import email_worker
 from app.core.queue import EmailQueue
-from app.api.middleware import setup_security_middleware, setup_validation_middleware
+from app.api.middleware import setup_middleware
 from app.core.metrics import get_metrics
 from app.schemas.user import UserResponse
 from app.api import deps
 
 # Set up structured logging
-setup_logging(settings.model_dump())
+setup_logging(get_settings().model_dump())
 logger = structlog.get_logger()
 
 class HealthCheck(BaseModel):
@@ -91,7 +91,6 @@ async def lifespan(app: FastAPI):
     
     # Initialize email queue
     email_queue = EmailQueue(redis=redis_client)
-    await email_queue.connect()
     
     # Initialize and start email worker
     email_worker.queue = email_queue
@@ -99,15 +98,14 @@ async def lifespan(app: FastAPI):
     
     logger.info(
         "application_startup",
-        environment=settings.environment,
-        debug=settings.debug,
+        environment=get_settings().environment,
+        debug=get_settings().debug,
     )
     
     yield
     
     # Cleanup
     email_worker.stop()
-    await email_queue.disconnect()
     await close_redis()
     
     logger.info("application_shutdown")
@@ -118,8 +116,8 @@ def custom_openapi():
         return app.openapi_schema
     
     openapi_schema = get_openapi(
-        title=settings.app_name,
-        version=settings.version,
+        title=get_settings().app_name,
+        version=get_settings().version,
         description=__doc__,
         routes=app.routes,
     )
@@ -133,41 +131,40 @@ def custom_openapi():
     return app.openapi_schema
 
 app = FastAPI(
-    title=settings.app_name,
-    version=settings.version,
+    title=get_settings().app_name,
+    version=get_settings().version,
     description=__doc__,
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
-    openapi_url="/api/openapi.json" if settings.environment != "production" else None,
+    openapi_url="/api/openapi.json" if get_settings().environment != "production" else None,
 )
 
 # Override the default OpenAPI schema
 app.openapi = custom_openapi
 
 # Set up CORS first
-if settings.cors_origins:
+if get_settings().cors_origins:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.cors_origins],
+        allow_origins=[str(origin) for origin in get_settings().cors_origins],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
 # Set up security middleware before validation
-setup_security_middleware(app)
-setup_validation_middleware(app)
+setup_middleware(app)
 
 # Add API router
-app.include_router(api_router, prefix=settings.api_v1_str)
+app.include_router(api_router, prefix=get_settings().api_v1_str)
 
 # Add metrics endpoint
 app.include_router(metrics.router, tags=["monitoring"])
 
 # Add a router specifically for testing dependencies
 # This should ideally only be active in test environments
-if settings.environment == "test":
+if get_settings().environment == "test":
     test_deps_router = APIRouter()
     
     @test_deps_router.get("/test-deps/current-user", response_model=UserResponse, tags=["test_dependencies"])
@@ -184,7 +181,7 @@ async def custom_swagger_ui_html():
     """Custom Swagger UI."""
     return get_swagger_ui_html(
         openapi_url=app.openapi_url,
-        title=f"{settings.app_name} - API Documentation",
+        title=f"{get_settings().app_name} - API Documentation",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
         swagger_js_url="/static/swagger-ui-bundle.js",
         swagger_css_url="/static/swagger-ui.css",
@@ -209,7 +206,7 @@ async def health_check(
     overall_status = "healthy" if db_status == "healthy" and redis_status == "healthy" else "unhealthy"
     return HealthCheck(
         status=overall_status,
-        version=settings.version,
+        version=get_settings().version,
         database_status=db_status,
         redis_status=redis_status
     )
@@ -243,10 +240,14 @@ async def detailed_health_check(
     overall_status = "healthy" if db_status == "healthy" and redis_status == "healthy" else "unhealthy"
     return DetailedHealthCheck(
         status=overall_status,
-        version=settings.version,
+        version=get_settings().version,
         database_status=db_status,
         redis_status=redis_status,
         database_latency_ms=round(db_latency, 2),
         redis_latency_ms=round(redis_latency, 2),
-        environment=settings.environment,
+        environment=get_settings().environment,
     ) 
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info") 

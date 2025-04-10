@@ -12,7 +12,6 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
-from app.core.config import settings
 from app.crud import email_tracking
 from app.db.session import get_db
 from app.core.redis import get_redis

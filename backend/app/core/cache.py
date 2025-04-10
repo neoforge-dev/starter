@@ -11,8 +11,6 @@ from redis.asyncio import Redis
 import structlog
 from prometheus_client import Counter, Histogram
 
-from app.core.config import settings
-
 logger = structlog.get_logger()
 
 # Type variables for generic caching

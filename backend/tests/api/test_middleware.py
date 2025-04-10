@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from httpx import AsyncClient, ASGITransport
 from redis.asyncio import Redis
 
-from app.core.config import settings
+from app.core.config import Settings
 from app.api.middleware.security import SecurityHeadersMiddleware
 from app.api.middleware.validation import RequestValidationMiddleware
 from app.api.middleware.rate_limit import RateLimitMiddleware
@@ -23,9 +23,9 @@ pytestmark = pytest.mark.asyncio
 
 
 @pytest.fixture
-async def redis() -> AsyncGenerator[Redis, None]:
+async def redis(test_settings: Settings) -> AsyncGenerator[Redis, None]:
     """Create Redis client for testing."""
-    client = Redis.from_url(settings.redis_url)
+    client = Redis.from_url(test_settings.redis_url)
     try:
         # Clear Redis before each test
         await client.flushdb()
@@ -55,7 +55,7 @@ def app_with_middleware() -> FastAPI:
 
 
 @pytest.fixture
-def valid_jwt_token() -> str:
+def valid_jwt_token(test_settings: Settings) -> str:
     """Generate a valid JWT token for testing."""
     payload = {
         "sub": "test-client",
@@ -63,8 +63,8 @@ def valid_jwt_token() -> str:
     }
     return jwt.encode(
         payload, 
-        settings.secret_key.get_secret_value(),
-        algorithm=settings.algorithm
+        test_settings.secret_key.get_secret_value(),
+        algorithm=test_settings.algorithm
     )
 
 
@@ -83,30 +83,33 @@ async def test_error_handler_middleware(client: AsyncClient):
 async def test_rate_limit_middleware_unauthenticated(
     app_with_middleware: FastAPI,
     redis: Redis,
+    test_settings: Settings,
 ):
     """Test rate limiting for unauthenticated requests."""
-    # Set lower rate limit for testing
-    settings.rate_limit_requests = 5
-    settings.rate_limit_window = 60
+    # Create custom settings with override
+    custom_settings = test_settings.model_copy(update={
+        "rate_limit_requests": 5,
+        "rate_limit_window": 60
+    })
 
     # Clear Redis before test
     await redis.flushdb()
 
-    # Add middleware with Redis client
-    app_with_middleware.add_middleware(RateLimitMiddleware, redis_client=redis)
+    # Add middleware with Redis client and custom settings
+    app_with_middleware.add_middleware(RateLimitMiddleware, settings=custom_settings, redis_client=redis)
 
     # Create a new client using ASGITransport
     transport = ASGITransport(app=app_with_middleware)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Make requests up to the limit
-        for i in range(settings.rate_limit_requests):
+        for i in range(custom_settings.rate_limit_requests):
             response = await client.get("/test")
             assert response.status_code == 200, f"Request {i+1} failed unexpectedly"
 
             # Verify rate limit headers are present on each request
             assert "X-RateLimit-Limit" in response.headers
             assert "X-RateLimit-Remaining" in response.headers
-            assert int(response.headers["X-RateLimit-Remaining"]) == settings.rate_limit_requests - (i + 1)
+            assert int(response.headers["X-RateLimit-Remaining"]) == custom_settings.rate_limit_requests - (i + 1)
 
         # Wait a short time to ensure Redis has processed everything
         await asyncio.sleep(0.1)
@@ -132,8 +135,8 @@ async def test_rate_limit_middleware_authenticated(
     valid_jwt_token: str  # Add fixture for valid token
 ):
     """Test authenticated requests bypass rate limits."""
-    # Set up middleware with Redis
-    app_with_middleware.add_middleware(RateLimitMiddleware, redis_client=redis)
+    # Use default test_settings here, as rate limits for authenticated aren't explicitly tested for override
+    app_with_middleware.add_middleware(RateLimitMiddleware, settings=test_settings, redis_client=redis)
     
     transport = ASGITransport(app=app_with_middleware)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -153,23 +156,26 @@ async def test_rate_limit_middleware_authenticated(
 async def test_rate_limit_middleware_ip_based(
     app_with_middleware: FastAPI,
     redis: Redis,
+    test_settings: Settings,
 ):
     """Test IP-based rate limiting."""
-    # Set lower rate limit for testing
-    settings.rate_limit_requests = 5
-    settings.rate_limit_window = 60
+    # Create custom settings with override
+    custom_settings = test_settings.model_copy(update={
+        "rate_limit_requests": 5,
+        "rate_limit_window": 60
+    })
 
     # Clear Redis before test
     await redis.flushdb()
 
-    # Add middleware with Redis client
-    app_with_middleware.add_middleware(RateLimitMiddleware, redis_client=redis)
+    # Add middleware with Redis client and custom settings
+    app_with_middleware.add_middleware(RateLimitMiddleware, settings=custom_settings, redis_client=redis)
     
     # Create a new AsyncClient after adding middleware and route
     transport = ASGITransport(app=app_with_middleware)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Make requests up to the limit
-        for _ in range(settings.rate_limit_requests):
+        for _ in range(custom_settings.rate_limit_requests):
             response = await client.get("/test")
             assert response.status_code == 200
 
@@ -180,23 +186,25 @@ async def test_rate_limit_middleware_ip_based(
 
 
 @pytest.mark.slow
-async def test_rate_limit_window_reset(app_with_middleware: FastAPI, redis: Redis):
+async def test_rate_limit_window_reset(app_with_middleware: FastAPI, redis: Redis, test_settings: Settings):
     """Test rate limit window reset."""
-    # Set lower rate limit for testing
-    settings.rate_limit_requests = 5
-    settings.rate_limit_window = 1  # 1 second window for faster test
+    # Create custom settings with override
+    custom_settings = test_settings.model_copy(update={
+        "rate_limit_requests": 5,
+        "rate_limit_window": 1 # 1 second window for faster test
+    })
 
     # Clear Redis before test
     await redis.flushdb()
 
-    # Add middleware with Redis client
-    app_with_middleware.add_middleware(RateLimitMiddleware, redis_client=redis)
+    # Add middleware with Redis client and custom settings
+    app_with_middleware.add_middleware(RateLimitMiddleware, settings=custom_settings, redis_client=redis)
 
     # Create a new AsyncClient after adding middleware and route
     transport = ASGITransport(app=app_with_middleware)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Make requests up to the rate limit
-        for _ in range(settings.rate_limit_requests):
+        for _ in range(custom_settings.rate_limit_requests):
             response = await client.get("/test")
             assert response.status_code == 200
 
@@ -205,7 +213,7 @@ async def test_rate_limit_window_reset(app_with_middleware: FastAPI, redis: Redi
         assert response.status_code == 429
 
         # Wait for the rate limit window to reset
-        await asyncio.sleep(settings.rate_limit_window)
+        await asyncio.sleep(custom_settings.rate_limit_window)
 
         # After the window reset, request should be accepted
         response = await client.get("/test")
@@ -219,35 +227,39 @@ async def test_rate_limit_bypass_health_check(
     app_with_middleware: FastAPI,
     client: AsyncClient,
     redis: Redis,
+    test_settings: Settings,
 ):
     """Test that health check endpoints bypass rate limiting."""
-    # Add middleware with Redis client
-    app_with_middleware.add_middleware(RateLimitMiddleware, redis_client=redis)
+    # Add middleware with Redis client and default test settings
+    app_with_middleware.add_middleware(RateLimitMiddleware, settings=test_settings, redis_client=redis)
     
     # Make many requests to health check
-    for _ in range(settings.rate_limit_requests * 2):
+    # Use a fixed number instead of relying on potentially modified settings
+    for _ in range(10): # Make 10 requests
         response = await client.get("/health")
         assert response.status_code == 200
 
 
-async def test_rate_limit_middleware_invalid_token(app_with_middleware: FastAPI, redis: Redis):
+async def test_rate_limit_middleware_invalid_token(app_with_middleware: FastAPI, redis: Redis, test_settings: Settings):
     """Test rate limiting with invalid JWT token."""
-    # Set lower rate limit for testing
-    settings.rate_limit_requests = 5
-    settings.rate_limit_window = 60
+    # Create custom settings with override
+    custom_settings = test_settings.model_copy(update={
+        "rate_limit_requests": 5,
+        "rate_limit_window": 60
+    })
 
     # Clear Redis before test
     await redis.flushdb()
 
-    # Add middleware with Redis client
-    app_with_middleware.add_middleware(RateLimitMiddleware, redis_client=redis)
+    # Add middleware with Redis client and custom settings
+    app_with_middleware.add_middleware(RateLimitMiddleware, settings=custom_settings, redis_client=redis)
 
     # Create a new AsyncClient after adding middleware and route
     transport = ASGITransport(app=app_with_middleware)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         headers = {"Authorization": "Bearer invalid.token.here"}
         # Should fall back to unauthenticated rate limit
-        for _ in range(settings.rate_limit_requests):
+        for _ in range(custom_settings.rate_limit_requests):
             response = await client.get("/test", headers=headers)
             assert response.status_code == 200
         response = await client.get("/test", headers=headers)

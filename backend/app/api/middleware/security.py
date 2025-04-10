@@ -6,16 +6,17 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 import structlog
 
-from app.core.config import settings
+from app.core.config import Settings, get_settings
 
 logger = structlog.get_logger()
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Middleware for adding security headers to responses."""
     
-    def __init__(self, app: ASGIApp):
+    def __init__(self, app: ASGIApp, settings: Settings):
         """Initialize middleware."""
         super().__init__(app)
+        self.settings = settings
         
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Add security headers to response."""
@@ -44,7 +45,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "style-src": ["'self'", "'unsafe-inline'"],
             "img-src": ["'self'", "data:", "https:"],
             "font-src": ["'self'", "https:", "data:"],
-            "connect-src": ["'self'"] + settings.cors_origins,
+            "connect-src": ["'self'"] + self.settings.cors_origins,
             "frame-ancestors": ["'none'"],
             "form-action": ["'self'"],
             "base-uri": ["'self'"],
@@ -59,10 +60,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 def setup_security_middleware(app: FastAPI) -> None:
     """Set up security middleware for the application."""
+    # NOTE: This setup function is likely obsolete now that main.py uses the consolidated setup_middleware.
+    # The logic here should be integrated into app.api.middleware.setup_middleware.
+    current_settings = get_settings() # Fetch settings temporarily for standalone use potential
+    
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
+        allow_origins=current_settings.cors_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         allow_headers=[
@@ -82,9 +87,9 @@ def setup_security_middleware(app: FastAPI) -> None:
     )
     
     # Add security headers middleware
-    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware, settings=current_settings)
     
     logger.info(
         "security_middleware_configured",
-        cors_origins=settings.cors_origins,
+        cors_origins=current_settings.cors_origins,
     ) 

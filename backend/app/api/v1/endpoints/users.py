@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models
 from app.api import deps
-from app.core.config import settings
 from app.schemas.user import UserResponse, UserCreate, UserUpdate
 from app.schemas.item import Item
 from app.models.item import Item as ItemModel

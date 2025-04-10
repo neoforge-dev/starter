@@ -12,7 +12,7 @@ from sqlalchemy.pool import NullPool, QueuePool
 from sqlalchemy import text, select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.core.config import settings
+from app.core.config import Settings
 from app.db.session import get_db, AsyncSessionLocal
 from app.db.base import Base
 from app.models.user import User
@@ -20,11 +20,11 @@ from app.models.user import User
 pytestmark = pytest.mark.asyncio
 
 @pytest.fixture(scope="function")
-async def test_engine() -> AsyncGenerator[AsyncEngine, None]:
+async def test_engine(test_settings: Settings) -> AsyncGenerator[AsyncEngine, None]:
     """Create test database engine."""
     engine = create_async_engine(
-        settings.database_url_for_env,
-        echo=settings.debug,
+        test_settings.database_url_for_env,
+        echo=test_settings.debug,
         future=True,
         poolclass=NullPool,
     )
@@ -49,15 +49,15 @@ async def test_session_factory(test_engine: AsyncEngine) -> async_sessionmaker:
         autoflush=False
     )
 
-async def test_engine_configuration():
+async def test_engine_configuration(test_settings: Settings):
     """Test database engine configuration."""
     engine = create_async_engine(
-        settings.database_url_for_env,
-        echo=settings.debug,
+        test_settings.database_url_for_env,
+        echo=test_settings.debug,
         poolclass=NullPool,
     )
     assert engine.dialect.name == "postgresql"
-    assert engine.echo == settings.debug
+    assert engine.echo == test_settings.debug
 
 async def test_session_factory_configuration(test_engine: AsyncEngine):
     """Test session factory configuration."""
@@ -164,12 +164,12 @@ async def test_session_concurrent_access(test_session_factory: async_sessionmake
         worker(i) for i in range(5)
     ])
 
-async def test_session_pool_behavior():
+async def test_session_pool_behavior(test_settings: Settings):
     """Test session pool behavior."""
     # Create engine with connection pool
     engine = create_async_engine(
-        settings.database_url_for_env,
-        echo=settings.debug,
+        test_settings.database_url_for_env,
+        echo=test_settings.debug,
         future=True,
         poolclass=QueuePool,
         pool_size=5,

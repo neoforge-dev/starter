@@ -110,28 +110,40 @@ async def test_connect_disconnect(email_queue_instance, mock_redis):
 @pytest.mark.asyncio
 async def test_enqueue(email_queue_instance, mock_redis, sample_email_item):
     """Test enqueuing an email."""
-    # Mock UUID generation for consistent testing
-    with patch('uuid.UUID') as mock_uuid:
-        mock_uuid.return_value = uuid.UUID('12345678-1234-5678-1234-567812345678')
-        
+    # Define a fixed timestamp
+    fixed_time = datetime(2024, 1, 1, 12, 0, 0)
+    expected_ts_int = int(fixed_time.timestamp() * 1000000)
+    expected_uuid = str(uuid.UUID(int=expected_ts_int))
+    
+    # Mock datetime.now() used for ID generation and timestamping
+    with patch('app.core.queue.datetime') as mock_dt:
+        mock_dt.now.return_value = fixed_time
+        mock_dt.timestamp.side_effect = lambda: fixed_time.timestamp() # Ensure timestamp() method works
+
         # Enqueue email
         email_id = await email_queue_instance.enqueue(sample_email_item)
-        
-        # Verify email ID
-        assert email_id == '12345678-1234-5678-1234-567812345678'
+    
+        # Verify email ID uses the fixed time
+        assert email_id == expected_uuid 
         
         # Verify Redis calls
+        # Check hset call (data storage)
         mock_redis.hset.assert_called_once()
-        mock_redis.zadd.assert_called_once()
+        hset_args = mock_redis.hset.call_args[0]
+        assert hset_args[0] == email_queue_instance.email_data_key # Check key name
+        assert hset_args[1] == email_id # Check email ID
+        # Decode the stored JSON data to verify content
+        stored_data = json.loads(hset_args[2])
+        assert stored_data['id'] == email_id
+        assert stored_data['subject'] == sample_email_item.subject
+        assert stored_data['status'] == 'queued'
+        assert stored_data['created_at'] == fixed_time.isoformat() # Check timestamp
         
-        # Verify email data was stored
-        call_args = mock_redis.hset.call_args[0]
-        assert call_args[0] == "email:data"
-        assert call_args[1] == email_id
-        
-        # Verify email was added to queue
-        call_args = mock_redis.zadd.call_args[0]
-        assert call_args[0] == "email:queue"
+        # Check zadd call (queue ordering)
+        mock_redis.zadd.assert_called_once_with(
+            email_queue_instance.queue_key, 
+            {email_id: fixed_time.timestamp()}
+        )
 
 
 @pytest.mark.asyncio

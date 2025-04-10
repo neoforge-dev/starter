@@ -1,9 +1,9 @@
 """Celery configuration module."""
 from celery import Celery
-from app.core.config import settings
+from app.core.config import Settings, get_settings
 from datetime import timedelta
 
-def create_celery_app() -> Celery:
+def create_celery_app(settings: Settings) -> Celery:
     """Create and configure the Celery application instance."""
     celery = Celery(
         "neoforge",
@@ -35,5 +35,8 @@ def create_celery_app() -> Celery:
     )
     return celery
 
+# Get settings instance once
+current_settings = get_settings()
+
 # Create the app instance using the factory
-celery_app = create_celery_app() 
+celery_app = create_celery_app(current_settings) 

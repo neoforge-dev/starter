@@ -8,7 +8,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.db.base_class import Base
 from app.db.types import TZDateTime, UTCDateTime
-from app.core.config import settings
+from app.core.config import Settings
 
 pytestmark = pytest.mark.asyncio
 
@@ -22,9 +22,9 @@ class TestModel(Base):
     utc_datetime = Column(UTCDateTime)
 
 @pytest.fixture(scope="function")
-async def test_session() -> AsyncSession:
+async def test_session(test_settings: Settings) -> AsyncSession:
     """Create a test database session."""
-    engine = create_async_engine(settings.database_url_for_env)
+    engine = create_async_engine(test_settings.database_url_for_env)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     

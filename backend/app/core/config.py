@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     database_url_for_env: str = Field(default="postgresql+asyncpg://postgres:postgres@db:5432/app", env="DATABASE_URL")
     debug: bool = Field(default=False, env="DEBUG")
     testing: bool = Field(default=False, env="TESTING")
-    redis_url: str = Field(default="redis://redis:6379/0", env="REDIS_URL")
+    redis_url: RedisDsn = Field(default="redis://redis:6379/0", env="REDIS_URL")
     environment: Environment = Field(default=Environment.DEVELOPMENT, env="ENVIRONMENT")
     cors_origins: List[str] = Field(default=["http://localhost:3000"], env="CORS_ORIGINS")
     access_token_expire_minutes: int = Field(default=10080, env="ACCESS_TOKEN_EXPIRE_MINUTES")  # 7 days
@@ -186,6 +186,4 @@ def get_settings() -> Settings:
     except ValidationError as e:
         # Log error details during startup if validation fails
         print(f"ERROR: Settings validation failed: {e}")
-        raise
-
-settings = Settings() 
+        raise 

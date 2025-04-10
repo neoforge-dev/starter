@@ -9,7 +9,7 @@ from starlette.datastructures import URL, Headers
 from starlette.responses import JSONResponse
 from unittest.mock import patch, MagicMock, AsyncMock
 from app.api.middleware.validation import RequestValidationMiddleware
-from app.core.config import settings
+from app.core.config import Settings # Changed import
 # from tests.conftest import Settings # Comment out if client is removed
 from fastapi.testclient import TestClient
 from app.main import app
@@ -79,7 +79,7 @@ def create_mock_request(method: str, path: str, headers: dict, body: bytes = b''
     return mock_req
 
 @pytest.fixture(scope="module")
-def validation_middleware() -> RequestValidationMiddleware:
+def validation_middleware(test_settings: Settings) -> RequestValidationMiddleware: # Add test_settings
     # Instantiate the middleware once for the module
     # Patch 'get_metrics' if it's called during __init__ and requires setup
     with patch("app.api.middleware.validation.get_metrics") as mock_get_metrics:
@@ -89,13 +89,14 @@ def validation_middleware() -> RequestValidationMiddleware:
             "http_requests": MagicMock()
         }
         mock_get_metrics.return_value = mock_metrics_instance
-        middleware = RequestValidationMiddleware(app=None) # app isn't strictly needed for dispatch test
+        # Pass test_settings to middleware constructor
+        middleware = RequestValidationMiddleware(app=None, settings=test_settings)
     return middleware
 
 @pytest.mark.asyncio
-async def test_validation_content_type(validation_middleware: RequestValidationMiddleware):
+async def test_validation_content_type(validation_middleware: RequestValidationMiddleware, test_settings: Settings): # Add test_settings
     """Test middleware Content-Type enforcement via direct dispatch call."""
-    path = f"{settings.api_v1_str}/test"
+    path = f"{test_settings.api_v1_str}/test" # Use test_settings
 
     # Test POST with incorrect content-type
     headers_incorrect = {
@@ -128,9 +129,9 @@ async def test_validation_content_type(validation_middleware: RequestValidationM
     assert response.status_code == 200 # From dummy_call_next
 
 @pytest.mark.asyncio
-async def test_validation_content_length(validation_middleware: RequestValidationMiddleware):
+async def test_validation_content_length(validation_middleware: RequestValidationMiddleware, test_settings: Settings): # Add test_settings
     """Test Content-Length validation via direct dispatch call."""
-    path = f"{settings.api_v1_str}/test"
+    path = f"{test_settings.api_v1_str}/test" # Use test_settings
     base_headers = {
         "Accept": "application/json",
         "User-Agent": "test-client",
@@ -160,9 +161,9 @@ async def test_validation_content_length(validation_middleware: RequestValidatio
     assert json.loads(response.body) == {"detail": "Invalid Content-Length header"}
 
 @pytest.mark.asyncio
-async def test_validation_required_headers(validation_middleware: RequestValidationMiddleware):
+async def test_validation_required_headers(validation_middleware: RequestValidationMiddleware, test_settings: Settings): # Add test_settings
     """Test required headers validation via direct dispatch call."""
-    path = f"{settings.api_v1_str}/test"
+    path = f"{test_settings.api_v1_str}/test" # Use test_settings
     json_body = {"title": "Test", "description": "Desc"}
     body_bytes = json.dumps(json_body).encode('utf-8')
     content_length = str(len(body_bytes))
@@ -196,7 +197,7 @@ async def test_validation_required_headers(validation_middleware: RequestValidat
     assert detail in ["Accept header is required", "User-Agent header is required"]
 
 @pytest.mark.asyncio
-async def test_validation_public_endpoints(validation_middleware: RequestValidationMiddleware):
+async def test_validation_public_endpoints(validation_middleware: RequestValidationMiddleware, test_settings: Settings): # Add test_settings
     """Test that public endpoints skip validation checks via direct dispatch call."""
     # Health endpoint (GET)
     health_path = "/health"
@@ -206,7 +207,7 @@ async def test_validation_public_endpoints(validation_middleware: RequestValidat
     assert response.status_code == 200 # Should call next, not 400
 
     # Auth token endpoint (POST)
-    auth_path = f"{settings.api_v1_str}/auth/token"
+    auth_path = f"{test_settings.api_v1_str}/auth/token" # Use test_settings
     headers_auth = { # Missing required headers, wrong content-type, missing length
          "Content-Type": "text/plain" 
     }
@@ -215,9 +216,9 @@ async def test_validation_public_endpoints(validation_middleware: RequestValidat
     assert response.status_code == 200 # Should call next, not 4xx
 
 @pytest.mark.asyncio
-async def test_validation_error_handling(validation_middleware: RequestValidationMiddleware):
+async def test_validation_error_handling(validation_middleware: RequestValidationMiddleware, test_settings: Settings): # Add test_settings
     """Test validation middleware general error handling via direct dispatch call."""
-    path = f"{settings.api_v1_str}/test"
+    path = f"{test_settings.api_v1_str}/test" # Use test_settings
     headers = {
         "Accept": "application/json",
         "User-Agent": "test-client",

@@ -17,10 +17,10 @@ async def init_db():
 
 cache = Cache(Cache.REDIS, endpoint="redis://localhost")
 
-async def cached_query(query: str, ttl: int = 300):
+async def cached_query(pool, query: str, ttl: int = 300):
     key = hashlib.sha256(query.encode()).hexdigest()
     result = await cache.get(key)
     if not result:
-        result = await db.fetch(query)
+        result = await pool.fetch(query)
         await cache.set(key, result, ttl=ttl)
     return result 

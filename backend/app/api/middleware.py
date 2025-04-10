@@ -9,9 +9,14 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from redis.asyncio import Redis
 import structlog
 import jwt
+# Import security middleware components
+from .security import SecurityHeadersMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import settings
+from app.core.config import Settings, get_settings
 from app.core.redis import get_redis
+# Import validation middleware
+from .validation import RequestValidationMiddleware
 
 logger = structlog.get_logger()
 
@@ -88,9 +93,10 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Middleware for rate limiting requests."""
     
-    def __init__(self, app: FastAPI, redis_client: Optional[Redis] = None):
+    def __init__(self, app: FastAPI, settings: Settings, redis_client: Optional[Redis] = None):
         """Initialize middleware."""
         super().__init__(app)
+        self.settings = settings
         self.redis: Optional[Redis] = redis_client
     
     async def _get_redis(self) -> Redis:
@@ -109,8 +115,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         try:
             payload = jwt.decode(
                 token,
-                settings.secret_key,
-                algorithms=[settings.algorithm]
+                self.settings.secret_key.get_secret_value(),
+                algorithms=[self.settings.algorithm]
             )
             return str(payload.get("sub"))
         except jwt.InvalidTokenError:
@@ -121,10 +127,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Base key includes the path to separate limits by endpoint
         base_key = f"ratelimit:{request.url.path}"
         
-        if user_id and settings.rate_limit_by_key:
+        if user_id and self.settings.rate_limit_by_key:
             # Use user ID if available and rate_limit_by_key is enabled
             return f"{base_key}:user:{user_id}"
-        elif settings.rate_limit_by_ip:
+        elif self.settings.rate_limit_by_ip:
             # Fall back to IP-based limiting if enabled
             return f"{base_key}:ip:{client_ip}"
         else:
@@ -170,9 +176,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         
         # Get appropriate rate limit based on authentication
         rate_limit = (
-            settings.rate_limit_auth_requests
+            self.settings.rate_limit_auth_requests
             if user_id
-            else settings.rate_limit_requests
+            else self.settings.rate_limit_requests
         )
         
         # Get rate limit key
@@ -184,7 +190,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             
             # Increment request count and set expiry
             pipe.incr(key)
-            pipe.expire(key, settings.rate_limit_window)
+            pipe.expire(key, self.settings.rate_limit_window)
             
             # Execute pipeline
             results = await pipe.execute()
@@ -195,7 +201,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 key=key,
                 count=request_count,
                 limit=rate_limit,
-                window_start=int(time.time()) - settings.rate_limit_window,
+                window_start=int(time.time()) - self.settings.rate_limit_window,
                 now=int(time.time()),
             )
             
@@ -221,9 +227,46 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
 def setup_middleware(app: FastAPI) -> None:
     """Set up all middleware for the application."""
-    # Add error handling middleware
+    current_settings = get_settings() # Fetch settings once
+    
+    # Add CORS middleware (must be early)
+    if current_settings.cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=[str(origin) for origin in current_settings.cors_origins],
+            allow_credentials=True,
+            allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+            allow_headers=[
+                "Content-Type",
+                "Authorization",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
+            ],
+            expose_headers=[
+                "Content-Length",
+                "Content-Range",
+            ],
+            max_age=600,  # 10 minutes
+        )
+    
+    # Add Security Headers middleware
+    app.add_middleware(SecurityHeadersMiddleware, settings=current_settings)
+    
+    # Add error handling middleware (must be after CORS/Security? Check order)
     app.add_middleware(ErrorHandlerMiddleware)
     
-    # Add rate limiting middleware
-    if settings.enable_rate_limiting:
-        app.add_middleware(RateLimitMiddleware) 
+    # Add validation middleware
+    app.add_middleware(RequestValidationMiddleware, settings=current_settings)
+    
+    # Add rate limiting middleware (conditionally)
+    if current_settings.enable_rate_limiting:
+        app.add_middleware(RateLimitMiddleware, settings=current_settings)
+
+    logger.info(
+        "all_middleware_configured",
+        cors_origins=current_settings.cors_origins,
+        rate_limiting_enabled=current_settings.enable_rate_limiting
+    ) 
