@@ -1,5 +1,5 @@
 """Simple test file for security module that doesn't depend on any fixtures."""
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, UTC, timezone
 from jose import jwt
 
 from app.core.config import get_settings
@@ -43,6 +43,7 @@ def test_create_access_token():
 
 def test_expired_token():
     """Test validation of expired JWT token."""
+    settings = get_settings()
     expired_token = jwt.encode(
         {"sub": "user1", "exp": 1},  # Expired in 1970
         settings.secret_key.get_secret_value(),

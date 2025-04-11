@@ -6,6 +6,9 @@ from app.core.email import EmailContent
 from app.core.queue import EmailQueueItem
 from redis.asyncio import Redis
 import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 @pytest_asyncio.fixture
 async def mock_redis():
@@ -101,7 +104,9 @@ async def test_start_stop(worker):
     # Test stopping
     worker.stop()
     assert not worker.is_running
-    assert worker.processing_task.cancel.called
+    # Allow event loop to process cancellation
+    await asyncio.sleep(0)
+    assert worker.processing_task.cancelled()
 
 @pytest.mark.asyncio
 async def test_start_with_no_queue(worker):
@@ -119,16 +124,37 @@ async def test_start_with_no_queue(worker):
 
 @pytest.mark.asyncio
 async def test_process_loop(worker, mock_queue):
-    """Test the processing loop."""
-    # Setup
-    worker.process_one = AsyncMock(side_effect=[True, False, Exception("Test error"), asyncio.CancelledError()])
-    
+    """Test the processing loop runs, handles side effects, and cancels."""
+    # Setup side effects for process_one: success, stop, error, then keep running
+    worker.process_one = AsyncMock(side_effect=[True, False, Exception("Test error"), True, True])
+    worker.processing_interval = 0.01 # Speed up loop for testing
+    worker.error_interval = 0.01
+
     # Start the worker
     worker.is_running = True
+    loop_task = asyncio.create_task(worker._process_loop(), name="TestProcessLoop")
+
+    # Allow loop to run through initial side effects
+    await asyncio.sleep(0.1) 
+
+    # Assert process_one was called at least 3 times (True, False, Exception)
+    assert worker.process_one.call_count >= 3 
+
+    # Cancel the task directly
+    logger.info(f"Test cancelling task {loop_task.get_name()}")
+    loop_task.cancel()
     
-    # Run the process loop with a timeout
-    with pytest.raises(asyncio.CancelledError):
-        await asyncio.wait_for(worker._process_loop(), timeout=1.0)
-    
-    # Verify the process_one method was called multiple times
-    assert worker.process_one.call_count >= 2 
+    # Wait for the task to finish and confirm it was cancelled
+    cancelled_correctly = False
+    try:
+        await asyncio.wait_for(loop_task, timeout=1.0)
+    except asyncio.CancelledError:
+        logger.info(f"Task {loop_task.get_name()} successfully cancelled as expected.")
+        cancelled_correctly = True
+    except asyncio.TimeoutError:
+        pytest.fail(f"Task {loop_task.get_name()} did not cancel within timeout.")
+    except Exception as e:
+        pytest.fail(f"Task {loop_task.get_name()} raised unexpected exception: {e}")
+
+    assert cancelled_correctly, "Loop task should have been cancelled."
+    assert not worker.is_running, "Worker should be marked as not running after loop exits/cancels" 

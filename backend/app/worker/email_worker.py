@@ -71,17 +71,27 @@ class EmailWorker:
     async def _process_loop(self):
         """Continuously process emails from the queue."""
         logger.info("Email processing loop started")
-        while self.is_running:
-            try:
-                processed = await self.process_one()
-                if not processed:
-                    # If no email was processed, wait a bit before trying again
-                    await asyncio.sleep(self.processing_interval)
-            except Exception as e:
-                logger.error(f"Error in email processing loop: {e}")
-                # Wait a bit before trying again
-                await asyncio.sleep(self.retry_delay)
-        logger.info("Email processing loop stopped")
+        try:
+            while self.is_running:
+                try:
+                    # Process one item from the queue
+                    processed = await self.process_one()
+
+                    # If the queue was empty or no item was processed, wait a bit
+                    if not processed:
+                        await asyncio.sleep(self.processing_interval)
+                except Exception as e:
+                    # Log error and wait before continuing
+                    logger.error(f"Error in email processing loop: {e}", exc_info=True)
+                    await asyncio.sleep(self.retry_delay)
+        except asyncio.CancelledError:
+            logger.info("Email processing loop cancelled.")
+            # Re-raise the CancelledError so the task status reflects cancellation
+            raise
+        finally:
+            # Ensure the running flag is set to false when the loop exits
+            self.is_running = False
+            logger.info("Email processing loop stopped.")
             
     def start(self):
         """Start the email worker."""
@@ -109,8 +119,18 @@ class EmailWorker:
         self.is_running = False
         
         # Cancel the processing task if it exists
-        if self.processing_task:
+        if self.processing_task and not self.processing_task.done():
+            logger.info(f"Cancelling worker task {self.processing_task.get_name()}")
             self.processing_task.cancel()
+            # Optionally wait for cancellation, but often not needed if loop checks is_running
+            # try:
+            #     await asyncio.wait_for(self.processing_task, timeout=1.0)
+            # except asyncio.CancelledError:
+            #     logger.info("Worker task successfully cancelled.")
+            # except asyncio.TimeoutError:
+            #     logger.warning("Worker task did not cancel within timeout.")
+
+        logger.info("Email worker stopped.")
 
 # Create a singleton instance of EmailWorker. The actual queue will be set in main.py
 email_worker = EmailWorker() 

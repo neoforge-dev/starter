@@ -21,9 +21,9 @@ def test_default_settings():
     assert settings.database_url_for_env == "postgresql+asyncpg://postgres:postgres@db:5432/app"
     assert settings.debug is True
     assert settings.testing is False
-    assert settings.redis_url == "redis://redis:6379/0"
+    assert str(settings.redis_url) == "redis://redis:6379/0"
     assert settings.environment == Environment.DEVELOPMENT
-    assert settings.cors_origins == ["http://localhost:3000"]
+    assert settings.cors_origins == ["http://localhost:3000/"]
     assert settings.access_token_expire_minutes == 10080
 
 

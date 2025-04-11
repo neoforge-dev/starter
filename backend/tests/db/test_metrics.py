@@ -3,6 +3,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from prometheus_client import REGISTRY
+import asyncio
 
 from app.db.metrics import get_pool_stats, log_pool_stats
 from app.core.metrics import get_metrics
@@ -74,12 +75,15 @@ async def test_pool_metrics_increment() -> None:
 async def test_query_duration_metric(db: AsyncSession) -> None:
     """Test that query duration metric is recorded."""
     # Get initial sum from the metric
+    await asyncio.sleep(0.01) # Short sleep to allow potential background metric processing
     initial_samples = list(metrics["db_query_duration_seconds"].collect())
     initial_sum = initial_samples[0].samples[0].value if initial_samples and initial_samples[0].samples else 0.0
 
     # Execute a real query (insert) instead of SELECT 1
-    _ = await UserFactory.create(session=db)
-    await db.flush() # Ensure the insert is flushed
+    user = await UserFactory.create(session=db)
+    await db.flush() # Ensure the insert is sent to DB
+    await db.refresh(user) # Explicitly refresh to ensure listener has fired and completed
+    await asyncio.sleep(0.01) # Short sleep after refresh
 
     # Get final sum
     final_samples = list(metrics["db_query_duration_seconds"].collect())
@@ -91,12 +95,15 @@ async def test_query_duration_metric(db: AsyncSession) -> None:
 async def test_total_queries_metric(db: AsyncSession) -> None:
     """Test that total queries metric is recorded."""
     # Get initial count from the metric
+    await asyncio.sleep(0.01) # Short sleep to allow potential background metric processing
     initial_samples = list(metrics["db_query_count"].collect())
     initial_count = initial_samples[0].samples[0].value if initial_samples and initial_samples[0].samples else 0.0
 
     # Execute a real query (insert) instead of SELECT 1
-    _ = await UserFactory.create(session=db)
+    user = await UserFactory.create(session=db)
     await db.flush() # Ensure the insert is flushed
+    await db.refresh(user) # Explicitly refresh to ensure listener has fired and completed
+    await asyncio.sleep(0.01) # Short sleep after refresh
 
     # Get final count
     final_samples = list(metrics["db_query_count"].collect())

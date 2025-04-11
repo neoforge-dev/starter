@@ -80,9 +80,10 @@ async def engine(test_settings):
     test_engine = create_async_engine(db_url, echo=False, pool_pre_ping=True)
     
     # Register query monitor listeners on the test engine's sync_engine
-    logger.info("Registering query monitor listeners on test engine")
-    event.listen(test_engine.sync_engine, "before_cursor_execute", before_cursor_execute)
-    event.listen(test_engine.sync_engine, "after_cursor_execute", after_cursor_execute)
+    # logger.info("Registering query monitor listeners on test engine")
+    # event.listen(test_engine.sync_engine, "before_cursor_execute", before_cursor_execute)
+    # event.listen(test_engine.sync_engine, "after_cursor_execute", after_cursor_execute)
+    # ^^^ Moved listener attachment to the 'db' fixture below ^^^ 
 
     yield test_engine
     await test_engine.dispose()
@@ -110,6 +111,11 @@ async def db(engine) -> AsyncGenerator[AsyncSession, None]:
         expire_on_commit=False
     )
     async with engine.connect() as connection:
+        # Attach listeners directly to the connection used by this test session
+        logger.info("Attaching query monitor listeners to test connection")
+        event.listen(connection.sync_connection, "before_cursor_execute", before_cursor_execute)
+        event.listen(connection.sync_connection, "after_cursor_execute", after_cursor_execute)
+        
         transaction = await connection.begin()
         async with async_session_factory(bind=connection) as session:
             # Set the context variable before yielding
@@ -120,11 +126,20 @@ async def db(engine) -> AsyncGenerator[AsyncSession, None]:
                 # Reset the context variable
                 current_test_session.reset(token)
                 await transaction.rollback()
+                
+        # Detach listeners after use to avoid potential leaks or side effects
+        logger.info("Detaching query monitor listeners from test connection")
+        try:
+            event.remove(connection.sync_connection, "before_cursor_execute", before_cursor_execute)
+            event.remove(connection.sync_connection, "after_cursor_execute", after_cursor_execute)
+        except Exception as e:
+             logger.warning(f"Could not detach event listeners: {e}") # Log warning if removal fails
 
 @pytest_asyncio.fixture(scope="function")
 async def redis(test_settings) -> AsyncGenerator[Redis, None]:
     """Create a test Redis connection using settings from the environment."""
-    redis_url = test_settings.redis_url
+    # Convert RedisDsn to string before passing to from_url
+    redis_url = str(test_settings.redis_url) 
     logger.info(f"Connecting to test Redis at: {redis_url}")
     redis = Redis.from_url(redis_url, decode_responses=True)
     try:
