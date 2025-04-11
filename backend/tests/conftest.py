@@ -40,6 +40,9 @@ from app.core.config import get_settings as core_get_settings
 # Import the context variable from the new file
 from tests.session_context import current_test_session 
 
+# Import event listeners from query_monitor
+from app.db.query_monitor import before_cursor_execute, after_cursor_execute
+
 # Get a logger instance for conftest
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO) # Configure basic logging
@@ -74,9 +77,15 @@ async def engine(test_settings):
     """Create a test database engine (session scope)."""
     db_url = test_settings.database_url_for_env
     logger.info(f"Creating test engine with URL: {db_url}")
-    engine = create_async_engine(db_url, echo=False, pool_pre_ping=True)
-    yield engine
-    await engine.dispose()
+    test_engine = create_async_engine(db_url, echo=False, pool_pre_ping=True)
+    
+    # Register query monitor listeners on the test engine's sync_engine
+    logger.info("Registering query monitor listeners on test engine")
+    event.listen(test_engine.sync_engine, "before_cursor_execute", before_cursor_execute)
+    event.listen(test_engine.sync_engine, "after_cursor_execute", after_cursor_execute)
+
+    yield test_engine
+    await test_engine.dispose()
     logger.info("Test engine disposed")
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
@@ -142,42 +151,52 @@ async def client(db: AsyncSession, test_settings: Settings) -> AsyncClient:
     """Create a standard test client using the main application."""
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
-    
+
     # Import the main app instance directly
     from app.main import app as fastapi_app
     # Import the dependency functions to override
     from app.core.config import get_settings as app_get_settings
     from app.api.deps import get_db as app_api_get_db # Renamed for clarity
     from app.db.session import get_db as app_session_get_db # Import the one used by security
-    
+
     logger.debug("Setting up standard test client with main app routes:")
     for route in fastapi_app.routes:
         logger.debug(f"Route: {route.path}, methods: {getattr(route, 'methods', None)}")
-    
+
     # Ensure dependency overrides are clean before applying
     if hasattr(fastapi_app, "dependency_overrides"):
         fastapi_app.dependency_overrides.clear()
     else:
         fastapi_app.dependency_overrides = {}
 
+    # Store test session in app state
+    fastapi_app.state._test_session = db
+    logger.debug(f"Stored test session {id(db)} in fastapi_app.state._test_session")
+
     # Override get_settings
     fastapi_app.dependency_overrides[app_get_settings] = lambda: test_settings
-    # Override get_db (both potential locations) to use the test session
-    fastapi_app.dependency_overrides[app_api_get_db] = lambda: db 
-    fastapi_app.dependency_overrides[app_session_get_db] = lambda: db # Explicitly override this one too
+    # Dependency overrides for get_db are no longer needed; session is passed via app.state
+    # fastapi_app.dependency_overrides[app_api_get_db] = lambda: db 
+    # fastapi_app.dependency_overrides[app_session_get_db] = lambda: db 
 
     logger.debug(f"Overriding get_settings for main app. Effective settings: {test_settings}")
-    logger.debug(f"Overriding get_db (both api.deps and db.session) for main app to use test session: {db}")
-    
+    # logger.debug(f"Overriding get_db... using app.state instead") # Updated comment
+
     transport = ASGITransport(app=fastapi_app)
     logger.debug("Creating AsyncClient with transport for main app")
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         logger.debug("Standard AsyncClient created")
         yield ac
-    
+
     # Clean up dependency overrides after the test run
     if hasattr(fastapi_app, "dependency_overrides"):
         fastapi_app.dependency_overrides.clear()
+    
+    # Clean up app state
+    if hasattr(fastapi_app.state, "_test_session"):
+        del fastapi_app.state._test_session
+        logger.debug("Removed _test_session from fastapi_app.state")
+        
     logger.debug("Standard test client dependency overrides cleared")
 
 @pytest_asyncio.fixture(scope="function")

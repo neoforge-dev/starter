@@ -53,12 +53,13 @@ def create_access_token(
 
 
 async def get_current_user(
+    settings: Settings,
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db),
-    settings: Settings = Depends(get_settings),
 ) -> User:
-    """Gets the current user based on the provided token."""
+    """Get current user based on JWT token."""
     logger.debug(f"Attempting to get current user with token: {token[:10]}...")
+    logger.debug(f"[get_current_user] Received session ID: {id(db)}") # Log session ID
 
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

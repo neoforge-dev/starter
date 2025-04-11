@@ -8,6 +8,7 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.db.session import engine
 from app.core.metrics import get_metrics
@@ -49,6 +50,7 @@ def get_query_type(query: str) -> str:
 
 def record_query_metrics(query: str, duration: float) -> None:
     """Record query metrics."""
+    logger.debug(f"[Metrics] Recording metrics for query: {query[:100]}... Duration: {duration:.4f}s")
     query_type = get_query_type(query)
     table = extract_table_name(query)
     
@@ -73,8 +75,29 @@ def after_cursor_execute(
     conn, cursor, statement, parameters, context, executemany
 ):
     """Event listener for query execution end."""
-    total_time = time.time() - context._query_start_time
+    start_time = context._query_start_time
+    total_time = time.time() - start_time
     record_query_metrics(statement, total_time)
+
+# --- ORM Event Listeners --- 
+
+def before_flush(session, flush_context, instances):
+    """Record start time before ORM flush."""
+    # Use session.info dictionary to store temporary data
+    session.info.setdefault('_query_start_time', time.time())
+
+def after_flush(session, flush_context):
+    """Record metrics after ORM flush."""
+    start_time = session.info.pop('_query_start_time', None)
+    if start_time:
+        duration = time.time() - start_time
+        # Simplistic approach: log one 'flush' event for metrics
+        # This captures the time spent in the flush operation itself.
+        # Individual statements within the flush might still be captured by cursor events.
+        logger.debug(f"[Metrics] Recording ORM flush duration: {duration:.4f}s")
+        record_query_metrics("ORM Flush", duration) # Use a generic label
+
+# --- Register Listeners --- 
 
 # Register event listeners for both sync and async engines
 if isinstance(engine, AsyncEngine):
@@ -85,6 +108,11 @@ else:
     # If using sync engine only
     event.listen(engine, "before_cursor_execute", before_cursor_execute)
     event.listen(engine, "after_cursor_execute", after_cursor_execute)
+
+# Register ORM event listeners globally for Session (applied to AsyncSession)
+# Note: The event system uses the sync Session for targets
+event.listen(Session, "before_flush", before_flush)
+event.listen(Session, "after_flush", after_flush)
 
 @asynccontextmanager
 async def monitor_query() -> AsyncGenerator[Dict[str, Any], None]:

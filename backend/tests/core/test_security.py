@@ -21,6 +21,8 @@ from app.core.security import (
     oauth2_scheme,
 )
 from app.core.config import Settings, get_settings
+from app.models.user import User
+from tests.factories import UserFactory
 
 
 def test_create_access_token():
@@ -111,7 +113,7 @@ async def test_get_current_user_invalid_token():
     
     # Call the function and expect an exception
     with pytest.raises(HTTPException) as excinfo:
-        await get_current_user(db=mock_db, token=token)
+        await get_current_user(db=mock_db, token=token, settings=get_settings())
     
     # Verify the exception
     assert excinfo.value.status_code == 401
@@ -135,7 +137,7 @@ async def test_get_current_user_missing_subject():
     
     # Call the function and expect an exception
     with pytest.raises(HTTPException) as excinfo:
-        await get_current_user(db=mock_db, token=token)
+        await get_current_user(db=mock_db, token=token, settings=get_settings())
     
     # Verify the exception
     assert excinfo.value.status_code == 401

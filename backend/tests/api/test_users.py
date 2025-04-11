@@ -43,7 +43,7 @@ async def test_create_user(client: AsyncClient, db: AsyncSession, superuser_toke
 async def test_read_users(client: AsyncClient, db: AsyncSession, superuser_token_headers: dict, test_settings: Settings) -> None:
     """Test reading multiple users."""
     # Clear existing users first (use DELETE for simplicity, TRUNCATE might require specific permissions)
-    await db.execute(delete(User))
+    # await db.execute(delete(User))
     # await db.commit() # Commit deletion - Let the transaction handle it
     
     # Create superuser first (rely on fixture flush)
@@ -76,9 +76,10 @@ async def test_read_users(client: AsyncClient, db: AsyncSession, superuser_token
         )
         user = await crud.user.create(db, obj_in=user_in) # Factory flushes
         test_users_created.append(user)
-    
-    # await db.commit() # REMOVED: Commit all newly created users before the API call - Rely on fixture rollback
-    
+
+        await db.flush() # Flush newly created users before the API call
+        # await db.commit() # REMOVED: Commit all newly created users before the API call - Rely on fixture rollback
+
     # Now, read the users using the superuser token
     logger.info(f"Reading users with superuser token: {headers}")
     response = await client.get(

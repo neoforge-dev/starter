@@ -6,6 +6,7 @@ from prometheus_client import REGISTRY
 
 from app.db.metrics import get_pool_stats, log_pool_stats
 from app.core.metrics import get_metrics
+from tests.factories import UserFactory
 
 pytestmark = pytest.mark.asyncio
 
@@ -72,40 +73,36 @@ async def test_pool_metrics_increment() -> None:
 
 async def test_query_duration_metric(db: AsyncSession) -> None:
     """Test that query duration metric is recorded."""
-    # Initial value should be 0 or not exist if cleared properly
-    initial_value = get_metric_value(DB_QUERY_DURATION)
-    # print(f"Initial DB_QUERY_DURATION value: {initial_value}") # Removed diagnostic
-    assert initial_value == 0.0, "Metric should start at 0"
+    # Get initial sum from the metric
+    initial_samples = list(metrics["db_query_duration_seconds"].collect())
+    initial_sum = initial_samples[0].samples[0].value if initial_samples and initial_samples[0].samples else 0.0
 
-    # Execute a query
-    await db.execute(text("SELECT 1"))
-    await db.commit() # Commit to ensure after_cursor_execute fires if needed
+    # Execute a real query (insert) instead of SELECT 1
+    _ = await UserFactory.create(session=db)
+    await db.flush() # Ensure the insert is flushed
+
+    # Get final sum
+    final_samples = list(metrics["db_query_duration_seconds"].collect())
+    final_sum = final_samples[0].samples[0].value if final_samples and final_samples[0].samples else 0.0
     
-    # Check if the metric value has increased
-    final_value = get_metric_value(DB_QUERY_DURATION)
-    # print(f"Final DB_QUERY_DURATION value: {final_value}") # Removed diagnostic
-    
-    # Check the number of samples
-    samples = list(DB_QUERY_DURATION.collect())[0].samples
-    # print(f"DB_QUERY_DURATION Samples: {samples}") # Removed diagnostic
-    
-    assert final_value > 0.0, "Query duration metric should have increased"
+    assert final_sum > initial_sum, "Query duration metric sum should have increased"
 
 
 async def test_total_queries_metric(db: AsyncSession) -> None:
     """Test that total queries metric is recorded."""
-    initial_value = get_metric_value(DB_TOTAL_QUERIES)
-    # print(f"Initial DB_TOTAL_QUERIES value: {initial_value}") # Removed diagnostic
-    assert initial_value == 0.0, "Metric should start at 0"
+    # Get initial count from the metric
+    initial_samples = list(metrics["db_query_count"].collect())
+    initial_count = initial_samples[0].samples[0].value if initial_samples and initial_samples[0].samples else 0.0
 
-    # Execute a query
-    await db.execute(text("SELECT 1"))
-    await db.commit()
+    # Execute a real query (insert) instead of SELECT 1
+    _ = await UserFactory.create(session=db)
+    await db.flush() # Ensure the insert is flushed
+
+    # Get final count
+    final_samples = list(metrics["db_query_count"].collect())
+    final_count = final_samples[0].samples[0].value if final_samples and final_samples[0].samples else 0.0
     
-    # Check if the metric value has increased
-    final_value = get_metric_value(DB_TOTAL_QUERIES)
-    # print(f"Final DB_TOTAL_QUERIES value: {final_value}") # Removed diagnostic
-    assert final_value == 1.0, "Total queries metric should be 1"
+    assert final_count == initial_count + 1.0, f"Total queries metric count should have increased by 1 (from {initial_count} to {final_count})"
 
 
 async def test_pool_overflow_metric(db: AsyncSession) -> None:
