@@ -98,7 +98,9 @@ async def get_current_user(
     try:
         user_id_int = int(token_data.sub) # Convert sub to int
         logger.debug(f"Attempting to fetch user with ID: {user_id_int}")
-        user = await user_crud.get(db, id=user_id_int)
+        # Revert back to using crud layer
+        user = await user_crud.get(db, id=user_id_int) 
+        # user = await db.get(User, user_id_int) # Changed line
         logger.debug(f"User lookup result: {'Found' if user else 'Not Found'}")
     except ValueError:
         logger.warning(f"Could not convert user ID '{token_data.sub}' to integer.")

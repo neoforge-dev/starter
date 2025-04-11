@@ -197,7 +197,7 @@ class AdminFactory(ModelFactory):
         
         admin = model_class(**kwargs)
         session.add(admin)
-        await session.commit()
+        await session.flush()
         await session.refresh(admin, ["user"])
         
         return admin

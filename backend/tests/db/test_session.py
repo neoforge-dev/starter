@@ -73,16 +73,18 @@ async def test_session_factory_configuration(test_engine: AsyncEngine):
 
 async def test_session_context_manager(test_session_factory: async_sessionmaker):
     """Test session context manager behavior."""
+    s = None
     async with test_session_factory() as session:
+        s = session # Keep a reference for later check
         # Session should be active
         assert session.is_active
-        
+
         # Execute test query
         result = await session.execute(text("SELECT 1"))
         assert result.scalar() == 1
-    
-    # Session should be closed
-    assert not session.is_active
+
+    # After exiting the context manager, the session should be inactive
+    assert not s.is_active, "Session should be inactive after context manager exits."
 
 async def test_session_commit_rollback(test_session_factory: async_sessionmaker):
     """Test session commit and rollback behavior."""

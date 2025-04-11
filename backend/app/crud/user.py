@@ -58,7 +58,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             is_superuser=create_data.get("is_superuser", False),
         )
         db.add(db_obj)
-        await db.commit()
+        await db.flush()
         await db.refresh(db_obj)
         return db_obj
 

@@ -47,18 +47,20 @@ async def test_read_users(client: AsyncClient, db: AsyncSession, superuser_token
     # await db.commit() # Commit deletion - Let the transaction handle it
     
     # Create superuser first (rely on fixture flush)
-    superuser_email = "admin@example.com"
-    superuser_password = "admin123"
-    superuser_in = UserCreate(
-        email=superuser_email,
-        password=superuser_password,
-        password_confirm=superuser_password,
-        full_name="Admin User",
-        is_superuser=True
-    )
-    superuser = await crud.user.create(db, obj_in=superuser_in) # Factory flushes
+    # Superuser creation is handled by the superuser_token_headers fixture, including commit/flush
+    # No need to create manually here unless specifically testing that creation.
+    # superuser_email = "admin@example.com"
+    # superuser_password = "admin123"
+    # superuser_in = UserCreate(
+    #     email=superuser_email,
+    #     password=superuser_password,
+    #     password_confirm=superuser_password,
+    #     full_name="Admin User",
+    #     is_superuser=True
+    # )
+    # superuser = await crud.user.create(db, obj_in=superuser_in) # Factory flushes
     # await db.commit() # Don't commit superuser creation yet
-
+    
     # Get authentication token for superuser - Use the fixture directly
     # The superuser_token_headers fixture already creates and commits a superuser
     headers = superuser_token_headers
@@ -75,8 +77,8 @@ async def test_read_users(client: AsyncClient, db: AsyncSession, superuser_token
         user = await crud.user.create(db, obj_in=user_in) # Factory flushes
         test_users_created.append(user)
     
-    await db.commit() # Commit all newly created users before the API call
-
+    # await db.commit() # REMOVED: Commit all newly created users before the API call - Rely on fixture rollback
+    
     # Now, read the users using the superuser token
     logger.info(f"Reading users with superuser token: {headers}")
     response = await client.get(
@@ -87,23 +89,12 @@ async def test_read_users(client: AsyncClient, db: AsyncSession, superuser_token
     logger.info(f"Read users response status: {response.status_code}")
     logger.info(f"Read users response body: {response.text}")
     assert response.status_code == 200, f"Read users failed: {response.text}"
+    
     data = response.json()
-    # +1 for the superuser created by the superuser_token_headers fixture
-    # +1 for the superuser created locally in this test
-    # +3 for the regular users created locally in this test
-    # Total expected should reflect all users committed before the GET
-    expected_user_count = 1 + 1 + 3 
-    # Making this assertion robust is tricky due to fixture interactions. Let's check if our created users are present.
+    assert len(data) >= 3 # Check if at least the 3 created users are returned (might include superuser)
     created_emails = {u.email for u in test_users_created}
-    found_emails = {u['email'] for u in data}
-    assert created_emails.issubset(found_emails)
-    # Assert the total count, accounting for fixture superuser and locally created users
-    # Count users directly from DB for verification
-    db_count_res = await db.execute(select(func.count(User.id)))
-    db_count = db_count_res.scalar_one()
-    logger.info(f"Total users in DB before assertion: {db_count}")
-    logger.info(f"Total users found in API response: {len(data)}")
-    assert len(data) >= len(created_emails), "Not all created users were found in the response"
+    returned_emails = {u['email'] for u in data}
+    assert created_emails.issubset(returned_emails)
 
 
 async def test_read_user(

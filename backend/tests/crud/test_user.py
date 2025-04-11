@@ -36,28 +36,46 @@ async def test_authenticate(db: AsyncSession):
     user_in = UserCreate(
         email="test@example.com",
         password="testpassword",
+        password_confirm="testpassword",
         full_name="Test User",
     )
     user = await user_crud.create(db, obj_in=user_in)
     
-    # Test successful authentication
-    authenticated = await user_crud.authenticate(
+    # Authenticate successfully
+    authenticated_user = await user_crud.authenticate(
         db, email="test@example.com", password="testpassword"
     )
-    assert authenticated is not None
-    assert authenticated.id == user.id
-    
-    # Test failed authentication - wrong password
-    failed = await user_crud.authenticate(
+    assert authenticated_user
+    assert authenticated_user.email == user.email
+
+    # Authenticate with wrong password
+    non_authenticated_user = await user_crud.authenticate(
         db, email="test@example.com", password="wrongpassword"
     )
-    assert failed is None
-    
-    # Test failed authentication - wrong email
-    failed = await user_crud.authenticate(
-        db, email="wrong@example.com", password="testpassword"
+    assert non_authenticated_user is None
+
+    # Authenticate non-existent user
+    non_existent_user = await user_crud.authenticate(
+        db, email="nonexistent@example.com", password="testpassword"
     )
-    assert failed is None
+    assert non_existent_user is None
+    
+    # Authenticate inactive user
+    user_inactive_in = UserCreate(
+        email="inactive@example.com",
+        password="testpassword",
+        password_confirm="testpassword",
+        full_name="Inactive User",
+    )
+    inactive_user = await user_crud.create(db, obj_in=user_inactive_in)
+    inactive_user.is_active = False
+    await db.flush()
+    await db.refresh(inactive_user)
+    
+    authenticated_inactive_user = await user_crud.authenticate(
+        db, email="inactive@example.com", password="testpassword"
+    )
+    assert authenticated_inactive_user is None
 
 
 @pytest.mark.skip_asyncio

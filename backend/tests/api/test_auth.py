@@ -12,6 +12,8 @@ from app.crud import user as user_crud
 
 pytestmark = pytest.mark.asyncio
 
+logger = logging.getLogger(__name__)
+
 
 @pytest.fixture
 def test_user_email() -> str:
@@ -36,7 +38,7 @@ async def test_user(db: AsyncSession, test_user_email: str, test_user_password: 
         )
         # Store the plain password for test use
         setattr(user, 'plain_password', test_user_password)
-        await db.commit() # Commit after creation
+        # await db.commit() # REVERTED EXPERIMENT: Rely on fixture transaction
         yield user
     finally:
         if user is not None:
@@ -44,7 +46,7 @@ async def test_user(db: AsyncSession, test_user_email: str, test_user_password: 
             user_to_delete = await db.get(User, user.id)
             if user_to_delete:
                 await db.delete(user_to_delete)
-                await db.commit() # Commit deletion
+                # No commit needed here, rely on fixture rollback for cleanup
 
 
 @pytest.fixture
@@ -58,7 +60,6 @@ async def test_inactive_user(db: AsyncSession) -> User:
             password="inactivepassword",
             is_active=False
         )
-        await db.commit() # Ensure user is committed if factory doesn't
         await db.refresh(user)
         yield user # Provide the user to the test
     finally:
@@ -68,7 +69,6 @@ async def test_inactive_user(db: AsyncSession) -> User:
             user_to_delete = await db.get(User, user.id)
             if user_to_delete:
                 await db.delete(user_to_delete)
-                await db.commit()
 
 
 @pytest.fixture

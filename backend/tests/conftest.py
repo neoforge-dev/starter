@@ -147,7 +147,8 @@ async def client(db: AsyncSession, test_settings: Settings) -> AsyncClient:
     from app.main import app as fastapi_app
     # Import the dependency functions to override
     from app.core.config import get_settings as app_get_settings
-    from app.api.deps import get_db as app_get_db # Import the specific get_db to override
+    from app.api.deps import get_db as app_api_get_db # Renamed for clarity
+    from app.db.session import get_db as app_session_get_db # Import the one used by security
     
     logger.debug("Setting up standard test client with main app routes:")
     for route in fastapi_app.routes:
@@ -161,11 +162,12 @@ async def client(db: AsyncSession, test_settings: Settings) -> AsyncClient:
 
     # Override get_settings
     fastapi_app.dependency_overrides[app_get_settings] = lambda: test_settings
-    # Override get_db to use the test session
-    fastapi_app.dependency_overrides[app_get_db] = lambda: db 
+    # Override get_db (both potential locations) to use the test session
+    fastapi_app.dependency_overrides[app_api_get_db] = lambda: db 
+    fastapi_app.dependency_overrides[app_session_get_db] = lambda: db # Explicitly override this one too
 
     logger.debug(f"Overriding get_settings for main app. Effective settings: {test_settings}")
-    logger.debug(f"Overriding get_db for main app to use test session: {db}")
+    logger.debug(f"Overriding get_db (both api.deps and db.session) for main app to use test session: {db}")
     
     transport = ASGITransport(app=fastapi_app)
     logger.debug("Creating AsyncClient with transport for main app")

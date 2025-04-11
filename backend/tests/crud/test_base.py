@@ -45,6 +45,25 @@ class TestCRUD(CRUDBase[TestItem, TestItemCreate, TestItemUpdate]):
             .limit(limit)
         )
         return result.scalars().all()
+    
+    async def count(self, db: AsyncSession, *, owner_id: Optional[int] = None) -> int:
+        query = select(func.count()).select_from(self.model)
+        if owner_id is not None:
+            query = query.where(self.model.owner_id == owner_id)
+        result = await db.execute(query)
+        return result.scalar_one()
+    
+    async def get_by_title(self, db: AsyncSession, *, title: str) -> list[TestItem]:
+        result = await db.execute(
+            select(self.model)
+            .where(self.model.title == title)
+        )
+        return result.scalars().all()
+
+    async def exists(self, db: AsyncSession, *, id: int) -> bool:
+        query = select(self.model.id).where(self.model.id == id)
+        result = await db.execute(query)
+        return result.scalar_one_or_none() is not None
 
 @pytest.fixture
 async def crud(db: AsyncSession) -> TestCRUD:
@@ -181,20 +200,23 @@ async def test_delete(db: AsyncSession, crud: TestCRUD):
 
 async def test_count(db: AsyncSession, crud: TestCRUD):
     """Test counting items."""
-    # Create test items
+    # Initial item with owner_id=999 exists from fixture
+    # Create test items for owner_id=1
     for i in range(5):
         item_in = TestItemCreate(title=f"Test Item {i}", owner_id=1)
         await crud.create(db, obj_in=item_in)
     
-    # Count all items
+    # Count all items (5 created + 1 from fixture)
     count = await crud.count(db)
-    assert count == 5
+    assert count == 6 # Adjusted assertion
     
     # Count items by owner
-    count = await crud.count(db, owner_id=1)
-    assert count == 5
-    count = await crud.count(db, owner_id=2)
-    assert count == 0
+    count_owner1 = await crud.count(db, owner_id=1)
+    assert count_owner1 == 5
+    count_owner2 = await crud.count(db, owner_id=2)
+    assert count_owner2 == 0
+    count_owner999 = await crud.count(db, owner_id=999)
+    assert count_owner999 == 1 # Verify the fixture item is counted
 
 async def test_exists(db: AsyncSession, crud: TestCRUD):
     """Test checking item existence."""
