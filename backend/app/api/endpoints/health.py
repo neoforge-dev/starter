@@ -9,7 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
-from app.api.deps import get_monitored_db
+from app.api.deps import get_monitored_db, MonitoredDB
 from app.core.redis import get_redis
 from app.core.config import get_settings, Settings
 
@@ -22,7 +22,7 @@ async def health_check():
 @router.get("/detailed", tags=["health"], summary="Detailed Health Check")
 async def detailed_health_check(
     settings: Annotated[Settings, Depends(get_settings)],
-    db: Annotated[AsyncSession, Depends(get_monitored_db)],
+    db: Annotated[MonitoredDB, Depends(get_monitored_db)],
     redis: Annotated[Redis | None, Depends(get_redis)]
 ) -> JSONResponse:
     start_time = time.time()
