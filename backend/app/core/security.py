@@ -54,8 +54,8 @@ def create_access_token(
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    settings: Settings = Depends(get_settings),
     db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings),
 ) -> User:
     """Gets the current user based on the provided token."""
     logger.debug(f"Attempting to get current user with token: {token[:10]}...")

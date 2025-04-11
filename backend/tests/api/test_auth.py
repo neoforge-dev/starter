@@ -8,6 +8,7 @@ import logging
 from app.core.config import get_settings, Settings
 from app.models.user import User
 from tests.factories import UserFactory
+from app.crud import user as user_crud
 
 pytestmark = pytest.mark.asyncio
 
@@ -33,17 +34,17 @@ async def test_user(db: AsyncSession, test_user_email: str, test_user_password: 
             password=test_user_password,
             is_active=True
         )
-        await db.commit() # Ensure user is committed if factory doesn't
-        await db.refresh(user)
-        yield user # Provide the user to the test
+        # Store the plain password for test use
+        setattr(user, 'plain_password', test_user_password)
+        await db.commit() # Commit after creation
+        yield user
     finally:
-        # Cleanup: Delete the user after the test if created
         if user is not None:
-            # Re-fetch the user in the current session context for deletion
+            # Use get to fetch potentially detached object
             user_to_delete = await db.get(User, user.id)
             if user_to_delete:
                 await db.delete(user_to_delete)
-                await db.commit()
+                await db.commit() # Commit deletion
 
 
 @pytest.fixture
@@ -83,18 +84,33 @@ async def test_user_headers(test_user: User, test_settings: Settings) -> Dict[st
     return {"Authorization": f"Bearer {access_token}"}
 
 
-async def test_login_access_token(client: AsyncClient, db: AsyncSession, test_user: User, test_user_email: str, test_user_password: str, test_settings: Settings) -> None:
+async def test_login_access_token(client: AsyncClient, db: AsyncSession, test_user: User, test_settings: Settings) -> None:
     """Test login with valid credentials."""
-    # test_user fixture already creates the user
+    # The test_user fixture now commits, no need for explicit commit here
+    login_data = {
+        "username": test_user.email,
+        "password": test_user.plain_password  # Use the stored plain password
+    }
+    # Add logging before making the request
+    logger.info(f"Attempting login for user: {test_user.email}, PW snippet: {test_user.plain_password[:3]}...")
+    existing_user = await user_crud.get_by_email(db, email=test_user.email)
+    if existing_user:
+        logger.info(f"User {test_user.email} found in DB (ID: {existing_user.id}) before client call.")
+        logger.info(f"Stored hash: {existing_user.hashed_password}")
+    else:
+        logger.warning(f"User {test_user.email} NOT found in DB before client call.")
+    
     response = await client.post(
-        f"{test_settings.api_v1_str}/auth/token", # Corrected path, use test_settings
-        data={"username": test_user_email, "password": test_user_password},
+        f"{test_settings.api_v1_str}/auth/token",
+        data=login_data,
         headers={"Content-Type": "application/x-www-form-urlencoded"}
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert "access_token" in data
-    assert data["token_type"] == "bearer"
+    logger.info(f"Login response status: {response.status_code}")
+    logger.info(f"Login response body: {response.text}")
+    assert response.status_code == 200, f"Expected 200, got {response.status_code} with body: {response.text}"
+    token = response.json()
+    assert "access_token" in token
+    assert token["token_type"] == "bearer"
 
 
 async def test_login_invalid_credentials(client: AsyncClient, db: AsyncSession, test_user: User, test_user_email: str, test_settings: Settings) -> None:

@@ -1,10 +1,11 @@
 import asyncio
 import pytest
 import pytest_asyncio
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Generator, Dict, Optional
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import event
 from redis.asyncio import Redis
 from redis.exceptions import ConnectionError, TimeoutError
 from datetime import timedelta
@@ -12,18 +13,32 @@ from sqlalchemy import select
 from fastapi import FastAPI
 import logging
 from pydantic import BaseModel
+import uuid
+import contextvars # Import contextvars
 
 from app.main import app
 from app.core.config import Settings, get_settings
-from app.db.session import AsyncSessionLocal
+from app.db.session import AsyncSessionLocal, engine
 from app.db.base import Base
 from app.core.security import create_access_token
 from app.models.user import User
+from app.models.admin import Admin
 from tests.factories import UserFactory
 from app.api.middleware.validation import RequestValidationMiddleware
+from app.crud.user import user as user_crud
+from app.crud.admin import admin
+from app.schemas.user import UserCreate
+from app.schemas.admin import AdminCreate, AdminCreateWithoutUser, AdminRole
+from app.api.deps import get_db
+from app.core.config import get_settings as core_get_settings
+from tests.utils.user import authentication_token_from_email, create_random_user
+from tests.utils.admin import create_random_admin
 
 # Import get_settings specifically for cache clearing
 from app.core.config import get_settings as core_get_settings
+
+# Import the context variable from the new file
+from tests.session_context import current_test_session 
 
 # Get a logger instance for conftest
 logger = logging.getLogger(__name__)
@@ -31,6 +46,9 @@ logging.basicConfig(level=logging.INFO) # Configure basic logging
 
 # Test database URL - use test database from docker-compose
 TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@db:5432/test_db"
+
+# Get settings instance
+settings = get_settings()
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -46,51 +64,53 @@ def test_settings() -> Settings:
     (primarily set in docker-compose.dev.yml for the test service).
     This ensures tests use the config defined for the container environment.
     """
-    return get_settings()
+    settings = get_settings()
+    # Make sure it's a Settings instance, not a function
+    assert isinstance(settings, Settings), "test_settings should return a Settings instance"
+    return settings
 
 @pytest_asyncio.fixture(scope="session")
 async def engine(test_settings):
-    """Create a test database engine."""
-    # Ensure the correct DB URL is used (loaded by test_settings)
+    """Create a test database engine (session scope)."""
     db_url = test_settings.database_url_for_env
     logger.info(f"Creating test engine with URL: {db_url}")
-    engine = create_async_engine(
-        db_url,
-        echo=False,
-        pool_pre_ping=True,
-        pool_size=5,
-        max_overflow=0
-    )
-    
-    # Create all tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    
+    engine = create_async_engine(db_url, echo=False, pool_pre_ping=True)
     yield engine
-    
-    # Drop all tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
     logger.info("Test engine disposed")
 
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def setup_database(engine):
+    """Create and drop database schema once per session (autouse)."""
+    logger.info("Creating database schema...")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database schema created.")
+    yield
+    logger.info("Dropping database schema...")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    logger.info("Database schema dropped.")
+
 @pytest_asyncio.fixture(scope="function")
 async def db(engine) -> AsyncGenerator[AsyncSession, None]:
-    """Create a test database session."""
-    async_session = sessionmaker(
+    """Create a test database session with rollback (function scope)."""
+    async_session_factory = sessionmaker(
         engine,
         class_=AsyncSession,
-        expire_on_commit=False,
-        autocommit=False,
-        autoflush=False
+        expire_on_commit=False
     )
-
-    async with async_session() as session:
-        try:
-            yield session
-        finally:
-            await session.rollback()
-            await session.close()
+    async with engine.connect() as connection:
+        transaction = await connection.begin()
+        async with async_session_factory(bind=connection) as session:
+            # Set the context variable before yielding
+            token = current_test_session.set(session)
+            try:
+                yield session
+            finally:
+                # Reset the context variable
+                current_test_session.reset(token)
+                await transaction.rollback()
 
 @pytest_asyncio.fixture(scope="function")
 async def redis(test_settings) -> AsyncGenerator[Redis, None]:
@@ -118,14 +138,16 @@ async def redis(test_settings) -> AsyncGenerator[Redis, None]:
                 logger.error(f"Error closing Redis connection: {close_exc}", exc_info=True)
 
 @pytest_asyncio.fixture(scope="function")
-async def client(test_settings: Settings) -> AsyncGenerator[AsyncClient, None]:
+async def client(db: AsyncSession, test_settings: Settings) -> AsyncClient:
     """Create a standard test client using the main application."""
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
     
     # Import the main app instance directly
     from app.main import app as fastapi_app
+    # Import the dependency functions to override
     from app.core.config import get_settings as app_get_settings
+    from app.api.deps import get_db as app_get_db # Import the specific get_db to override
     
     logger.debug("Setting up standard test client with main app routes:")
     for route in fastapi_app.routes:
@@ -137,10 +159,13 @@ async def client(test_settings: Settings) -> AsyncGenerator[AsyncClient, None]:
     else:
         fastapi_app.dependency_overrides = {}
 
-    # Override the get_settings dependency to use the environment-loaded settings
+    # Override get_settings
     fastapi_app.dependency_overrides[app_get_settings] = lambda: test_settings
+    # Override get_db to use the test session
+    fastapi_app.dependency_overrides[app_get_db] = lambda: db 
 
     logger.debug(f"Overriding get_settings for main app. Effective settings: {test_settings}")
+    logger.debug(f"Overriding get_db for main app to use test session: {db}")
     
     transport = ASGITransport(app=fastapi_app)
     logger.debug("Creating AsyncClient with transport for main app")
@@ -154,81 +179,86 @@ async def client(test_settings: Settings) -> AsyncGenerator[AsyncClient, None]:
     logger.debug("Standard test client dependency overrides cleared")
 
 @pytest_asyncio.fixture(scope="function")
-async def regular_user(db: AsyncSession) -> User:
-    """Create a regular test user."""
-    # Check if user already exists
-    result = await db.execute(
-        select(User).where(User.email == "regular@example.com")
-    )
-    existing_user = result.scalar_one_or_none()
-    
-    if existing_user:
-        await db.delete(existing_user)
-        await db.commit()
-    
-    user = await UserFactory.create(
-        session=db,
-        email="regular@example.com",
-        password="regular123",
-        is_active=True
-    )
-    await db.commit()
-    await db.refresh(user)  # Ensure we have the latest state including ID
+async def super_admin_user(db: AsyncSession) -> User:
+    """Fixture to create a super admin user."""
+    email = f"super_admin_{uuid.uuid4()}@example.com"
+    password = "supersecret"
+    user_in = UserCreate(email=email, password=password, is_superuser=True)
+    user = await user_crud.create(db=db, obj_in=user_in)
+    await db.flush()
+    await db.refresh(user)
+    logger.info(f"Created super admin user {user.email} with ID {user.id}")
     return user
 
 @pytest_asyncio.fixture(scope="function")
-async def superuser(db: AsyncSession) -> User:
-    """Create a superuser test user."""
-    # Check if user already exists
-    result = await db.execute(
-        select(User).where(User.email == "admin@example.com")
+async def admin_user(db: AsyncSession) -> Admin:
+    """Fixture to create a regular admin user and associated user record."""
+    # 1. Create the User record first
+    email = f"admin_{uuid.uuid4()}@example.com"
+    password = "adminpassword"
+    user_in = UserCreate(
+        email=email,
+        password=password,
+        password_confirm=password,
+        full_name="Admin User Name",
+        is_superuser=False # Regular admin is not a superuser by default
     )
-    existing_user = result.scalar_one_or_none()
-    
-    if existing_user:
-        await db.delete(existing_user)
-        await db.commit()
-    
-    user = await UserFactory.create(
-        session=db,
-        email="admin@example.com",
-        password="admin123",
-        is_superuser=True,
-        is_active=True
-    )
-    await db.commit()
-    await db.refresh(user)  # Ensure we have the latest state including ID
-    return user
+    user_obj = await user_crud.create(db=db, obj_in=user_in)
+    await db.flush()
+    await db.refresh(user_obj)
+    logger.info(f"Created underlying user {user_obj.email} with ID {user_obj.id} for admin")
+
+    # 2. Create the Admin record, linking it to the user
+    admin_in = AdminCreateWithoutUser(role=AdminRole.USER_ADMIN, is_active=True)
+    admin_obj = await admin.create(db=db, obj_in=admin_in, actor_id=user_obj.id, user_id=user_obj.id)
+    await db.flush()
+    await db.refresh(admin_obj)
+    logger.info(f"Created admin record {admin_obj.id} linked to user {user_obj.id}")
+
+    # Attach the user object to the admin object for convenience in tests
+    # This assumes the relationship is loaded or accessible; adjust if needed
+    admin_obj.user = user_obj
+
+    return admin_obj
 
 @pytest_asyncio.fixture(scope="function")
-async def regular_user_headers(regular_user: User, test_settings: Settings) -> dict:
-    """Get headers for regular user authentication."""
-    access_token = create_access_token(
-        subject=regular_user.id,
-        settings=test_settings,
-        expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
-    )
-    return {
-        "Authorization": f"Bearer {access_token}",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "User-Agent": "pytest-test-client"
-    }
+async def readonly_admin_user(db: AsyncSession) -> Admin:
+    """Fixture to create a read-only admin user."""
+    email = f"readonly_admin_{uuid.uuid4()}@example.com"
+    password = "readonlypassword"
+    user_in = UserCreate(email=email, password=password, is_superuser=False)
+    user = await user_crud.create(db=db, obj_in=user_in)
+    await db.flush()
+    await db.refresh(user)
+    # Ensure AdminRole is imported or defined
+    from app.schemas.admin import AdminRole # Assuming AdminRole is here
+    admin_in = AdminCreate(user_id=user.id, role=AdminRole.READ_ONLY)
+    # Corrected usage: admin_crud.create_admin -> admin.create
+    # Pass actor_id=user.id assuming the user creates their own admin profile initially
+    admin_obj = await admin_crud.create(db=db, obj_in=admin_in, actor_id=user.id, user_id=user.id)
+    await db.flush()
+    await db.refresh(admin_obj)
+    logger.info(f"Created read-only admin user {user.email} with ID {admin_obj.id}, User ID {admin_obj.user_id}")
+    return admin_obj # Return the created admin object
 
 @pytest_asyncio.fixture(scope="function")
-async def superuser_headers(superuser: User, test_settings: Settings) -> dict:
-    """Get headers for superuser authentication."""
-    access_token = create_access_token(
-        subject=superuser.id,
-        settings=test_settings,
-        expires_delta=timedelta(minutes=test_settings.access_token_expire_minutes)
+async def test_user(db: AsyncSession) -> User:
+    """Fixture to create a standard test user."""
+    email = f"testuser_{uuid.uuid4()}@example.com"
+    password = "testpassword"
+    user_in = UserCreate(
+        email=email, 
+        password=password, 
+        password_confirm=password, # Add confirmation
+        full_name="Test User Name", # Add full name
+        is_superuser=False
     )
-    return {
-        "Authorization": f"Bearer {access_token}",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "User-Agent": "pytest-test-client"
-    }
+    user_obj = await user_crud.create(db=db, obj_in=user_in)
+    await db.flush()
+    await db.refresh(user_obj)
+    logger.info(f"Created test user {user_obj.email} with ID {user_obj.id}")
+    user_obj.password = password # Add plaintext password for test use
+    return user_obj
 
 @pytest.fixture
 def app_with_validation(test_settings: Settings) -> FastAPI:
@@ -252,4 +282,91 @@ def app_with_validation(test_settings: Settings) -> FastAPI:
 def clear_settings_cache():
     """Fixture to automatically clear the get_settings cache before each test."""
     core_get_settings.cache_clear()
-    logger.debug("Cleared get_settings() cache") 
+    logger.debug("Cleared get_settings() cache")
+
+@pytest_asyncio.fixture(scope="function")
+async def superuser_token_headers(client: AsyncClient, db: AsyncSession, test_settings: Settings) -> dict[str, str]:
+    """Fixture to provide superuser token headers for authenticated requests."""
+    # Create a superuser using the UserFactory
+    superuser = await UserFactory.create(session=db, is_superuser=True)
+    await db.flush()
+    await db.refresh(superuser)
+    await db.commit()
+    logger.info(f"Created superuser {superuser.email} with ID {superuser.id}")
+    
+    # Generate access token directly
+    access_token = create_access_token(
+        subject=str(superuser.id),
+        settings=test_settings,
+        expires_delta=timedelta(minutes=60)
+    )
+    
+    # Return the auth headers
+    return {"Authorization": f"Bearer {access_token}"}
+
+@pytest_asyncio.fixture(scope="function")
+async def normal_user_token_headers(client: AsyncClient, db: AsyncSession, test_settings: Settings) -> tuple[Dict[str, str], User]:
+    """
+    Fixture to provide normal user token headers and the user object.
+
+    Args:
+        client: The test client.
+        db: The database session.
+        test_settings: The application settings.
+
+    Returns:
+        A tuple containing:
+            - A dictionary with the Authorization header.
+            - The created normal User object.
+    """
+    logger.info("Generating normal user token headers and user object for testing.")
+    # Create a regular user using UserFactory
+    regular_user = await UserFactory.create(session=db, is_superuser=False)
+    await db.flush()
+    await db.refresh(regular_user)
+    logger.info(f"Created normal user {regular_user.email} with ID {regular_user.id}")
+    
+    # Generate access token directly
+    access_token = create_access_token(
+        subject=str(regular_user.id),
+        settings=test_settings,
+        expires_delta=timedelta(minutes=60)
+    )
+    
+    headers = {"Authorization": f"Bearer {access_token}"}
+    return headers, regular_user # Return both headers and user object
+
+@pytest_asyncio.fixture(scope="function")
+async def admin_user_token_headers(
+    client: AsyncClient, db: AsyncSession, test_settings: Settings
+) -> tuple[Dict[str, str], Admin]: # Return tuple: headers and the created Admin object
+    """Generate admin user token headers for testing."""
+    logger.info("Generating admin user token headers for testing.")
+    # Use the utility function which handles user creation via factory
+    admin_user_obj = await create_random_admin(db, role=AdminRole.USER_ADMIN)
+    # Refresh the admin object AND its user relationship eagerly within the async fixture context
+    await db.refresh(admin_user_obj, attribute_names=['user'])
+    
+    # Now it's safe to access the user relationship
+    user_id_for_token = str(admin_user_obj.user.id)
+    logger.info(f"Created admin user {admin_user_obj.user.email} with Admin ID {admin_user_obj.id} for token generation")
+
+    access_token_expires = timedelta(minutes=test_settings.access_token_expire_minutes)
+    token = create_access_token(
+        subject=user_id_for_token, 
+        settings=test_settings, # Pass the whole settings object
+        expires_delta=access_token_expires
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+    logger.info(f"Generated token headers for admin user ID {user_id_for_token} (Admin ID {admin_user_obj.id})")
+    return headers, admin_user_obj # Return both
+
+@pytest.fixture(scope="function")
+def test_user_email() -> str:
+    """Return a test user email."""
+    return f"test_user_{uuid.uuid4()}@example.com"
+
+@pytest.fixture(scope="function")
+def test_user_password() -> str:
+    """Return a test user password."""
+    return "test_password123"

@@ -8,7 +8,9 @@ from app.core.auth import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
+import logging
 
+logger = logging.getLogger(__name__)
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     """User CRUD operations."""
@@ -102,13 +104,28 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         Returns:
             User if authenticated, None otherwise
         """
+        logger.debug(f"Attempting to authenticate user: {email}")
         user = await self.get_by_email(db, email=email)
         if not user:
+            logger.warning(f"Authentication failed: User {email} not found.")
             return None
+        
+        logger.debug(f"User found: {user.email}, ID: {user.id}. Verifying password...")
+        logger.debug(f"Stored hash: {user.hashed_password}")
+        
+        # Log the first few chars of the provided password for debugging (AVOID logging full password)
+        provided_password_snippet = password[:3] + "..."
+        logger.debug(f"Provided password snippet: {provided_password_snippet}")
+
         if not verify_password(password, user.hashed_password):
+            logger.warning(f"Authentication failed: Incorrect password for user {email}.")
             return None
+            
         if not user.is_active:
+            logger.warning(f"Authentication failed: User {email} is inactive.")
             return None
+            
+        logger.info(f"User {email} authenticated successfully.")
         return user
 
     def is_active(self, user: User) -> bool:

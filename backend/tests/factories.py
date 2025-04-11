@@ -8,11 +8,13 @@ import factory
 from factory import fuzzy
 from factory.faker import Faker
 from datetime import datetime, timezone
-from typing import Any, Type, Coroutine
+from typing import Any, Type, Coroutine, Generic, List, Optional, Sequence, TypeVar
 from uuid import uuid4
+import asyncio
 
 from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.item import Item
 from app.models.user import User
@@ -21,6 +23,11 @@ from app.schemas.user import UserCreate
 
 # Configure faker globally
 factory.Faker._DEFAULT_LOCALE = 'en_US'
+
+# Import the context variable from the new file
+from tests.session_context import current_test_session
+
+T = TypeVar("T", bound=SQLModel)
 
 class AsyncModelFactory(factory.Factory):
     """

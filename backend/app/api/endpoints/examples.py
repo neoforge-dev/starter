@@ -19,7 +19,7 @@ router = APIRouter(prefix="/examples", tags=["examples"])
 logger = structlog.get_logger()
 
 @router.get("/cached-users", response_model=List[UserResponse])
-@cached(ttl=timedelta(minutes=5))
+# @cached(ttl=timedelta(minutes=5)) # Temporarily comment out caching
 async def get_cached_users(db: MonitoredDB) -> List[UserResponse]:
     """
     Get all users with caching.

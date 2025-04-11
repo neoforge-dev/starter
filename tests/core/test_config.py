@@ -154,6 +154,24 @@ class TestConfigValidation:
         assert settings.debug is False
         assert settings.cors_origins == []
 
+    def test_settings_cors_validator_in_test_mode(self):
+        """Test the CORS validator empties list when environment is 'test'."""
+        # Clear cache just in case, though direct instantiation shouldn't use it
+        # clear_get_settings_cache()
+        
+        # Instantiate with environment='test' and explicitly provide cors_origins
+        # Assuming Environment.TEST evaluates to "test"
+        settings_env_test = Settings(
+            secret_key=VALID_SECRET_KEY, 
+            environment="test", # Use string literal for clarity
+            cors_origins=["http://should_be_removed.com"]
+        )
+        
+        # The model_validator should override the passed cors_origins
+        assert settings_env_test.cors_origins == [], "CORS origins should be empty in 'test' environment"
+        assert settings_env_test.testing is True, "Testing flag should be True in 'test' environment"
+        assert settings_env_test.debug is False, "Debug flag should be False in 'test' environment"
+
 # This test is now correctly placed at the module level
 def test_settings_cors_validator_in_test_mode():
     """Test the CORS validator specifically empties list when testing=True."""

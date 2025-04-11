@@ -2,7 +2,7 @@
 import asyncio
 import jwt
 import time
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Dict
 from datetime import datetime, timedelta, UTC
 
 import pytest
@@ -17,6 +17,7 @@ from app.api.middleware.security import SecurityHeadersMiddleware
 from app.api.middleware.validation import RequestValidationMiddleware
 from tests.factories import UserFactory
 from app.main import app
+from app.models.user import User
 
 pytestmark = pytest.mark.asyncio
 
@@ -81,17 +82,18 @@ async def test_error_handler_middleware(client: AsyncClient):
 
 
 async def test_error_handler_middleware_validation_error(
-    client: AsyncClient, 
-    regular_user_headers: dict, 
+    client: AsyncClient,
+    normal_user_token_headers: tuple[Dict[str, str], User],
     test_settings: Settings
 ):
     """Test handling of validation errors."""
+    headers, _ = normal_user_token_headers
     # Example: Try to create an item with invalid data (requires authentication)
     invalid_item_data = {"name": 123} # Invalid type for name
     response = await client.post(
-        f"{test_settings.api_v1_str}/items/", 
+        f"{test_settings.api_v1_str}/items/",
         json=invalid_item_data,
-        headers=regular_user_headers
+        headers=headers
     )
     assert response.status_code == 422 # Unprocessable Entity for validation errors
     data = response.json()

@@ -73,12 +73,12 @@ def test_settings_secret_key_validation():
 def test_settings_cors_validator_in_test_mode():
     """Test the CORS validator specifically empties list in test mode."""
     # Instantiate with testing=True
-    settings_testing = Settings(secret_key=VALID_SECRET_KEY, testing=True, cors_origins=["http://should_be_removed.com"])
-    assert settings_testing.cors_origins == []
-    
-    # Instantiate with environment=test
-    settings_env_test = Settings(secret_key=VALID_SECRET_KEY, environment=Environment.TEST, cors_origins=["http://should_be_removed.com"])
-    assert settings_env_test.cors_origins == []
+    settings_testing = Settings(
+        secret_key=VALID_SECRET_KEY, 
+        testing=True, 
+        cors_origins=["http://should_be_removed.com"]
+    )
+    assert settings_testing.cors_origins == [], "When testing=True, cors_origins should be empty"
 
 def test_get_settings_caching():
     """Test that get_settings caches the settings (relies on test env)."""

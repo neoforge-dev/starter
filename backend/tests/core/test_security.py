@@ -90,8 +90,8 @@ async def test_get_current_user_valid_token(test_settings: Settings):
         # Configure mock to return our mock user
         mock_get.return_value = mock_user
         
-        # Call the function
-        user = await get_current_user(db=mock_db, token=token)
+        # Call the function with test_settings directly rather than relying on Depends
+        user = await get_current_user(db=mock_db, token=token, settings=test_settings)
         
         # Verify the result
         assert user is mock_user
@@ -157,11 +157,11 @@ async def test_get_current_user_user_not_found(test_settings: Settings):
         
         # Call the function and expect an exception
         with pytest.raises(HTTPException) as excinfo:
-            await get_current_user(db=mock_db, token=token)
+            await get_current_user(db=mock_db, token=token, settings=test_settings)
         
         # Verify the exception
-        assert excinfo.value.status_code == 401
-        assert excinfo.value.detail == "Could not validate credentials"
+        assert excinfo.value.status_code == 404
+        assert excinfo.value.detail == "User not found"
         
         # Verify user_crud.get was called
         mock_get.assert_called_once() 

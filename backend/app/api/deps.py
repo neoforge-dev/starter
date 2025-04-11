@@ -8,11 +8,25 @@ import logging
 
 from app.models.user import User
 from app.models.admin import Admin
-from app.core.security import get_current_user
+from app.core.security import get_current_user, oauth2_scheme
 from app.core.config import Settings, get_settings
 from app.db.session import AsyncSessionLocal, get_db
 from app.db.query_monitor import QueryMonitor
 from app import crud
+
+
+# Dependency to get the current user based on token and settings
+# Note: This is the raw dependency, usually used via other dependencies below
+# def get_current_user_dependency( # REMOVED WRAPPER
+#     settings: Settings = Depends(get_settings),
+#     db: AsyncSession = Depends(get_db),
+#     token: str = Depends(oauth2_scheme)
+# ) -> User:
+#     # This wrapper calls the actual refactored get_current_user
+#     # We need this wrapper because FastAPI resolves dependencies based on
+#     # the function signature provided to Depends(), not the signature of the
+#     # underlying callable if it's different.
+#     return get_current_user(settings=settings, db=db, token=token)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -22,16 +36,20 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_current_active_user(
-    current_user: User = Depends(get_current_user),
+    # Now depend directly on the components needed by get_current_user
+    settings: Settings = Depends(get_settings),
+    db: AsyncSession = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
 ) -> User:
     """Get current active user."""
+    current_user = await get_current_user(settings=settings, db=db, token=token)
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 
 async def get_current_active_superuser(
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_active_user), # This dependency chain is now correct
 ) -> User:
     """Get current active superuser."""
     logger = logging.getLogger(__name__)
@@ -46,12 +64,17 @@ async def get_current_active_superuser(
 
 
 async def get_current_admin(
+    # Depend on components needed by get_current_user and for admin lookup
+    settings: Settings = Depends(get_settings),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    token: str = Depends(oauth2_scheme)
 ) -> Admin:
     """Get current admin user."""
+    # Get the user first
+    current_user = await get_current_user(settings=settings, db=db, token=token)
+    
     logger = logging.getLogger(__name__)
-    logger.debug(f"Attempting to get admin for user_id: {current_user.id}")
+    logger.debug(f"Attempting to get admin for user_id: {current_user.id}") # Now current_user is a User object
     
     try:
         admin = await crud.admin.get_by_user_id(db=db, user_id=current_user.id)
@@ -78,7 +101,7 @@ async def get_current_admin(
 
 
 async def get_current_active_admin(
-    current_admin: Admin = Depends(get_current_admin),
+    current_admin: Admin = Depends(get_current_admin), # This chain is now correct
 ) -> Admin:
     """Get current active admin."""
     if not current_admin.is_active:
