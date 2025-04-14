@@ -1,12 +1,12 @@
 # Linters / Formatters / Type Checkers
-ruff>=0.4.10,<0.5.0
-black>=24.4.0,<25.0.0
+ruff>=0.4.10,<0.12.0
+black>=24.4.0,<26.0.0
 # Testing
 pytest>=8.3.4,<9.0.0
-pytest-asyncio>=0.25.3,<0.26.0
+pytest-asyncio>=0.25.3,<0.27.0
 pytest-cov>=6.0.0,<7.0.0
 pytest-env>=1.1.3,<2.0.0
-httpx>=0.27.0,<0.28.0
+httpx>=0.27.0,<0.29.0
 pytest-faker>=35.2.0,<36.0.0
 # Debugging / Utilities
-ipython>=8.26.0,<9.0.0 
+ipython>=8.26.0,<10.0.0 
