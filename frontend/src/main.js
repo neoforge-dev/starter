@@ -5,10 +5,12 @@ import {
 import { baseStyles } from "./components/styles/base.js";
 import { lazyLoad } from "./utils/lazy-load.js";
 import registrationPromise from "./register-components.mjs";
+import { pwaService } from "./services/pwa.js";
 
 // Import critical components
 import "./components/header.js";
 import "./components/footer.js";
+import "./components/core/pwa-prompt.js";
 
 // Configure logging
 const isDev = import.meta.env.DEV;
@@ -144,6 +146,7 @@ class NeoApp extends LitElement {
           ${this.pageContent ? this.pageContent : html`<slot></slot>`}
         </main>
         <app-footer></app-footer>
+        <pwa-prompt></pwa-prompt>
       </div>
     `;
   }
@@ -158,3 +161,7 @@ const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
   : "light";
 const initialTheme = savedTheme === "system" ? systemTheme : savedTheme;
 document.documentElement.setAttribute("data-theme", initialTheme);
+
+// Initialize PWA service
+pwaService.initialize();
+pwaService.enablePeriodicUpdates(60); // Check for updates every hour

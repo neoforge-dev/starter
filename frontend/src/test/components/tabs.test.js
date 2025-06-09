@@ -230,7 +230,7 @@ describe("Tabs", () => {
     expect(element.tabButtons[0].getAttribute("aria-selected")).toBe("false");
   });
 
-  it.skip("supports keyboard navigation", () => {
+  it("supports keyboard navigation", () => {
     // Set up keyboard event
     const rightArrowEvent = new KeyboardEvent("keydown", {
       key: "ArrowRight",
@@ -244,14 +244,14 @@ describe("Tabs", () => {
     // Start with tab1 selected
     element.selected = "tab1";
 
-    // Simulate right arrow key
-    element.shadowRoot.querySelector(".tabs").dispatchEvent(rightArrowEvent);
+    // Simulate right arrow key directly on the element
+    element.handleKeyDown(rightArrowEvent);
 
     // Check that selected tab is updated
     expect(element.selected).toBe("tab2");
 
     // Simulate left arrow key
-    element.shadowRoot.querySelector(".tabs").dispatchEvent(leftArrowEvent);
+    element.handleKeyDown(leftArrowEvent);
 
     // Check that selected tab is updated
     expect(element.selected).toBe("tab1");

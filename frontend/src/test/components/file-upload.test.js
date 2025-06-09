@@ -326,7 +326,7 @@ describe("FileUpload", () => {
     expect(errorSpy).toHaveBeenCalled();
   });
 
-  it.skip("should validate file type", () => {
+  it("should validate file type", () => {
     const errorSpy = vi.fn();
     element.addEventListener("error", errorSpy);
 
@@ -343,7 +343,7 @@ describe("FileUpload", () => {
     expect(errorSpy).toHaveBeenCalled();
   });
 
-  it.skip("should handle multiple files when multiple is true", () => {
+  it("should handle multiple files when multiple is true", () => {
     element.multiple = true;
 
     const file1 = new File(["content 1"], "file1.txt", { type: "text/plain" });
@@ -361,7 +361,7 @@ describe("FileUpload", () => {
     expect(element.files[1]).toEqual(file2);
   });
 
-  it.skip("should replace file when multiple is false", () => {
+  it("should replace file when multiple is false", () => {
     element.multiple = false;
 
     const file1 = new File(["content 1"], "file1.txt", { type: "text/plain" });

@@ -168,6 +168,7 @@ export class SignupForm extends LoadingMixin(ErrorMixin(LitElement)) {
           <input
             type="text"
             id="name"
+            data-testid="name-input"
             .value=${this.name}
             @input=${(e) => this.name = e.target.value}
             placeholder="Enter your full name"
@@ -180,6 +181,7 @@ export class SignupForm extends LoadingMixin(ErrorMixin(LitElement)) {
           <input
             type="email"
             id="email"
+            data-testid="email-input"
             .value=${this.email}
             @input=${(e) => this.email = e.target.value}
             placeholder="Enter your email"
@@ -192,6 +194,7 @@ export class SignupForm extends LoadingMixin(ErrorMixin(LitElement)) {
           <input
             type="password"
             id="password"
+            data-testid="password-input"
             .value=${this.password}
             @input=${(e) => this.password = e.target.value}
             placeholder="Create a password"
@@ -204,6 +207,7 @@ export class SignupForm extends LoadingMixin(ErrorMixin(LitElement)) {
           <input
             type="password"
             id="confirm-password"
+            data-testid="confirm-password-input"
             .value=${this.confirmPassword}
             @input=${(e) => this.confirmPassword = e.target.value}
             placeholder="Confirm your password"
@@ -212,10 +216,10 @@ export class SignupForm extends LoadingMixin(ErrorMixin(LitElement)) {
         </div>
 
         ${this.error ? html`
-          <div class="error-message">${this.error}</div>
+          <div class="error-message" data-testid="error">${this.error}</div>
         ` : ''}
 
-        <button type="submit" ?disabled=${this.loading}>
+        <button type="submit" data-testid="register-button" ?disabled=${this.loading}>
           ${this.loading ? 'Creating Account...' : 'Create Account'}
         </button>
       </form>

@@ -343,7 +343,7 @@ describe("NeoProgressBar", () => {
     expect(element.progressContainer.hasAttribute("aria-valuenow")).toBe(false);
   });
 
-  it.skip("should update screen reader text based on progress", () => {
+  it("should update screen reader text based on progress", () => {
     element.value = 33;
     expect(element.srOnly.textContent).toBe("Progress: 33%");
 

@@ -359,7 +359,7 @@ describe("NeoModal", () => {
     expect(element._overlay.classList.contains("open")).toBe(false);
   });
 
-  it.skip("dispatches neo-close event when closed", () => {
+  it("dispatches neo-close event when closed", () => {
     element.open = true;
 
     const closeSpy = vi.fn();
@@ -377,7 +377,7 @@ describe("NeoModal", () => {
     });
   });
 
-  it.skip("closes when escape key is pressed", () => {
+  it("closes when escape key is pressed", () => {
     element.open = true;
     element.closeOnEscape = true;
 
@@ -397,7 +397,7 @@ describe("NeoModal", () => {
     });
   });
 
-  it.skip("doesn't close on escape when closeOnEscape is false", () => {
+  it("doesn't close on escape when closeOnEscape is false", () => {
     element.open = true;
     element.closeOnEscape = false;
 

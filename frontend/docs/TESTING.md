@@ -4,6 +4,17 @@
 
 This document provides guidelines for writing and running tests for the NeoForge frontend components. It covers best practices, common patterns, and solutions to known issues.
 
+## Current Test Status
+
+**Test Results**: 659 passing, 34 skipped (75/88 test files passing)
+- **Component Tests**: Enabled 8 previously skipped tests with improved mocks
+- **Key improvements**:
+  - File upload component: 3 tests enabled (file validation, multiple files)
+  - Modal component: 3 tests enabled (events, keyboard handling)
+  - Tabs component: 1 test enabled (keyboard navigation)
+  - Progress bar component: 1 test enabled (accessibility)
+- **Skipped tests**: Mostly E2E tests requiring browser environment
+
 ## Test Types
 
 - **Unit Tests**: Test individual components and services in isolation

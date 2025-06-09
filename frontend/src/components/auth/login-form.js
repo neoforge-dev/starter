@@ -180,13 +180,13 @@ export class LoginForm extends LitElement {
       >
         <div class="form-group">
           <label for="email">Email</label>
-          <input type="email" id="email" name="email" required />
+          <input type="email" id="email" name="email" data-testid="login-email" required />
           <div class="field-error" id="email-error"></div>
         </div>
         <div class="form-group">
           <label for="password">Password</label>
           <div style="position: relative;">
-            <input type="password" id="password" name="password" required />
+            <input type="password" id="password" name="password" data-testid="login-password" required />
             <button
               type="button"
               class="toggle-password"
@@ -202,9 +202,9 @@ export class LoginForm extends LitElement {
           <div class="password-strength"></div>
         </div>
         ${this.errorMessage
-          ? html`<div class="error-message">${this.errorMessage}</div>`
+          ? html`<div class="error-message" data-testid="error">${this.errorMessage}</div>`
           : ""}
-        <button type="submit" ?disabled=${this.isLoading}>
+        <button type="submit" data-testid="login-button" ?disabled=${this.isLoading}>
           ${this.isLoading
             ? html`<span class="loading-spinner"></span>`
             : "Login"}
