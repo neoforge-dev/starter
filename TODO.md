@@ -48,8 +48,8 @@
 
 ## Next Priorities
 - ⏳ Implement PWA features
-  - 🔲 Add web manifest
-  - 🔲 Configure service worker
+  - ✅ Add web manifest
+  - ✅ Configure service worker
   - 🔲 Implement offline support
   - 🔲 Add install prompt
   - 🔲 Set up push notifications

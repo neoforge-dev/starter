@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose:*)",
+      "Bash(ls:*)",
+      "Bash(npm run test:*)",
+      "Bash(find:*)"
+    ],
+    "deny": []
+  }
+}

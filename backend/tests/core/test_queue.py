@@ -460,4 +460,32 @@ async def test_global_email_queue_instance():
     assert email_queue.processing_key == "email:processing"
     assert email_queue.completed_key == "email:completed"
     assert email_queue.failed_key == "email:failed"
-    assert email_queue.email_data_key == "email:data" 
+    assert email_queue.email_data_key == "email:data"
+
+
+@pytest.mark.asyncio 
+async def test_email_queue_fallback_redis_creation():
+    """Test EmailQueue creates fallback Redis instance when none provided."""
+    with patch('app.core.queue.Redis') as mock_redis_class, \
+         patch('app.core.queue.get_settings') as mock_get_settings, \
+         patch('app.core.queue.redis_client', None):  # Mock global redis_client as None
+        
+        # Mock settings
+        mock_settings = MagicMock()
+        mock_settings.redis_url = "redis://localhost:6379"
+        mock_get_settings.return_value = mock_settings
+        
+        # Mock Redis.from_url to return a mock instance
+        mock_redis_instance = MagicMock()
+        mock_redis_class.from_url.return_value = mock_redis_instance
+        
+        # Create EmailQueue without providing redis parameter
+        queue = EmailQueue(redis=None)
+        
+        # Verify fallback Redis was created
+        mock_get_settings.assert_called_once()
+        mock_redis_class.from_url.assert_called_once_with(
+            mock_settings.redis_url, 
+            decode_responses=True
+        )
+        assert queue.redis == mock_redis_instance 

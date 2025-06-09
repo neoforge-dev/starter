@@ -62,7 +62,8 @@ Your development environment is now running:
 - Frontend: http://localhost:8080 (served directly, no build needed)
 - Backend API: http://localhost:8000
 - API Documentation: http://localhost:8000/docs
-- Admin Interface: http://localhost:8000/admin (if enabled)
+- Health Check: http://localhost:8000/health
+- Metrics: http://localhost:8000/metrics
 
 ## Development Environment
 
@@ -109,28 +110,39 @@ ENVIRONMENT=development
 ```
 your-project/
 ├── backend/                 # FastAPI application
-│   ├── api/                # API endpoints
-│   │   ├── v1/            # API version 1
-│   │   └── deps.py        # Dependencies
-│   ├── core/              # Core functionality
-│   │   ├── config.py      # Configuration
-│   │   └── security.py    # Security utilities
-│   ├── db/                # Database
-│   │   ├── base.py        # Base models
-│   │   └── session.py     # DB session
-│   ├── models/            # SQLModel models
-│   └── schemas/           # Pydantic schemas
-├── frontend/              # Browser-native web components
+│   ├── app/
+│   │   ├── api/            # API endpoints and middleware
+│   │   │   ├── v1/        # API version 1 endpoints
+│   │   │   ├── middleware/ # Security and validation
+│   │   │   └── deps.py    # Dependencies
+│   │   ├── core/          # Core functionality
+│   │   │   ├── config.py  # Configuration
+│   │   │   ├── security.py # Security utilities
+│   │   │   ├── database.py # Database connection
+│   │   │   └── email.py   # Email services
+│   │   ├── crud/          # Database operations
+│   │   ├── db/            # Database models and sessions
+│   │   ├── models/        # SQLModel models
+│   │   ├── schemas/       # Pydantic schemas
+│   │   └── worker/        # Background tasks
+│   └── tests/             # Comprehensive test suite (270+ tests)
+├── frontend/              # Lit-based web components
 │   ├── src/
-│   │   ├── components/    # Web components
-│   │   │   ├── core/     # Core components
-│   │   │   └── features/ # Feature components
-│   │   ├── pages/        # Route pages
-│   │   └── styles/       # Shared styles
+│   │   ├── components/    # Web components (atomic design)
+│   │   │   ├── atoms/    # Basic UI elements
+│   │   │   ├── molecules/ # Composed components
+│   │   │   ├── organisms/ # Complex components
+│   │   │   └── pages/    # Full page components
+│   │   ├── services/     # API clients and utilities
+│   │   ├── styles/       # Shared styles and themes
+│   │   └── test/         # Frontend tests (123 test files)
 │   └── index.html        # Entry point
-├── deploy/                # Deployment configs
-├── tests/                # Test suite
-└── docker/               # Docker configs
+├── docs/                 # Project documentation
+├── deploy/               # Infrastructure as code
+│   ├── terraform/        # Terraform configurations
+│   ├── nomad/           # Container orchestration
+│   └── prometheus/      # Monitoring setup
+└── Makefile             # Development tasks
 ```
 
 ## First Application

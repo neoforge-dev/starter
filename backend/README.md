@@ -65,16 +65,16 @@ make fix-collation
 
 ```bash
 # Run all tests with verbose output
-./scripts/run_tests_fixed.sh -v
+docker compose -f docker-compose.dev.yml run --rm api pytest -v
 
 # Run specific tests
-./scripts/run_tests_fixed.sh -v tests/test_api
+docker compose -f docker-compose.dev.yml run --rm api pytest tests/api/test_users.py -v
 
 # Run tests with specific markers
-./scripts/run_tests_fixed.sh -m "not db" -v
+docker compose -f docker-compose.dev.yml run --rm api pytest -m "not db" -v
 
 # Run tests with coverage report
-./scripts/run_tests_fixed.sh -c -v
+docker compose -f docker-compose.dev.yml run --rm api pytest --cov --cov-report=html -v
 ```
 
 ## 🏗 Project Structure

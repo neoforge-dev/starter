@@ -23,6 +23,8 @@ from app.schemas.admin import AdminWithUser
 from tests.factories import UserFactory, AdminFactory
 from tests.utils.admin import create_random_admin
 from app.crud import user as user_crud
+from app.db.query_monitor import QueryMonitor
+from unittest.mock import patch
 
 # Configure logger for this module
 logger = logging.getLogger(__name__)
@@ -305,4 +307,107 @@ async def test_get_current_active_admin(db: AsyncSession):
     
     # Test the dependency directly
     current_admin = await deps.get_current_active_admin(current_admin=admin)
-    assert current_admin == admin 
+    assert current_admin == admin
+
+
+async def test_get_current_active_admin_inactive_directly(db: AsyncSession):
+    """Test getting current active admin with inactive admin (direct function call)."""
+    # Create an active admin, then mark it inactive
+    admin = await create_random_admin(db, role=AdminRole.USER_ADMIN)
+    admin.is_active = False
+    await db.commit()
+    
+    # Test the dependency directly, expecting HTTPException
+    with pytest.raises(HTTPException) as exc_info:
+        await deps.get_current_active_admin(current_admin=admin)
+    assert exc_info.value.status_code == 403
+    assert "Inactive admin user" in exc_info.value.detail
+
+
+async def test_get_db_non_test_session():
+    """Test get_db when no test session is available."""
+    from fastapi import Request
+    from unittest.mock import Mock
+    
+    # Create a mock request without test session
+    mock_request = Mock(spec=Request)
+    mock_request.app.state = Mock()
+    # Ensure no _test_session attribute exists
+    if hasattr(mock_request.app.state, '_test_session'):
+        delattr(mock_request.app.state, '_test_session')
+    
+    # This should use the AsyncSessionLocal path
+    async for session in deps.get_db(mock_request):
+        assert isinstance(session, AsyncSession)
+        break
+
+
+async def test_get_monitored_db_test_session(db: AsyncSession):
+    """Test get_monitored_db with test session."""
+    from fastapi import Request
+    from unittest.mock import Mock
+    
+    # Create a mock request with test session
+    mock_request = Mock(spec=Request)
+    mock_request.app.state = Mock()
+    mock_request.app.state._test_session = db
+    
+    # This should use the test session path
+    async for monitor in deps.get_monitored_db(mock_request):
+        assert isinstance(monitor, QueryMonitor)
+        assert monitor.session == db
+        break
+
+
+async def test_get_monitored_db_error_handling():
+    """Test get_monitored_db error handling paths."""
+    from fastapi import Request
+    from unittest.mock import Mock, patch, AsyncMock
+    
+    # Create a mock request without test session
+    mock_request = Mock(spec=Request)
+    mock_request.app.state = Mock()
+    if hasattr(mock_request.app.state, '_test_session'):
+        delattr(mock_request.app.state, '_test_session')
+    
+    # Mock get_db to raise StopAsyncIteration
+    with patch('app.api.deps.get_db') as mock_get_db:
+        async def mock_generator():
+            # Immediately raise StopAsyncIteration (empty generator)
+            return
+            yield  # This line never executes
+        
+        mock_get_db.return_value = mock_generator()
+        
+        with pytest.raises(HTTPException) as exc_info:
+            async for _ in deps.get_monitored_db(mock_request):
+                pass
+        
+        assert exc_info.value.status_code == 503
+        assert "Database connection failed" in exc_info.value.detail
+
+
+async def test_get_current_admin_unexpected_exception(db: AsyncSession, test_settings: Settings):
+    """Test get_current_admin with unexpected exception during admin lookup."""
+    # Create a valid user
+    user = await UserFactory.create(session=db, is_active=True)
+    await db.commit()
+    
+    # Create a valid token
+    token = create_access_token(
+        subject=str(user.id), 
+        settings=test_settings
+    )
+    
+    # Mock crud.admin.get_by_user_id to raise an unexpected exception
+    with patch('app.api.deps.crud.admin.get_by_user_id') as mock_get_by_user_id:
+        mock_get_by_user_id.side_effect = Exception("Database error")
+        
+        with pytest.raises(Exception) as exc_info:
+            await deps.get_current_admin(
+                settings=test_settings,
+                db=db,
+                token=token
+            )
+        
+        assert "Database error" in str(exc_info.value) 

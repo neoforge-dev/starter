@@ -11,6 +11,16 @@ The NeoForge backend testing infrastructure is designed to run all tests inside 
 3. Database and Redis services are properly isolated
 4. Test results are reproducible
 
+## Current Test Status
+
+**Coverage**: 90% (exceeds 80% target)
+- **Tests**: 270 passing, 1 skipped, 2 deferred health tests
+- **Key modules**:
+  - `deps` module: 68% coverage (improved with 5 new tests)
+  - `queue` module: 81% coverage (added fallback Redis test)
+  - `health` module: Basic health check test added
+- **Deferred tests**: 2 complex health check tests requiring advanced mocking
+
 ## Key Components
 
 ### Docker Setup

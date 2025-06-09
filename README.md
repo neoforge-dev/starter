@@ -134,33 +134,71 @@ Tests run in a dedicated container with:
 - Async test support
 - Full coverage reporting
 
-```bash
-# Run specific test file
-docker compose -f backend/docker-compose.dev.yml run --rm test pytest tests/api/test_users.py -v
+**Current Test Coverage:**
+- **Backend**: 90% coverage (270 tests passing, 2 failed, 1 skipped)
+- **Frontend**: 75/88 test files passing (659 tests passing, 34 skipped)
 
-# Run with coverage report
-docker compose -f backend/docker-compose.dev.yml run --rm test pytest --cov=app --cov-report=html
+```bash
+# Backend tests
+docker compose -f backend/docker-compose.dev.yml run --rm api pytest --cov --cov-report=html
+
+# Frontend tests
+cd frontend && npm run test:unit
+cd frontend && npm run test:coverage
+
+# Run specific test file
+docker compose -f backend/docker-compose.dev.yml run --rm api pytest tests/api/test_users.py -v
 ```
 
 ## Project Structure
 
 ```
 neoforge/
-├── backend/
+├── backend/                    # FastAPI backend application
 │   ├── app/
-│   │   ├── api/           # API endpoints
-│   │   ├── core/          # Core functionality
-│   │   ├── models/        # SQLModel models
-│   │   └── services/      # Business logic
-│   ├── tests/
-│   │   ├── factories.py   # Test data factories
-│   │   └── conftest.py    # Test configuration
+│   │   ├── api/               # API endpoints and middleware
+│   │   │   ├── v1/           # API version 1 endpoints
+│   │   │   ├── middleware/   # Security and validation middleware
+│   │   │   └── deps.py       # Dependency injection
+│   │   ├── core/             # Core functionality
+│   │   │   ├── config.py     # Configuration management
+│   │   │   ├── security.py   # Authentication & authorization
+│   │   │   ├── database.py   # Database setup
+│   │   │   ├── email.py      # Email services
+│   │   │   └── metrics.py    # Performance monitoring
+│   │   ├── crud/             # Database operations
+│   │   ├── db/               # Database models and session management
+│   │   ├── models/           # SQLModel data models
+│   │   ├── schemas/          # Pydantic schemas for validation
+│   │   └── worker/           # Background task workers
+│   ├── tests/                # Comprehensive test suite (270+ tests)
+│   │   ├── api/              # API endpoint tests
+│   │   ├── core/             # Core functionality tests
+│   │   ├── crud/             # Database operation tests
+│   │   └── conftest.py       # Test configuration
 │   └── docker-compose.dev.yml
-├── frontend/
-│   ├── index.html
-│   └── js/
-│       └── components/    # Web components
-└── Makefile              # Development tasks
+├── frontend/                  # Lit-based web components frontend
+│   ├── src/
+│   │   ├── components/       # Web components (atomic design)
+│   │   │   ├── atoms/        # Basic UI elements
+│   │   │   ├── molecules/    # Composed components
+│   │   │   ├── organisms/    # Complex components
+│   │   │   └── pages/        # Full page components
+│   │   ├── services/         # API clients and utilities
+│   │   ├── styles/           # Shared styles and themes
+│   │   └── test/             # Frontend tests (123 test files)
+│   ├── docs/                 # Component documentation
+│   └── index.html            # Application entry point
+├── docs/                     # Project documentation
+│   ├── architecture.md      # System architecture
+│   ├── api/                 # API documentation
+│   ├── frontend/            # Frontend guides
+│   └── deployment.md        # Deployment instructions
+├── deploy/                   # Infrastructure as code
+│   ├── terraform/           # Terraform configurations
+│   ├── nomad/              # Nomad job specifications
+│   └── prometheus/         # Monitoring configuration
+└── Makefile                 # Development task automation
 ```
 
 ## Best Practices
