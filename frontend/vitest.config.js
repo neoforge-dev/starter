@@ -109,9 +109,51 @@ export default defineConfig({
     // Coverage configuration
     coverage: {
       provider: "v8",
-      include: ["src/**/*.js", "src/**/*.vue"],
-      exclude: ["node_modules", "dist"],
-      reporter: ["text", "json", "html"],
+      include: [
+        "src/**/*.js",
+        "src/components/**/*.js",
+        "src/services/**/*.js",
+        "src/pages/**/*.js",
+        "src/utils/**/*.js"
+      ],
+      exclude: [
+        "node_modules/**",
+        "dist/**",
+        "src/test/**",
+        "src/stories/**",
+        "**/*.test.js",
+        "**/*.spec.js",
+        "**/*.stories.js",
+        "src/test/setup/**",
+        "src/test/mocks/**",
+        "src/test/helpers/**"
+      ],
+      reporter: ["text", "json", "html", "lcov"],
+      reportsDirectory: "./coverage",
+      thresholds: {
+        global: {
+          branches: 75,
+          functions: 75,
+          lines: 80,
+          statements: 80
+        },
+        // Per-file thresholds for critical components
+        "src/services/**/*.js": {
+          branches: 85,
+          functions: 85,
+          lines: 90,
+          statements: 90
+        },
+        "src/utils/**/*.js": {
+          branches: 80,
+          functions: 80,
+          lines: 85,
+          statements: 85
+        }
+      },
+      all: true,
+      clean: true,
+      skipFull: false
     },
     // Setup files - these are loaded before tests run
     setupFiles: [

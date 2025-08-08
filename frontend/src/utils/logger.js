@@ -23,10 +23,13 @@ class LoggerService {
   /**
    * Get the log level from environment or default to 'info'.
    * If a log level is stored in localStorage, use that value.
+   * In production, default to 'error' to minimize console output.
    * @returns {string}
    */
   _getLogLevel() {
-    return localStorage.getItem('logLevel') || window.LOG_LEVEL || 'info';
+    const isProduction = import.meta.env.PROD;
+    const defaultLevel = isProduction ? 'error' : 'info';
+    return localStorage.getItem('logLevel') || window.LOG_LEVEL || defaultLevel;
   }
 
   /**

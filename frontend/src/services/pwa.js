@@ -1,3 +1,6 @@
+import { Logger } from '../utils/logger.js';
+import { offlineStorage } from './offline-storage.js';
+
 /**
  * Service to handle PWA installation and updates
  */
@@ -13,6 +16,9 @@ class PWAService {
    * Initialize PWA service
    */
   async initialize() {
+    // Initialize offline storage
+    await offlineStorage.initialize();
+    
     // Register service worker
     if ("serviceWorker" in navigator) {
       try {
@@ -43,9 +49,15 @@ class PWAService {
           });
         });
 
-        console.log("Service Worker registered successfully");
+        // Enable background sync if supported
+        if (typeof window !== 'undefined' && window.ServiceWorkerRegistration && 'sync' in window.ServiceWorkerRegistration.prototype) {
+          await registration.sync.register('background-sync');
+          Logger.info("Background sync enabled");
+        }
+
+        Logger.info("Service Worker registered successfully");
       } catch (error) {
-        console.error("Service Worker registration failed:", error);
+        Logger.error("Service Worker registration failed:", error);
       }
     }
   }
@@ -75,21 +87,21 @@ class PWAService {
    */
   async promptInstall() {
     if (!this.deferredInstallPrompt) {
-      console.log("Installation prompt not available");
+      Logger.debug("Installation prompt not available");
       return false;
     }
 
     try {
       // Show prompt
       const result = await this.deferredInstallPrompt.prompt();
-      console.log("Install prompt result:", result);
+      Logger.info("Install prompt result:", result);
 
       // Clear the deferred prompt
       this.deferredInstallPrompt = null;
 
       return result.outcome === "accepted";
     } catch (error) {
-      console.error("Error showing install prompt:", error);
+      Logger.error("Error showing install prompt:", error);
       return false;
     }
   }
@@ -110,7 +122,7 @@ class PWAService {
         window.location.reload();
       }
     } catch (error) {
-      console.error("Error applying update:", error);
+      Logger.error("Error applying update:", error);
     }
   }
 
@@ -175,7 +187,7 @@ class PWAService {
       const registration = await navigator.serviceWorker.ready;
       await registration.update();
     } catch (error) {
-      console.error("Error checking for updates:", error);
+      Logger.error("Error checking for updates:", error);
     }
   }
 
@@ -185,6 +197,47 @@ class PWAService {
    */
   enablePeriodicUpdates(intervalMinutes = 60) {
     setInterval(() => this.checkForUpdates(), intervalMinutes * 60 * 1000);
+  }
+
+  /**
+   * Get offline functionality status
+   * @returns {Promise<Object>} Offline status and statistics
+   */
+  async getOfflineStatus() {
+    const stats = await offlineStorage.getCacheStats();
+    return {
+      isOnline: navigator.onLine,
+      serviceWorkerActive: !!navigator.serviceWorker.controller,
+      ...stats
+    };
+  }
+
+  /**
+   * Queue an action to be performed when back online
+   * @param {Object} action - Action to queue
+   * @returns {Promise<string>} Action ID
+   */
+  async queueOfflineAction(action) {
+    return await offlineStorage.queueAction(action);
+  }
+
+  /**
+   * Store data for offline access
+   * @param {string} key - Storage key
+   * @param {any} data - Data to store
+   * @param {number} ttl - Time to live in milliseconds (optional)
+   */
+  async storeOfflineData(key, data, ttl) {
+    return await offlineStorage.setItem(key, data, ttl);
+  }
+
+  /**
+   * Get data from offline storage
+   * @param {string} key - Storage key
+   * @returns {Promise<any>} Stored data
+   */
+  async getOfflineData(key) {
+    return await offlineStorage.getItem(key);
   }
 }
 

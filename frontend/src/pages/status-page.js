@@ -1,6 +1,7 @@
 import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
+import { apiService } from "../services/api.js";
 
 /**
  * @element status-page
@@ -13,6 +14,9 @@ export class StatusPage extends BaseComponent {
     error: { type: String },
     darkMode: { type: Boolean },
     selectedFilter: { type: String },
+    subscribing: { type: Boolean },
+    subscribed: { type: Boolean },
+    email: { type: String },
   };
 
   constructor() {
@@ -22,6 +26,9 @@ export class StatusPage extends BaseComponent {
     this.error = null;
     this.darkMode = false;
     this.selectedFilter = "all";
+    this.subscribing = false;
+    this.subscribed = false;
+    this.email = "";
     console.log("Initializing shadow root for STATUS-PAGE");
   }
 
@@ -34,7 +41,7 @@ export class StatusPage extends BaseComponent {
   async _fetchStatus() {
     try {
       this.loading = true;
-      this.status = await window.status.getStatus();
+      this.status = await apiService.getSystemStatus();
     } catch (err) {
       this.error = err.message;
     } finally {
@@ -47,9 +54,35 @@ export class StatusPage extends BaseComponent {
     this.selectedFilter = e.target.value;
   }
 
-  _handleSubscribe() {
-    console.log("Binding event handler _handleSubscribe for STATUS-PAGE");
-    // TODO: Implement subscription logic
+  _handleEmailInput(e) {
+    this.email = e.target.value;
+  }
+
+  async _handleSubscribe() {
+    if (!this.email) {
+      this.error = "Please enter a valid email address";
+      return;
+    }
+
+    try {
+      this.subscribing = true;
+      this.error = null;
+      
+      await apiService.subscribeToStatusUpdates(this.email);
+      
+      this.subscribed = true;
+      this.subscribing = false;
+      
+      // Show success message
+      this.dispatchEvent(new CustomEvent('subscription-success', {
+        detail: { email: this.email },
+        bubbles: true
+      }));
+      
+    } catch (error) {
+      this.error = `Subscription failed: ${error.message}`;
+      this.subscribing = false;
+    }
   }
 
   static styles = [
@@ -86,6 +119,56 @@ export class StatusPage extends BaseComponent {
       .dark {
         background: var(--color-bg-dark);
         color: var(--color-text-dark);
+      }
+
+      .subscribe-section {
+        background: var(--color-bg-light);
+        border-radius: var(--border-radius);
+        padding: var(--spacing-lg);
+        margin-top: var(--spacing-lg);
+      }
+
+      .subscribe-form {
+        display: flex;
+        gap: var(--spacing-md);
+        align-items: flex-end;
+        margin-top: var(--spacing-md);
+      }
+
+      .subscribe-form input {
+        flex: 1;
+        padding: var(--spacing-sm);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-sm);
+      }
+
+      .subscribe-form button {
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .subscribe-form button:hover:not(:disabled) {
+        background: var(--color-primary-dark);
+      }
+
+      .subscribe-form button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .success-message {
+        color: var(--color-success);
+        margin-top: var(--spacing-sm);
+      }
+
+      .error-message {
+        color: var(--color-error);
+        margin-top: var(--spacing-sm);
       }
     `,
   ];
@@ -154,9 +237,42 @@ export class StatusPage extends BaseComponent {
                 </div>
 
                 <div class="subscribe-section">
-                  <button @click=${this._handleSubscribe}>
-                    Subscribe to Updates
-                  </button>
+                  <h2>Stay Updated</h2>
+                  <p>Get notified about system status changes and maintenance windows.</p>
+                  
+                  ${this.subscribed
+                    ? html`
+                        <div class="success-message">
+                          ✅ Successfully subscribed! You'll receive updates at ${this.email}
+                        </div>
+                      `
+                    : html`
+                        <div class="subscribe-form">
+                          <div>
+                            <label for="email">Email Address</label>
+                            <input
+                              id="email"
+                              type="email"
+                              placeholder="your@email.com"
+                              .value=${this.email}
+                              @input=${this._handleEmailInput}
+                              ?disabled=${this.subscribing}
+                            />
+                          </div>
+                          <button
+                            @click=${this._handleSubscribe}
+                            ?disabled=${this.subscribing || !this.email}
+                          >
+                            ${this.subscribing ? "Subscribing..." : "Subscribe"}
+                          </button>
+                        </div>
+                        
+                        ${this.error && !this.loading
+                          ? html`<div class="error-message">${this.error}</div>`
+                          : ""
+                        }
+                      `
+                  }
                 </div>
               `}
       </div>
