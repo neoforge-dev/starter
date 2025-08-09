@@ -1,4 +1,5 @@
 """User CRUD operations."""
+from datetime import datetime
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy import select
@@ -151,6 +152,41 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             True if user is superuser, False otherwise
         """
         return user.is_superuser
+
+    async def verify_email(self, db: AsyncSession, *, user_id: int) -> Optional[User]:
+        """
+        Mark user's email as verified.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            
+        Returns:
+            Updated user if found, None otherwise
+        """
+        user = await self.get(db, id=user_id)
+        if not user:
+            return None
+        
+        # Mark as verified with timestamp
+        user.is_verified = True
+        user.email_verified_at = datetime.utcnow()
+        
+        await db.flush()
+        await db.refresh(user)
+        return user
+
+    def is_verified(self, user: User) -> bool:
+        """
+        Check if user's email is verified.
+        
+        Args:
+            user: User object
+            
+        Returns:
+            True if user is verified, False otherwise
+        """
+        return user.is_verified
 
 
 user = CRUDUser() 

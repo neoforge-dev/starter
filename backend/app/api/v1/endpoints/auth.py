@@ -6,15 +6,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import create_access_token
+from app.core.security import create_access_token, validate_verification_token
 from app.core.config import Settings, get_settings
 from app.crud.user import user as user_crud
 from app.api.deps import get_db
-from app.schemas.auth import Token, TokenPayload, PasswordResetRequest, PasswordResetConfirm
+from app.schemas.auth import Token, TokenPayload, PasswordResetRequest, PasswordResetConfirm, EmailVerification, ResendVerification
 from app.schemas.user import UserCreate, UserResponse
 from app.models.user import User
 from app.core.email import send_new_account_email, send_reset_password_email
-from app.core.security import verify_password, get_password_hash
+from app.core.auth import verify_password, get_password_hash
 from app.crud import user as user_crud, password_reset_token
 import logging # Import logging
 
@@ -292,4 +292,151 @@ async def reset_password_confirm(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unable to reset password. Please try again or request a new reset token."
+        )
+
+
+@router.post("/verify-email", response_model=dict)
+async def verify_email(
+    verify_data: EmailVerification,
+    settings: Annotated[Settings, Depends(get_settings)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict:
+    """
+    Verify user's email address using verification token.
+    
+    This endpoint:
+    1. Validates the verification token (JWT)
+    2. Checks token is not expired
+    3. Marks user's email as verified
+    4. Returns success confirmation
+    """
+    logger.info("Email verification attempt")
+    
+    # Validate verification token and get user
+    user = await validate_verification_token(
+        verify_data.token, settings, db
+    )
+    
+    if not user:
+        logger.warning("Invalid or expired email verification token provided")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification token"
+        )
+    
+    # Check if already verified
+    if user.is_verified:
+        logger.info(f"Email already verified for user {user.id} ({user.email})")
+        return {
+            "message": "Email address is already verified."
+        }
+    
+    try:
+        # Mark email as verified
+        verified_user = await user_crud.verify_email(db, user_id=user.id)
+        
+        if not verified_user:
+            logger.error(f"Failed to verify email for user {user.id}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unable to verify email. Please try again."
+            )
+        
+        await db.commit()
+        
+        logger.info(f"Email successfully verified for user {user.id} ({user.email})")
+        
+        return {
+            "message": "Email address has been successfully verified. Welcome to our platform!"
+        }
+        
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Email verification failed for user {user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to verify email. Please try again or request a new verification link."
+        )
+
+
+@router.post("/resend-verification", response_model=dict)
+async def resend_verification(
+    resend_data: ResendVerification,
+    settings: Annotated[Settings, Depends(get_settings)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict:
+    """
+    Resend email verification link.
+    
+    This endpoint:
+    1. Validates the email address
+    2. Finds the user (if exists and not verified)
+    3. Generates a new verification token
+    4. Sends verification email
+    5. Returns generic success message (doesn't reveal if email exists)
+    """
+    logger.info(f"Verification resend requested for email: {resend_data.email}")
+    
+    try:
+        # Look up user by email
+        user = await user_crud.get_by_email(db, email=resend_data.email)
+        
+        if user:
+            # Check if already verified
+            if user.is_verified:
+                logger.info(f"Verification resend requested for already verified user: {resend_data.email}")
+                # Return success anyway to prevent email enumeration
+                return {
+                    "message": "If the email address is registered and not yet verified, you will receive a verification link shortly."
+                }
+            
+            # Check for rate limiting - reuse password reset logic
+            has_recent_reset = await password_reset_token.has_recent_token(
+                db, user_id=user.id, minutes_threshold=5
+            )
+            
+            if has_recent_reset:
+                logger.warning(f"Rate limit: Recent verification resend for {resend_data.email}")
+                # Return success anyway to prevent email enumeration
+                return {
+                    "message": "If the email address is registered and not yet verified, you will receive a verification link shortly."
+                }
+            
+            # Generate new verification token
+            verification_token = create_access_token(
+                subject=user.id,
+                settings=settings,
+                expires_delta=timedelta(hours=24)  # 24-hour expiration
+            )
+            
+            logger.info(f"New verification token generated for user {user.id}")
+            
+            # Send verification email
+            try:
+                await send_new_account_email(
+                    email_to=user.email,
+                    username=user.full_name or user.email,
+                    verification_token=verification_token,
+                    settings=settings
+                )
+                logger.info(f"Verification email resent to: {user.email}")
+            except Exception as email_error:
+                # Log error but don't fail the request
+                logger.error(f"Failed to resend verification email to {user.email}: {email_error}")
+                # Continue with success response
+        else:
+            logger.info(f"Verification resend requested for non-existent email: {resend_data.email}")
+            # Don't reveal that email doesn't exist
+        
+        # Always return the same message for security
+        return {
+            "message": "If the email address is registered and not yet verified, you will receive a verification link shortly."
+        }
+        
+    except Exception as e:
+        logger.error(f"Verification resend failed for {resend_data.email}: {e}")
+        # Return generic error to prevent information disclosure
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to process verification resend request. Please try again later."
         )

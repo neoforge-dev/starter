@@ -34,4 +34,14 @@ class PasswordResetRequest(BaseModel):
 class PasswordResetConfirm(BaseModel):
     """Password reset confirm schema."""
     token: str
-    new_password: str 
+    new_password: str
+
+
+class EmailVerification(BaseModel):
+    """Email verification schema."""
+    token: str
+
+
+class ResendVerification(BaseModel):
+    """Resend verification email schema."""
+    email: EmailStr 

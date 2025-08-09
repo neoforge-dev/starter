@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import func
 
 from app.db.base_class import Base
 
@@ -21,6 +22,8 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(default=True)
     is_superuser: Mapped[bool] = mapped_column(default=False)
+    is_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
+    email_verified_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
 
     # Relationships
     items: Mapped[List["Item"]] = relationship(

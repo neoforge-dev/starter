@@ -120,4 +120,52 @@ async def get_current_user(
     # Add detailed log before returning
     logger.info(f"get_current_user returning User ID: {user.id}, Email: {user.email}, Is Superuser: {user.is_superuser}") 
     logger.debug(f"Returning user: {user.email}, ID: {user.id}") # Keep debug log
-    return user 
+    return user
+
+
+async def validate_verification_token(
+    token: str,
+    settings: Settings,
+    db: AsyncSession
+) -> Optional[User]:
+    """
+    Validate email verification token and return user if valid.
+    
+    Args:
+        token: JWT verification token
+        settings: Application settings
+        db: Database session
+        
+    Returns:
+        User if token is valid and user exists, None otherwise
+    """
+    try:
+        # Decode JWT token
+        secret_value = settings.secret_key.get_secret_value()
+        payload = jwt.decode(
+            token, secret_value, algorithms=[settings.algorithm]
+        )
+        
+        user_id: str | None = payload.get("sub")
+        if user_id is None:
+            logger.warning("User ID ('sub') not found in verification token payload.")
+            return None
+            
+        # Get user from database
+        try:
+            user_id_int = int(user_id)
+            user = await user_crud.get(db, id=user_id_int)
+            return user
+        except ValueError:
+            logger.warning(f"Could not convert user ID '{user_id}' to integer.")
+            return None
+        except Exception as e:
+            logger.error(f"Error retrieving user by ID {user_id}: {e}")
+            return None
+            
+    except JWTError as e:
+        logger.warning(f"JWTError during verification token decoding: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Unexpected error during verification token processing: {e}")
+        return None 

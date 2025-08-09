@@ -1,6 +1,7 @@
 """Email tracking CRUD operations."""
 from datetime import datetime, UTC
 from typing import Dict, List, Optional, Union
+import logging
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,41 @@ from sqlalchemy.orm import joinedload
 from app.crud.base import CRUDBase
 from app.models.email_tracking import EmailEvent, EmailStatus, EmailTracking
 from app.schemas.email_tracking import EmailEventCreate, EmailTrackingCreate, EmailTrackingStats
+
+logger = logging.getLogger(__name__)
+
+# Status transition rules - defines which transitions are valid
+VALID_STATUS_TRANSITIONS = {
+    EmailStatus.QUEUED: [
+        EmailStatus.SENT, EmailStatus.FAILED, EmailStatus.BOUNCED
+    ],
+    EmailStatus.SENT: [
+        EmailStatus.DELIVERED, EmailStatus.BOUNCED, EmailStatus.FAILED, 
+        EmailStatus.SPAM, EmailStatus.OPENED, EmailStatus.CLICKED
+    ],
+    EmailStatus.DELIVERED: [
+        EmailStatus.OPENED, EmailStatus.CLICKED, EmailStatus.SPAM
+    ],
+    EmailStatus.OPENED: [
+        EmailStatus.CLICKED
+    ],
+    EmailStatus.CLICKED: [],  # Terminal status for engagement
+    EmailStatus.BOUNCED: [],  # Terminal status
+    EmailStatus.FAILED: [],   # Terminal status
+    EmailStatus.SPAM: [],     # Terminal status
+}
+
+# Status priority for handling concurrent updates
+STATUS_PRIORITY = {
+    EmailStatus.QUEUED: 1,
+    EmailStatus.SENT: 2,
+    EmailStatus.DELIVERED: 3,
+    EmailStatus.OPENED: 4,
+    EmailStatus.CLICKED: 5,
+    EmailStatus.BOUNCED: 6,
+    EmailStatus.FAILED: 7,
+    EmailStatus.SPAM: 8,
+}
 
 
 class CRUDEmailTracking(CRUDBase[EmailTracking, EmailTrackingCreate, None]):
@@ -89,6 +125,56 @@ class CRUDEmailTracking(CRUDBase[EmailTracking, EmailTrackingCreate, None]):
         await db.refresh(db_obj, ["events"])
         return db_obj
 
+    def _is_valid_status_transition(
+        self, current_status: EmailStatus, new_status: EmailStatus
+    ) -> bool:
+        """
+        Check if status transition is valid.
+        
+        Args:
+            current_status: Current email status
+            new_status: Proposed new status
+            
+        Returns:
+            True if transition is valid, False otherwise
+        """
+        if current_status == new_status:
+            return True  # Same status is always valid (idempotency)
+        
+        allowed_transitions = VALID_STATUS_TRANSITIONS.get(current_status, [])
+        return new_status in allowed_transitions
+    
+    def _should_update_status(
+        self, current_status: EmailStatus, new_status: EmailStatus
+    ) -> bool:
+        """
+        Determine if status should be updated based on priority and validity.
+        
+        Args:
+            current_status: Current email status
+            new_status: Proposed new status
+            
+        Returns:
+            True if status should be updated, False otherwise
+        """
+        # Always allow valid transitions
+        if self._is_valid_status_transition(current_status, new_status):
+            return True
+        
+        # For invalid transitions, only allow if new status has higher priority
+        # This handles edge cases where events arrive out of order
+        current_priority = STATUS_PRIORITY.get(current_status, 0)
+        new_priority = STATUS_PRIORITY.get(new_status, 0)
+        
+        should_update = new_priority > current_priority
+        if should_update:
+            logger.warning(
+                f"Invalid status transition allowed due to priority: "
+                f"{current_status} -> {new_status}"
+            )
+        
+        return should_update
+
     async def update_status(
         self,
         db: AsyncSession,
@@ -98,23 +184,41 @@ class CRUDEmailTracking(CRUDBase[EmailTracking, EmailTrackingCreate, None]):
         error_message: Optional[str] = None,
         tracking_metadata: Optional[Dict] = None,
     ) -> EmailTracking:
-        """Update email tracking status."""
+        """Update email tracking status with validation."""
+        # Validate status transition
+        current_status = db_obj.status
+        if not self._should_update_status(current_status, status):
+            logger.warning(
+                f"Rejected invalid status transition for email {db_obj.id}: "
+                f"{current_status} -> {status}"
+            )
+            # Return the object unchanged
+            await db.refresh(db_obj, ["events"])
+            return db_obj
+        
+        # Log status change
+        if current_status != status:
+            logger.info(
+                f"Status transition for email {db_obj.id}: "
+                f"{current_status} -> {status}"
+            )
+        
         # Update status and tracking metadata
         db_obj.status = status
         if tracking_metadata:
             db_obj.tracking_metadata = tracking_metadata
 
-        # Update timestamp based on status
+        # Update timestamp based on status (only if not already set)
         timestamp = datetime.now(UTC)
-        if status == EmailStatus.SENT:
+        if status == EmailStatus.SENT and not db_obj.sent_at:
             db_obj.sent_at = timestamp
-        elif status == EmailStatus.DELIVERED:
+        elif status == EmailStatus.DELIVERED and not db_obj.delivered_at:
             db_obj.delivered_at = timestamp
-        elif status == EmailStatus.OPENED:
+        elif status == EmailStatus.OPENED and not db_obj.opened_at:
             db_obj.opened_at = timestamp
-        elif status == EmailStatus.CLICKED:
+        elif status == EmailStatus.CLICKED and not db_obj.clicked_at:
             db_obj.clicked_at = timestamp
-        elif status in [EmailStatus.FAILED, EmailStatus.BOUNCED, EmailStatus.SPAM]:
+        elif status in [EmailStatus.FAILED, EmailStatus.BOUNCED, EmailStatus.SPAM] and not db_obj.failed_at:
             db_obj.failed_at = timestamp
             if error_message:
                 db_obj.error_message = error_message
@@ -146,6 +250,64 @@ class CRUDEmailTracking(CRUDBase[EmailTracking, EmailTrackingCreate, None]):
             select(EmailTracking)
             .where(EmailTracking.email_id == email_id)
             .options(joinedload(EmailTracking.events))
+        )
+        return result.unique().scalar_one_or_none()
+
+    async def find_by_email_and_recipient(
+        self,
+        db: AsyncSession,
+        *,
+        email_id: Optional[str] = None,
+        recipient: str,
+        timestamp: Optional[datetime] = None,
+        time_window_hours: int = 24
+    ) -> Optional[EmailTracking]:
+        """
+        Find email tracking by multiple criteria with fallback strategies.
+        
+        First tries exact email_id match, then falls back to recipient+timestamp matching.
+        
+        Args:
+            email_id: Primary email ID to search for
+            recipient: Recipient email address
+            timestamp: Event timestamp for temporal matching
+            time_window_hours: Time window for recipient matching (default 24h)
+            
+        Returns:
+            EmailTracking record or None
+        """
+        # Strategy 1: Exact email_id match
+        if email_id:
+            tracking = await self.get_by_email_id(db, email_id=email_id)
+            if tracking:
+                return tracking
+        
+        # Strategy 2: Recipient + timestamp window matching
+        if timestamp:
+            # Calculate time window
+            from datetime import timedelta
+            start_time = timestamp - timedelta(hours=time_window_hours)
+            end_time = timestamp + timedelta(hours=time_window_hours)
+            
+            result = await db.execute(
+                select(EmailTracking)
+                .where(
+                    EmailTracking.recipient == recipient,
+                    EmailTracking.created_at >= start_time,
+                    EmailTracking.created_at <= end_time
+                )
+                .options(joinedload(EmailTracking.events))
+                .order_by(EmailTracking.created_at.desc())  # Most recent first
+            )
+            return result.unique().scalars().first()
+        
+        # Strategy 3: Most recent email to recipient (last resort)
+        result = await db.execute(
+            select(EmailTracking)
+            .where(EmailTracking.recipient == recipient)
+            .options(joinedload(EmailTracking.events))
+            .order_by(EmailTracking.created_at.desc())
+            .limit(1)
         )
         return result.unique().scalar_one_or_none()
 
