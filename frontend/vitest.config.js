@@ -105,6 +105,7 @@ export default defineConfig({
       "**/tests-backup-old/**",
       "**/node_modules/**",
       "test/**",
+      "src/test/e2e/**",
     ],
     // Coverage configuration
     coverage: {

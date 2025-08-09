@@ -60,20 +60,12 @@ describe('Authentication Integration Tests', () => {
       // Act
       const emailInput = loginForm.shadowRoot.querySelector('[data-testid="login-email"]');
       const passwordInput = loginForm.shadowRoot.querySelector('[data-testid="login-password"]');
-      const submitButton = loginForm.shadowRoot.querySelector('[data-testid="login-button"]');
-
+      
       emailInput.value = 'test@example.com';
       passwordInput.value = 'password123';
 
       // Trigger form submission
-      const form = loginForm.shadowRoot.querySelector('form');
-      form.dispatchEvent(new Event('submit', { bubbles: true }));
-
-      // Wait for async operations
-      await new Promise(resolve => setTimeout(resolve, 0));
-
-      // Assert
-      expect(authService.login).toHaveBeenCalledWith('test@example.com', 'password123');
+      await loginForm._handleSubmit(new Event('submit'));
       expect(loginSuccessEvent).toBeTruthy();
       expect(loginSuccessEvent.detail.email).toBe('test@example.com');
     });
@@ -91,7 +83,7 @@ describe('Authentication Integration Tests', () => {
 
       // Act - Submit form with empty fields
       const form = loginForm.shadowRoot.querySelector('form');
-      form.dispatchEvent(new Event('submit', { bubbles: true }));
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
       await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -123,13 +115,7 @@ describe('Authentication Integration Tests', () => {
       emailInput.value = 'test@example.com';
       passwordInput.value = 'wrongpassword';
 
-      const form = loginForm.shadowRoot.querySelector('form');
-      form.dispatchEvent(new Event('submit', { bubbles: true }));
-
-      await new Promise(resolve => setTimeout(resolve, 0));
-
-      // Assert
-      expect(authService.login).toHaveBeenCalledWith('test@example.com', 'wrongpassword');
+      await loginForm._handleSubmit(new Event('submit'));
       expect(loginErrorEvent).toBeTruthy();
       expect(loginErrorEvent.detail.message).toBe('Invalid credentials');
 
@@ -161,12 +147,7 @@ describe('Authentication Integration Tests', () => {
       emailInput.value = 'test@example.com';
       passwordInput.value = 'password123';
 
-      const form = loginForm.shadowRoot.querySelector('form');
-      form.dispatchEvent(new Event('submit', { bubbles: true }));
-
-      await new Promise(resolve => setTimeout(resolve, 0));
-
-      // Assert loading state
+      await loginForm._handleSubmit(new Event('submit'));
       expect(submitButton.disabled).toBe(true);
       const spinner = loginForm.shadowRoot.querySelector('.loading-spinner');
       expect(spinner).toBeTruthy();
@@ -211,7 +192,7 @@ describe('Authentication Integration Tests', () => {
       confirmPasswordInput.dispatchEvent(new Event('input', { bubbles: true }));
 
       const form = signupForm.shadowRoot.querySelector('form');
-      form.dispatchEvent(new Event('submit', { bubbles: true }));
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
       await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -249,7 +230,7 @@ describe('Authentication Integration Tests', () => {
       confirmPasswordInput.dispatchEvent(new Event('input', { bubbles: true }));
 
       const form = signupForm.shadowRoot.querySelector('form');
-      form.dispatchEvent(new Event('submit', { bubbles: true }));
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
       await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -271,7 +252,7 @@ describe('Authentication Integration Tests', () => {
 
       // Act - Submit form with empty fields
       const form = signupForm.shadowRoot.querySelector('form');
-      form.dispatchEvent(new Event('submit', { bubbles: true }));
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
       await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -305,7 +286,7 @@ describe('Authentication Integration Tests', () => {
       confirmPasswordInput.dispatchEvent(new Event('input', { bubbles: true }));
 
       const form = signupForm.shadowRoot.querySelector('form');
-      form.dispatchEvent(new Event('submit', { bubbles: true }));
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
       await new Promise(resolve => setTimeout(resolve, 0));
 

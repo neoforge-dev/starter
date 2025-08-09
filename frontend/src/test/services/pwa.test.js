@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { pwaService } from '../../services/pwa.js';
+import { Logger } from '../../utils/logger.js';
 
 describe('PWA Service', () => {
   let mockServiceWorker;
@@ -58,7 +59,7 @@ describe('PWA Service', () => {
     });
 
     it('should handle service worker registration failure', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(Logger, 'error').mockImplementation(() => {});
       mockServiceWorker.register.mockRejectedValue(new Error('Registration failed'));
 
       await pwaService.initialize();
@@ -108,7 +109,7 @@ describe('PWA Service', () => {
     });
 
     it('should return false when no prompt available', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(Logger, 'debug').mockImplementation(() => {});
       pwaService.deferredInstallPrompt = null;
 
       const result = await pwaService.promptInstall();
@@ -142,7 +143,7 @@ describe('PWA Service', () => {
     });
 
     it('should handle update check failure', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(Logger, 'error').mockImplementation(() => {});
       mockRegistration.update.mockRejectedValue(new Error('Update failed'));
 
       await pwaService.checkForUpdates();

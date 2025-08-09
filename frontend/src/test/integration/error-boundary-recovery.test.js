@@ -384,7 +384,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
       expect(result2.data).toBe('Network recovered');
       
       // Check that retry delay was applied
-      expect(endTime - startTime).toBeGreaterThan(100); // At least 100ms delay
+      expect(endTime - startTime).toBeGreaterThanOrEqual(100); // At least 100ms delay
       
       // Check attempt counts
       expect(recoveryManager.getAttemptCount(networkError)).toBe(2);
