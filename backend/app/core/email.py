@@ -111,8 +111,10 @@ async def send_reset_password_email(
         recipients=[email_to],
         template_body={
             "username": username,
-            "reset_link": reset_link,
-            "valid_hours": 24
+            "reset_url": reset_link,  # Template expects reset_url
+            "reset_link": reset_link,  # Keep both for backwards compatibility
+            "valid_hours": 24,
+            "project_name": settings.app_name
         },
         template_name="reset_password.html",
         subtype="html"

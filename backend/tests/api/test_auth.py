@@ -180,4 +180,236 @@ async def test_read_users_me_no_token(client: AsyncClient, db: AsyncSession, tes
     assert response.status_code == 401
     data = response.json()
     assert "detail" in data
-    assert data["detail"] == "Not authenticated" 
+    assert data["detail"] == "Not authenticated"
+
+
+# Registration tests
+async def test_register_user_success(client: AsyncClient, db: AsyncSession, test_settings: Settings) -> None:
+    """Test successful user registration."""
+    registration_data = {
+        "email": "newuser@example.com",
+        "password": "testpassword123",
+        "password_confirm": "testpassword123",
+        "full_name": "New Test User"
+    }
+    
+    response = await client.post(
+        f"{test_settings.api_v1_str}/auth/register",
+        json=registration_data
+    )
+    
+    assert response.status_code == 200, f"Expected 200, got {response.status_code} with body: {response.text}"
+    data = response.json()
+    
+    # Check response structure
+    assert "message" in data
+    assert data["message"] == "User registered successfully"
+    assert "user" in data
+    assert "access_token" in data
+    assert "token_type" in data
+    assert data["token_type"] == "bearer"
+    
+    # Check user data
+    user_data = data["user"]
+    assert user_data["email"] == registration_data["email"]
+    assert user_data["full_name"] == registration_data["full_name"]
+    assert user_data["is_active"] is True
+    assert "id" in user_data
+    assert "created_at" in user_data
+    assert "password" not in user_data  # Password should never be returned
+    
+    # Verify user was created in database
+    from app.crud.user import user as user_crud
+    created_user = await user_crud.get_by_email(db, email=registration_data["email"])
+    assert created_user is not None
+    assert created_user.email == registration_data["email"]
+    assert created_user.full_name == registration_data["full_name"]
+    assert created_user.is_active is True
+    
+    # Clean up
+    await db.delete(created_user)
+    await db.commit()
+
+
+async def test_register_user_duplicate_email(client: AsyncClient, db: AsyncSession, test_user: User, test_settings: Settings) -> None:
+    """Test registration with an already registered email."""
+    registration_data = {
+        "email": test_user.email,  # Use existing user's email
+        "password": "testpassword123",
+        "password_confirm": "testpassword123",
+        "full_name": "Duplicate User"
+    }
+    
+    response = await client.post(
+        f"{test_settings.api_v1_str}/auth/register",
+        json=registration_data
+    )
+    
+    assert response.status_code == 400
+    data = response.json()
+    assert "detail" in data
+    assert data["detail"] == "Email already registered"
+
+
+async def test_register_user_password_mismatch(client: AsyncClient, db: AsyncSession, test_settings: Settings) -> None:
+    """Test registration with mismatched passwords."""
+    registration_data = {
+        "email": "mismatch@example.com",
+        "password": "testpassword123",
+        "password_confirm": "differentpassword",  # Different password
+        "full_name": "Mismatch User"
+    }
+    
+    response = await client.post(
+        f"{test_settings.api_v1_str}/auth/register",
+        json=registration_data
+    )
+    
+    assert response.status_code == 422  # Validation error
+    data = response.json()
+    assert "detail" in data
+
+
+async def test_register_user_invalid_email(client: AsyncClient, db: AsyncSession, test_settings: Settings) -> None:
+    """Test registration with invalid email format."""
+    registration_data = {
+        "email": "invalid-email",  # Invalid email format
+        "password": "testpassword123",
+        "password_confirm": "testpassword123",
+        "full_name": "Invalid Email User"
+    }
+    
+    response = await client.post(
+        f"{test_settings.api_v1_str}/auth/register",
+        json=registration_data
+    )
+    
+    assert response.status_code == 422  # Validation error
+    data = response.json()
+    assert "detail" in data
+
+
+async def test_register_user_missing_fields(client: AsyncClient, db: AsyncSession, test_settings: Settings) -> None:
+    """Test registration with missing required fields."""
+    registration_data = {
+        "email": "incomplete@example.com",
+        # Missing password, password_confirm, and full_name
+    }
+    
+    response = await client.post(
+        f"{test_settings.api_v1_str}/auth/register",
+        json=registration_data
+    )
+    
+    assert response.status_code == 422  # Validation error
+    data = response.json()
+    assert "detail" in data
+
+
+async def test_register_user_email_integration(client: AsyncClient, db: AsyncSession, test_settings: Settings) -> None:
+    """Test that registration triggers welcome email (mocked)."""
+    from unittest.mock import patch
+    
+    registration_data = {
+        "email": "emailtest@example.com",
+        "password": "testpassword123",
+        "password_confirm": "testpassword123",
+        "full_name": "Email Test User"
+    }
+    
+    # Mock the email sending function
+    with patch('app.api.v1.endpoints.auth.send_new_account_email') as mock_send_email:
+        response = await client.post(
+            f"{test_settings.api_v1_str}/auth/register",
+            json=registration_data
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["message"] == "User registered successfully"
+        
+        # Verify email function was called
+        mock_send_email.assert_called_once()
+        call_args = mock_send_email.call_args
+        assert call_args[1]["email_to"] == registration_data["email"]
+        assert call_args[1]["username"] == registration_data["full_name"]
+        assert "verification_token" in call_args[1]
+        assert call_args[1]["settings"] == test_settings
+    
+    # Clean up
+    from app.crud.user import user as user_crud
+    created_user = await user_crud.get_by_email(db, email=registration_data["email"])
+    if created_user:
+        await db.delete(created_user)
+        await db.commit()
+
+
+async def test_register_user_email_failure_continues_registration(client: AsyncClient, db: AsyncSession, test_settings: Settings) -> None:
+    """Test that registration completes even if email sending fails."""
+    from unittest.mock import patch
+    
+    registration_data = {
+        "email": "emailfail@example.com",
+        "password": "testpassword123", 
+        "password_confirm": "testpassword123",
+        "full_name": "Email Fail User"
+    }
+    
+    # Mock email sending to raise an exception
+    with patch('app.api.v1.endpoints.auth.send_new_account_email', side_effect=Exception("Email service down")):
+        response = await client.post(
+            f"{test_settings.api_v1_str}/auth/register",
+            json=registration_data
+        )
+        
+        # Registration should still succeed despite email failure
+        assert response.status_code == 200
+        data = response.json()
+        assert data["message"] == "User registered successfully"
+        assert "access_token" in data
+    
+    # Verify user was still created in database
+    from app.crud.user import user as user_crud
+    created_user = await user_crud.get_by_email(db, email=registration_data["email"])
+    assert created_user is not None
+    assert created_user.email == registration_data["email"]
+    
+    # Clean up
+    await db.delete(created_user)
+    await db.commit()
+
+
+async def test_register_user_can_login_immediately(client: AsyncClient, db: AsyncSession, test_settings: Settings) -> None:
+    """Test that a newly registered user can login immediately using the returned token."""
+    registration_data = {
+        "email": "logintest@example.com",
+        "password": "testpassword123",
+        "password_confirm": "testpassword123", 
+        "full_name": "Login Test User"
+    }
+    
+    # Register user
+    response = await client.post(
+        f"{test_settings.api_v1_str}/auth/register",
+        json=registration_data
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    access_token = data["access_token"]
+    
+    # Use the token to access a protected endpoint
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = await client.get(f"{test_settings.api_v1_str}/users/me", headers=headers)
+    
+    assert response.status_code == 200
+    user_data = response.json()
+    assert user_data["email"] == registration_data["email"]
+    assert user_data["full_name"] == registration_data["full_name"]
+    
+    # Clean up
+    from app.crud.user import user as user_crud
+    created_user = await user_crud.get_by_email(db, email=registration_data["email"])
+    if created_user:
+        await db.delete(created_user)
+        await db.commit() 

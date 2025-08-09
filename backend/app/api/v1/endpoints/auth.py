@@ -10,8 +10,12 @@ from app.core.security import create_access_token
 from app.core.config import Settings, get_settings
 from app.crud.user import user as user_crud
 from app.api.deps import get_db
-from app.schemas.auth import Token, TokenPayload
+from app.schemas.auth import Token, TokenPayload, PasswordResetRequest, PasswordResetConfirm
+from app.schemas.user import UserCreate, UserResponse
 from app.models.user import User
+from app.core.email import send_new_account_email, send_reset_password_email
+from app.core.security import verify_password, get_password_hash
+from app.crud import user as user_crud, password_reset_token
 import logging # Import logging
 
 router = APIRouter()
@@ -46,3 +50,246 @@ async def login_access_token(
         ),
         token_type="bearer",
     )
+
+
+@router.post("/register", response_model=dict)
+async def register_user(
+    user_data: UserCreate,
+    settings: Annotated[Settings, Depends(get_settings)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict:
+    """
+    Register a new user account.
+    
+    This endpoint:
+    1. Validates the user input (including password confirmation)
+    2. Checks if email is already registered
+    3. Creates the user in the database with hashed password
+    4. Sends a welcome email with verification token
+    5. Returns user info and access token
+    """
+    logger.info(f"Registration attempt for email: {user_data.email}")
+    
+    # Check if user already exists
+    existing_user = await user_crud.get_by_email(db, email=user_data.email)
+    if existing_user:
+        logger.warning(f"Registration failed: Email {user_data.email} already registered")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    try:
+        # Create the user
+        logger.info(f"Creating new user: {user_data.email}")
+        user = await user_crud.create(db, obj_in=user_data)
+        await db.commit()
+        await db.refresh(user)
+        
+        logger.info(f"User created successfully: {user.email} (ID: {user.id})")
+        
+        # Generate verification token for the welcome email
+        verification_token = create_access_token(
+            subject=user.id, 
+            settings=settings,
+            expires_delta=timedelta(hours=24)  # Verification token expires in 24 hours
+        )
+        
+        # Send welcome email with verification link
+        try:
+            await send_new_account_email(
+                email_to=user.email,
+                username=user.full_name or user.email,
+                verification_token=verification_token,
+                settings=settings
+            )
+            logger.info(f"Welcome email sent to: {user.email}")
+        except Exception as email_error:
+            # Log error but don't fail registration if email fails
+            logger.error(f"Failed to send welcome email to {user.email}: {email_error}")
+            # Note: We continue with registration even if email fails
+        
+        # Generate access token for immediate login
+        access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+        access_token = create_access_token(
+            subject=user.id, 
+            settings=settings, 
+            expires_delta=access_token_expires
+        )
+        
+        logger.info(f"User registration completed successfully: {user.email}")
+        
+        # Return user info and access token
+        return {
+            "message": "User registered successfully",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "is_active": user.is_active,
+                "created_at": user.created_at.isoformat()
+            },
+            "access_token": access_token,
+            "token_type": "bearer"
+        }
+        
+    except Exception as e:
+        # Rollback the transaction on any error
+        await db.rollback()
+        logger.error(f"User registration failed for {user_data.email}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Registration failed. Please try again."
+        )
+
+
+@router.post("/reset-password-request", response_model=dict)
+async def reset_password_request(
+    reset_data: PasswordResetRequest,
+    settings: Annotated[Settings, Depends(get_settings)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict:
+    """
+    Request a password reset token.
+    
+    This endpoint:
+    1. Validates the email address
+    2. Finds the user (if exists)
+    3. Generates a secure reset token
+    4. Sends password reset email
+    5. Returns generic success message (doesn't reveal if email exists)
+    """
+    logger.info(f"Password reset requested for email: {reset_data.email}")
+    
+    try:
+        # Look up user by email
+        user = await user_crud.get_by_email(db, email=reset_data.email)
+        
+        if user:
+            # Check for recent reset requests to prevent spam
+            has_recent_token = await password_reset_token.has_recent_token(
+                db, user_id=user.id, minutes_threshold=5
+            )
+            
+            if has_recent_token:
+                logger.warning(f"Rate limit: Recent reset request for {reset_data.email}")
+                # Return success anyway to prevent email enumeration
+                return {
+                    "message": "If the email address is registered, you will receive a password reset link shortly."
+                }
+            
+            # Clean up any existing tokens for this user
+            await password_reset_token.cleanup_tokens_for_user(db, user.id)
+            
+            # Create new reset token
+            token_record, plain_token = await password_reset_token.create_for_user(
+                db, user, expires_hours=24
+            )
+            
+            await db.commit()
+            
+            logger.info(f"Password reset token created for user {user.id}")
+            
+            # Send password reset email
+            try:
+                await send_reset_password_email(
+                    email_to=user.email,
+                    token=plain_token,
+                    username=user.full_name or user.email,
+                    settings=settings
+                )
+                logger.info(f"Password reset email sent to: {user.email}")
+            except Exception as email_error:
+                # Log error but don't fail the request
+                logger.error(f"Failed to send password reset email to {user.email}: {email_error}")
+                # Continue with success response
+        else:
+            logger.info(f"Password reset requested for non-existent email: {reset_data.email}")
+            # Don't reveal that email doesn't exist
+        
+        # Always return the same message for security
+        return {
+            "message": "If the email address is registered, you will receive a password reset link shortly."
+        }
+        
+    except Exception as e:
+        logger.error(f"Password reset request failed for {reset_data.email}: {e}")
+        # Return generic error to prevent information disclosure
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to process password reset request. Please try again later."
+        )
+
+
+@router.post("/reset-password-confirm", response_model=dict)
+async def reset_password_confirm(
+    confirm_data: PasswordResetConfirm,
+    settings: Annotated[Settings, Depends(get_settings)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict:
+    """
+    Confirm password reset with token and set new password.
+    
+    This endpoint:
+    1. Validates the reset token
+    2. Checks token is not expired or used
+    3. Updates user's password
+    4. Marks token as used
+    5. Returns success confirmation
+    """
+    logger.info("Password reset confirmation attempt")
+    
+    # Get token from database
+    token_record = await password_reset_token.get_by_token(db, confirm_data.token)
+    
+    if not token_record:
+        logger.warning("Invalid password reset token provided")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+    
+    # Check if token is valid (not expired and not used)
+    if not token_record.is_valid():
+        logger.warning(f"Expired or used password reset token for user {token_record.user_id}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+    
+    try:
+        # Get the user
+        user = await user_crud.get(db, id=token_record.user_id)
+        if not user:
+            logger.error(f"User {token_record.user_id} not found for valid token")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token"
+            )
+        
+        # Update user's password
+        hashed_password = get_password_hash(confirm_data.new_password)
+        user.hashed_password = hashed_password
+        
+        # Mark token as used
+        await password_reset_token.mark_as_used(db, token_record)
+        
+        # Commit changes
+        await db.commit()
+        
+        logger.info(f"Password successfully reset for user {user.id} ({user.email})")
+        
+        return {
+            "message": "Password has been successfully reset. You can now log in with your new password."
+        }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Password reset confirmation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to reset password. Please try again or request a new reset token."
+        )
