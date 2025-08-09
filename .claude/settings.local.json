@@ -6,7 +6,8 @@
       "Bash(npm run test:*)",
       "Bash(find:*)",
       "Bash(npm audit:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(xcrun simctl list:*)"
     ],
     "deny": []
   }

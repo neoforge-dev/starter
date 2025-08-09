@@ -144,14 +144,21 @@ app = FastAPI(
 # Override the default OpenAPI schema
 app.openapi = custom_openapi
 
-# Set up CORS first
+# Set up CORS first with environment-specific configuration
 if get_settings().cors_origins:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[str(origin) for origin in get_settings().cors_origins],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_credentials=get_settings().cors_credentials,
+        allow_methods=get_settings().cors_methods,
+        allow_headers=get_settings().cors_headers,
+    )
+    logger.info(
+        "cors_configured",
+        origins=get_settings().cors_origins,
+        methods=get_settings().cors_methods,
+        credentials=get_settings().cors_credentials,
+        environment=get_settings().environment
     )
 
 # Set up security and validation middleware

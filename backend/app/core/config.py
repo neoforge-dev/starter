@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     redis_url: RedisDsn = Field(default="redis://redis:6379/0", env="REDIS_URL")
     environment: Environment = Field(default=Environment.DEVELOPMENT, env="ENVIRONMENT")
     cors_origins: List[str] = Field(default=["http://localhost:3000"], env="CORS_ORIGINS")
+    cors_methods: List[str] = Field(default=["GET", "POST", "PUT", "DELETE"], env="CORS_METHODS")
+    cors_headers: List[str] = Field(default=["*"], env="CORS_HEADERS")
+    cors_credentials: bool = Field(default=True, env="CORS_CREDENTIALS")
     access_token_expire_minutes: int = Field(default=10080, env="ACCESS_TOKEN_EXPIRE_MINUTES")  # 7 days
     smtp_user: Optional[str] = Field(default=None, env="SMTP_USER")
     smtp_password: Optional[str] = Field(default=None, env="SMTP_PASSWORD")
@@ -95,7 +98,7 @@ class Settings(BaseSettings):
 
     @field_validator("cors_origins", mode="before")
     def validate_cors_origins(cls, v: Union[str, List[str]], info: ValidationInfo) -> List[str]:
-        """Validate CORS origins."""
+        """Validate CORS origins with environment-specific security."""
         # If in test mode, return empty list
         testing = str(info.data.get("testing", "false")).lower() in ("true", "1", "t", "yes", "y")
         environment = str(info.data.get("environment", "")).lower()
@@ -113,6 +116,15 @@ class Settings(BaseSettings):
         if not isinstance(v, list) or not all(isinstance(i, str) for i in v):
              raise ValueError("CORS_ORIGINS must be a list of strings")
 
+        # Production security: prohibit wildcard origins
+        if environment == "production":
+            if "*" in v:
+                raise ValueError("Wildcard CORS origins (*) are not allowed in production")
+            # Only allow HTTPS origins in production (except localhost for development testing)
+            for origin in v:
+                if not origin.startswith("https://") and not origin.startswith("http://localhost"):
+                    raise ValueError(f"Production CORS origins must use HTTPS: {origin}")
+
         # Validate each URL (optional but recommended)
         validated_origins = []
         for origin in v:
@@ -123,6 +135,54 @@ class Settings(BaseSettings):
                 raise ValueError(f"Invalid URL in CORS_ORIGINS: {origin} ({e})")
         
         return validated_origins
+    
+    @field_validator("cors_methods", mode="before")
+    def validate_cors_methods(cls, v: Union[str, List[str]], info: ValidationInfo) -> List[str]:
+        """Validate CORS methods with security constraints."""
+        environment = str(info.data.get("environment", "")).lower()
+        
+        # Handle string input (from env var)
+        if isinstance(v, str):
+            if v == "*":
+                # Default safe methods for production
+                if environment == "production":
+                    return ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+                else:
+                    return ["*"]
+            try:
+                v = json.loads(v)
+            except json.JSONDecodeError:
+                # Try comma-separated
+                v = [method.strip() for method in v.split(",")]
+
+        if not isinstance(v, list):
+            raise ValueError("CORS_METHODS must be a list of strings")
+        
+        # Validate HTTP methods
+        valid_methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "*"]
+        for method in v:
+            if method not in valid_methods:
+                raise ValueError(f"Invalid HTTP method: {method}")
+        
+        return v
+    
+    @field_validator("cors_headers", mode="before")
+    def validate_cors_headers(cls, v: Union[str, List[str]], info: ValidationInfo) -> List[str]:
+        """Validate CORS headers."""
+        # Handle string input (from env var)
+        if isinstance(v, str):
+            if v == "*":
+                return ["*"]
+            try:
+                v = json.loads(v)
+            except json.JSONDecodeError:
+                # Try comma-separated
+                v = [header.strip() for header in v.split(",")]
+
+        if not isinstance(v, list):
+            raise ValueError("CORS_HEADERS must be a list of strings")
+        
+        return v
 
     @field_validator("debug", mode="before")
     def validate_debug(cls, v: Union[str, bool], info: ValidationInfo) -> bool:
