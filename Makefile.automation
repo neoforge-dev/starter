@@ -1,0 +1,144 @@
+# NeoForge Automation Toolkit Makefile
+# Enhanced developer experience with simple commands
+
+# CLI tool path
+CLI = python scripts/neoforge-cli.py
+
+# Colors for output
+GREEN = \033[0;32m
+BLUE = \033[0;34m
+YELLOW = \033[1;33m
+RED = \033[0;31m
+NC = \033[0m # No Color
+
+.PHONY: help component endpoint integration test-component test-endpoint list-components list-endpoints
+
+# Default target
+help:
+	@echo "$(BLUE)🚀 NeoForge Automation Toolkit$(NC)"
+	@echo ""
+	@echo "$(GREEN)Component Generation:$(NC)"
+	@echo "  make component name=UserProfile type=molecule        # Create component"
+	@echo "  make component name=ProductCard type=atom state=yes  # With state management"
+	@echo ""
+	@echo "$(GREEN)API Generation:$(NC)" 
+	@echo "  make endpoint name=products                          # Create CRUD API"
+	@echo "  make endpoint name=users model=User                  # With custom model"
+	@echo ""
+	@echo "$(GREEN)Service Integration:$(NC)"
+	@echo "  make integration provider=stripe type=payment        # Add Stripe"
+	@echo "  make integration provider=auth0 type=auth            # Add Auth0"
+	@echo "  make integration provider=sendgrid type=email        # Add SendGrid"
+	@echo ""
+	@echo "$(GREEN)Testing:$(NC)"
+	@echo "  make test-component name=user-profile                # Test specific component"
+	@echo "  make test-endpoint name=products                     # Test specific endpoint"
+	@echo ""
+	@echo "$(GREEN)Utilities:$(NC)"
+	@echo "  make list-components                                 # List all components"
+	@echo "  make list-endpoints                                  # List all endpoints"
+
+# Component generation
+component:
+	@if [ -z "$(name)" ]; then echo "$(RED)Error: name parameter required$(NC)"; exit 1; fi
+	@echo "$(BLUE)🔨 Creating component: $(name)$(NC)"
+	@$(CLI) create-component --name $(name) \
+		--type $(or $(type),molecule) \
+		$(if $(state),--state,) \
+		$(if $(events),--events,)
+	@echo "$(GREEN)✅ Component $(name) created successfully!$(NC)"
+
+# API endpoint generation  
+endpoint:
+	@if [ -z "$(name)" ]; then echo "$(RED)Error: name parameter required$(NC)"; exit 1; fi
+	@echo "$(BLUE)🔨 Creating endpoint: $(name)$(NC)"
+	@$(CLI) create-endpoint --name $(name) \
+		$(if $(model),--model $(model),) \
+		$(if $(no-auth),--no-auth,) \
+		$(if $(no-validation),--no-validation,)
+	@echo "$(GREEN)✅ Endpoint $(name) created successfully!$(NC)"
+	@echo "$(YELLOW)📝 Don't forget to:$(NC)"
+	@echo "  1. Run: alembic revision --autogenerate -m 'Add $(name)'"
+	@echo "  2. Run: alembic upgrade head"
+	@echo "  3. Add router to app/api/v1/api.py"
+
+# Service integration
+integration:
+	@if [ -z "$(provider)" ]; then echo "$(RED)Error: provider parameter required$(NC)"; exit 1; fi
+	@if [ -z "$(type)" ]; then echo "$(RED)Error: type parameter required$(NC)"; exit 1; fi
+	@echo "$(BLUE)🔨 Adding $(provider) integration$(NC)"
+	@$(CLI) add-integration --provider $(provider) --type $(type)
+	@echo "$(GREEN)✅ Integration $(provider) added successfully!$(NC)"
+
+# Testing
+test-component:
+	@if [ -z "$(name)" ]; then echo "$(RED)Error: name parameter required$(NC)"; exit 1; fi
+	@echo "$(BLUE)🧪 Testing component: $(name)$(NC)"
+	cd frontend && npm run test -- $(name)
+
+test-endpoint:
+	@if [ -z "$(name)" ]; then echo "$(RED)Error: name parameter required$(NC)"; exit 1; fi
+	@echo "$(BLUE)🧪 Testing endpoint: $(name)$(NC)"
+	cd backend && docker compose -f docker-compose.dev.yml run --rm api pytest tests/api/v1/test_$(name).py -v
+
+# Utilities
+list-components:
+	@echo "$(BLUE)📦 Available Components:$(NC)"
+	@find frontend/src/components -name "*.js" -not -name "*.test.js" -not -name "*.stories.js" | \
+		sed 's|frontend/src/components/||' | \
+		sed 's|\.js$$||' | \
+		sort
+
+list-endpoints:
+	@echo "$(BLUE)🌐 Available Endpoints:$(NC)"
+	@find backend/app/api/v1/endpoints -name "*.py" -not -name "__*" | \
+		sed 's|backend/app/api/v1/endpoints/||' | \
+		sed 's|\.py$$||' | \
+		sort
+
+# Advanced shortcuts
+quick-crud:
+	@if [ -z "$(name)" ]; then echo "$(RED)Error: name parameter required$(NC)"; exit 1; fi
+	@echo "$(BLUE)🚀 Creating complete CRUD system: $(name)$(NC)"
+	@make endpoint name=$(name)
+	@echo "$(YELLOW)⏳ Setting up database...$(NC)"
+	cd backend && alembic revision --autogenerate -m "Add $(name)" || true
+	cd backend && alembic upgrade head || true
+	@echo "$(GREEN)✅ Complete CRUD system ready!$(NC)"
+
+# Development helpers
+dev-setup:
+	@echo "$(BLUE)🔧 Setting up development environment$(NC)"
+	chmod +x scripts/neoforge-cli.py
+	@echo "$(GREEN)✅ NeoForge CLI is ready!$(NC)"
+	@echo ""
+	@make help
+
+# Examples
+examples:
+	@echo "$(BLUE)📚 Usage Examples:$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Create a user profile component:$(NC)"
+	@echo "  make component name=UserProfile type=organism state=yes events=yes"
+	@echo ""
+	@echo "$(YELLOW)Create a products API:$(NC)" 
+	@echo "  make endpoint name=products"
+	@echo ""
+	@echo "$(YELLOW)Add Stripe payments:$(NC)"
+	@echo "  make integration provider=stripe type=payment"
+	@echo ""
+	@echo "$(YELLOW)Complete CRUD with database setup:$(NC)"
+	@echo "  make quick-crud name=orders"
+	@echo ""
+	@echo "$(YELLOW)Test everything:$(NC)"
+	@echo "  make test-component name=user-profile"
+	@echo "  make test-endpoint name=products"
+
+# Validation
+validate:
+	@echo "$(BLUE)🔍 Validating generated code...$(NC)"
+	@echo "Checking Python syntax..."
+	@find backend -name "*.py" -exec python -m py_compile {} \; 2>/dev/null || echo "$(RED)Python syntax errors found$(NC)"
+	@echo "Checking TypeScript/JavaScript syntax..."
+	@cd frontend && npm run lint --silent || echo "$(YELLOW)Linting issues found$(NC)"
+	@echo "$(GREEN)✅ Validation complete$(NC)"
