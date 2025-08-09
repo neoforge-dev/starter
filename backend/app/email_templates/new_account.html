@@ -1,38 +1,121 @@
 {% extends "base.html" %} {% block content %}
-<p>Welcome to {{ project_name }}!</p>
+<h1>Welcome to {{ project_name }}! 🎉</h1>
 
-<p>Hi {{ username }},</p>
-<p>Your account has been created successfully. Here are your login details:</p>
-
-<ul>
-  <li>Email: {{ email }}</li>
-  <li>Password: {{ password }}</li>
-</ul>
-
-<p>Please click the button below to log in:</p>
-
-<table class="btn btn-primary" cellpadding="0" cellspacing="0" border="0">
-  <tr>
-    <td align="center">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td>
-            <a href="{{ login_url }}" target="_blank"
-              >Login to {{ project_name }}</a
-            >
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-
-<p>For security reasons, please change your password after your first login.</p>
+<p>Hi <strong>{{ username }}</strong>,</p>
 
 <p>
-  If you have any questions or need assistance, please don't hesitate to contact
-  our support team.
+  Congratulations! Your account has been successfully created and you're now part of the {{ project_name }} community. 
+  We're excited to have you on board and can't wait to see what amazing things you'll build with us.
 </p>
 
-<p>Best regards,<br />{{ project_name }} Team</p>
+<div class="info-box info-box-success">
+  <h3 style="margin-top: 0;">🚀 Your Account is Ready!</h3>
+  <p style="margin-bottom: 0;">
+    Your account setup is complete and ready to use. Below you'll find your login credentials and next steps.
+  </p>
+</div>
+
+<h2>Your Login Credentials</h2>
+<div class="info-box">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+      <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+        <strong style="color: #334155;">Email Address:</strong>
+      </td>
+      <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; text-align: right;">
+        <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-family: monospace;">{{ email }}</code>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0;">
+        <strong style="color: #334155;">Temporary Password:</strong>
+      </td>
+      <td style="padding: 8px 0; text-align: right;">
+        <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-family: monospace;">{{ password }}</code>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="cta-container">
+  <a href="{{ login_url }}" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+    Login to {{ project_name }} →
+  </a>
+</div>
+
+<div class="info-box info-box-warning">
+  <h3 style="margin-top: 0;">🔐 Important Security Notice</h3>
+  <p style="margin-bottom: 0;">
+    For your security, please <strong>change your password immediately</strong> after your first login. 
+    We've provided a temporary password that should only be used for your initial access.
+  </p>
+</div>
+
+<hr class="divider">
+
+<h2>What's Next?</h2>
+<p>Here are some things you can do to get started:</p>
+
+<div style="margin: 24px 0;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+      <td style="padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e2e8f0;">
+        <div style="display: flex; align-items: flex-start;">
+          <span style="font-size: 20px; margin-right: 12px;">🔒</span>
+          <div>
+            <h4 style="margin: 0 0 8px 0; color: #1e293b; font-size: 16px;">Update Your Password</h4>
+            <p style="margin: 0; color: #64748b; font-size: 14px;">Change your temporary password to something secure and memorable.</p>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e2e8f0;">
+        <div style="display: flex; align-items: flex-start;">
+          <span style="font-size: 20px; margin-right: 12px;">👤</span>
+          <div>
+            <h4 style="margin: 0 0 8px 0; color: #1e293b; font-size: 16px;">Complete Your Profile</h4>
+            <p style="margin: 0; color: #64748b; font-size: 14px;">Add more details to personalize your {{ project_name }} experience.</p>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e2e8f0;">
+        <div style="display: flex; align-items: flex-start;">
+          <span style="font-size: 20px; margin-right: 12px;">📚</span>
+          <div>
+            <h4 style="margin: 0 0 8px 0; color: #1e293b; font-size: 16px;">Explore the Documentation</h4>
+            <p style="margin: 0; color: #64748b; font-size: 14px;">Learn about all the features and capabilities available to you.</p>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<hr class="divider">
+
+<h2>Need Help?</h2>
+<p>
+  We're here to support you every step of the way. If you have any questions, encounter any issues, 
+  or need assistance getting started, our friendly support team is ready to help.
+</p>
+
+<div class="cta-container">
+  <a href="#" class="btn btn-secondary">Contact Support</a>
+</div>
+
+<div class="security-badge">
+  Secure Account Creation
+</div>
+
+<p>
+  Welcome aboard and thank you for choosing {{ project_name }}!
+</p>
+
+<p>
+  Best regards,<br>
+  <strong>The {{ project_name }} Team</strong>
+</p>
 {% endblock %}
