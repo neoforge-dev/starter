@@ -1,13 +1,77 @@
-import { TestRunner, Assert, ComponentTester } from "../test-utils.js";
-// import { LoginPage } from "../../pages/auth/login-page.js";
-// import { mockAuthService } from "../mocks/auth-service.mock.js";
-import { describe, it } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { LoginPage } from "../../pages/login-page.js";
 
-// Skip these tests in unit test environment
-describe.skip("Login Page", () => {
-  it("should render login page", () => {
-    // This test requires a real browser environment
-    // Skip in unit tests
+// Mock the auth service
+vi.mock("../../services/auth.js", () => ({
+  authService: {
+    login: vi.fn(),
+    isAuthenticated: vi.fn(() => false),
+    getCurrentUser: vi.fn()
+  }
+}));
+
+describe("Login Page", () => {
+  let container;
+  let element;
+
+  beforeEach(async () => {
+    // Create a container for the page
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    // Create the login-page element
+    element = document.createElement('login-page');
+    container.appendChild(element);
+    
+    // Wait for component to be fully rendered
+    await element.updateComplete;
+  });
+
+  afterEach(() => {
+    if (container && container.parentNode) {
+      document.body.removeChild(container);
+    }
+  });
+
+  it("should render login page", async () => {
+    expect(element).toBeTruthy();
+    expect(element.shadowRoot).toBeTruthy();
+  });
+
+  it("should render login form elements", async () => {
+    const shadowRoot = element.shadowRoot;
+    const form = shadowRoot.querySelector("form");
+    const emailInput = shadowRoot.querySelector('input[type="email"]');
+    const passwordInput = shadowRoot.querySelector('input[type="password"]');
+    const submitButton = shadowRoot.querySelector('button[type="submit"]');
+    
+    expect(form).toBeTruthy();
+    expect(emailInput).toBeTruthy();
+    expect(passwordInput).toBeTruthy();
+    expect(submitButton).toBeTruthy();
+  });
+
+  it("should handle loading state", async () => {
+    element.loading = true;
+    await element.updateComplete;
+    
+    expect(element.loading).toBe(true);
+    // When loading, the component shows a loading spinner instead of form elements
+    const loadingSpinner = element.shadowRoot.querySelector('.loading-spinner');
+    expect(loadingSpinner).toBeTruthy();
+    
+    // No form elements should be visible when loading
+    const form = element.shadowRoot.querySelector('form');
+    expect(form).toBeNull();
+  });
+
+  it("should display error message when error is set", async () => {
+    element.error = "Invalid credentials";
+    await element.updateComplete;
+    
+    const errorContainer = element.shadowRoot.querySelector(".error-container");
+    expect(errorContainer).toBeTruthy();
+    expect(errorContainer.textContent).toContain("Invalid credentials");
   });
 });
 

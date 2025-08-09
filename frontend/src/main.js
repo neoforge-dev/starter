@@ -1,7 +1,7 @@
-import {
+import { 
   LitElement,
   html,
-} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+ } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "./components/styles/base.js";
 import { lazyLoad } from "./utils/lazy-load.js";
 import registrationPromise from "./register-components.mjs";

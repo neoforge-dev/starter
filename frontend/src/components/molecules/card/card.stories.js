@@ -1,4 +1,4 @@
-import { html } from "lit";
+import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import "./card.js"; // Assuming card component is defined here
 // Import other components if needed for slotted content examples
 import "../../atoms/button/button.js";

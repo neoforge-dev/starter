@@ -1,12 +1,32 @@
-import { TestRunner, Assert, ComponentTester } from "../test-utils.js";
-// import { SettingsPage } from "../../pages/settings-page.js";
-import { describe, it } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { SettingsPage } from "../../pages/settings-page.js";
 
-// Skip these tests in unit test environment
-describe.skip("Settings Page", () => {
-  it("should render settings page", () => {
-    // This test requires a real browser environment
-    // Skip in unit tests
+describe("Settings Page", () => {
+  let container;
+  let element;
+
+  beforeEach(async () => {
+    // Create a container for the page
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    // Create the settings-page element
+    element = document.createElement('settings-page');
+    container.appendChild(element);
+    
+    // Wait for component to be fully rendered
+    await element.updateComplete;
+  });
+
+  afterEach(() => {
+    if (container && container.parentNode) {
+      document.body.removeChild(container);
+    }
+  });
+
+  it("should render settings page", async () => {
+    expect(element).toBeTruthy();
+    expect(element.shadowRoot).toBeTruthy();
   });
 });
 

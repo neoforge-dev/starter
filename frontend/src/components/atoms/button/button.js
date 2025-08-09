@@ -1,4 +1,4 @@
-import { html, css } from "lit";
+import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { baseStyles } from "../../styles/base.js";
 import { BaseComponent } from "../../base-component.js";
 
@@ -277,3 +277,6 @@ export class NeoButton extends BaseComponent {
     `;
   }
 }
+
+// Register the component
+customElements.define("neo-button", NeoButton);

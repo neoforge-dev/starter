@@ -1,4 +1,4 @@
-import { html } from "lit";
+import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { useState } from "@storybook/preview-api";
 import "./modal.js"; // Assuming modal component is defined here
 import "../../atoms/button/button.js";

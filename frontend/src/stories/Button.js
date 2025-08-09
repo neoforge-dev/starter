@@ -1,4 +1,4 @@
-import { html } from 'lit';
+import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { styleMap } from 'lit/directives/style-map.js';
 
 import './button.css';

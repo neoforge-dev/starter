@@ -1,5 +1,5 @@
 import { expect, vi, describe, it, beforeEach, afterEach } from "vitest";
-import { html } from "lit";
+import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 // Mock for window.auth
 window.auth = {

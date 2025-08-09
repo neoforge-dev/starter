@@ -1,6 +1,6 @@
 import { TestRunner, Assert, ComponentTester } from "../test-utils.js";
 import { DashboardPage } from "../../pages/dashboard-page.js";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 
 const runner = new TestRunner();
 
@@ -247,9 +247,32 @@ runner.describe("DashboardPage", () => {
 // Run tests
 runner.run();
 
-// Re-skipping this suite. Tests use a custom runner (TestRunner) which is not
-// automatically discovered by Vitest. Requires refactoring or TestRunner integration fix.
-describe.skip("Dashboard Page", () => {
-  it.todo("placeholder to prevent 'no tests found' error when skipped");
-  // Original tests are defined above using runner.describe/it
+// Simple vitest test for Dashboard Page
+describe("Dashboard Page", () => {
+  let container;
+  let element;
+
+  beforeEach(async () => {
+    // Create a container for the page
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    // Create the dashboard-page element  
+    element = document.createElement('dashboard-page');
+    container.appendChild(element);
+    
+    // Wait for component to be fully rendered
+    await element.updateComplete;
+  });
+
+  afterEach(() => {
+    if (container && container.parentNode) {
+      document.body.removeChild(container);
+    }
+  });
+
+  it("should render dashboard page", async () => {
+    expect(element).toBeTruthy();
+    expect(element.shadowRoot).toBeTruthy();
+  });
 });

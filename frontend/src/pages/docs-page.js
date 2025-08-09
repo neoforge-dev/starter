@@ -1,4 +1,4 @@
-import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {   html, css   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import {
   BaseComponent,
   defineComponent,
@@ -426,3 +426,6 @@ export class DocsPage extends BaseComponent {
     `;
   }
 }
+
+// Register the component
+customElements.define("docs-page", DocsPage);

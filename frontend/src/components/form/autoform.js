@@ -1,8 +1,8 @@
 // Import from lit directly for test environment
-import {
+import { 
   html,
   css,
-} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+ } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { BaseComponent } from "../base-component.js";
 import { baseStyles } from "../../styles/base.js";
 

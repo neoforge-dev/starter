@@ -5,7 +5,7 @@
  * It addresses common issues with custom element registration in the test environment.
  */
 
-import { LitElement, html } from "lit";
+import {   LitElement, html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 /**
  * Registry to keep track of registered components

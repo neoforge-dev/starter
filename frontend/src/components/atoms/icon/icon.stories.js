@@ -1,4 +1,4 @@
-import { html } from "lit";
+import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import "./icon.js";
 import { icons } from "./icons.js";
 

@@ -1,4 +1,4 @@
-import {  LitElement, html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {   LitElement, html, css   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { themeVariables } from "../styles/theme.js";
 import { baseStyles } from "../styles/base.js";
 import { router } from "../router.js";
@@ -481,7 +481,7 @@ neo = NeoForge()
 async def hello_world():
     return {"message": "Welcome to NeoForge!"}`;
       case "frontend":
-        return `import {  LitElement, html  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+        return `import {   LitElement, html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 class MyApp extends LitElement {
   render() {

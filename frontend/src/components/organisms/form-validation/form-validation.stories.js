@@ -1,4 +1,4 @@
-import { html } from "lit";
+import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { action } from "@storybook/addon-actions";
 import "./form-validation.js"; // Assuming form-validation component is defined here
 import "../../atoms/button/button.js";

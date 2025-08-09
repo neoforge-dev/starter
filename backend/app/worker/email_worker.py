@@ -101,15 +101,21 @@ class EmailWorker:
             
         if not self.queue:
             logger.error("Cannot start email worker: queue is not set")
-            return
+            raise RuntimeError("Cannot start email worker: queue is not set")
             
         logger.info("Starting email worker")
         self.is_running = True
         
         # Start the processing loop as a background task
-        self.processing_task = asyncio.create_task(self._process_loop())
+        try:
+            self.processing_task = asyncio.create_task(self._process_loop())
+            logger.info("Email worker started successfully")
+        except Exception as e:
+            logger.error(f"Failed to start email worker: {e}")
+            self.is_running = False
+            raise
         
-    def stop(self):
+    async def stop(self):
         """Stop the email worker."""
         if not self.is_running:
             logger.warning("Email worker is not running")
@@ -122,15 +128,28 @@ class EmailWorker:
         if self.processing_task and not self.processing_task.done():
             logger.info(f"Cancelling worker task {self.processing_task.get_name()}")
             self.processing_task.cancel()
-            # Optionally wait for cancellation, but often not needed if loop checks is_running
-            # try:
-            #     await asyncio.wait_for(self.processing_task, timeout=1.0)
-            # except asyncio.CancelledError:
-            #     logger.info("Worker task successfully cancelled.")
-            # except asyncio.TimeoutError:
-            #     logger.warning("Worker task did not cancel within timeout.")
+            
+            # Wait for graceful cancellation with timeout
+            try:
+                await asyncio.wait_for(self.processing_task, timeout=2.0)
+                logger.info("Worker task successfully cancelled.")
+            except asyncio.CancelledError:
+                logger.info("Worker task successfully cancelled.")
+            except asyncio.TimeoutError:
+                logger.warning("Worker task did not cancel within timeout.")
+            except Exception as e:
+                logger.error(f"Error while cancelling worker task: {e}")
 
         logger.info("Email worker stopped.")
+    
+    def get_health_status(self) -> dict:
+        """Get health status of the email worker."""
+        return {
+            "is_running": self.is_running,
+            "has_queue": self.queue is not None,
+            "task_active": self.processing_task is not None and not self.processing_task.done() if self.processing_task else False,
+            "task_cancelled": self.processing_task.cancelled() if self.processing_task else False,
+        }
 
 # Create a singleton instance of EmailWorker. The actual queue will be set in main.py
 email_worker = EmailWorker() 

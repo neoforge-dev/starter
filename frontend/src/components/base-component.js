@@ -1,4 +1,4 @@
-import { LitElement } from "lit";
+import {  LitElement  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 /**
  * Base component class that ensures proper shadow DOM initialization

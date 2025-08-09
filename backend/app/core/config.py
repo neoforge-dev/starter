@@ -57,6 +57,9 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(default=10080, env="ACCESS_TOKEN_EXPIRE_MINUTES")  # 7 days
     smtp_user: Optional[str] = Field(default=None, env="SMTP_USER")
     smtp_password: Optional[str] = Field(default=None, env="SMTP_PASSWORD")
+    # Webhook settings
+    SENDGRID_WEBHOOK_PUBLIC_KEY: Optional[str] = Field(default=None, env="SENDGRID_WEBHOOK_PUBLIC_KEY")
+    WEBHOOK_SECRET_KEY: Optional[str] = Field(default=None, env="WEBHOOK_SECRET_KEY")
 
     model_config = SettingsConfigDict(
         env_file=".env",

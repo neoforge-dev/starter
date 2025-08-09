@@ -1,5 +1,5 @@
 import { expect, describe, it, beforeEach } from "vitest";
-import { html } from "lit";
+import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 // Skip all tests in this file for now due to custom element registration issues
 describe("ThemeToggleButton", () => {

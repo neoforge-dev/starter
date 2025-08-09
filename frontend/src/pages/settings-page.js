@@ -1,4 +1,4 @@
-import {  html, css  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {   html, css   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
 

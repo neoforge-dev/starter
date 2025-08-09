@@ -1,12 +1,52 @@
-import { TestRunner, Assert, ComponentTester } from "../test-utils.js";
-// import { PageNotFound } from "../../pages/404-page.js";
-import { describe, it } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { NotFoundPage } from "../../pages/404-page.js";
 
-// Skip these tests in unit test environment
-describe.skip("404 Page", () => {
-  it("should render 404 page", () => {
-    // This test requires a real browser environment
-    // Skip in unit tests
+describe("404 Page", () => {
+  let container;
+  let element;
+
+  beforeEach(async () => {
+    // Create a container for the page
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    // Create the 404-page element
+    element = document.createElement('not-found-page');
+    container.appendChild(element);
+    
+    // Wait for component to be fully rendered
+    await element.updateComplete;
+  });
+
+  afterEach(() => {
+    if (container && container.parentNode) {
+      document.body.removeChild(container);
+    }
+  });
+
+  it("should render 404 page", async () => {
+    expect(element).toBeTruthy();
+    expect(element.shadowRoot).toBeTruthy();
+  });
+
+  it("should render 404 message", async () => {
+    const shadowRoot = element.shadowRoot;
+    const heading = shadowRoot.querySelector("h1");
+    
+    expect(heading).toBeTruthy();
+    expect(heading.textContent).toContain("404");
+    expect(heading.textContent).toContain("Page Not Found");
+  });
+
+  it("should render error message and home link", async () => {
+    const shadowRoot = element.shadowRoot;
+    const paragraphs = shadowRoot.querySelectorAll("p");
+    const homeLink = shadowRoot.querySelector('a[href="/"]');
+
+    expect(paragraphs.length).toBeGreaterThan(0);
+    expect(paragraphs[0].textContent).toContain("doesn't exist");
+    expect(homeLink).toBeTruthy();
+    expect(homeLink.textContent).toContain("Home");
   });
 });
 

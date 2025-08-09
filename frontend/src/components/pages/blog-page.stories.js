@@ -1,4 +1,4 @@
-import { html } from "lit";
+import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import "./blog-page.js"; // Import the component
 
 // NOTE: This page component currently renders hardcoded blog posts.

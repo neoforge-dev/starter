@@ -1,12 +1,54 @@
-import { TestRunner, Assert, ComponentTester } from "../test-utils.js";
-// import { ProfilePage } from "../../pages/profile-page.js";
-import { describe, it } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { ProfilePage } from "../../pages/profile-page.js";
 
-// Skip these tests in unit test environment
-describe.skip("Profile Page", () => {
-  it("should render profile page", () => {
-    // This test requires a real browser environment
-    // Skip in unit tests
+// Mock services that the ProfilePage might use
+vi.mock("../../services/auth.js", () => ({
+  authService: {
+    getCurrentUser: vi.fn(() => ({
+      id: 1,
+      name: "John Doe",
+      email: "john@example.com",
+      avatar: null
+    })),
+    updateProfile: vi.fn(),
+    logout: vi.fn()
+  }
+}));
+
+describe("Profile Page", () => {
+  let container;
+  let element;
+
+  beforeEach(async () => {
+    // Create a container for the page
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    // Create the profile-page element
+    element = document.createElement('profile-page');
+    container.appendChild(element);
+    
+    // Wait for component to be fully rendered
+    await element.updateComplete;
+  });
+
+  afterEach(() => {
+    if (container && container.parentNode) {
+      document.body.removeChild(container);
+    }
+  });
+
+  it("should render profile page", async () => {
+    expect(element).toBeTruthy();
+    expect(element.shadowRoot).toBeTruthy();
+  });
+
+  it("should have profile page structure", async () => {
+    const shadowRoot = element.shadowRoot;
+    const heading = shadowRoot.querySelector("h1, h2, h3");
+    
+    // The profile page should have some heading or main content
+    expect(heading || shadowRoot.children.length > 0).toBeTruthy();
   });
 });
 

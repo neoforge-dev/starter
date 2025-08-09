@@ -47,7 +47,10 @@ describe('Authentication Integration Tests', () => {
       // Arrange
       const loginForm = document.createElement('login-form');
       container.appendChild(loginForm);
+      
+      // Wait for component to be fully rendered
       await loginForm.updateComplete;
+      await new Promise(resolve => setTimeout(resolve, 100)); // Additional wait for DOM rendering
 
       const mockUser = { id: 1, email: 'test@example.com', name: 'Test User' };
       authService.login.mockResolvedValue(mockUser);
@@ -57,15 +60,21 @@ describe('Authentication Integration Tests', () => {
         loginSuccessEvent = e;
       });
 
-      // Act
-      const emailInput = loginForm.shadowRoot.querySelector('[data-testid="login-email"]');
-      const passwordInput = loginForm.shadowRoot.querySelector('[data-testid="login-password"]');
+      // Act - Get inputs after component is fully rendered
+      const emailInput = loginForm.shadowRoot?.querySelector('[data-testid="login-email"]');
+      const passwordInput = loginForm.shadowRoot?.querySelector('[data-testid="login-password"]');
+      
+      expect(emailInput).toBeTruthy();
+      expect(passwordInput).toBeTruthy();
       
       emailInput.value = 'test@example.com';
       passwordInput.value = 'password123';
 
       // Trigger form submission
       await loginForm._handleSubmit(new Event('submit'));
+      
+      // Assert
+      expect(authService.login).toHaveBeenCalledWith('test@example.com', 'password123');
       expect(loginSuccessEvent).toBeTruthy();
       expect(loginSuccessEvent.detail.email).toBe('test@example.com');
     });
@@ -99,7 +108,10 @@ describe('Authentication Integration Tests', () => {
       // Arrange
       const loginForm = document.createElement('login-form');
       container.appendChild(loginForm);
+      
+      // Wait for component to be fully rendered
       await loginForm.updateComplete;
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       authService.login.mockRejectedValue(new Error('Invalid credentials'));
 
@@ -109,18 +121,25 @@ describe('Authentication Integration Tests', () => {
       });
 
       // Act
-      const emailInput = loginForm.shadowRoot.querySelector('[data-testid="login-email"]');
-      const passwordInput = loginForm.shadowRoot.querySelector('[data-testid="login-password"]');
+      const emailInput = loginForm.shadowRoot?.querySelector('[data-testid="login-email"]');
+      const passwordInput = loginForm.shadowRoot?.querySelector('[data-testid="login-password"]');
+
+      expect(emailInput).toBeTruthy();
+      expect(passwordInput).toBeTruthy();
 
       emailInput.value = 'test@example.com';
       passwordInput.value = 'wrongpassword';
 
       await loginForm._handleSubmit(new Event('submit'));
+      
+      // Assert
+      expect(authService.login).toHaveBeenCalledWith('test@example.com', 'wrongpassword');
       expect(loginErrorEvent).toBeTruthy();
       expect(loginErrorEvent.detail.message).toBe('Invalid credentials');
 
       // Check that error message is displayed
-      const errorMessage = loginForm.shadowRoot.querySelector('[data-testid="error"]');
+      await loginForm.updateComplete; // Wait for error to be rendered
+      const errorMessage = loginForm.shadowRoot?.querySelector('[data-testid="error"]');
       expect(errorMessage).toBeTruthy();
       expect(errorMessage.textContent).toBe('Invalid credentials');
     });
@@ -129,7 +148,10 @@ describe('Authentication Integration Tests', () => {
       // Arrange
       const loginForm = document.createElement('login-form');
       container.appendChild(loginForm);
+      
+      // Wait for component to be fully rendered
       await loginForm.updateComplete;
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Mock login to resolve after a delay
       let resolveLogin;
@@ -140,21 +162,28 @@ describe('Authentication Integration Tests', () => {
       });
 
       // Act
-      const emailInput = loginForm.shadowRoot.querySelector('[data-testid="login-email"]');
-      const passwordInput = loginForm.shadowRoot.querySelector('[data-testid="login-password"]');
-      const submitButton = loginForm.shadowRoot.querySelector('[data-testid="login-button"]');
+      const emailInput = loginForm.shadowRoot?.querySelector('[data-testid="login-email"]');
+      const passwordInput = loginForm.shadowRoot?.querySelector('[data-testid="login-password"]');
+      const submitButton = loginForm.shadowRoot?.querySelector('[data-testid="login-button"]');
+
+      expect(emailInput).toBeTruthy();
+      expect(passwordInput).toBeTruthy();
+      expect(submitButton).toBeTruthy();
 
       emailInput.value = 'test@example.com';
       passwordInput.value = 'password123';
 
-      await loginForm._handleSubmit(new Event('submit'));
+      // Start the login process but don't await it yet
+      const submitPromise = loginForm._handleSubmit(new Event('submit'));
+      
+      // Check loading state immediately after submitting
+      await loginForm.updateComplete;
       expect(submitButton.disabled).toBe(true);
-      const spinner = loginForm.shadowRoot.querySelector('.loading-spinner');
-      expect(spinner).toBeTruthy();
-
+      expect(loginForm.isLoading).toBe(true);
+      
       // Resolve login
       resolveLogin({ id: 1, email: 'test@example.com' });
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await submitPromise; // Now wait for submit to complete
 
       // Assert loading state is cleared
       expect(submitButton.disabled).toBe(false);

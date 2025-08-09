@@ -1,12 +1,32 @@
-import { TestRunner, Assert, ComponentTester } from "../test-utils.js";
-// import { DocsPage } from "../../pages/docs-page.js";
-import { describe, it } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { DocsPage } from "../../pages/docs-page.js";
 
-// Skip these tests in unit test environment
-describe.skip("Docs Page", () => {
-  it("should render docs page", () => {
-    // This test requires a real browser environment
-    // Skip in unit tests
+describe("Docs Page", () => {
+  let container;
+  let element;
+
+  beforeEach(async () => {
+    // Create a container for the page
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    // Create the docs-page element
+    element = document.createElement('docs-page');
+    container.appendChild(element);
+    
+    // Wait for component to be fully rendered
+    await element.updateComplete;
+  });
+
+  afterEach(() => {
+    if (container && container.parentNode) {
+      document.body.removeChild(container);
+    }
+  });
+
+  it("should render docs page", async () => {
+    expect(element).toBeTruthy();
+    expect(element.shadowRoot).toBeTruthy();
   });
 });
 
