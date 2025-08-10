@@ -1,0 +1,35 @@
+{
+  "thresholds": {
+    "debtScore": {
+      "warning": 30,
+      "critical": 50
+    },
+    "eslintIssues": {
+      "warning": 50,
+      "critical": 100
+    },
+    "criticalIssues": {
+      "warning": 1,
+      "critical": 5
+    },
+    "testCoverage": {
+      "warning": 75,
+      "critical": 60
+    },
+    "bundleSize": {
+      "warning": 2,
+      "critical": 5
+    }
+  },
+  "trending": {
+    "lookbackDays": 30,
+    "alertOnIncreasingTrend": true,
+    "trendThreshold": 0.1
+  },
+  "notifications": {
+    "console": true,
+    "file": true,
+    "github": false,
+    "email": false
+  }
+}

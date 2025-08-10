@@ -39,7 +39,11 @@
     "docs:custom-elements": "npm run analyze && custom-elements-manifest-to-markdown -i docs/custom-elements.json -o docs/COMPONENTS.md",
     "postinstall": "patch-package",
     "setup:component-registry": "node scripts/setup-component-registry.js",
-    "lint:components": "eslint src --ext .js --rule 'component-registry/no-duplicate-components: warn'"
+    "lint:components": "eslint src --ext .js --rule 'component-registry/no-duplicate-components: warn'",
+    "debt:analyze": "node scripts/analyze-technical-debt.js",
+    "debt:monitor": "node scripts/debt-monitor.js",
+    "debt:monitor:init": "node scripts/debt-monitor.js init",
+    "debt:ci": "node scripts/debt-monitor.js run"
   },
   "dependencies": {
     "@custom-elements-manifest/to-markdown": "^0.1.0",
