@@ -11,7 +11,7 @@ from app.core.config import get_settings, Settings
 from app.models.user import User
 from app.models.password_reset_token import PasswordResetToken
 from app.crud import password_reset_token, user as user_crud
-from app.core.security import get_password_hash, verify_password
+from app.core.auth import get_password_hash, verify_password
 from tests.factories import UserFactory
 
 pytestmark = pytest.mark.asyncio
