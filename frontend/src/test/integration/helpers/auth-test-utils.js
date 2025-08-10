@@ -13,6 +13,7 @@ import { vi } from 'vitest';
 export class MockLocalStorage {
   constructor() {
     this.store = new Map();
+    this._quotaExceeded = false;
   }
 
   getItem(key) {
@@ -20,6 +21,11 @@ export class MockLocalStorage {
   }
 
   setItem(key, value) {
+    if (this._quotaExceeded) {
+      const error = new Error('QuotaExceededError');
+      error.name = 'QuotaExceededError';
+      throw error;
+    }
     this.store.set(key, String(value));
   }
 
@@ -38,6 +44,11 @@ export class MockLocalStorage {
 
   get length() {
     return this.store.size;
+  }
+
+  // Test utility methods
+  setQuotaExceeded(exceeded) {
+    this._quotaExceeded = exceeded;
   }
 }
 
@@ -61,21 +72,28 @@ export class AuthTestUtils {
    * Setup authentication testing environment
    */
   setup() {
-    // Mock localStorage and sessionStorage BEFORE any services are instantiated
-    Object.defineProperty(window, 'localStorage', {
-      value: this.mockLocalStorage,
-      writable: true,
-      configurable: true
-    });
+    // Clear any existing data
+    this.mockLocalStorage.clear();
+    this.mockSessionStorage.clear();
     
+    // Mock localStorage and sessionStorage BEFORE any services are instantiated
+    if (typeof window !== 'undefined') {
+      Object.defineProperty(window, 'localStorage', {
+        value: this.mockLocalStorage,
+        writable: true,
+        configurable: true
+      });
+      
+      Object.defineProperty(window, 'sessionStorage', {
+        value: this.mockSessionStorage,
+        writable: true,
+        configurable: true
+      });
+    }
+    
+    // Always set global mocks for Node.js environment
     Object.defineProperty(global, 'localStorage', {
       value: this.mockLocalStorage,
-      writable: true,
-      configurable: true
-    });
-    
-    Object.defineProperty(window, 'sessionStorage', {
-      value: this.mockSessionStorage,
       writable: true,
       configurable: true
     });

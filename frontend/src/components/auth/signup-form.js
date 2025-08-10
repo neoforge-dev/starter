@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "../../../vendor/lit-core.min.js";
+import { LitElement, html, css } from "lit";
 import { baseStyles } from "../../styles/base.js";
 import { LoadingMixin, ErrorMixin } from "../../styles/base.js";
 import { authService } from "../../services/auth.js";
@@ -154,7 +154,7 @@ export class SignupForm extends LoadingMixin(ErrorMixin(LitElement)) {
           <div class="message">
             Didn't receive the email? You can request a new verification link on the verification page.
           </div>
-          <button @click=${() => window.location.href = '/verify-email'}>
+          <button @click=${() => window.location.href = '/verify-email?email=' + encodeURIComponent(this.email)}>
             Go to Verification Page
           </button>
         </div>

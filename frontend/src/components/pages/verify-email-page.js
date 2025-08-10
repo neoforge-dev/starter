@@ -1,6 +1,6 @@
-import {   LitElement, html, css   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import { baseStyles } from "../styles/base.js";
-import "../components/auth/verify-email.js";
+import { LitElement, html, css } from "lit";
+import { baseStyles } from "../../styles/base.js";
+import "../auth/verify-email.js";
 
 export class VerifyEmailPage extends LitElement {
   static styles = [

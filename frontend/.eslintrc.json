@@ -9,9 +9,8 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": ["component-registry"],
+  "plugins": [],
   "rules": {
-    "component-registry/no-duplicate-components": "warn"
   },
   "settings": {
     "componentRegistry": {

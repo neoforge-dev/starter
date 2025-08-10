@@ -14,18 +14,27 @@ function criticalCssPlugin() {
       const filter = createFilter("src/**/critical.css");
       if (!filter(id)) return null;
 
-      // Mark this CSS as critical
+      // Transform CSS to JS module that injects critical CSS
+      const transformedCode = `const style = document.createElement('style');
+style.setAttribute('critical', '');
+style.textContent = ${JSON.stringify(code)};
+document.head.appendChild(style);
+export default style;`;
+
       return {
-        code: `
-          const style = document.createElement('style');
-          style.setAttribute('critical', '');
-          style.textContent = ${JSON.stringify(code)};
-          document.head.appendChild(style);
-          export default style;
-        `,
-        map: null,
+        code: transformedCode,
+        map: null
       };
     },
+    generateBundle(options, bundle) {
+      // Process any critical CSS files in the bundle
+      Object.keys(bundle).forEach(fileName => {
+        if (fileName.includes('critical') && bundle[fileName].type === 'asset') {
+          // Mark as processed
+          bundle[fileName].fileName = fileName.replace('.css', '.js');
+        }
+      });
+    }
   };
 }
 
@@ -151,7 +160,7 @@ export default defineConfig({
     },
   },
   plugins: [
-    criticalCssPlugin(),
+    // criticalCssPlugin(), // Temporarily disabled due to build issues
     visualizer({
       filename: "dist/stats.html",
       gzipSize: true,

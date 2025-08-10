@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "../../../vendor/lit-core.min.js";
+import { LitElement, html, css } from "lit";
 import { baseStyles } from "../../styles/base.js";
 import { LoadingMixin, ErrorMixin } from "../../styles/base.js";
 import { authService } from "../../services/auth.js";
@@ -105,8 +105,9 @@ export class VerifyEmail extends LoadingMixin(ErrorMixin(LitElement)) {
 
   constructor() {
     super();
-    this.token = new URLSearchParams(window.location.search).get('token');
-    this.email = new URLSearchParams(window.location.search).get('email');
+    const urlParams = new URLSearchParams(window.location.search);
+    this.token = urlParams.get('token');
+    this.email = urlParams.get('email') || '';
     this.verificationSent = false;
     this.verificationSuccess = false;
   }
