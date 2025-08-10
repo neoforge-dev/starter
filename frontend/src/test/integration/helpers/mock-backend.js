@@ -230,12 +230,13 @@ export class MockBackendServer {
       ok: true,
       status: 200,
       json: async () => ({
-        message: "User registered successfully",
+        message: "Registration successful",
         user: {
           id: newUser.id,
           email: newUser.email,
           full_name: newUser.full_name,
           is_active: newUser.is_active,
+          is_verified: newUser.is_verified,
           created_at: newUser.created_at
         },
         access_token: accessToken,
@@ -317,8 +318,10 @@ export class MockBackendServer {
     }
 
     // Always return success to prevent email enumeration (matches backend behavior)
-    const resetToken = Math.random().toString(36).substring(2, 15) + 
-                      Math.random().toString(36).substring(2, 15);
+    // Use a predictable token for testing, but random for non-test scenarios
+    const resetToken = email === 'test@example.com' ? 'mock_reset_token_12345' : 
+                      (Math.random().toString(36).substring(2, 15) + 
+                       Math.random().toString(36).substring(2, 15));
     
     // Store reset token if user exists
     const user = mockUsers.get(email);

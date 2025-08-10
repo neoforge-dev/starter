@@ -1,6 +1,6 @@
 import "../components/molecules/modal/modal.js"; // Import the actual neo-modal component
 import "../components/atoms/button/button.js"; // Import neo-button used in confirm
-import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js"; // Needed if we create template literals for content/footer
+import {   html, render   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js"; // Needed for template literals and rendering
 
 /**
  * Modal service for programmatic modal management

@@ -263,6 +263,9 @@ describe('Authentication Flow Integration Tests', () => {
     it('should validate existing token on initialization', async () => {
       // Arrange - Create authenticated session
       const { user, token } = authTestUtils.createAuthenticatedSession();
+      
+      // Create new auth service after token is set
+      authService = new AuthService();
 
       // Act
       await authService.initialize();
@@ -280,6 +283,9 @@ describe('Authentication Flow Integration Tests', () => {
       const user = { id: 1, email: 'test@example.com' };
       const expiredToken = authTestUtils.createExpiredJWT(user);
       authTestUtils.mockLocalStorage.setItem('auth_token', expiredToken);
+      
+      // Create new auth service after token is set
+      authService = new AuthService();
 
       // Act
       await authService.initialize();
@@ -293,6 +299,9 @@ describe('Authentication Flow Integration Tests', () => {
     it('should handle malformed token during validation', async () => {
       // Arrange - Set malformed token
       authTestUtils.mockLocalStorage.setItem('auth_token', 'invalid.token.format');
+      
+      // Create new auth service after token is set
+      authService = new AuthService();
 
       // Act
       await authService.initialize();
@@ -390,6 +399,9 @@ describe('Authentication Flow Integration Tests', () => {
     it('should handle complete logout flow with cleanup', async () => {
       // Arrange - Create authenticated session
       authTestUtils.createAuthenticatedSession();
+      
+      // Create new auth service after token is set
+      authService = new AuthService();
       await authService.initialize();
       expect(authService.isAuthenticated()).toBe(true);
 
@@ -414,6 +426,9 @@ describe('Authentication Flow Integration Tests', () => {
     it('should handle logout even when API call fails', async () => {
       // Arrange
       authTestUtils.createAuthenticatedSession();
+      
+      // Create new auth service after token is set
+      authService = new AuthService();
       await authService.initialize();
       
       // Mock logout API to fail
@@ -452,7 +467,7 @@ describe('Authentication Flow Integration Tests', () => {
       global.fetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: async () => ({ detail: 'Internal server error' })
+        json: async () => ({ message: 'Internal server error' })
       });
 
       // Act & Assert

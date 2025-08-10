@@ -160,6 +160,14 @@ self.addEventListener("message", (event) => {
   }
 });
 
+// Sync offline form submissions
+async function syncForms() {
+  // Retrieve stored form submissions from IndexedDB
+  // This function should sync offline forms with the server
+  console.log("Syncing offline forms...");
+  // TODO: Implement actual form sync logic
+}
+
 // Background sync for offline form submissions
 self.addEventListener("sync", (event) => {
   if (event.tag === "sync-forms") {
@@ -190,6 +198,6 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   if (event.notification.data.url) {
-    event.waitUntil(clients.openWindow(event.notification.data.url));
+    event.waitUntil(self.clients.openWindow(event.notification.data.url));
   }
 });

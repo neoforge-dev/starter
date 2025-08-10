@@ -1,4 +1,5 @@
 import { LitElement, html, css } from '/vendor/lit-core.min.js';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { baseStyles } from '../../styles/base.js';
 import { docsService } from '../../services/docs.js';
 

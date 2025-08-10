@@ -154,7 +154,7 @@ class SecurityMiddleware {
 
     // Set up reporting API if supported
     if ("ReportingObserver" in window) {
-      const observer = new ReportingObserver(
+      const observer = new window.ReportingObserver(
         (reports) => {
           reports.forEach((report) => {
             fetch(

@@ -58,12 +58,14 @@ export class PerformanceChart extends LitElement {
     this.metric = "";
     this.timeRange = "24h";
     this.chart = null;
+    this.Chart = null;
   }
 
   async firstUpdated() {
     // Dynamically import Chart.js only when needed
     const { Chart, registerables } = await import("chart.js");
     Chart.register(...registerables);
+    this.Chart = Chart;
 
     this.initializeChart();
   }
@@ -82,9 +84,11 @@ export class PerformanceChart extends LitElement {
   }
 
   initializeChart() {
+    if (!this.Chart) return; // Chart.js not loaded yet
+    
     const ctx = this.shadowRoot.querySelector("canvas").getContext("2d");
 
-    this.chart = new Chart(ctx, {
+    this.chart = new this.Chart(ctx, {
       type: "line",
       data: {
         labels: [],

@@ -5,7 +5,7 @@
  * including session management, token handling, and user state management.
  */
 
-import { vi } from 'vitest';
+import { vi, expect } from 'vitest';
 
 /**
  * Mock localStorage implementation for testing
