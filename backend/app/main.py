@@ -25,8 +25,7 @@ from app.db.base import Base
 from app.core.redis import get_redis, redis_client
 from app.api.v1.api import api_router
 from app.api.endpoints import metrics
-from app.worker.email_worker import email_worker
-from app.core.queue import EmailQueue
+from app.core.celery import celery_app
 # Import specific middleware setup functions
 from app.api.middleware import setup_security_middleware, setup_validation_middleware
 from app.core.metrics import get_metrics
@@ -44,7 +43,7 @@ class HealthCheck(BaseModel):
     version: str
     database_status: str
     redis_status: str
-    email_worker_status: str
+    celery_status: str
 
 class DetailedHealthCheck(HealthCheck):
     """Detailed health check response with component information."""
@@ -52,7 +51,7 @@ class DetailedHealthCheck(HealthCheck):
     database_latency_ms: float
     redis_latency_ms: float
     environment: str
-    email_worker_details: dict
+    celery_details: dict
 
 async def init_db():
     """Initialize database."""
@@ -92,18 +91,11 @@ async def lifespan(app: FastAPI):
     # Initialize metrics
     get_metrics()
     
-    # Initialize email queue and worker
-    email_queue = EmailQueue(redis=redis_client)
-    email_worker.queue = email_queue
-    
-    # Start email worker with error handling
-    try:
-        email_worker.start()
-        logger.info("Email worker started successfully")
-    except Exception as e:
-        logger.error(f"Failed to start email worker: {e}")
-        # Continue startup even if email worker fails - emails will be queued but not processed
-        logger.warning("Application will continue without email processing capabilities")
+    # Celery is managed separately - just log that it should be running
+    logger.info(
+        "celery_integration_ready",
+        note="Celery workers should be started separately using: python -m app.worker.run_worker"
+    )
     
     logger.info(
         "application_startup",
@@ -113,16 +105,8 @@ async def lifespan(app: FastAPI):
     
     yield
     
-    # Cleanup - stop email worker gracefully
-    try:
-        if email_worker.is_running:
-            logger.info("Stopping email worker...")
-            await email_worker.stop()
-            logger.info("Email worker stopped successfully")
-        else:
-            logger.info("Email worker was not running during shutdown")
-    except Exception as e:
-        logger.error(f"Error stopping email worker: {e}")
+    # Celery workers are managed separately - no cleanup needed in FastAPI app
+    logger.info("celery_integration_shutdown_complete")
     
     await close_redis()
     
@@ -221,7 +205,7 @@ async def health_check(
     """Check API health status with dependency statuses."""
     db_status = "healthy"
     redis_status = "healthy"
-    email_worker_status = "healthy"
+    celery_status = "healthy"
     
     try:
         await db.execute(text("SELECT 1"))
@@ -233,22 +217,22 @@ async def health_check(
     except Exception as e:
         redis_status = f"unhealthy: {str(e)}"
         
-    # Check email worker status
+    # Check Celery status by inspecting active workers
     try:
-        health = email_worker.get_health_status()
-        if not health["is_running"]:
-            email_worker_status = "stopped"
-        elif not health["has_queue"]:
-            email_worker_status = "no_queue"
-        elif not health["task_active"]:
-            email_worker_status = "task_inactive"
-        elif health["task_cancelled"]:
-            email_worker_status = "task_cancelled"
+        # Check if Celery can connect to broker (Redis)
+        inspect = celery_app.control.inspect()
+        active_workers = inspect.active()
+        if active_workers is None or len(active_workers) == 0:
+            celery_status = "no_workers"
+        else:
+            # Check if any workers are available
+            total_workers = sum(len(tasks) for tasks in active_workers.values())
+            celery_status = f"healthy ({len(active_workers)} workers, {total_workers} active tasks)"
     except Exception as e:
-        email_worker_status = f"error: {str(e)}"
+        celery_status = f"error: {str(e)}"
     
     # Overall status is healthy only if all components are healthy
-    all_healthy = all(status == "healthy" for status in [db_status, redis_status, email_worker_status])
+    all_healthy = all("healthy" in str(status) for status in [db_status, redis_status, celery_status])
     overall_status = "healthy" if all_healthy else "unhealthy"
     
     return HealthCheck(
@@ -256,7 +240,7 @@ async def health_check(
         version=get_settings().version,
         database_status=db_status,
         redis_status=redis_status,
-        email_worker_status=email_worker_status
+        celery_status=celery_status
     )
 
 @app.get("/health/detailed", response_model=DetailedHealthCheck, tags=["system"])
@@ -268,7 +252,7 @@ async def detailed_health_check(
     import time
     db_status = "healthy"
     redis_status = "healthy"
-    email_worker_status = "healthy"
+    celery_status = "healthy"
 
     t_db = time.perf_counter()
     try:
@@ -286,23 +270,32 @@ async def detailed_health_check(
         redis_status = f"unhealthy: {str(e)}"
         redis_latency = 0.0
 
-    # Get detailed email worker status
-    email_worker_details = {}
+    # Get detailed Celery status
+    celery_details = {}
     try:
-        email_worker_details = email_worker.get_health_status()
-        if not email_worker_details["is_running"]:
-            email_worker_status = "stopped"
-        elif not email_worker_details["has_queue"]:
-            email_worker_status = "no_queue"
-        elif not email_worker_details["task_active"]:
-            email_worker_status = "task_inactive"
-        elif email_worker_details["task_cancelled"]:
-            email_worker_status = "task_cancelled"
+        inspect = celery_app.control.inspect()
+        active_workers = inspect.active() or {}
+        registered_tasks = inspect.registered() or {}
+        stats = inspect.stats() or {}
+        
+        celery_details = {
+            "active_workers": list(active_workers.keys()),
+            "worker_count": len(active_workers),
+            "active_tasks_total": sum(len(tasks) for tasks in active_workers.values()),
+            "registered_tasks": list(set().union(*registered_tasks.values())) if registered_tasks else [],
+            "worker_stats": stats
+        }
+        
+        if len(active_workers) == 0:
+            celery_status = "no_workers"
+        else:
+            celery_status = "healthy"
+            
     except Exception as e:
-        email_worker_status = f"error: {str(e)}"
-        email_worker_details = {"error": str(e)}
+        celery_status = f"error: {str(e)}"
+        celery_details = {"error": str(e)}
 
-    all_healthy = all(status == "healthy" for status in [db_status, redis_status, email_worker_status])
+    all_healthy = all("healthy" in str(status) for status in [db_status, redis_status, celery_status])
     overall_status = "healthy" if all_healthy else "unhealthy"
     
     return DetailedHealthCheck(
@@ -310,11 +303,11 @@ async def detailed_health_check(
         version=get_settings().version,
         database_status=db_status,
         redis_status=redis_status,
-        email_worker_status=email_worker_status,
+        celery_status=celery_status,
         database_latency_ms=round(db_latency, 2),
         redis_latency_ms=round(redis_latency, 2),
         environment=get_settings().environment,
-        email_worker_details=email_worker_details,
+        celery_details=celery_details,
     ) 
 
 if __name__ == "__main__":

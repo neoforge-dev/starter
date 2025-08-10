@@ -1,92 +1,72 @@
 #!/usr/bin/env python
 """
-Standalone Email Worker Process
+Standalone Celery Worker Process
 
-This script runs the email worker as a standalone process, separate from the main API.
-It continuously processes emails from the queue until stopped.
+This script runs the Celery worker as a standalone process, separate from the main API.
+It processes background tasks (primarily email sending) using the configured Celery app.
 
 Usage:
     python -m app.worker.run_worker
+    
+    # Or with specific options:
+    celery -A app.core.celery:celery_app worker --loglevel=info --queues=email,default
 """
-import asyncio
-import signal
 import sys
+import signal
+import logging
 import structlog
 from app.core.config import get_settings
 from app.core.logging import setup_logging
-from app.core.redis import redis_client
-from app.core.queue import EmailQueue
-from app.worker.email_worker import EmailWorker
+from app.core.celery import celery_app
 
-# Get settings once
-current_settings = get_settings()
+# Get settings
+settings = get_settings()
 
 # Set up structured logging
-setup_logging(current_settings.model_dump())
+setup_logging(settings.model_dump())
 logger = structlog.get_logger()
 
-# Create email worker
-email_queue = None
-email_worker = None
+def signal_handler(signum, frame):
+    """Handle shutdown signals gracefully."""
+    logger.info(f"Received signal {signum}, shutting down worker...")
+    # Celery will handle graceful shutdown
+    sys.exit(0)
 
-async def init():
-    """Initialize the email worker."""
-    global email_queue, email_worker
-    
-    # Initialize Redis connection
-    try:
-        await redis_client.ping()
-        logger.info("Redis connection established")
-    except Exception as e:
-        logger.error("Failed to connect to Redis", error=str(e))
-        sys.exit(1)
-    
-    # Initialize email queue
-    email_queue = EmailQueue(redis=redis_client)
-    
-    # Initialize and start email worker
-    email_worker = EmailWorker(queue=email_queue)
-    email_worker.start()
-    
+def main():
+    """Main entry point for the Celery worker."""
     logger.info(
-        "email_worker_started",
-        environment=current_settings.environment,
+        "celery_worker_starting",
+        environment=settings.environment.value,
+        redis_url=str(settings.redis_url),
+        queues=["email", "default"]
     )
-
-async def shutdown():
-    """Shutdown the email worker."""
-    global email_queue, email_worker
     
-    if email_worker:
-        email_worker.stop()
-        logger.info("Email worker stopped")
+    # Register signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     
-    if email_queue:
-        logger.info("Email queue disconnected")
-    
-    await redis_client.close()
-    logger.info("Redis connection closed")
-    
-    logger.info("email_worker_shutdown")
-
-async def main():
-    """Main entry point for the email worker."""
-    await init()
-    
-    # Set up signal handlers
-    loop = asyncio.get_running_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, lambda: asyncio.create_task(shutdown()))
-    
-    # Keep the process running until shutdown
     try:
-        # Run forever until interrupted
-        while email_worker and email_worker.is_running:
-            await asyncio.sleep(1)
-    except asyncio.CancelledError:
-        pass
+        # Start Celery worker
+        # This is equivalent to running: 
+        # celery -A app.core.celery:celery_app worker --loglevel=info --queues=email,default
+        celery_app.worker_main([
+            'worker',
+            '--loglevel=info',
+            '--queues=email,default',
+            '--concurrency=2',  # Number of worker processes
+            '--prefetch-multiplier=1',  # Tasks to prefetch per worker
+            '--max-tasks-per-child=1000',  # Restart worker after N tasks
+            '--without-gossip',  # Disable gossip for smaller deployments
+            '--without-mingle',  # Disable mingle for faster startup
+            '--without-heartbeat',  # Disable heartbeat for simpler monitoring
+        ])
+    except KeyboardInterrupt:
+        logger.info("Worker interrupted by user")
+    except Exception as e:
+        logger.error(f"Worker failed to start: {e}")
+        sys.exit(1)
     finally:
-        await shutdown()
+        logger.info("celery_worker_shutdown")
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    main()

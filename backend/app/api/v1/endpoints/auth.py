@@ -13,7 +13,7 @@ from app.api.deps import get_db
 from app.schemas.auth import Token, TokenPayload, PasswordResetRequest, PasswordResetConfirm, EmailVerification, ResendVerification
 from app.schemas.user import UserCreate, UserResponse
 from app.models.user import User
-from app.core.email import send_new_account_email, send_reset_password_email
+from app.worker.email_worker import send_welcome_email_task, send_verification_email_task, send_password_reset_email_task
 from app.core.auth import verify_password, get_password_hash
 from app.crud import user as user_crud, password_reset_token
 import logging # Import logging
@@ -95,19 +95,18 @@ async def register_user(
             expires_delta=timedelta(hours=24)  # Verification token expires in 24 hours
         )
         
-        # Send welcome email with verification link
+        # Queue welcome email with verification link
         try:
-            await send_new_account_email(
-                email_to=user.email,
-                username=user.full_name or user.email,
-                verification_token=verification_token,
-                settings=settings
+            task_result = send_welcome_email_task.delay(
+                user_email=user.email,
+                user_name=user.full_name or user.email,
+                verification_token=verification_token
             )
-            logger.info(f"Welcome email sent to: {user.email}")
+            logger.info(f"Welcome email task queued for: {user.email} (task_id: {task_result.id})")
         except Exception as email_error:
-            # Log error but don't fail registration if email fails
-            logger.error(f"Failed to send welcome email to {user.email}: {email_error}")
-            # Note: We continue with registration even if email fails
+            # Log error but don't fail registration if email queuing fails
+            logger.error(f"Failed to queue welcome email for {user.email}: {email_error}")
+            # Note: We continue with registration even if email queuing fails
         
         # Generate access token for immediate login
         access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
@@ -190,18 +189,17 @@ async def reset_password_request(
             
             logger.info(f"Password reset token created for user {user.id}")
             
-            # Send password reset email
+            # Queue password reset email
             try:
-                await send_reset_password_email(
-                    email_to=user.email,
-                    token=plain_token,
-                    username=user.full_name or user.email,
-                    settings=settings
+                task_result = send_password_reset_email_task.delay(
+                    user_email=user.email,
+                    user_name=user.full_name or user.email,
+                    reset_token=plain_token
                 )
-                logger.info(f"Password reset email sent to: {user.email}")
+                logger.info(f"Password reset email task queued for: {user.email} (task_id: {task_result.id})")
             except Exception as email_error:
                 # Log error but don't fail the request
-                logger.error(f"Failed to send password reset email to {user.email}: {email_error}")
+                logger.error(f"Failed to queue password reset email for {user.email}: {email_error}")
                 # Continue with success response
         else:
             logger.info(f"Password reset requested for non-existent email: {reset_data.email}")
@@ -411,18 +409,17 @@ async def resend_verification(
             
             logger.info(f"New verification token generated for user {user.id}")
             
-            # Send verification email
+            # Queue verification email
             try:
-                await send_new_account_email(
-                    email_to=user.email,
-                    username=user.full_name or user.email,
-                    verification_token=verification_token,
-                    settings=settings
+                task_result = send_verification_email_task.delay(
+                    user_email=user.email,
+                    user_name=user.full_name or user.email,
+                    verification_token=verification_token
                 )
-                logger.info(f"Verification email resent to: {user.email}")
+                logger.info(f"Verification email task queued for: {user.email} (task_id: {task_result.id})")
             except Exception as email_error:
                 # Log error but don't fail the request
-                logger.error(f"Failed to resend verification email to {user.email}: {email_error}")
+                logger.error(f"Failed to queue verification email for {user.email}: {email_error}")
                 # Continue with success response
         else:
             logger.info(f"Verification resend requested for non-existent email: {resend_data.email}")
