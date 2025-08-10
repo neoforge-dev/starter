@@ -1,9 +1,7 @@
-import { 
-  html,
-  css,
- } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import { BaseComponent } from "./base-component.js";
-import { baseStyles } from "../styles/base.js";
+// TODO: Add html, css imports when render method is implemented
+// import { html, css } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+// import { baseStyles } from "../styles/base.js";
 
 /**
  * @element neo-autoform

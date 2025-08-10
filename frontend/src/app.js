@@ -1,4 +1,4 @@
-import { offlineManager } from "./services/offline.js";
+// import { offlineManager } from "./services/offline.js"; // TODO: Implement offline functionality
 import { notificationService } from "./services/notifications.js";
 import { analytics } from "./services/analytics.js";
 import { i18n } from "./services/i18n.js";

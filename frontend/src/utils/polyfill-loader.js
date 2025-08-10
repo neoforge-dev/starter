@@ -36,7 +36,7 @@ export function detectFeatures() {
     subgrid: CSS.supports("(display: subgrid)"),
     viewTransitions: "startViewTransition" in document,
     declarativeShadowDOM:
-      HTMLTemplateElement.prototype.hasOwnProperty("shadowRoot"),
+      Object.prototype.hasOwnProperty.call(HTMLTemplateElement.prototype, "shadowRoot"),
     cssHas: CSS.supports("selector(:has(*))"),
   };
 }
@@ -64,7 +64,7 @@ async function loadBrowserFixes() {
  * Loads feature-specific polyfills based on browser support
  * @returns {Promise} Promise that resolves when feature polyfills are loaded
  */
-async function loadFeaturePolyfills() {
+async function loadAllFeaturePolyfills() {
   const features = detectFeatures();
   const polyfillPromises = [];
 
@@ -105,7 +105,7 @@ export async function initPolyfills() {
   const startTime = performance.now();
 
   try {
-    await Promise.all([loadBrowserFixes(), loadFeaturePolyfills()]);
+    await Promise.all([loadBrowserFixes(), loadAllFeaturePolyfills()]);
 
     const loadTime = performance.now() - startTime;
     console.log(`Polyfills initialized in ${loadTime.toFixed(2)}ms`);

@@ -327,4 +327,3 @@ if (!customElements.get("memory-monitor")) {
   customElements.define("memory-monitor", MemoryMonitor);
 }
 
-export { MemoryMonitor };

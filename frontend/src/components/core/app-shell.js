@@ -6,7 +6,7 @@ import "./app-footer.js";
 import "../auth/auth-modal.js";
 import "../../pages/docs-page.js";
 import { themeVariables, ThemeToggleMixin } from "@styles/theme.js";
-import { property } from "lit/decorators.js";
+// import { property } from "lit/decorators.js"; // Using static properties instead
 
 export class AppShell extends ThemeToggleMixin(LitElement) {
   static properties = {
