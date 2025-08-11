@@ -199,7 +199,7 @@ export class MockBackendServer {
   async mockRegister(userData) {
     await this._delay();
 
-    const { email, password, full_name } = userData;
+    const { email, full_name } = userData;
 
     // Check if user already exists
     if (mockUsers.has(email)) {
@@ -342,7 +342,7 @@ export class MockBackendServer {
     };
   }
 
-  async mockConfirmPasswordReset(token, newPassword) {
+  async mockConfirmPasswordReset(token) {
     await this._delay();
 
     const resetData = mockResetTokens.get(token);

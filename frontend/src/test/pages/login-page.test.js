@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { LoginPage } from "../../pages/login-page.js";
 
 // Mock the auth service
 vi.mock("../../services/auth.js", () => ({

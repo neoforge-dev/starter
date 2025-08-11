@@ -53,7 +53,7 @@ async function globalTeardown() {
   };
 
   // Process test results for compatibility report
-  Object.entries(testResults.results).forEach(([file, result]) => {
+  Object.entries(testResults.results).forEach(([, result]) => {
     if (result.suites) {
       result.suites.forEach((suite) => {
         if (suite.title === "Browser Compatibility") {
@@ -109,7 +109,7 @@ async function globalTeardown() {
     </tr>
     ${Object.entries(compatReport.browsers)
       .map(
-        ([name, info]) => `
+        ([, info]) => `
         <tr>
           <td>${info.browserName}</td>
           <td>${info.browserVersion}</td>

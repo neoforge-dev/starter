@@ -32,7 +32,6 @@ class MockTutorialsPage extends HTMLElement {
   set tutorials(value) {
     this._tutorials = value;
     this.render();
-    return true;
   }
 
   render() {

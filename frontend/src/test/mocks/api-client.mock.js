@@ -1,4 +1,4 @@
-import { AppError, ErrorType } from "../../services/error-service.js";
+// import { AppError, ErrorType } from "../../services/error-service.js";
 
 export class MockApiClient {
   constructor() {
@@ -14,7 +14,7 @@ export class MockApiClient {
     this.errors.set(endpoint, error);
   }
 
-  async _fetch(endpoint, options = {}) {
+  async _fetch(endpoint) {
     if (this.errors.has(endpoint)) {
       throw this.errors.get(endpoint);
     }
@@ -65,7 +65,7 @@ export class MockApiClient {
     return this._fetch(endpoint, { ...options, method: "DELETE" });
   }
 
-  async uploadFile(endpoint, file, onProgress) {
+  async uploadFile(endpoint, file) {
     return this._fetch(endpoint, {
       method: "POST",
       body: file,

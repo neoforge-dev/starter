@@ -380,9 +380,9 @@ describe("About Page", () => {
     const firstMember = teamMembers[0];
     const avatar = firstMember.querySelector(".member-avatar");
 
-    let errorHandled = false;
+    // let errorHandled = false;
     avatar.addEventListener("error", () => {
-      errorHandled = true;
+      // errorHandled = true;
     });
 
     // Simulate error event

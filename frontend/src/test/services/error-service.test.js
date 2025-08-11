@@ -36,7 +36,7 @@ class MockApiClient {
     this.errors.set(endpoint, error);
   }
 
-  async _fetch(endpoint, options = {}) {
+  async _fetch(endpoint) {
     if (this.errors.has(endpoint)) {
       throw this.errors.get(endpoint);
     }
@@ -100,7 +100,7 @@ class ErrorService {
     }
   }
 
-  _showErrorMessage(error) {
+  _showErrorMessage() {
     // Mock implementation
   }
 

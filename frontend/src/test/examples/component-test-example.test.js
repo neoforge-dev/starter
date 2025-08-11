@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   createMockElement,
   createMockEvent,
-  createMockComponent,
+  // createMockComponent,
   mockCreateElement,
 } from "../utils/dom-mock-utils";
 
@@ -53,7 +53,7 @@ class ExampleComponent {
     }
   }
 
-  handleClick(event) {
+  handleClick() {
     this.dispatchEvent(
       new CustomEvent("example-clicked", {
         detail: { value: "clicked" },

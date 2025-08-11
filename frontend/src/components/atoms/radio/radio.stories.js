@@ -78,16 +78,16 @@ const Template = ({
   helper 
 }) => html`
   <neo-radio
-    name=\${name}
-    value=\${value}
-    ?checked=\${checked}
-    ?disabled=\${disabled}
-    ?required=\${required}
-    error=\${error}
-    helper=\${helper}
-    @change=\${(e) => console.log('Radio changed:', e.target.checked)}
+    name=${name}
+    value=${value}
+    ?checked=${checked}
+    ?disabled=${disabled}
+    ?required=${required}
+    error=${error}
+    helper=${helper}
+    @change=${(e) => console.log('Radio changed:', e.target.checked)}
   >
-    \${label}
+    ${label}
   </neo-radio>
 `;
 

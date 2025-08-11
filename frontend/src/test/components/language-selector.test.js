@@ -73,7 +73,7 @@ class MockLanguageSelector {
   _handleKeyDown(e) {
     // Instead of checking document.activeElement, we'll use a mock approach
     // We'll assume the select is always the active element for testing purposes
-      if (e.key === "ArrowDown") {
+    if (e.key === "ArrowDown") {
         const currentIndex = this.languages.findIndex(
           (lang) => lang.code === this.currentLanguage
         );
@@ -99,7 +99,6 @@ class MockLanguageSelector {
           })
         );
       }
-    }
   }
 
   _handleLanguageChange(e) {

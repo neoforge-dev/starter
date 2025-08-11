@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 
 // Skip all e2e tests when running in unit test environment
 describe.skip("NeoForge Frontend Pages", () => {

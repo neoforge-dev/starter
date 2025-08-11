@@ -106,7 +106,7 @@ describe("Documentation Page", () => {
           if (selector === ".search-input") {
             return {
               value: pageProps.searchQuery,
-              dispatchEvent: function (event) {
+              dispatchEvent: function () {
                 return true;
               },
             };
@@ -166,7 +166,6 @@ describe("Documentation Page", () => {
   });
 
   it("handles search", async () => {
-    const searchInput = pageProps.shadowRoot.querySelector(".search-input");
     await pageProps._handleSearch("test");
     expect(pageProps.api.searchDocs).toHaveBeenCalledWith("test");
   });

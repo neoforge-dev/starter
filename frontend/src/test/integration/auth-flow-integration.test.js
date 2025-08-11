@@ -262,7 +262,7 @@ describe('Authentication Flow Integration Tests', () => {
   describe('Token Validation and Session Management', () => {
     it('should validate existing token on initialization', async () => {
       // Arrange - Create authenticated session
-      const { user, token } = authTestUtils.createAuthenticatedSession();
+      const { user } = authTestUtils.createAuthenticatedSession();
       
       // Create new auth service after token is set
       authService = new AuthService();

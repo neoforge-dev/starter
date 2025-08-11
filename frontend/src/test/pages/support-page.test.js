@@ -347,8 +347,6 @@ describe("Support Page", () => {
   });
 
   it("filters tickets by status", () => {
-    const statusFilter = element.shadowRoot.querySelector(".status-filter");
-
     // Simulate change event
     element.filterTickets("closed");
 

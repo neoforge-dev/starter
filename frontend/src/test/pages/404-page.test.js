@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { NotFoundPage } from "../../pages/404-page.js";
+// import { NotFoundPage } from "../../pages/404-page.js";
 
 describe("404 Page", () => {
   let container;

@@ -179,12 +179,12 @@ describe("Phone Input", () => {
   });
 
   it("emits change events with formatted value", () => {
-    let eventFired = false;
+    // let eventFired = false;
     let eventValue = "";
 
     element.addEventListener = (event, callback) => {
       if (event === "change") {
-        eventFired = true;
+        // eventFired = true;
         callback({ detail: { value: "(123) 456-7890" } });
       }
     };
@@ -263,11 +263,11 @@ describe("Phone Input", () => {
   });
 
   it("handles paste events", () => {
-    let pasteEventFired = false;
+    // let pasteEventFired = false;
 
     element.inputElement.addEventListener = (event, callback) => {
       if (event === "paste") {
-        pasteEventFired = true;
+        // pasteEventFired = true;
         callback({
           preventDefault: () => {},
           clipboardData: {

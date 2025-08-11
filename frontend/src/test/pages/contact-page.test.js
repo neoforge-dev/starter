@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { ContactPage } from "../../pages/contact-page.js";
+// import { ContactPage } from "../../pages/contact-page.js";
 
 describe("Contact Page", () => {
   let container;

@@ -158,6 +158,7 @@ class MockBlogPage {
 /**
  * Mock CustomEvent for testing
  */
+/*
 class MockCustomEvent {
   constructor(type, options = {}) {
     this.type = type;
@@ -171,6 +172,7 @@ class MockCustomEvent {
     this.defaultPrevented = true;
   }
 }
+*/
 
 describe("Blog Page", () => {
   let element;

@@ -5,8 +5,8 @@
  * It addresses common issues with custom element registration in the test environment.
  */
 
-import { expect, vi, beforeEach, afterEach } from "vitest";
-import {   LitElement, html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { vi } from "vitest";
+import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import {
   registerTestComponents,
   registerTestComponent,
@@ -119,5 +119,4 @@ export function cleanupTestEnvironment() {
   resetComponentRegistry();
 }
 
-// Export test utilities
-export { TestUtils };
+// TestUtils already exported above as const export

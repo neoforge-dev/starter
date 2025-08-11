@@ -111,7 +111,7 @@ describe('Session Management Integration Tests', () => {
 
     it('should handle network failure during token validation', async () => {
       // Arrange
-      const { token } = authTestUtils.createAuthenticatedSession();
+      authTestUtils.createAuthenticatedSession();
       
       // Mock network failure
       global.fetch = vi.fn().mockRejectedValue(new Error('Network Error'));
@@ -133,7 +133,7 @@ describe('Session Management Integration Tests', () => {
       const credentials = { email: 'test@example.com', password: 'password123' };
       
       // Mock login response
-      global.fetch = vi.fn().mockImplementation(async (url, options) => {
+      global.fetch = vi.fn().mockImplementation(async (url) => {
         if (url.includes('/auth/login')) {
           const { user, token } = authTestUtils.createAuthenticatedSession();
           return {
@@ -194,7 +194,7 @@ describe('Session Management Integration Tests', () => {
 
     it('should handle token expiration during active session', async () => {
       // Arrange - Start with valid session
-      const { user, token } = authTestUtils.createAuthenticatedSession();
+      authTestUtils.createAuthenticatedSession();
       await authService.initialize();
       
       // Mock API call that returns 401 (expired token)
@@ -287,7 +287,7 @@ describe('Session Management Integration Tests', () => {
 
     it('should synchronize logout state across browser tabs', async () => {
       // Arrange - Both tabs start authenticated
-      const { user, token } = authTestUtils.createAuthenticatedSession();
+      const { user } = authTestUtils.createAuthenticatedSession();
       
       const authService1 = new AuthService();
       const authService2 = new AuthService();
@@ -362,7 +362,7 @@ describe('Session Management Integration Tests', () => {
   describe('Session Storage Security', () => {
     it('should clear sensitive data from storage on logout', async () => {
       // Arrange
-      const { user, token } = authTestUtils.createAuthenticatedSession();
+      const { user } = authTestUtils.createAuthenticatedSession();
       
       // Create new auth service and simulate initialization
       const testAuthService = new AuthService();

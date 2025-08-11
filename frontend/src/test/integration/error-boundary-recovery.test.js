@@ -57,12 +57,11 @@ class TestComponent extends HTMLElement {
         break;
       case 'network':
         throw new TypeError('Failed to fetch');
-        break;
-      case 'validation':
+      case 'validation': {
         const validationError = new Error('Validation failed');
         validationError.name = 'ValidationError';
         throw validationError;
-        break;
+      }
     }
   }
 
@@ -355,12 +354,12 @@ describe('Error Boundary and Recovery Integration Tests', () => {
         return { success: true, data: 'Network recovered' };
       });
 
-      recoveryManager.registerStrategy(ErrorType.API, async (error, context, attempts) => {
+      recoveryManager.registerStrategy(ErrorType.API, async () => {
         // Simulate API recovery
         return { success: true, fallbackData: 'Fallback API response' };
       });
 
-      recoveryManager.registerStrategy(ErrorType.VALIDATION, async (error, context, attempts) => {
+      recoveryManager.registerStrategy(ErrorType.VALIDATION, async () => {
         // Validation errors should not be retried
         return { success: false, userAction: 'Please correct the input' };
       });
@@ -472,7 +471,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
 
       let statePreserved = true;
 
-      errorService.addListener((error) => {
+      errorService.addListener(() => {
         // Simulate state preservation during error
         if (!appState.user || !appState.ui) {
           statePreserved = false;

@@ -612,8 +612,8 @@ describe('Item Management E2E Tests', () => {
 
       // Act
       const createdItem = await itemManager.createItem(itemData);
-      const fetchedItem = await api.getItem(createdItem.id);
-      const updatedItem = await itemManager.updateItem(createdItem.id, { title: 'Updated Performance Test' });
+      await api.getItem(createdItem.id);
+      await itemManager.updateItem(createdItem.id, { title: 'Updated Performance Test' });
       await itemManager.deleteItem(createdItem.id);
 
       const endTime = Date.now();

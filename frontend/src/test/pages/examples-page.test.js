@@ -33,7 +33,6 @@ class MockExamplesPage extends HTMLElement {
   set examples(value) {
     this._examples = value;
     this.render();
-    return true;
   }
 
   render() {

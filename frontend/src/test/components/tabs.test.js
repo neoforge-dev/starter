@@ -269,14 +269,14 @@ describe("Tabs", () => {
     expect(element.tabList.getAttribute("role")).toBe("tablist");
 
     // Check tab buttons
-    element.tabButtons.forEach((button, index) => {
+    element.tabButtons.forEach((button) => {
       expect(button.getAttribute("role")).toBe("tab");
       expect(button.getAttribute("aria-selected")).toBeDefined();
       expect(button.getAttribute("tabindex")).toBeDefined();
     });
 
     // Check tab panels
-    element.tabPanels.forEach((panel, index) => {
+    element.tabPanels.forEach((panel) => {
       expect(panel.getAttribute("role")).toBe("tabpanel");
       expect(panel.getAttribute("aria-labelledby")).toBeDefined();
     });

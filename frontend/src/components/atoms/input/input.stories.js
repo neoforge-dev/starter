@@ -81,17 +81,17 @@ const Template = ({
   helper 
 }) => html`
   <neo-input
-    type=\${type}
-    label=\${label}
-    placeholder=\${placeholder}
-    value=\${value}
-    ?required=\${required}
-    ?disabled=\${disabled}
-    error=\${error}
-    helper=\${helper}
-    @change=\${(e) => console.log('Input changed:', e.target.value)}
-    @focus=\${() => console.log('Input focused')}
-    @blur=\${() => console.log('Input blurred')}
+    type=${type}
+    label=${label}
+    placeholder=${placeholder}
+    value=${value}
+    ?required=${required}
+    ?disabled=${disabled}
+    error=${error}
+    helper=${helper}
+    @change=${(e) => console.log('Input changed:', e.target.value)}
+    @focus=${() => console.log('Input focused')}
+    @blur=${() => console.log('Input blurred')}
   ></neo-input>
 `;
 
@@ -206,10 +206,10 @@ export const NumberInput = () => html`
     max="100"
     step="1"
   >
-    <neo-button slot="prefix" variant="icon" @click=\${() => this.value--}>
+    <neo-button slot="prefix" variant="icon" @click=${() => this.value--}>
       <neo-icon name="remove"></neo-icon>
     </neo-button>
-    <neo-button slot="suffix" variant="icon" @click=\${() => this.value++}>
+    <neo-button slot="suffix" variant="icon" @click=${() => this.value++}>
       <neo-icon name="add"></neo-icon>
     </neo-button>
   </neo-input>

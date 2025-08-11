@@ -74,7 +74,7 @@ class MockProjectsPage {
       querySelectorAll: (selector) => {
         if (selector === ".project-card") {
           // Create a result array with the project cards
-          const result = this.projects.map((project, index) => ({
+          const result = this.projects.map((project) => ({
             querySelector: (innerSelector) =>
               this._createProjectElement(project, innerSelector),
             querySelectorAll: (innerSelector) =>

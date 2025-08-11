@@ -216,7 +216,7 @@ runner.describe("DashboardPage", () => {
     // Sort by due date
     await ComponentTester.select(sortSelect, "due_date");
 
-    const projectItems = shadowRoot.querySelectorAll(".project-item");
+    shadowRoot.querySelectorAll(".project-item");
     const firstProjectDate = new Date(mockData.projects[0].dueDate);
     const secondProjectDate = new Date(mockData.projects[1].dueDate);
 

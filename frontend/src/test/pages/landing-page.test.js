@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { LandingPage } from "../../pages/landing-page.js";
 
 describe("Landing Page", () => {
   let container;

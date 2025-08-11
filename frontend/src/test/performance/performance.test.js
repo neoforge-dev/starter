@@ -20,15 +20,7 @@ async function measureRenderTime(component) {
   return performance.now() - start;
 }
 
-async function measureMemoryUsage(fn) {
-  if (!performance.memory) {
-    console.warn("Memory measurement not supported in this environment");
-    return 0;
-  }
-  const startMemory = performance.memory.usedJSHeapSize;
-  await fn();
-  return performance.memory.usedJSHeapSize - startMemory;
-}
+// measureMemoryUsage function removed - was unused
 
 async function measureEventResponse(component, eventName, action) {
   const promise = new Promise((resolve) => {

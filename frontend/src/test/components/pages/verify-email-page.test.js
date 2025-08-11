@@ -101,7 +101,7 @@ describe('VerifyEmailPage Component Tests', () => {
       await verifyEmailPage.updateComplete;
 
       // Assert - Component should have proper responsive constraints
-      const computedStyle = getComputedStyle(verifyEmailPage);
+      getComputedStyle(verifyEmailPage);
       
       // These styles should be applied via the CSS in the component
       // We're testing that the component renders without errors

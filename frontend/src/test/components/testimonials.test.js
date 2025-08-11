@@ -109,7 +109,7 @@ describe("Testimonials", () => {
     // Create testimonials with different styles
     const styles = ["minimal", "card", "quote"];
 
-    styles.forEach((style, index) => {
+    styles.forEach((style) => {
       const testimonial = createMockElement("div");
       testimonial.className = `testimonial-item ${style}`;
       testimonial.setAttribute("data-style", style);

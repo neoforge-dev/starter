@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { SettingsPage } from "../../pages/settings-page.js";
 
 describe("Settings Page", () => {
   let container;
