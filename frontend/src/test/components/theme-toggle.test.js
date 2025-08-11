@@ -1,5 +1,4 @@
 import { expect, describe, it, beforeEach } from "vitest";
-import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 // Skip all tests in this file for now due to custom element registration issues
 describe("ThemeToggleButton", () => {
@@ -50,11 +49,11 @@ describe("ThemeToggleButton", () => {
 
       // Shadow DOM
       shadowRoot: {
-        querySelector: function (selector) {
+        querySelector: function () {
           // Return mock elements based on the selector
           return null;
         },
-        querySelectorAll: function (selector) {
+        querySelectorAll: function () {
           // Return mock elements based on the selector
           return [];
         },
@@ -63,7 +62,7 @@ describe("ThemeToggleButton", () => {
       // Other properties needed for testing
       updateComplete: Promise.resolve(true),
       classList: {
-        contains: function (className) {
+        contains: function () {
           // Implementation
           return false;
         },

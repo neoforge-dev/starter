@@ -1,5 +1,4 @@
 import { expect, describe, it, beforeEach, vi } from "vitest";
-import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 /**
  * Mock for the NeoButton component

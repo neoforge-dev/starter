@@ -1,4 +1,4 @@
-import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
+import { expect, describe, it, beforeEach } from "vitest";
 
 // Mock ErrorType enum
 const ErrorType = {

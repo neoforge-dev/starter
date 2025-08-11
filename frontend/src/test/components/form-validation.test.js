@@ -1,5 +1,4 @@
 import { expect, describe, it, beforeEach, vi } from "vitest";
-import { fixture, html } from "@open-wc/testing-helpers";
 
 /**
  * Mock for the FormValidation component

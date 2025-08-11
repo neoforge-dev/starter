@@ -68,7 +68,7 @@ describe("Form", () => {
       _eventListeners: new Map(),
 
       // Create mock form elements based on config
-      formElements: mockFormConfig.fields.map((field, index) => ({
+      formElements: mockFormConfig.fields.map((field) => ({
         name: field.name,
         type: field.type,
         value: "",

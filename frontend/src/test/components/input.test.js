@@ -1,5 +1,4 @@
 import { expect, describe, it, beforeEach, vi } from "vitest";
-import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 /**
  * Mock for the NeoInput component
@@ -94,7 +93,7 @@ class MockNeoInput {
     this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   }
 
-  _handleChange(e) {
+  _handleChange() {
     this.dispatchEvent(
       new CustomEvent("neo-change", {
         detail: { value: this.value },

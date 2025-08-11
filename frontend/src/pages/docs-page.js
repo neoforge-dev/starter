@@ -1,11 +1,9 @@
 import {   html, css   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import {
   BaseComponent,
-  defineComponent,
 } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
 
-@defineComponent("docs-page")
 export class DocsPage extends BaseComponent {
   static properties = {
     currentSection: { type: String, state: true },

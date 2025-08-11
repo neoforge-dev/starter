@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-08-11T04:44:14.920Z",
+  "timestamp": "2025-08-11T05:04:38.310Z",
   "summary": {
-    "totalDebtIssues": 215,
+    "totalDebtIssues": 137,
     "criticalIssues": 2,
-    "highPriorityIssues": 213,
+    "highPriorityIssues": 135,
     "testCoveragePercentage": 0,
     "bundleSizeMB": 0.36,
     "highComplexityFiles": 139,
@@ -29,86 +29,6 @@
       }
     ],
     "HIGH": [
-      {
-        "file": "/src/components/analytics/analytics-dashboard.js",
-        "line": 158,
-        "column": 25,
-        "rule": "no-unused-vars",
-        "message": "'type' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/analytics/analytics-dashboard.js",
-        "line": 158,
-        "column": 31,
-        "rule": "no-unused-vars",
-        "message": "'data' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/atoms/badge/badge.stories.fixed.js",
-        "line": 1,
-        "column": 12,
-        "rule": "no-unused-vars",
-        "message": "'html' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/atoms/badge/badge.stories.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'ifDefined' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/atoms/button.stories.js",
-        "line": 1,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'Button' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/atoms/button/button.js",
-        "line": 266,
-        "column": 21,
-        "rule": "no-unused-vars",
-        "message": "'_' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/atoms/button/button.stories.fixed.js",
-        "line": 1,
-        "column": 12,
-        "rule": "no-unused-vars",
-        "message": "'html' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/atoms/checkbox/checkbox.stories.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'ifDefined' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/atoms/input.stories.js",
-        "line": 1,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'Input' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/atoms/input/input.js",
-        "line": 161,
-        "column": 17,
-        "rule": "no-unused-vars",
-        "message": "'e' is defined but never used.",
-        "severity": "error"
-      },
       {
         "file": "/src/components/atoms/input/input.stories.js",
         "line": 2,
@@ -254,102 +174,6 @@
         "severity": "error"
       },
       {
-        "file": "/src/components/atoms/spinner/spinner.stories.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'ifDefined' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/atoms/text-input/text-input.js",
-        "line": 177,
-        "column": 17,
-        "rule": "no-unused-vars",
-        "message": "'e' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/core/app-header/app-header.stories.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'action' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/core/memory-monitor.test.js",
-        "line": 1,
-        "column": 44,
-        "rule": "no-unused-vars",
-        "message": "'afterEach' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/core/memory-monitor.test.js",
-        "line": 3,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'MemoryMonitor' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/docs/markdown-viewer.js",
-        "line": 209,
-        "column": 25,
-        "rule": "no-unused-vars",
-        "message": "'lang' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/error/error-page.js",
-        "line": 308,
-        "column": 11,
-        "rule": "no-unused-vars",
-        "message": "'message' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/form/color-picker.js",
-        "line": 477,
-        "column": 16,
-        "rule": "no-unused-vars",
-        "message": "'color' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/marketing/bento-grid.js",
-        "line": 177,
-        "column": 17,
-        "rule": "no-unused-vars",
-        "message": "'_' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/molecules/card/card.stories.fixed.js",
-        "line": 1,
-        "column": 12,
-        "rule": "no-unused-vars",
-        "message": "'html' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/molecules/date-picker.stories.js",
-        "line": 1,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'DatePicker' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/molecules/language-selector.stories.js",
-        "line": 1,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'LanguageSelector' is defined but never used.",
-        "severity": "error"
-      },
-      {
         "file": "/src/components/molecules/modal/modal.stories.js",
         "line": 206,
         "column": 9,
@@ -366,131 +190,11 @@
         "severity": "error"
       },
       {
-        "file": "/src/components/organisms/charts.stories.js",
-        "line": 1,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'Charts' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/organisms/file-upload.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'baseStyles' is defined but never used.",
-        "severity": "error"
-      },
-      {
         "file": "/src/components/organisms/form-validation.js",
         "line": 108,
         "column": 23,
         "rule": "no-unused-vars",
-        "message": "'removed' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/organisms/rich-text-editor.stories.js",
-        "line": 2,
-        "column": 12,
-        "rule": "no-unused-vars",
-        "message": "'html' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/pages/community-page.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'Logger' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/pages/dashboard-page.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'baseStyles' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/pages/dashboard-page.js",
-        "line": 3,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'authService' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/pages/home-page.js",
-        "line": 11,
-        "column": 14,
-        "rule": "no-unused-vars",
-        "message": "'registration' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/playground/component-playground.js",
-        "line": 217,
-        "column": 20,
-        "rule": "no-unused-vars",
-        "message": "'e' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/components/theme-toggle.js",
-        "line": 238,
-        "column": 24,
-        "rule": "no-unused-vars",
-        "message": "'e' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/main.js",
-        "line": 6,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'lazyLoad' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/mixins/error.js",
-        "line": 1,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'dedupeMixin' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/mixins/translation.js",
-        "line": 21,
-        "column": 30,
-        "rule": "no-unused-vars",
-        "message": "'locale' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/mixins/translation.js",
-        "line": 36,
-        "column": 12,
-        "rule": "no-unused-vars",
-        "message": "'params' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/pages/about-page.js",
-        "line": 7,
-        "column": 3,
-        "rule": "no-unused-vars",
-        "message": "'registerComponent' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/pages/dashboard-page.js",
-        "line": 1,
-        "column": 12,
-        "rule": "no-unused-vars",
-        "message": "'LitElement' is defined but never used.",
+        "message": "'_removed' is assigned a value but never used.",
         "severity": "error"
       },
       {
@@ -502,14 +206,6 @@
         "severity": "error"
       },
       {
-        "file": "/src/pages/faq-page.js",
-        "line": 7,
-        "column": 3,
-        "rule": "no-unused-vars",
-        "message": "'registerComponent' is defined but never used.",
-        "severity": "error"
-      },
-      {
         "file": "/src/pages/home-page.js",
         "line": 4,
         "column": 1,
@@ -518,142 +214,6 @@
         "severity": "error"
       },
       {
-        "file": "/src/pages/profile-page.js",
-        "line": 7,
-        "column": 3,
-        "rule": "no-unused-vars",
-        "message": "'registerComponent' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/pages/support-page.js",
-        "line": 7,
-        "column": 3,
-        "rule": "no-unused-vars",
-        "message": "'registerComponent' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/router.js",
-        "line": 199,
-        "column": 18,
-        "rule": "no-unused-vars",
-        "message": "'options' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/services/analytics.js",
-        "line": 112,
-        "column": 13,
-        "rule": "no-unused-vars",
-        "message": "'type' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/services/analytics.js",
-        "line": 140,
-        "column": 11,
-        "rule": "no-unused-vars",
-        "message": "'now' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/services/docs.js",
-        "line": 94,
-        "column": 42,
-        "rule": "no-unused-vars",
-        "message": "'escaped' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/services/error-service.test.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'fixture' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/services/error-service.test.js",
-        "line": 2,
-        "column": 19,
-        "rule": "no-unused-vars",
-        "message": "'html' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/services/notifications.js",
-        "line": 65,
-        "column": 17,
-        "rule": "no-useless-escape",
-        "message": "Unnecessary escape character: \\-.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/services/store.js",
-        "line": 425,
-        "column": 48,
-        "rule": "no-unused-vars",
-        "message": "'state' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/services/store.js",
-        "line": 425,
-        "column": 55,
-        "rule": "no-unused-vars",
-        "message": "'store' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/stories/example.stories.js",
-        "line": 1,
-        "column": 12,
-        "rule": "no-unused-vars",
-        "message": "'html' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/styles/theme.js",
-        "line": 10,
-        "column": 12,
-        "rule": "no-unused-vars",
-        "message": "'css' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/accessibility/basic.test.js",
-        "line": 5,
-        "column": 7,
-        "rule": "no-unused-vars",
-        "message": "'mockAxeBuilder' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/accessibility/web-components.test.js",
-        "line": 1,
-        "column": 44,
-        "rule": "no-unused-vars",
-        "message": "'afterEach' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/base-component.test.js",
-        "line": 1,
-        "column": 32,
-        "rule": "no-unused-vars",
-        "message": "'beforeEach' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/component-registration-helper.js",
-        "line": 62,
-        "column": 15,
-        "rule": "no-unused-vars",
-        "message": "'newTagName' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
         "file": "/src/test/components/atoms/badge.test.js",
         "line": 191,
         "column": 28,
@@ -675,14 +235,6 @@
         "column": 44,
         "rule": "no-unused-vars",
         "message": "'newValue' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/button.test.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'NeoButton' is defined but never used.",
         "severity": "error"
       },
       {
@@ -691,126 +243,6 @@
         "column": 10,
         "rule": null,
         "message": "Parsing error: Identifier 'html' has already been declared",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/checkbox.test.js",
-        "line": 33,
-        "column": 28,
-        "rule": "no-unused-vars",
-        "message": "'attr' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/checkbox.test.js",
-        "line": 33,
-        "column": 34,
-        "rule": "no-unused-vars",
-        "message": "'value' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/checkbox.test.js",
-        "line": 156,
-        "column": 43,
-        "rule": "no-unused-vars",
-        "message": "'eventName' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/checkbox.test.js",
-        "line": 156,
-        "column": 54,
-        "rule": "no-unused-vars",
-        "message": "'callback' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/input.test.js",
-        "line": 33,
-        "column": 7,
-        "rule": "no-unused-vars",
-        "message": "'element' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/input.test.js",
-        "line": 36,
-        "column": 7,
-        "rule": "no-unused-vars",
-        "message": "'neoInputProps' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/input.test.js",
-        "line": 84,
-        "column": 34,
-        "rule": "no-unused-vars",
-        "message": "'selector' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/input.test.js",
-        "line": 88,
-        "column": 37,
-        "rule": "no-unused-vars",
-        "message": "'selector' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/input.test.js",
-        "line": 97,
-        "column": 29,
-        "rule": "no-unused-vars",
-        "message": "'className' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/progress-bar.test.js",
-        "line": 1,
-        "column": 44,
-        "rule": "no-unused-vars",
-        "message": "'vi' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/select.test.js",
-        "line": 259,
-        "column": 11,
-        "rule": "no-unused-vars",
-        "message": "'trigger' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/atoms/select.test.js",
-        "line": 262,
-        "column": 11,
-        "rule": "no-unused-vars",
-        "message": "'option' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/badge.test.js",
-        "line": 191,
-        "column": 28,
-        "rule": "no-unused-vars",
-        "message": "'name' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/badge.test.js",
-        "line": 191,
-        "column": 34,
-        "rule": "no-unused-vars",
-        "message": "'oldValue' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/components/badge.test.js",
-        "line": 191,
-        "column": 44,
-        "rule": "no-unused-vars",
-        "message": "'newValue' is defined but never used.",
         "severity": "error"
       },
       {
@@ -1422,59 +854,11 @@
         "severity": "error"
       },
       {
-        "file": "/src/test/pages/registration-page-simple.test.js",
-        "line": 2,
-        "column": 12,
-        "rule": "no-unused-vars",
-        "message": "'html' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/registration-page.test.js",
-        "line": 1,
-        "column": 44,
-        "rule": "no-unused-vars",
-        "message": "'afterEach' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/registration-page.test.js",
-        "line": 35,
-        "column": 11,
-        "rule": "no-unused-vars",
-        "message": "'nameField' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/registration-page.test.js",
-        "line": 36,
-        "column": 11,
-        "rule": "no-unused-vars",
-        "message": "'emailField' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/registration-page.test.js",
-        "line": 37,
-        "column": 11,
-        "rule": "no-unused-vars",
-        "message": "'passwordField' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
         "file": "/src/test/pages/settings-page.test.js",
         "line": 2,
         "column": 10,
         "rule": "no-unused-vars",
         "message": "'SettingsPage' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/status-page.test.js",
-        "line": 1,
-        "column": 44,
-        "rule": "no-unused-vars",
-        "message": "'afterEach' is defined but never used.",
         "severity": "error"
       },
       {
@@ -1499,14 +883,6 @@
         "column": 16,
         "rule": "no-unused-vars",
         "message": "'measureMemoryUsage' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/services/api-client.test.js",
-        "line": 1,
-        "column": 30,
-        "rule": "no-unused-vars",
-        "message": "'afterEach' is defined but never used.",
         "severity": "error"
       },
       {
@@ -1737,8 +1113,8 @@
     "MEDIUM": [],
     "LOW": [],
     "totalFiles": 398,
-    "totalIssues": 215,
-    "errorCount": 215,
+    "totalIssues": 137,
+    "errorCount": 137,
     "warningCount": 0
   },
   "coverage": {
@@ -1764,10 +1140,10 @@
     }
   },
   "bundle": {
-    "totalSize": 376347,
+    "totalSize": 376166,
     "jsSize": 156488,
     "cssSize": 8271,
-    "assetSize": 211588,
+    "assetSize": 211407,
     "files": [
       {
         "path": "assets/about-page.CsO_wRrB.js",
@@ -1896,15 +1272,15 @@
       },
       {
         "path": "stats.html",
-        "size": 178405,
-        "sizeFormatted": "174.22 KB"
+        "size": 178224,
+        "sizeFormatted": "174.05 KB"
       }
     ]
   },
   "complexity": {
     "totalFiles": 398,
-    "totalLines": 82399,
-    "avgComplexity": 207.03266331658293,
+    "totalLines": 82307,
+    "avgComplexity": 206.80150753768845,
     "highComplexityFiles": [
       {
         "file": "src/components/analytics/performance-chart.js",
@@ -2129,7 +1505,7 @@
       {
         "file": "src/pages/profile-page.js",
         "complexity": 30,
-        "lines": 707
+        "lines": 706
       },
       {
         "file": "src/pages/registration-page.js",
@@ -2159,7 +1535,7 @@
       {
         "file": "src/services/analytics.js",
         "complexity": 20,
-        "lines": 211
+        "lines": 210
       },
       {
         "file": "src/services/api-client.js",
@@ -2229,7 +1605,7 @@
       {
         "file": "src/test/component-registration-helper.js",
         "complexity": 18,
-        "lines": 171
+        "lines": 168
       },
       {
         "file": "src/test/components/atoms/badge.test.js",
@@ -2264,7 +1640,7 @@
       {
         "file": "src/test/components/atoms/select.test.js",
         "complexity": 35,
-        "lines": 384
+        "lines": 381
       },
       {
         "file": "src/test/components/atoms/tooltip.test.js",
@@ -2620,21 +1996,21 @@
     {
       "priority": "HIGH",
       "category": "Code Quality",
-      "issue": "213 high-priority ESLint issues",
+      "issue": "135 high-priority ESLint issues",
       "action": "Address unused variables and imports to improve maintainability",
       "effort": "Medium",
       "impact": "Medium",
       "files": [
-        "/src/components/analytics/analytics-dashboard.js",
-        "/src/components/analytics/analytics-dashboard.js",
-        "/src/components/atoms/badge/badge.stories.fixed.js",
-        "/src/components/atoms/badge/badge.stories.js",
-        "/src/components/atoms/button.stories.js",
-        "/src/components/atoms/button/button.js",
-        "/src/components/atoms/button/button.stories.fixed.js",
-        "/src/components/atoms/checkbox/checkbox.stories.js",
-        "/src/components/atoms/input.stories.js",
-        "/src/components/atoms/input/input.js"
+        "/src/components/atoms/input/input.stories.js",
+        "/src/components/atoms/input/input.stories.js",
+        "/src/components/atoms/input/input.stories.js",
+        "/src/components/atoms/input/input.stories.js",
+        "/src/components/atoms/input/input.stories.js",
+        "/src/components/atoms/input/input.stories.js",
+        "/src/components/atoms/input/input.stories.js",
+        "/src/components/atoms/input/input.stories.js",
+        "/src/components/atoms/input/input.stories.js",
+        "/src/components/atoms/radio/radio.stories.js"
       ]
     },
     {
@@ -2662,10 +2038,10 @@
     }
   ],
   "metrics": {
-    "codeQualityScore": 0,
+    "codeQualityScore": 31.5,
     "testCoverageScore": 0,
-    "performanceScore": 96.41087532043457,
+    "performanceScore": 96.41260147094727,
     "maintainabilityScore": 0,
-    "overallHealthScore": 19
+    "overallHealthScore": 32
   }
 }

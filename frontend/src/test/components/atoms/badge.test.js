@@ -188,7 +188,7 @@ class MockNeoBadge {
     );
   }
 
-  attributeChangedCallback(name, oldValue, newValue) {
+  attributeChangedCallback() {
     // Mock implementation
   }
 

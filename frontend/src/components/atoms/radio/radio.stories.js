@@ -1,5 +1,4 @@
 import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import { ifDefined } from 'lit/directives/if-defined.js';
 import './radio.js';
 
 export default {
@@ -79,13 +78,13 @@ const Template = ({
   helper 
 }) => html`
   <neo-radio
-    name=\${ifDefined(name)}
-    value=\${ifDefined(value)}
+    name=\${name}
+    value=\${value}
     ?checked=\${checked}
     ?disabled=\${disabled}
     ?required=\${required}
-    error=\${ifDefined(error)}
-    helper=\${ifDefined(helper)}
+    error=\${error}
+    helper=\${helper}
     @change=\${(e) => console.log('Radio changed:', e.target.checked)}
   >
     \${label}

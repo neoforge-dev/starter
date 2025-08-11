@@ -1,5 +1,4 @@
 import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import { ifDefined } from 'lit/directives/if-defined.js';
 import './input.js';
 
 export default {
@@ -82,14 +81,14 @@ const Template = ({
   helper 
 }) => html`
   <neo-input
-    type=\${ifDefined(type)}
-    label=\${ifDefined(label)}
-    placeholder=\${ifDefined(placeholder)}
-    value=\${ifDefined(value)}
+    type=\${type}
+    label=\${label}
+    placeholder=\${placeholder}
+    value=\${value}
     ?required=\${required}
     ?disabled=\${disabled}
-    error=\${ifDefined(error)}
-    helper=\${ifDefined(helper)}
+    error=\${error}
+    helper=\${helper}
     @change=\${(e) => console.log('Input changed:', e.target.value)}
     @focus=\${() => console.log('Input focused')}
     @blur=\${() => console.log('Input blurred')}

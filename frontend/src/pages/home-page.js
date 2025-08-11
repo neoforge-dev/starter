@@ -1,7 +1,5 @@
 import {   LitElement, html, css   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import { customElement } from "lit/decorators.js";
 
-@customElement("home-page")
 export class HomePage extends LitElement {
   static styles = css`
     :host {
@@ -19,3 +17,6 @@ export class HomePage extends LitElement {
     `;
   }
 }
+
+// Register the component
+customElements.define("home-page", HomePage);

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 // Remove any imports of the actual component or TestUtils
 // import { TestUtils } from "../../setup.mjs";
 // import { waitForComponents } from "../../setup.mjs";

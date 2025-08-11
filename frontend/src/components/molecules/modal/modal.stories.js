@@ -136,10 +136,8 @@ LongContentStory.storyName = "Direct Usage: Long Content";
 
 // Example showing how to manually control the modal without Storybook args
 export const ManualControl = () => html`
-  <neo-button @click="\${()" ="">
-    document.getElementById('manualModal').open = true}>Open
-    Manually</neo-button
-  >
+  <neo-button @click=${() => document.getElementById('manualModal').open = true}>Open
+    Manually</neo-button>
 
   <neo-modal id="manualModal" title="Manually Controlled">
     <p>
@@ -147,9 +145,7 @@ export const ManualControl = () => html`
       directly.
     </p>
     <div slot="footer" style="text-align: right;">
-      <neo-button @click="\${()" ="">
-        document.getElementById('manualModal').open = false}>Close</neo-button
-      >
+      <neo-button @click=${() => document.getElementById('manualModal').open = false}>Close</neo-button>
     </div>
   </neo-modal>
 `;
@@ -191,9 +187,7 @@ export const ServiceBasic = () => {
       content: html`<p style="padding: 1rem;">
         This modal was opened via <code>modalService.show()</code>.
       </p>`,
-      footer: html`<neo-button slot="footer" @click="\${(e)" ="">
-        e.target.closest('neo-modal')?.close()}>Close</neo-button
-      >`,
+      footer: html`<neo-button slot="footer" @click=${(e) => e.target.closest('neo-modal')?.close()}>Close</neo-button>`,
     });
   };
   return html`<neo-button @click=${showBasic}
@@ -209,18 +203,14 @@ export const ServiceSizes = () => {
       content: html`<div style="padding: 1rem;">
         <p>This is a ${size} modal shown via the service.</p>
       </div>`,
-      footer: html`<neo-button slot="footer" @click="\${(e)" ="">
-        e.target.closest('neo-modal')?.close()}>Close</neo-button
-      >`,
+      footer: html`<neo-button slot="footer" @click=${(e) => e.target.closest('neo-modal')?.close()}>Close</neo-button>`,
     });
   };
   return html`
     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
       ${["sm", "md", "lg", "xl", "full"].map(
         (size) => html`
-          <neo-button @click="\${()" ="">
-            showSized(size)}>${size.toUpperCase()}</neo-button
-          >
+          <neo-button @click=${() => showSized(size)}>${size.toUpperCase()}</neo-button>
         `
       )}
     </div>
@@ -269,16 +259,19 @@ export const ServiceForm = () => {
         `,
         footer: html`
           <div style="display: flex; justify-content: flex-end; gap: 8px;">
-            <neo-button variant="secondary" @click="\${async" ()="">
-              { const confirmed = await modalService.confirm({ title: "Discard
-              Changes?", message: "Are you sure you want to discard changes?",
-              confirmText: "Discard", size: "sm", }); if (confirmed)
-              modalInstance?.close(); }}>Cancel</neo-button
-            >
-            <neo-button variant="primary" @click="\${()" ="">
-              { console.log("Saving form data..."); modalInstance?.close();
-              }}>Save Changes</neo-button
-            >
+            <neo-button variant="secondary" @click=${async () => {
+              const confirmed = await modalService.confirm({ 
+                title: "Discard Changes?", 
+                message: "Are you sure you want to discard changes?",
+                confirmText: "Discard", 
+                size: "sm" 
+              }); 
+              if (confirmed) modalInstance?.close(); 
+            }}>Cancel</neo-button>
+            <neo-button variant="primary" @click=${() => {
+              console.log("Saving form data..."); 
+              modalInstance?.close();
+            }}>Save Changes</neo-button>
           </div>
         `,
       })

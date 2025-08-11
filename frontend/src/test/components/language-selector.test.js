@@ -33,7 +33,6 @@ class MockLanguageSelector {
           const code = selector.match(/(?:data-code|data-lang)="([^"]+)"/)[1];
           return {
             click: () => {
-              const oldSelected = this.currentLanguage;
               this.currentLanguage = code;
               this.isOpen = false;
 
@@ -72,11 +71,8 @@ class MockLanguageSelector {
   }
 
   _handleKeyDown(e) {
-    const select = this.shadowRoot.querySelector("select");
     // Instead of checking document.activeElement, we'll use a mock approach
     // We'll assume the select is always the active element for testing purposes
-    if (true) {
-      // Always consider the select as active for testing
       if (e.key === "ArrowDown") {
         const currentIndex = this.languages.findIndex(
           (lang) => lang.code === this.currentLanguage
@@ -137,11 +133,11 @@ class MockLanguageSelector {
     return true;
   }
 
-  hasAttribute(attr) {
+  hasAttribute() {
     return false;
   }
 
-  getAttribute(attr) {
+  getAttribute() {
     return null;
   }
 }

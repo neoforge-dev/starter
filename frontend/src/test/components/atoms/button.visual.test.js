@@ -79,7 +79,7 @@ vi.mock("@open-wc/testing-helpers", () => {
 
 vi.mock("@web/test-runner-visual-regression", () => {
   return {
-    visualDiff: vi.fn().mockImplementation((element, name) => {
+    visualDiff: vi.fn().mockImplementation((element) => {
       // Check if element is a Node-like object
       if (!element || typeof element !== "object" || !("nodeType" in element)) {
         throw new Error("Element to diff must be a Node.");
@@ -252,7 +252,3 @@ describe("neo-button visual regression", () => {
   });
 });
 
-// Helper function to simulate the html template literal tag
-function html(strings, ...values) {
-  return { strings, values };
-}

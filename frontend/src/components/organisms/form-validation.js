@@ -105,7 +105,8 @@ export class NeoForm extends LitElement {
       this.errors = { ...this.errors, [name]: error };
       return false;
     } else {
-      const { [name]: _removed, ...rest } = this.errors;
+      const { [name]: deleted, ...rest } = this.errors;
+      void deleted; // Mark as intentionally unused
       this.errors = rest;
       return true;
     }
