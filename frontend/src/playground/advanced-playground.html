@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoForge Component Playground</title>
+    <link rel="stylesheet" href="./styles/advanced-playground.css">
+</head>
+<body>
+    <div id="playground-app">
+        <!-- Navigation Sidebar -->
+        <aside class="component-nav">
+            <header class="nav-header">
+                <h1>Components</h1>
+                <div class="search-box">
+                    <input type="text" id="component-search" placeholder="Search components...">
+                </div>
+            </header>
+            
+            <nav class="component-tree" id="component-tree">
+                <!-- Will be populated by JavaScript -->
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="playground-content">
+            <!-- Toolbar -->
+            <header class="playground-toolbar">
+                <div class="component-info">
+                    <h2 id="current-component-title">Select a Component</h2>
+                    <p id="current-component-description">Choose a component from the sidebar to begin testing</p>
+                </div>
+                
+                <div class="toolbar-actions">
+                    <button id="toggle-props-panel" class="tool-button" title="Toggle Properties Panel">
+                        ⚙️ Props
+                    </button>
+                    <button id="toggle-code-view" class="tool-button" title="Toggle Code View">
+                        📄 Code
+                    </button>
+                    <button id="responsive-toggle" class="tool-button" title="Responsive Testing">
+                        📱 Responsive
+                    </button>
+                </div>
+            </header>
+
+            <!-- Component Display Area -->
+            <div class="playground-layout">
+                <!-- Component Examples -->
+                <section class="component-showcase" id="component-showcase">
+                    <div class="welcome-message">
+                        <h3>🎪 Welcome to the Native Web Components Playground</h3>
+                        <p>Select a component from the sidebar to see live examples with interactive controls.</p>
+                        <p><strong>Available Components:</strong></p>
+                        <ul>
+                            <li>✅ Button - All variants and states</li>
+                            <li>✅ Text Input - Form component with validation</li>
+                            <li>✅ Icon - Interface icons and graphics</li>
+                            <li>✅ Badge - Status and notification displays</li>
+                            <li>✅ Checkbox - Boolean input controls</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Properties Panel -->
+                <aside class="props-panel" id="props-panel">
+                    <h3>Properties</h3>
+                    <div id="props-editor-container">
+                        <p>Select a component to configure its properties</p>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- Code View Panel (Hidden by default) -->
+            <section class="code-panel" id="code-panel" style="display: none;">
+                <h3>Generated Code</h3>
+                <div class="code-tabs">
+                    <button class="tab-button active" data-tab="html">HTML</button>
+                    <button class="tab-button" data-tab="lit">Lit Template</button>
+                    <button class="tab-button" data-tab="react">React JSX</button>
+                </div>
+                <div class="code-content">
+                    <pre id="generated-code"><code>// Select a component to see generated code</code></pre>
+                </div>
+            </section>
+
+            <!-- Responsive Testing Panel -->
+            <section class="responsive-panel" id="responsive-panel" style="display: none;">
+                <h3>Responsive Testing</h3>
+                <div class="viewport-controls">
+                    <button class="viewport-btn" data-width="375" data-height="667">📱 Mobile</button>
+                    <button class="viewport-btn" data-width="768" data-height="1024">📱 Tablet</button>
+                    <button class="viewport-btn" data-width="1200" data-height="800">💻 Desktop</button>
+                    <button class="viewport-btn" data-width="100%" data-height="100%">🖥️ Full</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Import playground modules -->
+    <script type="module" src="./core/component-loader.js"></script>
+    <script type="module" src="./core/prop-editor.js"></script>
+    <script type="module" src="./utils/story-extractor.js"></script>
+    <script type="module" src="./core/keyboard-navigation.js"></script>
+    <script type="module" src="./core/smart-search.js"></script>
+    <script type="module" src="./core/session-memory.js"></script>
+    <script type="module" src="./core/performance-optimizer.js"></script>
+    <script type="module" src="./advanced-playground.js"></script>
+</body>
+</html>

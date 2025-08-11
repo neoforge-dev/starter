@@ -1,7 +1,0 @@
-import { defineConfig } from "vite";
-import { resolve } from "path";
-import autoprefixer from "autoprefixer";
-import postcssPresetEnv from "postcss-preset-env";
-import cssnano from "cssnano";
-
-export default defineConfig({
