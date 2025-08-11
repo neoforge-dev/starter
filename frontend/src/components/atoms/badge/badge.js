@@ -2,7 +2,7 @@ import {
   LitElement,
   html,
   css,
- } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+ } from "lit";
 import { baseStyles } from "../../styles/base.js";
 import "../../atoms/icon/icon.js";
 import { registerComponent } from "../../base-component.js";
