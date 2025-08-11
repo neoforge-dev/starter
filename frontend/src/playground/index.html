@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Playground</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .component-showcase {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .component-showcase h2 {
+            margin-top: 0;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 16px;
+        }
+        .variant-demo {
+            margin: 16px 0;
+            padding: 16px;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+        .variant-demo h3 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #6c757d;
+        }
+        .variant-demo > * + * {
+            margin-left: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Component Playground</h1>
+    <p>Test components in isolation with live examples</p>
+
+    <div class="component-showcase">
+        <h2>Button Component</h2>
+        
+        <div class="variant-demo">
+            <h3>Primary Variants</h3>
+            <neo-button variant="primary" size="sm">Small Primary</neo-button>
+            <neo-button variant="primary" size="md">Medium Primary</neo-button>
+            <neo-button variant="primary" size="lg">Large Primary</neo-button>
+        </div>
+        
+        <div class="variant-demo">
+            <h3>Secondary Variants</h3>
+            <neo-button variant="secondary" size="sm">Small Secondary</neo-button>
+            <neo-button variant="secondary" size="md">Medium Secondary</neo-button>
+            <neo-button variant="secondary" size="lg">Large Secondary</neo-button>
+        </div>
+        
+        <div class="variant-demo">
+            <h3>States</h3>
+            <neo-button variant="primary">Normal</neo-button>
+            <neo-button variant="primary" disabled>Disabled</neo-button>
+            <neo-button variant="primary" loading>Loading</neo-button>
+        </div>
+    </div>
+
+    <div class="component-showcase">
+        <h2>Text Input Component</h2>
+        
+        <div class="variant-demo">
+            <h3>Basic Text Input</h3>
+            <neo-text-input placeholder="Enter text here"></neo-text-input>
+        </div>
+        
+        <div class="variant-demo">
+            <h3>With Label</h3>
+            <neo-text-input label="Full Name" placeholder="Enter your full name"></neo-text-input>
+        </div>
+        
+        <div class="variant-demo">
+            <h3>Required Field</h3>
+            <neo-text-input label="Email" placeholder="Enter email" required></neo-text-input>
+        </div>
+    </div>
+
+    <!-- Import components -->
+    <script type="module" src="../components/atoms/button/button.js"></script>
+    <script type="module" src="../components/atoms/text-input/text-input.js"></script>
+</body>
+</html>
