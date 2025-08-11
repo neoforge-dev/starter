@@ -130,6 +130,44 @@ export class ComponentLoader {
           default:
             throw new Error(`Molecule component ${name} not yet migrated`);
         }
+      } else if (category === 'organisms') {
+        switch (name) {
+          case 'neo-table':
+            componentModule = await import('../../components/organisms/neo-table.js');
+            break;
+          case 'neo-data-grid':
+            componentModule = await import('../../components/organisms/neo-data-grid.js');
+            break;
+          case 'neo-form-builder':
+            componentModule = await import('../../components/organisms/neo-form-builder.js');
+            break;
+          case 'data-table':
+            componentModule = await import('../../components/organisms/data-table.js');
+            break;
+          case 'form':
+            componentModule = await import('../../components/organisms/form.js');
+            break;
+          case 'pagination':
+            componentModule = await import('../../components/organisms/pagination.js');
+            break;
+          case 'charts':
+            componentModule = await import('../../components/organisms/charts.js');
+            break;
+          case 'file-upload':
+            componentModule = await import('../../components/organisms/file-upload.js');
+            break;
+          case 'rich-text-editor':
+            componentModule = await import('../../components/organisms/rich-text-editor.js');
+            break;
+          case 'form-validation':
+            componentModule = await import('../../components/organisms/form-validation.js');
+            break;
+          case 'table':
+            componentModule = await import('../../components/organisms/table/table.js');
+            break;
+          default:
+            throw new Error(`Organism component ${name} not yet migrated`);
+        }
       } else {
         throw new Error(`Category ${category} not yet implemented`);
       }
@@ -350,6 +388,235 @@ export class ComponentLoader {
       };
     }
 
+    // Add organism component configurations
+    if (category === 'organisms' && name === 'neo-table') {
+      return {
+        component: 'neo-table',
+        title: 'Neo Table Component',
+        description: 'Advanced data table with sorting, filtering, and pagination capabilities',
+        examples: [
+          {
+            name: 'Basic Table',
+            description: 'Simple data table with basic features',
+            variants: [
+              { 
+                props: { 
+                  data: JSON.stringify([
+                    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin' },
+                    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'User' },
+                    { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'Editor' }
+                  ]),
+                  columns: JSON.stringify([
+                    { key: 'name', label: 'Name', sortable: true },
+                    { key: 'email', label: 'Email', sortable: true },
+                    { key: 'role', label: 'Role' }
+                  ])
+                } 
+              }
+            ]
+          },
+          {
+            name: 'Advanced Features',
+            description: 'Table with sorting, filtering, and selection',
+            variants: [
+              { 
+                props: { 
+                  data: JSON.stringify([
+                    { id: 1, name: 'Alice Brown', email: 'alice@example.com', role: 'Admin', status: 'Active' },
+                    { id: 2, name: 'Charlie Davis', email: 'charlie@example.com', role: 'User', status: 'Inactive' },
+                    { id: 3, name: 'Diana Wilson', email: 'diana@example.com', role: 'Editor', status: 'Active' }
+                  ]),
+                  columns: JSON.stringify([
+                    { key: 'name', label: 'Name', sortable: true, filterable: true },
+                    { key: 'email', label: 'Email', sortable: true },
+                    { key: 'role', label: 'Role', filterable: true },
+                    { key: 'status', label: 'Status', filterable: true }
+                  ]),
+                  selectable: true,
+                  searchable: true
+                } 
+              }
+            ]
+          }
+        ],
+        argTypes: {
+          data: { control: 'text', defaultValue: '[]', description: 'JSON array of table data' },
+          columns: { control: 'text', defaultValue: '[]', description: 'JSON array of column definitions' },
+          selectable: { control: 'boolean', defaultValue: false, description: 'Enable row selection' },
+          searchable: { control: 'boolean', defaultValue: false, description: 'Enable search functionality' },
+          sortable: { control: 'boolean', defaultValue: true, description: 'Enable column sorting' },
+          filterable: { control: 'boolean', defaultValue: false, description: 'Enable column filters' },
+          pageSize: { control: 'number', defaultValue: 10, description: 'Number of rows per page' },
+          striped: { control: 'boolean', defaultValue: false, description: 'Striped row styling' },
+          bordered: { control: 'boolean', defaultValue: false, description: 'Table border styling' },
+          compact: { control: 'boolean', defaultValue: false, description: 'Compact row spacing' }
+        }
+      };
+    }
+
+    if (category === 'organisms' && name === 'neo-data-grid') {
+      return {
+        component: 'neo-data-grid',
+        title: 'Neo Data Grid Component',
+        description: 'Interactive data grid with inline editing and advanced features',
+        examples: [
+          {
+            name: 'Editable Grid',
+            description: 'Data grid with inline editing capabilities',
+            variants: [
+              { 
+                props: { 
+                  data: JSON.stringify([
+                    { id: 1, product: 'Laptop', price: 999.99, category: 'Electronics', inStock: true },
+                    { id: 2, product: 'Mouse', price: 29.99, category: 'Electronics', inStock: false },
+                    { id: 3, product: 'Keyboard', price: 79.99, category: 'Electronics', inStock: true }
+                  ]),
+                  columns: JSON.stringify([
+                    { key: 'product', label: 'Product', editable: true, type: 'text' },
+                    { key: 'price', label: 'Price', editable: true, type: 'number' },
+                    { key: 'category', label: 'Category', editable: true, type: 'select', options: ['Electronics', 'Clothing', 'Books'] },
+                    { key: 'inStock', label: 'In Stock', editable: true, type: 'boolean' }
+                  ]),
+                  editable: true
+                } 
+              }
+            ]
+          },
+          {
+            name: 'Virtual Scrolling',
+            description: 'Grid with virtual scrolling for large datasets',
+            variants: [
+              { 
+                props: { 
+                  data: JSON.stringify(Array.from({ length: 100 }, (_, i) => ({
+                    id: i + 1,
+                    name: `Item ${i + 1}`,
+                    value: Math.floor(Math.random() * 1000),
+                    category: ['A', 'B', 'C'][i % 3]
+                  }))),
+                  columns: JSON.stringify([
+                    { key: 'name', label: 'Name' },
+                    { key: 'value', label: 'Value' },
+                    { key: 'category', label: 'Category' }
+                  ]),
+                  virtualScrolling: true,
+                  height: 400
+                } 
+              }
+            ]
+          }
+        ],
+        argTypes: {
+          data: { control: 'text', defaultValue: '[]', description: 'JSON array of grid data' },
+          columns: { control: 'text', defaultValue: '[]', description: 'JSON array of column definitions' },
+          editable: { control: 'boolean', defaultValue: false, description: 'Enable inline editing' },
+          virtualScrolling: { control: 'boolean', defaultValue: false, description: 'Enable virtual scrolling' },
+          height: { control: 'number', defaultValue: 400, description: 'Grid height in pixels' },
+          rowHeight: { control: 'number', defaultValue: 40, description: 'Row height in pixels' },
+          selectionMode: { control: 'select', options: ['none', 'single', 'multiple'], defaultValue: 'none', description: 'Row selection mode' },
+          showRowNumbers: { control: 'boolean', defaultValue: false, description: 'Show row numbers column' },
+          autoSave: { control: 'boolean', defaultValue: false, description: 'Auto-save changes' },
+          validateOnEdit: { control: 'boolean', defaultValue: true, description: 'Validate data on edit' }
+        }
+      };
+    }
+
+    if (category === 'organisms' && name === 'neo-form-builder') {
+      return {
+        component: 'neo-form-builder',
+        title: 'Neo Form Builder Component',
+        description: 'Dynamic form builder with drag-and-drop field management',
+        examples: [
+          {
+            name: 'Contact Form',
+            description: 'Pre-built contact form configuration',
+            variants: [
+              { 
+                props: { 
+                  schema: JSON.stringify({
+                    fields: [
+                      { type: 'text', name: 'name', label: 'Full Name', required: true, placeholder: 'Enter your name' },
+                      { type: 'email', name: 'email', label: 'Email Address', required: true, placeholder: 'Enter your email' },
+                      { type: 'select', name: 'subject', label: 'Subject', required: true, options: ['General Inquiry', 'Support', 'Sales'] },
+                      { type: 'textarea', name: 'message', label: 'Message', required: true, placeholder: 'Your message...', rows: 4 }
+                    ]
+                  }),
+                  layout: 'vertical'
+                } 
+              }
+            ]
+          },
+          {
+            name: 'Registration Form',
+            description: 'User registration form with validation',
+            variants: [
+              { 
+                props: { 
+                  schema: JSON.stringify({
+                    fields: [
+                      { type: 'text', name: 'firstName', label: 'First Name', required: true, validation: { minLength: 2 } },
+                      { type: 'text', name: 'lastName', label: 'Last Name', required: true, validation: { minLength: 2 } },
+                      { type: 'email', name: 'email', label: 'Email', required: true },
+                      { type: 'password', name: 'password', label: 'Password', required: true, validation: { minLength: 8 } },
+                      { type: 'password', name: 'confirmPassword', label: 'Confirm Password', required: true },
+                      { type: 'checkbox', name: 'terms', label: 'I agree to the terms and conditions', required: true },
+                      { type: 'checkbox', name: 'newsletter', label: 'Subscribe to newsletter' }
+                    ]
+                  }),
+                  layout: 'horizontal',
+                  validateOnChange: true
+                } 
+              }
+            ]
+          },
+          {
+            name: 'Survey Form',
+            description: 'Multi-step survey with conditional fields',
+            variants: [
+              { 
+                props: { 
+                  schema: JSON.stringify({
+                    steps: [
+                      {
+                        title: 'Personal Information',
+                        fields: [
+                          { type: 'text', name: 'name', label: 'Name', required: true },
+                          { type: 'number', name: 'age', label: 'Age', required: true, min: 18, max: 100 },
+                          { type: 'radio', name: 'role', label: 'Role', required: true, options: ['Developer', 'Designer', 'Manager', 'Other'] }
+                        ]
+                      },
+                      {
+                        title: 'Preferences',
+                        fields: [
+                          { type: 'checkbox-group', name: 'interests', label: 'Interests', options: ['Technology', 'Design', 'Business', 'Marketing'] },
+                          { type: 'range', name: 'experience', label: 'Years of Experience', min: 0, max: 20, step: 1 },
+                          { type: 'textarea', name: 'feedback', label: 'Additional Comments', rows: 3 }
+                        ]
+                      }
+                    ]
+                  }),
+                  multiStep: true,
+                  showProgress: true
+                } 
+              }
+            ]
+          }
+        ],
+        argTypes: {
+          schema: { control: 'text', defaultValue: '{"fields":[]}', description: 'JSON form schema' },
+          layout: { control: 'select', options: ['vertical', 'horizontal', 'inline'], defaultValue: 'vertical', description: 'Form layout' },
+          validateOnChange: { control: 'boolean', defaultValue: false, description: 'Validate fields on change' },
+          validateOnBlur: { control: 'boolean', defaultValue: true, description: 'Validate fields on blur' },
+          showValidation: { control: 'boolean', defaultValue: true, description: 'Show validation messages' },
+          multiStep: { control: 'boolean', defaultValue: false, description: 'Enable multi-step form' },
+          showProgress: { control: 'boolean', defaultValue: false, description: 'Show progress indicator' },
+          readonly: { control: 'boolean', defaultValue: false, description: 'Make form read-only' },
+          disabled: { control: 'boolean', defaultValue: false, description: 'Disable form inputs' },
+          submitText: { control: 'text', defaultValue: 'Submit', description: 'Submit button text' }
+        }
+      };
+    }
+
     // Default configuration for other components
     return this.createDefaultPlaygroundConfig(category, name);
   }
@@ -532,7 +799,10 @@ export class ComponentLoader {
         'alert', 'card', 'modal', 'toast', 'tabs',
         'breadcrumbs', 'phone-input', 'date-picker', 'language-selector'
       ],
-      organisms: [],
+      organisms: [
+        'neo-table', 'neo-data-grid', 'neo-form-builder', 'data-table', 'form', 
+        'pagination', 'charts', 'file-upload', 'rich-text-editor', 'form-validation', 'table'
+      ],
       pages: []
     };
   }

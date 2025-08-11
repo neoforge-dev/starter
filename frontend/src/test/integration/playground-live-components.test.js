@@ -8,17 +8,22 @@ import { fixture, html } from '@open-wc/testing';
 
 describe('Playground Live Components Integration', () => {
   
-  it('should support loading 20+ playground components without errors', async () => {
+  it('should support loading 33+ playground components without errors', async () => {
     const { ComponentLoader } = await import('../../playground/core/component-loader.js');
     const loader = new ComponentLoader();
     
     const availableComponents = loader.getAvailableComponents();
     const allComponents = [
       ...availableComponents.atoms.map(name => ({ category: 'atoms', name })),
-      ...availableComponents.molecules.map(name => ({ category: 'molecules', name }))
+      ...availableComponents.molecules.map(name => ({ category: 'molecules', name })),
+      ...availableComponents.organisms.map(name => ({ category: 'organisms', name }))
     ];
     
     console.log(`Testing ${allComponents.length} components...`);
+    console.log('Component breakdown:');
+    console.log(`  Atoms: ${availableComponents.atoms.length}`);
+    console.log(`  Molecules: ${availableComponents.molecules.length}`);
+    console.log(`  Organisms: ${availableComponents.organisms.length}`);
     
     let successfulLoads = 0;
     let failedLoads = [];
@@ -45,9 +50,10 @@ describe('Playground Live Components Integration', () => {
       console.log('Failed loads:', failedLoads);
     }
     
-    // At least 15+ components should load successfully
-    expect(successfulLoads).toBeGreaterThanOrEqual(15);
-    expect(allComponents.length).toBeGreaterThanOrEqual(20);
+    // Should have 33 total components (13 atoms + 9 molecules + 11 organisms)
+    expect(allComponents.length).toBe(33);
+    // At least 30+ components should load successfully
+    expect(successfulLoads).toBeGreaterThanOrEqual(30);
   });
   
   it('should validate enhanced playground configurations for priority components', async () => {
@@ -80,6 +86,45 @@ describe('Playground Live Components Integration', () => {
         expect(example.variants).toBeDefined();
         expect(example.variants.length).toBeGreaterThan(0);
       });
+    }
+  });
+
+  it('should validate enhanced organism component configurations', async () => {
+    const { ComponentLoader } = await import('../../playground/core/component-loader.js');
+    const loader = new ComponentLoader();
+    
+    // Test enhanced configs for key organism components
+    const keyOrganismComponents = [
+      { category: 'organisms', name: 'neo-table' },
+      { category: 'organisms', name: 'neo-data-grid' },
+      { category: 'organisms', name: 'neo-form-builder' }
+    ];
+    
+    for (const { category, name } of keyOrganismComponents) {
+      const config = await loader.loadPlaygroundConfig(category, name);
+      
+      // Validate enhanced configuration
+      expect(config.examples).toBeDefined();
+      expect(config.examples.length).toBeGreaterThan(1, `${name} should have multiple examples`);
+      
+      // Should have comprehensive argTypes for complex organisms
+      expect(Object.keys(config.argTypes).length).toBeGreaterThan(5, `${name} should have many configurable properties`);
+      
+      // Should have detailed examples with realistic data
+      config.examples.forEach(example => {
+        expect(example.name).toBeDefined();
+        expect(example.description).toBeDefined();
+        expect(example.variants).toBeDefined();
+        expect(example.variants.length).toBeGreaterThan(0);
+        
+        // Organism components should have props with data
+        example.variants.forEach(variant => {
+          expect(variant.props).toBeDefined();
+          expect(Object.keys(variant.props).length).toBeGreaterThan(0);
+        });
+      });
+      
+      console.log(`${name} configuration validated with ${config.examples.length} examples and ${Object.keys(config.argTypes).length} argTypes`);
     }
   });
   let container;
