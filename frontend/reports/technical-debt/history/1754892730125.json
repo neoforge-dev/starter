@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-08-11T06:12:10.124Z",
+  "summary": {
+    "totalDebtIssues": 25,
+    "criticalIssues": 0,
+    "highPriorityIssues": 25,
+    "testCoveragePercentage": 0,
+    "bundleSizeMB": 0.36,
+    "highComplexityFiles": 138,
+    "debtScore": 100
+  },
+  "metrics": {
+    "codeQualityScore": 87.5,
+    "testCoverageScore": 0,
+    "performanceScore": 96.4310073852539,
+    "maintainabilityScore": 0,
+    "overallHealthScore": 54
+  }
+}

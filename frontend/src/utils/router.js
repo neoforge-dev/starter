@@ -34,9 +34,8 @@ class Router {
 
   /**
    * Handle popstate events
-   * @param {PopStateEvent} event 
    */
-  _handlePopState(event) {
+  _handlePopState() {
     this._handleRoute(window.location.pathname + window.location.search);
   }
 

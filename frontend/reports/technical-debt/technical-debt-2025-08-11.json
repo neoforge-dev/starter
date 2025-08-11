@@ -1,170 +1,17 @@
 {
-  "timestamp": "2025-08-11T05:50:47.506Z",
+  "timestamp": "2025-08-11T06:12:10.124Z",
   "summary": {
-    "totalDebtIssues": 44,
-    "criticalIssues": 3,
-    "highPriorityIssues": 41,
+    "totalDebtIssues": 25,
+    "criticalIssues": 0,
+    "highPriorityIssues": 25,
     "testCoveragePercentage": 0,
     "bundleSizeMB": 0.36,
-    "highComplexityFiles": 139,
+    "highComplexityFiles": 138,
     "debtScore": 100
   },
   "eslint": {
-    "CRITICAL": [
-      {
-        "file": "/src/test/integration/session-management.test.js",
-        "line": 142,
-        "column": 40,
-        "rule": "no-undef",
-        "message": "'token' is not defined.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/integration/session-management.test.js",
-        "line": 299,
-        "column": 30,
-        "rule": "no-undef",
-        "message": "'user' is not defined.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/integration/session-management.test.js",
-        "line": 374,
-        "column": 32,
-        "rule": "no-undef",
-        "message": "'user' is not defined.",
-        "severity": "error"
-      }
-    ],
+    "CRITICAL": [],
     "HIGH": [
-      {
-        "file": "/src/test/pages/documentation-page.test.js",
-        "line": 109,
-        "column": 40,
-        "rule": "no-unused-vars",
-        "message": "'event' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/documentation-page.test.js",
-        "line": 169,
-        "column": 11,
-        "rule": "no-unused-vars",
-        "message": "'searchInput' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/examples-page.test.js",
-        "line": 36,
-        "column": 5,
-        "rule": "no-setter-return",
-        "message": "Setter cannot return a value.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/faq-page.test.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'FAQPage' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/faq-page.test.js",
-        "line": 5,
-        "column": 7,
-        "rule": "no-unused-vars",
-        "message": "'MockFAQPage' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/landing-page.test.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'LandingPage' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/login-page.test.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'LoginPage' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/profile-page.test.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'ProfilePage' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/projects-page.test.js",
-        "line": 77,
-        "column": 54,
-        "rule": "no-unused-vars",
-        "message": "'index' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/settings-page.test.js",
-        "line": 2,
-        "column": 10,
-        "rule": "no-unused-vars",
-        "message": "'SettingsPage' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/support-page.test.js",
-        "line": 350,
-        "column": 11,
-        "rule": "no-unused-vars",
-        "message": "'statusFilter' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/pages/tutorials-page.test.js",
-        "line": 35,
-        "column": 5,
-        "rule": "no-setter-return",
-        "message": "Setter cannot return a value.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/performance/performance.test.js",
-        "line": 23,
-        "column": 16,
-        "rule": "no-unused-vars",
-        "message": "'measureMemoryUsage' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/services/error-service.test.js",
-        "line": 39,
-        "column": 26,
-        "rule": "no-unused-vars",
-        "message": "'options' is assigned a value but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/services/error-service.test.js",
-        "line": 103,
-        "column": 21,
-        "rule": "no-unused-vars",
-        "message": "'error' is defined but never used.",
-        "severity": "error"
-      },
-      {
-        "file": "/src/test/services/notification-service.test.js",
-        "line": 58,
-        "column": 17,
-        "rule": "no-useless-escape",
-        "message": "Unnecessary escape character: \\-.",
-        "severity": "error"
-      },
       {
         "file": "/src/test/setup/global-performance-polyfill.js",
         "line": 98,
@@ -369,8 +216,8 @@
     "MEDIUM": [],
     "LOW": [],
     "totalFiles": 398,
-    "totalIssues": 44,
-    "errorCount": 44,
+    "totalIssues": 25,
+    "errorCount": 25,
     "warningCount": 0
   },
   "coverage": {
@@ -535,8 +382,8 @@
   },
   "complexity": {
     "totalFiles": 398,
-    "totalLines": 82282,
-    "avgComplexity": 206.73869346733667,
+    "totalLines": 82154,
+    "avgComplexity": 206.41708542713567,
     "highComplexityFiles": [
       {
         "file": "src/components/analytics/performance-chart.js",
@@ -1071,17 +918,12 @@
       {
         "file": "src/test/pages/documentation-page.test.js",
         "complexity": 18,
-        "lines": 187
+        "lines": 186
       },
       {
         "file": "src/test/pages/examples-page.test.js",
         "complexity": 15,
-        "lines": 454
-      },
-      {
-        "file": "src/test/pages/faq-page.test.js",
-        "complexity": 17,
-        "lines": 203
+        "lines": 453
       },
       {
         "file": "src/test/pages/pricing-page.test.js",
@@ -1106,17 +948,17 @@
       {
         "file": "src/test/pages/support-page.test.js",
         "complexity": 34,
-        "lines": 528
+        "lines": 526
       },
       {
         "file": "src/test/pages/tutorials-page.test.js",
         "complexity": 11,
-        "lines": 402
+        "lines": 401
       },
       {
         "file": "src/test/performance/performance.test.js",
-        "complexity": 12,
-        "lines": 242
+        "complexity": 11,
+        "lines": 234
       },
       {
         "file": "src/test/services/api-client.test.js",
@@ -1238,36 +1080,23 @@
   },
   "recommendations": [
     {
-      "priority": "CRITICAL",
-      "category": "Code Quality",
-      "issue": "3 critical ESLint errors found",
-      "action": "Fix critical ESLint errors immediately - these may cause runtime failures",
-      "effort": "High",
-      "impact": "High",
-      "files": [
-        "/src/test/integration/session-management.test.js",
-        "/src/test/integration/session-management.test.js",
-        "/src/test/integration/session-management.test.js"
-      ]
-    },
-    {
       "priority": "HIGH",
       "category": "Code Quality",
-      "issue": "41 high-priority ESLint issues",
+      "issue": "25 high-priority ESLint issues",
       "action": "Address unused variables and imports to improve maintainability",
       "effort": "Medium",
       "impact": "Medium",
       "files": [
-        "/src/test/pages/documentation-page.test.js",
-        "/src/test/pages/documentation-page.test.js",
-        "/src/test/pages/examples-page.test.js",
-        "/src/test/pages/faq-page.test.js",
-        "/src/test/pages/faq-page.test.js",
-        "/src/test/pages/landing-page.test.js",
-        "/src/test/pages/login-page.test.js",
-        "/src/test/pages/profile-page.test.js",
-        "/src/test/pages/projects-page.test.js",
-        "/src/test/pages/settings-page.test.js"
+        "/src/test/setup/global-performance-polyfill.js",
+        "/src/test/setup/optimized-performance-polyfill.js",
+        "/src/test/setup/optimized-performance-polyfill.js",
+        "/src/test/test-setup.js",
+        "/src/test/test-setup.js",
+        "/src/test/test-setup.js",
+        "/src/test/test-setup.js",
+        "/src/test/test-setup.js",
+        "/src/test/test-setup.js",
+        "/src/test/test-setup.js"
       ]
     },
     {
@@ -1281,7 +1110,7 @@
     {
       "priority": "MEDIUM",
       "category": "Code Complexity",
-      "issue": "139 files have high cyclomatic complexity",
+      "issue": "138 files have high cyclomatic complexity",
       "action": "Refactor complex functions into smaller, more maintainable units",
       "effort": "High",
       "impact": "Medium",
@@ -1295,10 +1124,10 @@
     }
   ],
   "metrics": {
-    "codeQualityScore": 78,
+    "codeQualityScore": 87.5,
     "testCoverageScore": 0,
     "performanceScore": 96.4310073852539,
     "maintainabilityScore": 0,
-    "overallHealthScore": 50
+    "overallHealthScore": 54
   }
 }

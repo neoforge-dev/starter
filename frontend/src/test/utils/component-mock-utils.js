@@ -100,8 +100,8 @@ export function createMockShadowRoot() {
   const attributes = new Map();
 
   return {
-    querySelector: (selector) => null,
-    querySelectorAll: (selector) => [],
+    querySelector: () => null,
+    querySelectorAll: () => [],
     appendChild: (child) => {
       children.push(child);
       return child;
@@ -182,16 +182,16 @@ export function createMockClassList() {
  * @returns {Function} - The mock fixture function
  */
 export function createMockFixture() {
-  return async (template) => {
+  return async () => {
     // Create a mock element that simulates the behavior of the fixture function
     const mockElement = {
       updateComplete: Promise.resolve(true),
       style: {},
       classList: createMockClassList(),
       shadowRoot: createMockShadowRoot(),
-      addEventListener: (event, callback) => {},
-      removeEventListener: (event, callback) => {},
-      dispatchEvent: (event) => true,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => true,
       remove: () => {},
     };
     return mockElement;
@@ -271,7 +271,7 @@ export function createMockElement(tagName = "div") {
 
     // Element methods
     remove: () => {},
-    cloneNode: (deep) => createMockElement(tagName),
+    cloneNode: () => createMockElement(tagName),
 
     // Query methods
     querySelector: () => null,

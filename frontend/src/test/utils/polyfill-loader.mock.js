@@ -92,7 +92,7 @@ const POLYFILLS = {
     name: "viewTransitions",
     test: () => "startViewTransition" in document,
     load: async () => {
-      document.startViewTransition = function (callback) {
+      document.startViewTransition = function () {
         return {
           ready: Promise.resolve(),
           finished: Promise.resolve(),

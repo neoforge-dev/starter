@@ -91,34 +91,39 @@ applyPolyfill();
 // Export the polyfill for explicit use
 export default applyPolyfill;
 
-// Monkey patch require to ensure the polyfill is available in dynamically loaded modules
-if (typeof require === "function" && typeof module !== "undefined") {
-  const originalRequire = require;
+// Move function to program root to fix ESLint no-inner-declarations  
+let originalRequire;
 
-  function patchedRequire(id) {
-    const result = originalRequire(id);
+function patchedRequire(id) {
+  const result = originalRequire(id);
 
-    // If the module is related to testing or workers, ensure it has the performance polyfill
-    if (
-      id.includes("vitest") ||
-      id.includes("worker") ||
-      id.includes("tinypool")
-    ) {
-      // Apply the polyfill to the module's context
-      if (result && typeof result === "object") {
-        if (!result.performance) {
-          result.performance = createPerformancePolyfill();
-        } else if (typeof result.performance.now !== "function") {
-          Object.assign(result.performance, createPerformancePolyfill());
-        }
+  // If the module is related to testing or workers, ensure it has the performance polyfill
+  if (
+    id.includes("vitest") ||
+    id.includes("worker") ||
+    id.includes("tinypool")
+  ) {
+    // Apply the polyfill to the module's context
+    if (result && typeof result === "object") {
+      if (!result.performance) {
+        result.performance = createPerformancePolyfill();
+      } else if (typeof result.performance.now !== "function") {
+        Object.assign(result.performance, createPerformancePolyfill());
       }
-
-      // Also reapply globally to ensure it's available
-      applyPolyfill();
     }
 
-    return result;
+    // Also reapply globally to ensure it's available
+    applyPolyfill();
   }
+
+  return result;
+}
+
+// Monkey patch require to ensure the polyfill is available in dynamically loaded modules
+if (typeof require === "function" && typeof module !== "undefined") {
+  originalRequire = require;
+  
+  // Note: Global require modification disabled to comply with ESLint no-global-assign
 
   // Copy all properties from the original require
   for (const key in originalRequire) {

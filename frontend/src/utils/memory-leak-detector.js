@@ -158,7 +158,7 @@ class MemoryLeakDetector {
    */
   _checkEventListenerLeaks() {
     const now = Date.now();
-    this.eventListenerRegistry.forEach((data, key) => {
+    this.eventListenerRegistry.forEach((data) => {
       const age = now - data.registeredAt;
 
       // Check for listeners older than 1 hour on detached elements

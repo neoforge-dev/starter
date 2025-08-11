@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   createMockElement,
   createMockShadowRoot,
@@ -7,7 +7,6 @@ import {
   createMockCustomEvent,
   mockCreateElement,
   createMockComponent,
-  registerMockComponent,
   createAndRegisterMockComponent,
 } from "./dom-mock-utils";
 

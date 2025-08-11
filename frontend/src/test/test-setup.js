@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, vi } from "vitest";
-import { fixture, fixtureCleanup } from "@open-wc/testing-helpers";
+import { fixtureCleanup } from "@open-wc/testing-helpers";
 import {   LitElement, html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 // Set default test timeout to prevent hanging tests
@@ -85,11 +85,11 @@ global.window.matchMedia = global.matchMedia = (query) => {
         : true,
     media: query,
     onchange: null,
-    addListener: (listener) => {}, // Deprecated but kept for compatibility
-    removeListener: (listener) => {}, // Deprecated but kept for compatibility
-    addEventListener: (event, listener) => {},
-    removeEventListener: (event, listener) => {},
-    dispatchEvent: (event) => true,
+    addListener: () => {}, // Deprecated but kept for compatibility
+    removeListener: () => {}, // Deprecated but kept for compatibility
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => true,
   };
 };
 

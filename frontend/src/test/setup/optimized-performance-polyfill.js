@@ -218,7 +218,7 @@ function applyPolyfill(silent = false) {
 }
 
 // Apply the polyfill immediately
-const performancePolyfill = applyPolyfill();
+applyPolyfill();
 
 // Patch Vitest worker and Tinypool modules
 function patchVitestModules() {
@@ -370,7 +370,7 @@ function setupErrorHandling() {
           const stackLines = err.stack.split("\n");
           for (const line of stackLines) {
             if (line.includes("node_modules/")) {
-              const match = line.match(/node_modules\/([^\/]+)/);
+              const match = line.match(/node_modules\/([^/]+)/);
               if (match && match[1]) {
                 const moduleName = match[1];
                 try {
