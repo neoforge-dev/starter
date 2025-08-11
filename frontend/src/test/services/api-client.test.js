@@ -1,4 +1,4 @@
-import { expect, beforeEach, afterEach, vi, describe, it } from "vitest";
+import { expect, beforeEach, vi, describe, it } from "vitest";
 // Remove the imports of the actual components
 // import { ApiClient } from "../../services/api-client.js";
 // import { AppError, ErrorType } from "../../services/error-service.js";

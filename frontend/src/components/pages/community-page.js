@@ -1,5 +1,5 @@
 import {   LitElement, html, css   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import { Logger } from "../utils/logger.js";
+// Logger import removed - not used
 
 export class CommunityPage extends LitElement {
   static styles = css`

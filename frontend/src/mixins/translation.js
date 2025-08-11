@@ -18,7 +18,7 @@ export const TranslationMixin = (superClass) =>
       translationUpdater.unregisterComponent(this);
     }
 
-    async updateTranslations(locale) {
+    async updateTranslations() {
       if (this.translationKeys) {
         const keys =
           typeof this.translationKeys === "function"
@@ -33,7 +33,7 @@ export const TranslationMixin = (superClass) =>
       }
     }
 
-    t(key, params = {}) {
+    t(key) {
       return this._translations[key] || key;
     }
   };

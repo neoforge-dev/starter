@@ -256,10 +256,7 @@ describe("NeoSelect", () => {
     element.value = "";
     element.render();
 
-    const trigger = element.shadowRoot.querySelector(".select-trigger");
     element.toggleDropdown();
-
-    const option = element.shadowRoot.querySelector(".option");
     element.selectOption("1");
 
     // For single selection, value should be a string

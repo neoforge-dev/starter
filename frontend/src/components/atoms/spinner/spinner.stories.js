@@ -1,5 +1,5 @@
-import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import { ifDefined } from "lit/directives/if-defined.js";
+import { html } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+// ifDefined import removed - not used
 import "./spinner.js";
 
 export default {

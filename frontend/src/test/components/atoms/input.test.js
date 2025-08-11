@@ -30,76 +30,11 @@ vi.mock(
 import { NeoInput } from "../../../components/atoms/input/input.js";
 
 describe("NeoInput", () => {
-  let element;
-
-  // Mock implementation for NeoInput
-  let neoInputProps;
+  // Mock implementation for NeoInput - component tests use mock object
 
   beforeEach(() => {
-    // Create a mock of the NeoInput properties
-    neoInputProps = {
-      // Properties
-      type: undefined,
-      reflect: undefined,
-
-      // Methods
-      properties: function () {
-        // Implementation
-      },
-      styles: function () {
-        // Implementation
-      },
-      _handleInput: function () {
-        // Implementation
-      },
-      _handleChange: function () {
-        // Implementation
-      },
-      _togglePasswordVisibility: function () {
-        // Implementation
-      },
-      focus: function () {
-        // Implementation
-      },
-      blur: function () {
-        // Implementation
-      },
-      reportValidity: function () {
-        // Implementation
-      },
-      checkValidity: function () {
-        // Implementation
-      },
-      render: function () {
-        // Implementation
-      },
-
-      // Event handling
-      addEventListener: function (event, callback) {
-        this[`_${event}Callback`] = callback;
-      },
-
-      // Shadow DOM
-      shadowRoot: {
-        querySelector: function (selector) {
-          // Return mock elements based on the selector
-          return null;
-        },
-        querySelectorAll: function (selector) {
-          // Return mock elements based on the selector
-          return [];
-        },
-      },
-
-      // Other properties needed for testing
-      updateComplete: Promise.resolve(true),
-      classList: {
-        contains: function (className) {
-          // Implementation
-          return false;
-        },
-      },
-    };
+    // Mock setup for component tests
+    // Individual tests will create their own mock objects as needed
   });
 
   it("should be defined as a class", () => {

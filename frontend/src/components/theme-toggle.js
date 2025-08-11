@@ -235,7 +235,7 @@ export class ThemeToggleButton extends ThemeToggleMixin(LitElement) {
     }, 400);
   }
 
-  _handleTransitionEnd(e) {
+  _handleTransitionEnd() {
     // Always remove the classes regardless of which event triggered this
     document.documentElement.classList.remove("theme-transition");
     this.classList.remove("transitioning");

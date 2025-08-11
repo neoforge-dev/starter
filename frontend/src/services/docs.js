@@ -91,7 +91,7 @@ class DocsService {
       const escapeHtml = this._escapeHtml.bind(this);
       // Create a custom renderer
       const renderer = new marked.Renderer();
-      renderer.code = (code, infostring, escaped) => {
+      renderer.code = (code, infostring) => {
         const langMatch = (infostring || '').match(/\S*/);
         const lang = langMatch ? langMatch[0] : 'plaintext';
         return `<code-snippet language="${lang}" code="${escapeHtml(code)}"></code-snippet>`;

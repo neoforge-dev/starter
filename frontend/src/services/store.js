@@ -422,7 +422,7 @@ export const StoreMixin = (superClass) =>
   };
 
 // Built-in middleware
-export const LoggerMiddleware = async (action, state, store) => {
+export const LoggerMiddleware = async (action) => {
   Logger.debug('Action dispatched:', action.type, action.payload);
   return action;
 };

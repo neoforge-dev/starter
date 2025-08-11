@@ -174,7 +174,7 @@ export class NeoTextInput extends LitElement {
     );
   }
 
-  _handleChange(e) {
+  _handleChange() {
     this.dispatchEvent(
       new CustomEvent("neo-change", {
         detail: { value: this.value },

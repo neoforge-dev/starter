@@ -214,7 +214,7 @@ export class ComponentPlayground extends LitElement {
     this._updatePreview();
   }
 
-  _handleFrameLoad(e) {
+  _handleFrameLoad() {
     this._updatePreview();
   }
 

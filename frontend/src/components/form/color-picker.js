@@ -474,7 +474,7 @@ export class ColorPicker extends LitElement {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   }
 
-  _formatColor(color) {
+  _formatColor() {
     if (this.mode === "gradient") {
       return `linear-gradient(${this._gradientAngle}deg, ${this._gradientStops
         .map((stop) => `${stop.color} ${stop.position}%`)

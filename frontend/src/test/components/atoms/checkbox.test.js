@@ -30,7 +30,7 @@ class MockNeoCheckbox {
                 return Boolean(this.error).toString();
               return null;
             },
-            setAttribute: (attr, value) => {
+            setAttribute: () => {
               // Mock setAttribute
             },
             click: () => {
@@ -153,7 +153,7 @@ describe("NeoCheckbox", () => {
     };
 
     // Add the addEventListener method to our mock
-    checkbox.addEventListener = function (eventName, callback) {
+    checkbox.addEventListener = function () {
       // This is just a stub, we'll test using dispatchEvent directly
     };
 

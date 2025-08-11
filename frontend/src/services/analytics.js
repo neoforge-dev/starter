@@ -109,7 +109,7 @@ class AnalyticsService {
   }
 
   trackUserInteraction(interaction) {
-    const { type, path } = interaction;
+    const { path } = interaction;
     const details = this.userBehaviorData.interactions.details;
     const existingInteraction = details.find((i) => i.path === path);
 
@@ -137,7 +137,6 @@ class AnalyticsService {
 
   getPerformanceData(metricType, timeRange) {
     const metrics = this.performanceData.get(metricType) || [];
-    const now = Date.now();
     const timeLimit = this.getTimeLimit(timeRange);
 
     return metrics.filter((metric) => metric.timestamp >= timeLimit);

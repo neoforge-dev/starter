@@ -1,5 +1,5 @@
 import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import { action } from "@storybook/addon-actions";
+// action import removed - not used
 import "./app-header.js"; // Assuming component is defined here
 import "../../atoms/button/button.js";
 

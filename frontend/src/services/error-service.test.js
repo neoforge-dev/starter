@@ -1,5 +1,5 @@
 import { expect } from "@esm-bundle/chai";
-import { fixture, html, waitUntil } from "@open-wc/testing";
+import { waitUntil } from "@open-wc/testing";
 import { AppError, ErrorType, errorService } from "./error-service.js";
 import { showToast } from "../components/ui/toast/index.js";
 import { apiClient } from "./api-client.js";

@@ -263,7 +263,7 @@ export class NeoButton extends BaseComponent {
         ?disabled="${isDisabled}"
         @click="${this._handleClick}"
         class="${Object.entries(classes)
-          .filter(([_, value]) => value)
+          .filter(([, value]) => value)
           .map(([key]) => key)
           .join(" ")}"
       >

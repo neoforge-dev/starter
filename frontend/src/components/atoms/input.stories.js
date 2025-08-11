@@ -1,5 +1,3 @@
-import { Input } from "./input.js";
-
 export default {
   title: "Components/Input",
   component: "neo-input",

@@ -1,6 +1,6 @@
 import {   LitElement, html, css   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
-import { baseStyles } from "../styles/base.js";
-import { authService } from "../services/auth-service.js";
+// baseStyles import removed - not used
+// authService import removed - not used
 import "../components/ui/card.js";
 import "../components/ui/spinner.js";
 import "../components/ui/tabs.js";

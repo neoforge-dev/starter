@@ -7,7 +7,7 @@
  * - ThemeToggleMixin: A mixin for LitElement-based components to add a theme toggling feature.
  */
 
-import {   css   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+// CSS utilities not needed in this theme configuration file
 import { dedupeMixin } from "../utils/dedupeMixin.js";
 
 // Theme configuration object

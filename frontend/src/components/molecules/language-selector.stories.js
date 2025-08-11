@@ -1,4 +1,4 @@
-import { LanguageSelector } from "./language-selector.js";
+// LanguageSelector class import removed - not used
 import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
 export default {

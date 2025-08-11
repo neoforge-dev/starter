@@ -58,9 +58,6 @@ export async function registerTestComponent(
         // We'll create a new class that extends the original one
         console.log(`Force re-registering component ${tagName}`);
 
-        // Create a new tag name with a timestamp to ensure uniqueness
-        const newTagName = `${tagName}-${Date.now()}`;
-
         // Store the original class in the registry
         componentRegistry.set(tagName, ComponentClass);
 

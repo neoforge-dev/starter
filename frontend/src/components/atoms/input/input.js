@@ -158,7 +158,7 @@ export class NeoInput extends LitElement {
     this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
   }
 
-  _handleChange(e) {
+  _handleChange() {
     this.dispatchEvent(
       new CustomEvent("neo-change", {
         detail: { value: this.value },

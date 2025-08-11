@@ -1,5 +1,3 @@
-import { Button } from "./button.js";
-
 export default {
   title: "Components/Button",
   component: "neo-button",

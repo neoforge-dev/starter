@@ -206,7 +206,7 @@ export class MarkdownViewer extends LitElement {
 
     // Configure marked with syntax highlighting
     window.marked.setOptions({
-      highlight: (code, lang) => {
+      highlight: (code) => {
         return window.hljs.highlightAuto(code).value;
       },
       breaks: true,

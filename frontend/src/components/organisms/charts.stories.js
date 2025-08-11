@@ -1,4 +1,4 @@
-import { Charts } from "./charts.js";
+// Charts class import removed - not used
 
 export default {
   title: "Components/Charts",

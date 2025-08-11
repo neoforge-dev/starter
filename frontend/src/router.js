@@ -196,7 +196,7 @@ class Router {
     }
   }
 
-  navigate(path, options = {}) {
+  navigate(path) {
     window.history.pushState(null, "", path);
     return this.handleRoute();
   }

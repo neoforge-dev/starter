@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { NeoButton } from '../../../components/atoms/button/button.js';
+// Import to register the component
+import '../../../components/atoms/button/button.js';
 
 describe('NeoButton Component', () => {
   let button;

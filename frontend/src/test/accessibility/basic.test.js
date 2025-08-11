@@ -1,16 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { JSDOM } from "jsdom";
 
-// Mock AxeBuilder functionality
-const mockAxeBuilder = {
-  include: function () {
-    return this;
-  },
-  analyze: function () {
-    return { violations: [] };
-  },
-};
-
 describe("Basic Accessibility Tests", () => {
   let dom;
   let document;

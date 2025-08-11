@@ -1,6 +1,6 @@
-import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
+import { expect, describe, it, beforeEach, vi } from "vitest";
 import { fixture, html } from "@open-wc/testing-helpers";
-import { MemoryMonitor } from "./memory-monitor.js";
+// MemoryMonitor import removed - only used in title string
 
 describe("MemoryMonitor", () => {
   let element;

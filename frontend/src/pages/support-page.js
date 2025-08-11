@@ -4,7 +4,6 @@ import {
  } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 import {
   BaseComponent,
-  registerComponent,
 } from "../components/base-component.js";
 
 export class SupportPage extends BaseComponent {

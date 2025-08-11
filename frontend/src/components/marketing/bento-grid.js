@@ -174,7 +174,7 @@ export class BentoGrid extends LitElement {
     };
 
     return Object.entries(styles)
-      .filter(([_, value]) => value !== undefined)
+      .filter(([, value]) => value !== undefined)
       .map(([key, value]) => `${key}: ${value}`)
       .join(";");
   }

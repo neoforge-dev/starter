@@ -1,4 +1,4 @@
-import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+// Example story file - no imports needed for this basic example
 
 export default {
   title: "Example/Button",

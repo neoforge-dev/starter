@@ -155,7 +155,7 @@ export class AnalyticsDashboard extends LitElement {
     }
   }
 
-  handleAnalyticsUpdate(type, data) {
+  handleAnalyticsUpdate() {
     this.updateData();
   }
 

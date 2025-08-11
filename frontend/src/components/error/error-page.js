@@ -305,7 +305,7 @@ export class ErrorPage extends LitElement {
   render() {
     const title = this._getErrorTitle();
     const icon = this._getErrorIcon();
-    const message = this._getErrorMessage();
+    // Message variable removed - not used in template
 
     return html`
       <div class="error-container">

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { JSDOM } from "jsdom";
 
 // Simple test for registration page functionality
@@ -32,9 +32,9 @@ describe("Registration Page", () => {
     formContainer.appendChild(form);
 
     // Create form elements
-    const nameField = createFormField(form, "name", "Name", "text", true);
-    const emailField = createFormField(form, "email", "Email", "email", true);
-    const passwordField = createFormField(
+    createFormField(form, "name", "Name", "text", true);
+    createFormField(form, "email", "Email", "email", true);
+    createFormField(
       form,
       "password",
       "Password",

@@ -1,4 +1,4 @@
-import { DatePicker } from "./date-picker.js";
+// DatePicker class import removed - not used
 
 export default {
   title: "Components/DatePicker",
