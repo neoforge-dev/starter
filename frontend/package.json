@@ -41,7 +41,16 @@
     "debt:analyze": "node scripts/analyze-technical-debt.js",
     "debt:monitor": "node scripts/debt-monitor.js",
     "debt:monitor:init": "node scripts/debt-monitor.js init",
-    "debt:ci": "node scripts/debt-monitor.js run"
+    "debt:ci": "node scripts/debt-monitor.js run",
+    "ci:validate": "node scripts/validate-ci-pipeline.js",
+    "ci:setup-hooks": "node scripts/setup-git-hooks.js install",
+    "ci:remove-hooks": "node scripts/setup-git-hooks.js remove",
+    "visual:update": "node scripts/manage-visual-baselines.js update",
+    "visual:validate": "node scripts/manage-visual-baselines.js validate",
+    "visual:clean": "node scripts/manage-visual-baselines.js clean",
+    "library:build": "node scripts/build-component-library.js",
+    "deploy:playground": "node scripts/deploy-playground.js",
+    "deploy:github-pages": "node scripts/deploy-playground.js github-pages"
   },
   "dependencies": {
     "@custom-elements-manifest/to-markdown": "^0.1.0",

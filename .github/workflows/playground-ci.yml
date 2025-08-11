@@ -1,0 +1,629 @@
+name: NeoForge Playground CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/playground-ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/playground-ci.yml'
+  workflow_dispatch:
+    inputs:
+      update_baselines:
+        description: 'Update visual regression baselines'
+        required: false
+        default: false
+        type: boolean
+      publish_components:
+        description: 'Publish component library'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18.18.2'
+  NPM_VERSION: '9.8.1'
+  PLAYWRIGHT_BROWSERS_PATH: ~/.cache/playwright
+
+jobs:
+  setup:
+    name: Setup and Cache Dependencies
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+      components-changed: ${{ steps.changes.outputs.components }}
+      playground-changed: ${{ steps.changes.outputs.playground }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          echo "key=deps-${{ hashFiles('frontend/package-lock.json') }}-${{ hashFiles('frontend/package.json') }}" >> $GITHUB_OUTPUT
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            deps-${{ hashFiles('frontend/package-lock.json') }}-
+            deps-
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: |
+          npm ci --prefer-offline --no-audit
+          npm run setup
+
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            components:
+              - 'frontend/src/components/**'
+              - 'frontend/src/playground/components/**'
+            playground:
+              - 'frontend/src/playground/**'
+              - 'frontend/src/test/**'
+
+  lint-and-format:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: Run ESLint
+        working-directory: frontend
+        run: |
+          npm run lint
+          npm run lint:components
+
+      - name: Check Prettier formatting
+        working-directory: frontend
+        run: |
+          npx prettier --check "src/**/*.{js,json,css,md}"
+
+      - name: Analyze technical debt
+        working-directory: frontend
+        run: npm run debt:analyze
+
+      - name: Upload lint results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-results
+          path: |
+            frontend/reports/technical-debt/
+            frontend/eslint-report.json
+          if-no-files-found: ignore
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: Run unit tests
+        working-directory: frontend
+        run: npm run test:coverage
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          directory: frontend/coverage
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: frontend/coverage/
+
+  component-tests:
+    name: Component Testing (${{ matrix.component-group }})
+    runs-on: ubuntu-latest
+    needs: [setup]
+    if: needs.setup.outputs.components-changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        component-group: [atoms, molecules, organisms, pages]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: Test component group
+        working-directory: frontend
+        run: npm run test:component src/test/components/${{ matrix.component-group }}/
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-tests-${{ matrix.component-group }}
+          path: frontend/test-results/
+
+  visual-regression:
+    name: Visual Regression Testing
+    runs-on: ubuntu-latest
+    needs: [setup, build-playground]
+    if: needs.setup.outputs.playground-changed == 'true' || github.event.inputs.update_baselines == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key: playwright-browsers-${{ hashFiles('frontend/package-lock.json') }}
+
+      - name: Download playground build
+        uses: actions/download-artifact@v4
+        with:
+          name: playground-dist
+          path: frontend/dist/
+
+      - name: Start playground server
+        working-directory: frontend
+        run: |
+          npm run preview &
+          npx wait-on http://localhost:4173 --timeout 60000
+
+      - name: Restore visual baselines
+        uses: actions/cache@v4
+        with:
+          path: frontend/src/test/visual/baselines/
+          key: visual-baselines-${{ github.base_ref || github.ref_name }}
+          restore-keys: |
+            visual-baselines-main
+            visual-baselines-
+
+      - name: Run visual regression tests
+        working-directory: frontend
+        run: |
+          if [ "${{ github.event.inputs.update_baselines }}" == "true" ]; then
+            npx playwright test --config=playwright.visual.config.js --update-snapshots
+          else
+            npx playwright test --config=playwright.visual.config.js
+          fi
+
+      - name: Save updated baselines
+        if: github.event.inputs.update_baselines == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: frontend/src/test/visual/baselines/
+          key: visual-baselines-${{ github.ref_name }}-${{ github.sha }}
+
+      - name: Upload visual test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-test-results
+          path: |
+            frontend/test-results/visual-artifacts/
+            frontend/test-results/visual-report/
+            frontend/test-results/visual-results.json
+
+      - name: Comment PR with visual changes
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              const results = JSON.parse(fs.readFileSync('frontend/test-results/visual-results.json', 'utf8'));
+              const failures = results.suites.flatMap(suite => 
+                suite.specs.filter(spec => spec.tests.some(test => test.status === 'failed'))
+              );
+              
+              if (failures.length > 0) {
+                const comment = [
+                  '## 📸 Visual Regression Detected',
+                  '',
+                  `Found ${failures.length} visual difference(s) in components:`,
+                  '',
+                  ...failures.map(spec => `- ${spec.title}`),
+                  '',
+                  'Please review the visual changes in the [test artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).',
+                  '',
+                  'To update baselines if changes are intentional:',
+                  '```bash',
+                  'gh workflow run playground-ci.yml -f update_baselines=true',
+                  '```'
+                ].join('\n');
+                
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: comment
+                });
+              }
+            } catch (error) {
+              console.log('Could not parse visual test results:', error.message);
+            }
+
+  accessibility-tests:
+    name: Accessibility Testing
+    runs-on: ubuntu-latest
+    needs: [setup, build-playground]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Download playground build
+        uses: actions/download-artifact@v4
+        with:
+          name: playground-dist
+          path: frontend/dist/
+
+      - name: Start playground server
+        working-directory: frontend
+        run: |
+          npm run preview &
+          npx wait-on http://localhost:4173 --timeout 60000
+
+      - name: Run accessibility tests
+        working-directory: frontend
+        run: npm run test:a11y
+
+      - name: Upload a11y test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-test-results
+          path: |
+            frontend/test-results/a11y-report/
+            frontend/artifacts/
+
+  build-playground:
+    name: Build Playground
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: Build playground
+        working-directory: frontend
+        run: npm run playground:build
+
+      - name: Check bundle size
+        working-directory: frontend
+        run: |
+          echo "## 📦 Bundle Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          find dist -name "*.js" -exec du -h {} + | sed 's/\t/ | /g' | sed 's/^/| /' | sed 's/$/ |/' >> $GITHUB_STEP_SUMMARY
+
+      - name: Validate bundle performance
+        working-directory: frontend
+        run: |
+          # Check that main bundle is under 100KB
+          MAIN_BUNDLE=$(find dist -name "index-*.js" | head -1)
+          if [ -f "$MAIN_BUNDLE" ]; then
+            SIZE=$(stat -f%z "$MAIN_BUNDLE")
+            if [ $SIZE -gt 102400 ]; then
+              echo "❌ Main bundle size ($SIZE bytes) exceeds 100KB limit"
+              exit 1
+            else
+              echo "✅ Main bundle size ($SIZE bytes) is within 100KB limit"
+            fi
+          fi
+
+      - name: Upload playground build
+        uses: actions/upload-artifact@v4
+        with:
+          name: playground-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  performance-tests:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: [setup, build-playground]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: Download playground build
+        uses: actions/download-artifact@v4
+        with:
+          name: playground-dist
+          path: frontend/dist/
+
+      - name: Run performance tests
+        working-directory: frontend
+        run: npm run test:perf
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: frontend/test-results/performance/
+
+  component-library:
+    name: Build Component Library
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, unit-tests]
+    if: github.event.inputs.publish_components == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'push')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: Generate component documentation
+        working-directory: frontend
+        run: |
+          npm run analyze
+          npm run docs:custom-elements
+
+      - name: Build component library package
+        working-directory: frontend
+        run: |
+          # Create publishable package structure
+          mkdir -p dist/lib
+          
+          # Copy component source files
+          cp -r src/components/* dist/lib/
+          
+          # Generate package.json for library
+          cat > dist/lib/package.json << EOF
+          {
+            "name": "@neoforge/web-components",
+            "version": "$(date +%Y.%m.%d)-$(git rev-parse --short HEAD)",
+            "description": "NeoForge Native Web Components Library",
+            "main": "index.js",
+            "module": "index.js",
+            "type": "module",
+            "exports": {
+              ".": "./index.js",
+              "./atoms/*": "./atoms/*",
+              "./molecules/*": "./molecules/*",
+              "./organisms/*": "./organisms/*",
+              "./pages/*": "./pages/*"
+            },
+            "keywords": ["web-components", "lit", "neoforge"],
+            "author": "NeoForge Team",
+            "license": "MIT",
+            "peerDependencies": {
+              "lit": "^3.0.0"
+            },
+            "repository": {
+              "type": "git",
+              "url": "https://github.com/${{ github.repository }}.git",
+              "directory": "frontend"
+            }
+          }
+          EOF
+          
+          # Generate barrel export file
+          find dist/lib -name "*.js" -not -path "*/test/*" -not -name "*.test.js" -not -name "*.stories.js" | \
+            sed 's|dist/lib/||' | sed 's|\.js$||' | \
+            awk '{print "export * from \"./" $1 ".js\";"}' > dist/lib/index.js
+
+      - name: Upload component library
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-library
+          path: dist/lib/
+
+      - name: Publish to NPM
+        if: github.event.inputs.publish_components == 'true' && github.ref == 'refs/heads/main'
+        working-directory: frontend/dist/lib
+        run: |
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  deploy-playground:
+    name: Deploy Playground to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: [build-playground, visual-regression, accessibility-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: playground
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download playground build
+        uses: actions/download-artifact@v4
+        with:
+          name: playground-dist
+          path: dist/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  quality-gate:
+    name: Quality Gate Summary
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, unit-tests, component-tests, visual-regression, accessibility-tests, performance-tests]
+    if: always()
+    steps:
+      - name: Check quality gate
+        run: |
+          echo "## 🚦 Quality Gate Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Quality | ${{ needs.lint-and-format.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Component Tests | ${{ needs.component-tests.result == 'success' && '✅ PASS' || needs.component-tests.result == 'skipped' && '⏭️ SKIP' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Visual Regression | ${{ needs.visual-regression.result == 'success' && '✅ PASS' || needs.visual-regression.result == 'skipped' && '⏭️ SKIP' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Accessibility | ${{ needs.accessibility-tests.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Performance | ${{ needs.performance-tests.result == 'success' && '✅ PASS' || '❌ FAIL' }} |" >> $GITHUB_STEP_SUMMARY
+          
+          # Fail if any required check failed
+          if [[ "${{ needs.lint-and-format.result }}" != "success" || \
+                "${{ needs.unit-tests.result }}" != "success" || \
+                "${{ needs.accessibility-tests.result }}" != "success" || \
+                "${{ needs.performance-tests.result }}" != "success" ]]; then
+            echo "❌ Quality gate failed - blocking merge"
+            exit 1
+          fi
+          
+          # Check optional tests
+          if [[ "${{ needs.visual-regression.result }}" == "failure" ]]; then
+            echo "⚠️ Visual regression tests failed - review required but not blocking"
+          fi
+          
+          echo "✅ Quality gate passed - ready for merge"
