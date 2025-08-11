@@ -32,6 +32,9 @@
                 </div>
                 
                 <div class="toolbar-actions">
+                    <button id="generate-component-button" class="tool-button tool-button-primary" title="Generate New Component">
+                        🧩 Generate
+                    </button>
                     <button id="toggle-props-panel" class="tool-button" title="Toggle Properties Panel">
                         ⚙️ Props
                     </button>
@@ -40,6 +43,9 @@
                     </button>
                     <button id="responsive-toggle" class="tool-button" title="Responsive Testing">
                         📱 Responsive
+                    </button>
+                    <button id="analytics-toggle" class="tool-button" title="Analytics Dashboard">
+                        📊 Analytics
                     </button>
                 </div>
             </header>
@@ -94,8 +100,16 @@
                     <button class="viewport-btn" data-width="100%" data-height="100%">🖥️ Full</button>
                 </div>
             </section>
+
+            <!-- Analytics Dashboard Panel -->
+            <section class="analytics-panel" id="analytics-panel" style="display: none;">
+                <playground-analytics id="playground-analytics"></playground-analytics>
+            </section>
         </main>
     </div>
+
+    <!-- Component Generator Modal -->
+    <component-generator-modal id="component-generator-modal"></component-generator-modal>
 
     <!-- Import playground modules -->
     <script type="module" src="./core/component-loader.js"></script>
@@ -105,6 +119,17 @@
     <script type="module" src="./core/smart-search.js"></script>
     <script type="module" src="./core/session-memory.js"></script>
     <script type="module" src="./core/performance-optimizer.js"></script>
+    <script type="module" src="./components/component-generator-modal.js"></script>
+    
+    <!-- Design System Integration -->
+    <script type="module" src="../components/tokens/token-system.js"></script>
+    <script type="module" src="../components/theme/theme-manager.js"></script>
+    <script type="module" src="../components/design/design-integration.js"></script>
+    <script type="module" src="./components/design-system-panel.js"></script>
+    
+    <!-- Analytics and Main App -->
+    <script type="module" src="../components/analytics/chart-visualizations.js"></script>
+    <script type="module" src="../components/analytics/playground-analytics.js"></script>
     <script type="module" src="./advanced-playground.js"></script>
 </body>
 </html>

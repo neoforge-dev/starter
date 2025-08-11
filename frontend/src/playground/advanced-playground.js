@@ -11,6 +11,9 @@ import { KeyboardNavigation } from './core/keyboard-navigation.js';
 import { SmartSearch } from './core/smart-search.js';
 import { SessionMemory } from './core/session-memory.js';
 import { PerformanceOptimizer } from './core/performance-optimizer.js';
+import { themeManager } from '../components/theme/theme-manager.js';
+import './components/design-system-panel.js';
+import analytics from '../services/analytics.js';
 
 class PlaygroundApp {
   constructor() {
@@ -24,6 +27,7 @@ class PlaygroundApp {
     this.smartSearch = null;
     this.sessionMemory = null;
     this.performanceOptimizer = null;
+    this.designSystemPanel = null;
     
     this.initializeApp();
   }
@@ -42,6 +46,7 @@ class PlaygroundApp {
     this.keyboardNavigation = new KeyboardNavigation(this);
     this.smartSearch = new SmartSearch(this);
     
+    this.setupDesignSystemPanel();
     this.setupPanelToggles();
     this.setupResponsiveControls();
     this.setupCodeGeneration();
@@ -65,6 +70,11 @@ class PlaygroundApp {
       searchInput.addEventListener('input', (e) => this.filterComponents(e.target.value));
     }
 
+    // Component generator button
+    document.getElementById('generate-component-button')?.addEventListener('click', () => {
+      this.openComponentGenerator();
+    });
+
     // Panel toggle buttons
     document.getElementById('toggle-props-panel')?.addEventListener('click', () => {
       this.togglePanel('props-panel');
@@ -78,6 +88,10 @@ class PlaygroundApp {
       this.togglePanel('responsive-panel');
     });
 
+    document.getElementById('analytics-toggle')?.addEventListener('click', () => {
+      this.togglePanel('analytics-panel');
+    });
+
     // Listen for prop editor changes
     document.addEventListener('prop-change', (e) => {
       this.handlePropChange(e.detail);
@@ -85,6 +99,15 @@ class PlaygroundApp {
 
     document.addEventListener('props-reset', (e) => {
       this.handlePropsReset(e.detail);
+    });
+
+    // Listen for component generator events
+    document.addEventListener('component-generated', (e) => {
+      this.handleComponentGenerated(e.detail);
+    });
+
+    document.addEventListener('generator-closed', (e) => {
+      this.handleGeneratorClosed();
     });
   }
 
@@ -127,14 +150,17 @@ class PlaygroundApp {
    * Filter components based on search input
    */
   filterComponents(searchTerm) {
+    const searchStart = performance.now();
     const componentItems = document.querySelectorAll('.component-item');
     const term = searchTerm.toLowerCase();
+    let visibleCount = 0;
 
     componentItems.forEach(item => {
       const componentName = item.dataset.component.toLowerCase();
       const category = item.dataset.category.toLowerCase();
       const visible = componentName.includes(term) || category.includes(term);
       item.style.display = visible ? 'block' : 'none';
+      if (visible) visibleCount++;
     });
 
     // Hide categories that have no visible components
@@ -143,6 +169,10 @@ class PlaygroundApp {
       const visibleItems = category.querySelectorAll('.component-item[style*="block"], .component-item:not([style])');
       category.style.display = visibleItems.length > 0 ? 'block' : 'none';
     });
+
+    // Track search analytics
+    const searchTime = performance.now() - searchStart;
+    analytics.trackSearchQuery(searchTerm, visibleCount, searchTime);
   }
 
   /**
@@ -150,6 +180,9 @@ class PlaygroundApp {
    */
   async loadComponent(category, name) {
     try {
+      // Start performance tracking for component switching
+      analytics.trackComponentSwitchStart();
+
       // Record component usage for memory system
       if (this.sessionMemory) {
         this.sessionMemory.recordComponentUsage(category, name);
@@ -207,12 +240,18 @@ class PlaygroundApp {
       // Highlight active component in tree
       this.highlightActiveComponent(category, name);
 
+      // Complete performance tracking
+      analytics.trackComponentSwitchEnd(category, name);
+
     } catch (error) {
       console.error('Error loading component:', error);
       this.showComponentError({ 
         title: `${name} (Error)`,
         description: `Failed to load component: ${error.message}`
       });
+      
+      // Still complete tracking even on error
+      analytics.trackComponentSwitchEnd(category, name);
     }
   }
 
@@ -345,6 +384,11 @@ class PlaygroundApp {
     const { property, value, allValues, targetComponent } = detail;
     this.currentProps = allValues;
 
+    // Track property interaction analytics
+    if (this.currentComponent) {
+      analytics.trackPropertyInteraction(this.currentComponent.component, property, value, 'change');
+    }
+
     // Remember property values for future sessions
     if (this.sessionMemory && this.currentComponent) {
       const { category, component } = this.parseComponentInfo();
@@ -411,8 +455,82 @@ class PlaygroundApp {
     this.panelStates = {
       'props-panel': true,
       'code-panel': false,
-      'responsive-panel': false
+      'responsive-panel': false,
+      'analytics-panel': false,
+      'design-system-panel': false
     };
+  }
+
+  /**
+   * Setup design system panel
+   */
+  setupDesignSystemPanel() {
+    // Create design system panel element
+    this.designSystemPanel = document.createElement('design-system-panel');
+    document.body.appendChild(this.designSystemPanel);
+
+    // Add theme switcher button to toolbar
+    const toolbar = document.querySelector('.toolbar-actions');
+    if (toolbar) {
+      const themeButton = document.createElement('button');
+      themeButton.id = 'theme-toggle';
+      themeButton.className = 'tool-button';
+      themeButton.title = 'Design System & Themes';
+      themeButton.innerHTML = '🎨 Design';
+      
+      themeButton.addEventListener('click', () => {
+        this.toggleDesignSystemPanel();
+      });
+      
+      toolbar.appendChild(themeButton);
+    }
+
+    // Initialize theme manager
+    if (themeManager) {
+      console.log('🎨 Theme Manager initialized with themes:', themeManager.getAvailableThemes().map(t => t.name));
+    }
+  }
+
+  /**
+   * Toggle design system panel visibility
+   */
+  toggleDesignSystemPanel() {
+    if (this.designSystemPanel) {
+      const isOpen = this.designSystemPanel.hasAttribute('is-open');
+      
+      if (isOpen) {
+        this.designSystemPanel.removeAttribute('is-open');
+        this.designSystemPanel.isOpen = false;
+      } else {
+        // Close other panels first
+        this.closeAllPanels();
+        this.designSystemPanel.setAttribute('is-open', '');
+        this.designSystemPanel.isOpen = true;
+      }
+    }
+  }
+
+  /**
+   * Close all open panels
+   */
+  closeAllPanels() {
+    // Hide traditional panels
+    Object.keys(this.panelStates).forEach(panelId => {
+      if (panelId !== 'props-panel') { // Keep props panel open
+        this.panelStates[panelId] = false;
+        const panel = document.getElementById(panelId);
+        if (panel) {
+          panel.style.display = 'none';
+          panel.classList.remove('active');
+        }
+      }
+    });
+
+    // Close design system panel
+    if (this.designSystemPanel) {
+      this.designSystemPanel.removeAttribute('is-open');
+      this.designSystemPanel.isOpen = false;
+    }
   }
 
   /**
@@ -428,13 +546,30 @@ class PlaygroundApp {
     if (!isVisible) {
       panel.style.display = 'block';
       panel.classList.add('active');
+      
+      // Special handling for analytics panel
+      if (panelId === 'analytics-panel') {
+        const analyticsComponent = document.getElementById('playground-analytics');
+        if (analyticsComponent) {
+          analyticsComponent.isVisible = true;
+        }
+      }
     } else {
       panel.style.display = 'none';
       panel.classList.remove('active');
+      
+      // Special handling for analytics panel
+      if (panelId === 'analytics-panel') {
+        const analyticsComponent = document.getElementById('playground-analytics');
+        if (analyticsComponent) {
+          analyticsComponent.isVisible = false;
+        }
+      }
     }
 
     // Update button state
-    const button = document.querySelector(`[onclick*="${panelId}"]`);
+    const buttonSelector = panelId === 'analytics-panel' ? '#analytics-toggle' : `[onclick*="${panelId}"]`;
+    const button = document.querySelector(buttonSelector);
     if (button) {
       button.classList.toggle('active', !isVisible);
     }
@@ -799,6 +934,191 @@ render() {
       return { category: 'molecules', component: componentName };
     } else {
       return { category: 'organisms', component: componentName };
+    }
+  }
+
+  /**
+   * Open the component generator modal
+   */
+  openComponentGenerator() {
+    const generatorModal = document.getElementById('component-generator-modal');
+    if (generatorModal) {
+      generatorModal.open();
+    }
+  }
+
+  /**
+   * Handle successful component generation
+   * @param {Object} generationResult - Result from component generator
+   */
+  handleComponentGenerated(generationResult) {
+    console.log('🧩 Component Generated:', generationResult);
+    
+    // Show success notification
+    this.showNotification('success', `Component "${generationResult.config.componentName}" generated successfully!`);
+    
+    // Log the generation result for developer
+    console.group('📋 Component Generation Result');
+    console.log('Config:', generationResult.config);
+    console.log('Files:', generationResult.files);
+    console.log('Loader Update:', generationResult.loaderUpdate);
+    console.log('Index Updates:', generationResult.indexUpdates);
+    console.groupEnd();
+
+    // Show integration instructions
+    setTimeout(() => {
+      this.showIntegrationInstructions(generationResult);
+    }, 2000);
+  }
+
+  /**
+   * Handle component generator modal closed
+   */
+  handleGeneratorClosed() {
+    // Focus back to playground
+    const toolbar = document.querySelector('.playground-toolbar');
+    if (toolbar) {
+      toolbar.focus();
+    }
+  }
+
+  /**
+   * Show notification message
+   * @param {string} type - Notification type (success, error, info)
+   * @param {string} message - Message to display
+   */
+  showNotification(type, message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+      <div class="notification-content">
+        <span class="notification-icon">
+          ${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
+        </span>
+        <span class="notification-message">${message}</span>
+        <button class="notification-close">×</button>
+      </div>
+    `;
+
+    // Add styles
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#cce7ff'};
+      color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#004085'};
+      padding: 1rem;
+      border-radius: 6px;
+      border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
+      z-index: 1001;
+      max-width: 400px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      animation: slideInRight 0.3s ease;
+    `;
+
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      .notification-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .notification-message {
+        flex: 1;
+      }
+      .notification-close {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: inherit;
+        opacity: 0.7;
+      }
+      .notification-close:hover {
+        opacity: 1;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Add to page
+    document.body.appendChild(notification);
+
+    // Close functionality
+    const closeBtn = notification.querySelector('.notification-close');
+    closeBtn.addEventListener('click', () => {
+      notification.remove();
+    });
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+
+  /**
+   * Show integration instructions modal
+   * @param {Object} generationResult - Generation result
+   */
+  showIntegrationInstructions(generationResult) {
+    const instructions = `
+      <div style="max-width: 600px; padding: 1rem;">
+        <h3>🚀 Integration Instructions</h3>
+        <p style="margin: 1rem 0;">Your component has been generated! Follow these steps to integrate it:</p>
+        
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+          <h4>1. Create Files</h4>
+          <p>Create these files in your project:</p>
+          <ul style="margin: 0.5rem 0 0 1.5rem;">
+            ${Object.keys(generationResult.files).map(file => `<li><code>${file}</code></li>`).join('')}
+          </ul>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+          <h4>2. Update ComponentLoader</h4>
+          <p>Add the following to <code>ComponentLoader.loadComponent()</code> in the <code>${generationResult.config.category}</code> switch statement:</p>
+          <pre style="background: #fff; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem; overflow-x: auto;"><code>${generationResult.loaderUpdate.categoryUpdate.importStatement}</code></pre>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+          <h4>3. Update Available Components</h4>
+          <p>Add <code>'${generationResult.config.name}'</code> to the <code>${generationResult.config.category}</code> array in <code>getAvailableComponents()</code></p>
+        </div>
+        
+        <div style="background: #e8f5e8; padding: 1rem; border-radius: 6px; margin: 1rem 0; border-left: 4px solid #28a745;">
+          <h4>✨ What's Next?</h4>
+          <ul style="margin: 0.5rem 0 0 1.5rem;">
+            <li>Customize the component's styles and functionality</li>
+            <li>Add more properties as needed</li>
+            <li>Test the component in the playground</li>
+            <li>Write additional tests</li>
+          </ul>
+        </div>
+        
+        <p style="margin: 1rem 0 0 0; font-size: 0.9rem; color: #666;">
+          💡 <strong>Tip:</strong> All generated code follows the existing project patterns and includes comprehensive tests!
+        </p>
+      </div>
+    `;
+
+    if (this.keyboardNavigation) {
+      this.keyboardNavigation.showModal('Component Integration', instructions);
+    } else {
+      // Fallback: show in console
+      console.log('Integration Instructions:', generationResult);
     }
   }
 

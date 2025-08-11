@@ -12,11 +12,25 @@ class AnalyticsService {
       interactions: { current: 0, previous: 0, details: [] },
       sessions: { current: 0, previous: 0, details: [] },
     };
+    this.playgroundData = {
+      componentUsage: new Map(),
+      searchQueries: [],
+      propertyInteractions: new Map(),
+      keyboardShortcuts: new Map(),
+      sessionDuration: { start: Date.now(), total: 0 },
+      performanceMetrics: {
+        componentSwitching: [],
+        searchResponse: [],
+        buildTimes: [],
+        memoryUsage: []
+      }
+    };
     this.observers = new Set();
     this.sessionId = this.generateSessionId();
     this.initializePerformanceObserver();
     this.initializeErrorHandling();
     this.initializeInteractionTracking();
+    this.initializePlaygroundTracking();
   }
 
   generateSessionId() {
@@ -199,6 +213,271 @@ class AnalyticsService {
     for (const observer of this.observers) {
       observer(type, data);
     }
+  }
+
+  // Playground-specific tracking methods
+  initializePlaygroundTracking() {
+    // Track keyboard shortcuts usage
+    document.addEventListener('keydown', (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) {
+        const shortcut = `${event.ctrlKey ? 'Ctrl+' : ''}${event.metaKey ? 'Cmd+' : ''}${event.altKey ? 'Alt+' : ''}${event.key}`;
+        this.trackKeyboardShortcut(shortcut);
+      }
+    });
+
+    // Track component performance switching
+    this.componentSwitchStart = null;
+  }
+
+  trackComponentUsage(category, componentName, timeSpent = 0) {
+    const key = `${category}/${componentName}`;
+    const existing = this.playgroundData.componentUsage.get(key) || {
+      category,
+      name: componentName,
+      accessCount: 0,
+      totalTime: 0,
+      lastAccess: null,
+      properties: new Map()
+    };
+
+    existing.accessCount++;
+    existing.totalTime += timeSpent;
+    existing.lastAccess = Date.now();
+    
+    this.playgroundData.componentUsage.set(key, existing);
+    this.notifyObservers('componentUsage', { category, componentName, timeSpent });
+  }
+
+  trackComponentSwitchStart() {
+    this.componentSwitchStart = performance.now();
+  }
+
+  trackComponentSwitchEnd(category, componentName) {
+    if (this.componentSwitchStart) {
+      const switchTime = performance.now() - this.componentSwitchStart;
+      this.playgroundData.performanceMetrics.componentSwitching.push({
+        category,
+        componentName,
+        duration: switchTime,
+        timestamp: Date.now()
+      });
+      this.componentSwitchStart = null;
+      
+      // Also track component usage
+      this.trackComponentUsage(category, componentName);
+    }
+  }
+
+  trackSearchQuery(query, resultsCount, responseTime) {
+    const searchData = {
+      query,
+      resultsCount,
+      responseTime,
+      timestamp: Date.now(),
+      sessionId: this.sessionId
+    };
+
+    this.playgroundData.searchQueries.push(searchData);
+    this.playgroundData.performanceMetrics.searchResponse.push({
+      responseTime,
+      resultsCount,
+      timestamp: Date.now()
+    });
+    
+    this.notifyObservers('searchQuery', searchData);
+  }
+
+  trackPropertyInteraction(componentName, property, value, interactionType = 'change') {
+    const key = `${componentName}/${property}`;
+    const existing = this.playgroundData.propertyInteractions.get(key) || {
+      componentName,
+      property,
+      interactions: 0,
+      values: new Map(),
+      types: new Map()
+    };
+
+    existing.interactions++;
+    
+    // Track value frequency
+    const valueKey = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    existing.values.set(valueKey, (existing.values.get(valueKey) || 0) + 1);
+    
+    // Track interaction type
+    existing.types.set(interactionType, (existing.types.get(interactionType) || 0) + 1);
+    
+    this.playgroundData.propertyInteractions.set(key, existing);
+    this.notifyObservers('propertyInteraction', { componentName, property, value, interactionType });
+  }
+
+  trackKeyboardShortcut(shortcut) {
+    const existing = this.playgroundData.keyboardShortcuts.get(shortcut) || {
+      shortcut,
+      usage: 0,
+      lastUsed: null
+    };
+
+    existing.usage++;
+    existing.lastUsed = Date.now();
+    
+    this.playgroundData.keyboardShortcuts.set(shortcut, existing);
+    this.notifyObservers('keyboardShortcut', { shortcut });
+  }
+
+  trackBuildPerformance(buildTime, success = true) {
+    this.playgroundData.performanceMetrics.buildTimes.push({
+      duration: buildTime,
+      success,
+      timestamp: Date.now()
+    });
+    
+    this.notifyObservers('buildPerformance', { buildTime, success });
+  }
+
+  trackMemoryUsage(component, memoryUsed) {
+    this.playgroundData.performanceMetrics.memoryUsage.push({
+      component,
+      memory: memoryUsed,
+      timestamp: Date.now()
+    });
+    
+    this.notifyObservers('memoryUsage', { component, memoryUsed });
+  }
+
+  // Data retrieval methods for playground analytics
+  getPlaygroundData(timeRange = '24h') {
+    const timeLimit = this.getTimeLimit(timeRange);
+    
+    return {
+      componentUsage: this.getFilteredComponentUsage(timeLimit),
+      searchMetrics: this.getFilteredSearchMetrics(timeLimit),
+      propertyInteractions: this.getFilteredPropertyInteractions(timeLimit),
+      keyboardShortcuts: this.getFilteredKeyboardShortcuts(timeLimit),
+      performanceMetrics: this.getFilteredPerformanceMetrics(timeLimit),
+      sessionDuration: this.getSessionDuration()
+    };
+  }
+
+  getFilteredComponentUsage(timeLimit) {
+    const filtered = new Map();
+    for (const [key, data] of this.playgroundData.componentUsage.entries()) {
+      if (data.lastAccess >= timeLimit) {
+        filtered.set(key, data);
+      }
+    }
+    return filtered;
+  }
+
+  getFilteredSearchMetrics(timeLimit) {
+    return this.playgroundData.searchQueries.filter(query => query.timestamp >= timeLimit);
+  }
+
+  getFilteredPropertyInteractions(timeLimit) {
+    const filtered = new Map();
+    for (const [key, data] of this.playgroundData.propertyInteractions.entries()) {
+      // Note: We don't have timestamp on property interactions, so we include all
+      // This could be enhanced by adding timestamps to property interactions
+      filtered.set(key, data);
+    }
+    return filtered;
+  }
+
+  getFilteredKeyboardShortcuts(timeLimit) {
+    const filtered = new Map();
+    for (const [key, data] of this.playgroundData.keyboardShortcuts.entries()) {
+      if (data.lastUsed >= timeLimit) {
+        filtered.set(key, data);
+      }
+    }
+    return filtered;
+  }
+
+  getFilteredPerformanceMetrics(timeLimit) {
+    return {
+      componentSwitching: this.playgroundData.performanceMetrics.componentSwitching
+        .filter(metric => metric.timestamp >= timeLimit),
+      searchResponse: this.playgroundData.performanceMetrics.searchResponse
+        .filter(metric => metric.timestamp >= timeLimit),
+      buildTimes: this.playgroundData.performanceMetrics.buildTimes
+        .filter(metric => metric.timestamp >= timeLimit),
+      memoryUsage: this.playgroundData.performanceMetrics.memoryUsage
+        .filter(metric => metric.timestamp >= timeLimit)
+    };
+  }
+
+  getSessionDuration() {
+    return {
+      start: this.playgroundData.sessionDuration.start,
+      current: Date.now() - this.playgroundData.sessionDuration.start,
+      total: this.playgroundData.sessionDuration.total
+    };
+  }
+
+  // Export functionality
+  exportData(format = 'json', timeRange = '24h') {
+    const data = {
+      general: {
+        performance: this.getPerformanceData('all', timeRange),
+        errors: this.getErrorData(timeRange),
+        userBehavior: this.getUserBehaviorData(timeRange)
+      },
+      playground: this.getPlaygroundData(timeRange),
+      meta: {
+        exportTime: new Date().toISOString(),
+        sessionId: this.sessionId,
+        timeRange
+      }
+    };
+
+    if (format === 'csv') {
+      return this.convertToCSV(data);
+    }
+    
+    return JSON.stringify(data, (key, value) => {
+      if (value instanceof Map) {
+        return Object.fromEntries(value);
+      }
+      return value;
+    }, 2);
+  }
+
+  convertToCSV(data) {
+    // Convert playground component usage to CSV
+    const componentUsageRows = [];
+    componentUsageRows.push(['Component Category', 'Component Name', 'Access Count', 'Total Time (ms)', 'Last Access']);
+    
+    for (const [key, usage] of data.playground.componentUsage) {
+      componentUsageRows.push([
+        usage.category,
+        usage.name,
+        usage.accessCount,
+        usage.totalTime,
+        new Date(usage.lastAccess).toISOString()
+      ]);
+    }
+
+    const componentUsageCSV = componentUsageRows.map(row => row.join(',')).join('\n');
+    
+    // Convert search metrics to CSV
+    const searchRows = [];
+    searchRows.push(['Query', 'Results Count', 'Response Time (ms)', 'Timestamp']);
+    
+    data.playground.searchMetrics.forEach(search => {
+      searchRows.push([
+        `"${search.query}"`,
+        search.resultsCount,
+        search.responseTime,
+        new Date(search.timestamp).toISOString()
+      ]);
+    });
+
+    const searchCSV = searchRows.map(row => row.join(',')).join('\n');
+
+    return {
+      componentUsage: componentUsageCSV,
+      searchMetrics: searchCSV,
+      // Add more CSV conversions as needed
+    };
   }
 }
 

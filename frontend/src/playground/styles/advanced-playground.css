@@ -181,6 +181,19 @@ body {
   border-color: #0969da;
 }
 
+.tool-button-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  font-weight: 500;
+}
+
+.tool-button-primary:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
 /* Main layout */
 .playground-layout {
   display: grid;
@@ -721,5 +734,32 @@ body {
   font-size: 11px;
   font-family: monospace;
   box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+
+/* Analytics panel styles */
+.analytics-panel {
+  background: #fff;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  margin-top: 16px;
+  overflow: hidden;
+  height: calc(100vh - 200px);
+}
+
+.analytics-panel playground-analytics {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.analytics-panel.active {
+  display: block !important;
+}
+
+/* Ensure analytics button gets active state styling */
+#analytics-toggle.active {
+  background: #0056b3 !important;
+  color: white !important;
+  border-color: #0056b3 !important;
 }
 
