@@ -10,6 +10,9 @@ from app.api import deps
 from app.core.auth import get_password_hash
 from app.models.admin import Admin, AdminRole
 from app.schemas import admin as schemas
+from app.schemas.common import PaginatedResponse
+from app.crud.audit_log import audit_log as audit_crud
+from datetime import datetime
 from app.schemas.user import UserCreate
 
 # Set up logger
@@ -176,6 +179,54 @@ async def read_admin(
         email=user.email,
         full_name=user.full_name
     )
+
+
+@router.get("/audit-logs", response_model=PaginatedResponse)
+async def list_audit_logs(
+    *,
+    db: AsyncSession = Depends(deps.get_db),
+    current_admin: Admin = Depends(deps.get_current_admin),
+    page: int = 1,
+    page_size: int = 50,
+    user_id: int | None = None,
+    action: str | None = None,
+    since: str | None = None,
+    until: str | None = None,
+) -> PaginatedResponse:
+    """List audit logs (admin only)."""
+    # Require at least READONLY_ADMIN
+    check_admin_permission(
+        current_admin=current_admin,
+        required_role=AdminRole.READONLY_ADMIN,
+        action="read",
+        resource="audit_logs",
+    )
+
+    dt_since = datetime.fromisoformat(since) if since else None
+    dt_until = datetime.fromisoformat(until) if until else None
+    skip = (page - 1) * page_size
+    items, total = await audit_crud.list(
+        db,
+        user_id=user_id,
+        action=action,
+        since=dt_since,
+        until=dt_until,
+        skip=skip,
+        limit=page_size,
+    )
+    pages = (total + page_size - 1) // page_size if page_size else 1
+    payload_items = [
+        {
+            "id": it.id,
+            "user_id": it.user_id,
+            "action": it.action,
+            "resource": it.resource,
+            "metadata": it.metadata,
+            "created_at": it.created_at.isoformat(),
+        }
+        for it in items
+    ]
+    return PaginatedResponse(items=payload_items, total=total, page=page, page_size=page_size, pages=pages)
 
 
 @router.get("/", response_model=List[schemas.AdminWithUser])

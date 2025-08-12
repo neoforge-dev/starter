@@ -57,6 +57,13 @@ This plan breaks work into implementation-ready tasks, acceptance criteria, and 
 - Middleware/hooks to emit entries; redact PII
 - Admin endpoint with pagination + filtering
 
+   Breakdown:
+   - Create `AuditLog` model (table `audit_logs`) with fields: id, user_id (nullable), action, resource, metadata (JSON string), created_at.
+   - Add to `backend/app/db/base.py` imports and `models/__init__.py`.
+   - CRUD: `app/crud/audit_log.py` for create/list with pagination and filters.
+   - Endpoint: `GET /api/v1/admin/audit-logs` (admin-only), with query filters: user_id, action, date range; returns PaginatedResponse.
+   - Hook examples: On project create/update, emit audit entry (feature-flagged initially).
+
 3) Rate limits & headers
 - Per-endpoint tiers (auth stricter): document and test
 - 429 headers: `Retry-After`, `X-RateLimit-*`

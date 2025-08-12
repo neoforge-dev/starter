@@ -5,3 +5,4 @@ from .project import Project
 from .support_ticket import SupportTicket
 from .community_post import CommunityPost
 from .idempotency_key import IdempotencyKey
+from .audit_log import AuditLog
