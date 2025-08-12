@@ -221,6 +221,8 @@ class Settings(BaseSettings):
         # No value provided; choose sensible default by environment
         env_val = env.value if isinstance(env, Environment) else str(env).lower() if env else None
         if env_val == Environment.TEST.value or env_val == "test":
+            # CI and local compose map test DB to non-standard 55433 (compose) or 55432 (CI),
+            # but inside containers use service host/port. Prefer env DATABASE_URL if provided.
             return "postgresql+asyncpg://postgres:postgres@db_test:5432/neoforge_test"
         # Development default
         return "postgresql+asyncpg://postgres:postgres@db:5432/neoforge"

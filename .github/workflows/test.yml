@@ -172,13 +172,13 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: neoforge
         ports:
-          - 5432:5432
+          - 55432:5432
         options: >-
           --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
       redis:
         image: redis:7-alpine
         ports:
-          - 6379:6379
+          - 56379:6379
         options: >-
           --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
@@ -201,8 +201,8 @@ jobs:
           pip install -r requirements.txt
       - name: Run backend tests (with coverage) and smoke
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/neoforge
-          REDIS_URL: redis://localhost:6379/1
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:55432/neoforge
+          REDIS_URL: redis://localhost:56379/1
           ENVIRONMENT: test
         run: |
           make setup
