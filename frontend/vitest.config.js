@@ -80,25 +80,30 @@ const customReporter = {
 };
 
 export default defineConfig({
+  cacheDir: "node_modules/.vitest", // Set cache directory at root level
   test: {
     environment: "jsdom",
     environmentOptions: {
       jsdom: {
-        // Add performance API to JSDOM
+        // Optimized JSDOM settings for Bun
         resources: "usable",
         runScripts: "dangerously",
         pretendToBeVisual: true,
+        url: "http://localhost:3000", // Set base URL for consistent behavior
       },
     },
     globals: true,
     reporters: ["default", customReporter],
-    // Enable threading for better performance but with consistent settings
+    
+    // Optimized threading for Bun runtime
     threads: true,
-    // Use thread-based pooling to improve performance
     pool: "threads",
-    isolate: true,
-    // Global test timeout
-    testTimeout: 10000,
+    isolate: false, // Disable isolation for faster test startup with Bun
+    
+    // Reduced timeout for faster feedback
+    testTimeout: 8000,
+    hookTimeout: 4000,
+    
     // Exclude old test directories, node_modules, and the top-level test directory
     exclude: [
       "**/tests-old/**",
@@ -107,7 +112,8 @@ export default defineConfig({
       "test/**",
       "src/test/e2e/**",
     ],
-    // Coverage configuration
+    
+    // Coverage configuration optimized for speed
     coverage: {
       provider: "v8",
       include: [
@@ -129,7 +135,7 @@ export default defineConfig({
         "src/test/mocks/**",
         "src/test/helpers/**"
       ],
-      reporter: ["text", "json", "html", "lcov"],
+      reporter: ["text", "json", "html"],
       reportsDirectory: "./coverage",
       thresholds: {
         global: {
@@ -154,58 +160,47 @@ export default defineConfig({
       },
       all: true,
       clean: true,
-      skipFull: false
+      skipFull: true, // Skip full coverage for faster runs
     },
-    // Setup files - these are loaded before tests run
+    
+    // Optimized setup files
     setupFiles: [
       "./src/test/setup/optimized-performance-polyfill.js",
-      // "./src/test/setup/silence-lit-dev-mode.js", // Commented out to re-enable Lit dev warnings
       "./vitest.setup.js",
     ],
-    // Thread settings - ensure minThreads <= maxThreads
-    minThreads: 1,
-    maxThreads: 4,
-    // Memory limit
+    
+    // Optimized pool configuration for Bun
     poolOptions: {
       threads: {
         singleThread: false,
-        minThreads: 1,
-        maxThreads: 4,
-      },
-      forks: {
-        singleFork: false,
+        minThreads: 2,
+        maxThreads: 6, // Increased for better parallelization with Bun
+        isolate: false, // Disable isolation for speed
+        useAtomics: true, // Enable atomics for better performance
       },
     },
-    // Retry failed tests
+    
+    // Faster test execution settings
     retry: 0,
-    // Bail after a certain number of failures
-    bail: 0,
-    // Silence console output during tests
+    bail: 10, // Bail after 10 failures instead of running all tests
     silent: false,
-    // Increase memory limit for workers
-    memoryLimit: "2GB",
-    // Worker configuration
-    workerIsolation: true,
-    workerTimeout: 60000,
-    workerDelay: 0,
-    workerConcurrency: 4,
-    workerIdleTimeout: 60000,
-    workerExitTimeout: 60000,
-    workerMinThreads: 1,
-    workerMaxThreads: 4,
-    workerMinForks: 1,
-    workerMaxForks: 4,
-    workerForks: true,
-    workerIsolate: true,
-    workerPool: "threads",
-    workerPoolOptions: {
-      threads: {
-        singleThread: false,
-        minThreads: 1,
-        maxThreads: 4,
-      },
-      forks: {
-        singleFork: false,
+    
+    // Optimized worker settings for Bun
+    maxWorkers: 6,
+    minWorkers: 2,
+    
+    // Watch mode optimizations
+    watch: {
+      // Ignore patterns for better watch performance
+      ignored: ["**/node_modules/**", "**/dist/**", "**/coverage/**"],
+    },
+    
+    // Optimize transformations using new API
+    deps: {
+      optimizer: {
+        web: {
+          include: ["lit", "@lit/reactive-element", "lit-html", "lit-element"],
+        },
       },
     },
   },

@@ -43,27 +43,55 @@ export default defineConfig({
   base: "/",
   server: {
     port: 3000,
+    host: "0.0.0.0", // Allow external connections for better development
     open: true,
+    strictPort: false,
     watch: {
-      usePolling: true,
+      usePolling: false, // Disabled for better performance with Bun
+      ignored: ["**/node_modules/**", "**/dist/**", "**/coverage/**"],
     },
     hmr: {
       overlay: true,
+      port: 3001, // Separate HMR port for better performance
+    },
+    // Optimize middleware for faster responses
+    middlewareMode: false,
+    // Enable HTTP/2 for better performance (if supported)
+    https: false,
+    // Optimize file serving
+    fs: {
+      strict: false,
+      allow: [".."],
+      deny: [".env", ".env.*", "*.{crt,pem}"],
+    },
+    // Pre-transform known imports for faster dev server startup
+    warmup: {
+      clientFiles: [
+        "./src/main.js",
+        "./src/components/**/*.js",
+        "./src/services/**/*.js",
+        "./src/pages/**/*.js",
+      ],
     },
   },
   build: {
-    target: "es2020",
+    target: "es2022", // Upgraded for better Bun compatibility
     minify: "terser",
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true,
+        passes: 2, // Additional compression passes for smaller bundles
+      },
+      mangle: {
+        safari10: false, // Disable safari10 support for better performance
       },
     },
     sourcemap: false,
     cssCodeSplit: true,
     cssMinify: "lightningcss",
     outDir: "dist",
+    reportCompressedSize: false, // Disable gzip reporting for faster builds
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
@@ -82,8 +110,18 @@ export default defineConfig({
             "./src/components/analytics/user-behavior.js",
           ],
         },
+        // Optimize chunk generation for faster builds
+        generatedCode: {
+          constBindings: true,
+          objectShorthand: true,
+          reservedNamesAsProps: false,
+        },
       },
       external: [/^node:.*$/],
+      treeshake: {
+        preset: "recommended", // Better tree-shaking for smaller bundles
+        manualPureFunctions: ["console.log", "console.warn"],
+      },
     },
     css: {
       postcss: {
@@ -98,7 +136,10 @@ export default defineConfig({
             },
           }),
           cssnano({
-            preset: "default",
+            preset: ["default", {
+              discardComments: { removeAll: true },
+              normalizeWhitespace: true,
+            }],
           }),
         ],
       },
@@ -106,7 +147,7 @@ export default defineConfig({
         filename: "assets/[name].[hash].css",
       },
     },
-    chunkSizeWarningLimit: 500,
+    chunkSizeWarningLimit: 1000, // Increased limit to reduce warnings
   },
   test: {
     globals: true,
@@ -151,13 +192,20 @@ export default defineConfig({
         decorators: true,
       },
       plugins: [],
+      // Optimize for Bun runtime
+      minify: false, // Let terser handle minification for consistency
+      sourcemap: false, // Disable source maps for faster builds
+      keepNames: false,
     },
     esbuild: {
-      target: "es2020",
+      target: "es2022", // Upgraded from es2020 for better Bun compatibility
       supported: {
         decorators: true,
+        "top-level-await": true,
       },
+      minify: false,
     },
+    force: true, // Force re-optimization for Bun compatibility
   },
   plugins: [
     // criticalCssPlugin(), // Temporarily disabled due to build issues
