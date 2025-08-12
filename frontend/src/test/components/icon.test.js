@@ -1,5 +1,5 @@
 import { expect, describe, it, beforeEach } from "vitest";
-import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {   html   } from 'lit';
 import {
   createMockFixture,
   createAndRegisterMockComponent,

@@ -2,7 +2,7 @@ import {
   LitElement,
   html,
   css,
- } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+ } from 'lit';
 import { registerComponent } from "../base-component.js";
 
 export class Testimonials extends LitElement {

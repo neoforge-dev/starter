@@ -1,4 +1,4 @@
-import { html } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import { html } from 'lit';
 // ifDefined import removed - not used
 import "./spinner.js";
 

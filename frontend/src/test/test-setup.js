@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, vi } from "vitest";
 import { fixtureCleanup } from "@open-wc/testing-helpers";
-import {   LitElement, html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {   LitElement, html   } from 'lit';
 
 // Set default test timeout to prevent hanging tests
 vi.setConfig({

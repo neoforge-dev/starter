@@ -1,4 +1,4 @@
-import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {   html   } from 'lit';
 import "./home-page.js"; // Import the component
 
 // Import any sub-components if they are not auto-loaded or are dynamic

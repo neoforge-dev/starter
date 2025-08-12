@@ -1,7 +1,7 @@
 import { 
   LitElement,
   html,
- } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+ } from 'lit';
 import { baseStyles } from "./components/styles/base.js";
 // lazyLoad import removed - not used
 import registrationPromise from "./register-components.mjs";

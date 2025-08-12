@@ -15,6 +15,13 @@ import { themeManager } from '../components/theme/theme-manager.js';
 import './components/design-system-panel.js';
 import analytics from '../services/analytics.js';
 
+// Import Application Integration Tools
+import { AppTemplateGenerator } from './tools/app-template-generator.js';
+import { ProjectIntegrator } from './tools/project-integrator.js';
+import { DeploymentExamples } from './tools/deployment-examples.js';
+import { PerformanceValidator } from './tools/performance-validator.js';
+import { UsageExamples } from './tools/usage-examples.js';
+
 class PlaygroundApp {
   constructor() {
     this.componentLoader = new ComponentLoader();
@@ -28,6 +35,22 @@ class PlaygroundApp {
     this.sessionMemory = null;
     this.performanceOptimizer = null;
     this.designSystemPanel = null;
+    
+    // Initialize Application Integration tools
+    this.appTemplateGenerator = new AppTemplateGenerator();
+    this.projectIntegrator = new ProjectIntegrator();
+    this.deploymentExamples = new DeploymentExamples();
+    this.performanceValidator = new PerformanceValidator();
+    this.usageExamples = new UsageExamples();
+    
+    // Application Integration state
+    this.appBuilderState = {
+      currentStep: 1,
+      selectedComponents: [],
+      selectedTemplate: null,
+      appConfiguration: {},
+      generatedApp: null
+    };
     
     this.initializeApp();
   }
@@ -73,6 +96,11 @@ class PlaygroundApp {
     // Component generator button
     document.getElementById('generate-component-button')?.addEventListener('click', () => {
       this.openComponentGenerator();
+    });
+
+    // Build App button - Application Integration
+    document.getElementById('build-app-button')?.addEventListener('click', () => {
+      this.openAppIntegrationPanel();
     });
 
     // Panel toggle buttons
@@ -1135,6 +1163,677 @@ render() {
 
     console.log('UX Enhancement Statistics:', stats);
     return stats;
+  }
+
+  // =============================================================================
+  // APPLICATION INTEGRATION FUNCTIONALITY
+  // =============================================================================
+
+  /**
+   * Open the Application Integration panel
+   */
+  openAppIntegrationPanel() {
+    const panel = document.getElementById('app-integration-panel');
+    if (!panel) return;
+
+    // Show the panel
+    panel.style.display = 'block';
+    panel.classList.add('panel-open');
+    
+    // Initialize the panel
+    this.initializeAppIntegrationPanel();
+    
+    // Reset to step 1
+    this.appBuilderState.currentStep = 1;
+    this.updateWorkflowStep(1);
+  }
+
+  /**
+   * Initialize the Application Integration panel
+   */
+  initializeAppIntegrationPanel() {
+    this.setupAppPanelEventListeners();
+    this.populateAvailableComponents();
+    this.populateTemplateOptions();
+    this.setupAppConfigurationForm();
+    this.updateWorkflowNavigation();
+  }
+
+  /**
+   * Setup event listeners for the Application Integration panel
+   */
+  setupAppPanelEventListeners() {
+    // Close panel button
+    document.getElementById('close-app-panel')?.addEventListener('click', () => {
+      this.closeAppIntegrationPanel();
+    });
+
+    // Workflow navigation buttons
+    document.getElementById('next-step-button')?.addEventListener('click', () => {
+      this.goToNextStep();
+    });
+
+    document.getElementById('prev-step-button')?.addEventListener('click', () => {
+      this.goToPreviousStep();
+    });
+
+    // Template selection (use event delegation to handle dynamically added elements)
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.template-option')) {
+        const templateOption = e.target.closest('.template-option');
+        this.selectTemplate(templateOption.dataset.template);
+      }
+    });
+
+    // App configuration form
+    document.getElementById('app-config-form')?.addEventListener('input', (e) => {
+      this.updateAppConfiguration(e);
+    });
+
+    // Generation buttons
+    document.getElementById('generate-app-button')?.addEventListener('click', () => {
+      this.generateApplication();
+    });
+
+    document.getElementById('validate-performance-button')?.addEventListener('click', () => {
+      this.validateAppPerformance();
+    });
+
+    document.getElementById('download-app-button')?.addEventListener('click', () => {
+      this.downloadApplication();
+    });
+
+    document.getElementById('copy-code-button')?.addEventListener('click', () => {
+      this.copyApplicationCode();
+    });
+
+    document.getElementById('deploy-app-button')?.addEventListener('click', () => {
+      this.showDeploymentOptions();
+    });
+
+    // Deployment platform selection (use event delegation)
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.deployment-option')) {
+        const deploymentOption = e.target.closest('.deployment-option');
+        this.selectDeploymentPlatform(deploymentOption.dataset.platform);
+      }
+    });
+  }
+
+  /**
+   * Close the Application Integration panel
+   */
+  closeAppIntegrationPanel() {
+    const panel = document.getElementById('app-integration-panel');
+    if (panel) {
+      panel.style.display = 'none';
+      panel.classList.remove('panel-open');
+    }
+  }
+
+  /**
+   * Populate available components for selection
+   */
+  populateAvailableComponents() {
+    const container = document.getElementById('component-selection');
+    if (!container) return;
+
+    let availableComponents = this.componentLoader.getAvailableComponents();
+    
+    // Provide fallback mock data for testing
+    if (!availableComponents || Object.keys(availableComponents).length === 0) {
+      availableComponents = {
+        atoms: ['neo-button', 'neo-input', 'neo-icon'],
+        molecules: ['neo-card', 'neo-form-builder'],
+        organisms: ['neo-table', 'neo-data-grid']
+      };
+    }
+    
+    let componentsHtml = '';
+
+    Object.entries(availableComponents).forEach(([category, components]) => {
+      if (components.length > 0) {
+        componentsHtml += `
+          <div class="component-category-selection">
+            <h4>${category.charAt(0).toUpperCase() + category.slice(1)}</h4>
+            <div class="component-checkboxes">
+              ${components.map(componentName => `
+                <label class="checkbox-label">
+                  <input type="checkbox" class="component-checkbox" 
+                         data-category="${category}" 
+                         data-component="${componentName}"
+                         onchange="playgroundApp.handleComponentSelection(event)">
+                  <span>${this.formatComponentName(componentName)}</span>
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    container.innerHTML = componentsHtml;
+  }
+
+  /**
+   * Handle component selection changes
+   */
+  handleComponentSelection(event) {
+    const checkbox = event.target;
+    const componentName = checkbox.dataset.component;
+    
+    if (checkbox.checked) {
+      if (!this.appBuilderState.selectedComponents.includes(componentName)) {
+        this.appBuilderState.selectedComponents.push(componentName);
+      }
+    } else {
+      this.appBuilderState.selectedComponents = this.appBuilderState.selectedComponents.filter(
+        comp => comp !== componentName
+      );
+    }
+
+    this.updateAppPreview();
+    this.updateWorkflowNavigation();
+  }
+
+  /**
+   * Update app preview with selected components
+   */
+  updateAppPreview() {
+    const preview = document.getElementById('app-preview');
+    if (!preview) return;
+
+    if (this.appBuilderState.selectedComponents.length === 0) {
+      preview.innerHTML = '<p>Selected components will appear here...</p>';
+      return;
+    }
+
+    const previewHtml = `
+      <div class="selected-components-preview">
+        <h4>Selected Components (${this.appBuilderState.selectedComponents.length})</h4>
+        <div class="component-list">
+          ${this.appBuilderState.selectedComponents.map(comp => `
+            <div class="selected-component-item">
+              <span class="component-icon">🧩</span>
+              <span class="component-name">${this.formatComponentName(comp)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    preview.innerHTML = previewHtml;
+  }
+
+  /**
+   * Populate template options
+   */
+  populateTemplateOptions() {
+    // Templates are already in HTML, just ensure they're interactive
+    const templates = this.appTemplateGenerator.getAvailableTemplates();
+    console.log('Available templates:', templates);
+  }
+
+  /**
+   * Select a template
+   */
+  selectTemplate(templateId) {
+    // Remove previous selection
+    document.querySelectorAll('.template-option').forEach(option => {
+      option.classList.remove('selected');
+    });
+
+    // Add selection to clicked template
+    const selectedTemplate = document.querySelector(`[data-template="${templateId}"]`);
+    if (selectedTemplate) {
+      selectedTemplate.classList.add('selected');
+      this.appBuilderState.selectedTemplate = templateId;
+
+      this.updateTemplatePreview(templateId);
+      this.updateComponentRecommendations(templateId);
+      this.updateWorkflowNavigation();
+    }
+  }
+
+  /**
+   * Update template preview
+   */
+  updateTemplatePreview(templateId) {
+    const preview = document.getElementById('template-preview');
+    if (!preview) return;
+
+    const templates = {
+      'dashboard-app': {
+        name: 'Dashboard Application',
+        description: 'Admin dashboard with data tables, forms, and analytics',
+        features: ['Data visualization', 'User management', 'Real-time updates'],
+        components: ['neo-table', 'neo-form-builder', 'neo-card', 'neo-button']
+      },
+      'marketing-site': {
+        name: 'Marketing Website',
+        description: 'Marketing website with landing pages and lead capture',
+        features: ['Hero sections', 'Feature highlights', 'Contact forms'],
+        components: ['neo-card', 'neo-button', 'neo-form-builder']
+      },
+      'saas-app': {
+        name: 'SaaS Application',
+        description: 'SaaS application with authentication and billing',
+        features: ['User authentication', 'Subscription management', 'Dashboard'],
+        components: ['neo-table', 'neo-form-builder', 'neo-card', 'neo-button']
+      },
+      'minimal-app': {
+        name: 'Minimal Application',
+        description: 'Clean starting point with essential components',
+        features: ['Basic UI components', 'Responsive design', 'Simple structure'],
+        components: ['neo-button', 'neo-card']
+      }
+    };
+
+    const template = templates[templateId];
+    if (!template) return;
+
+    preview.innerHTML = `
+      <div class="template-preview-content">
+        <h3>${template.name}</h3>
+        <p>${template.description}</p>
+        <div class="template-features">
+          <h4>Key Features:</h4>
+          <ul>
+            ${template.features.map(feature => `<li>${feature}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Update component recommendations based on template
+   */
+  updateComponentRecommendations(templateId) {
+    const container = document.getElementById('component-recommendations');
+    if (!container) return;
+
+    const recommendations = {
+      'dashboard-app': ['neo-table', 'neo-data-grid', 'neo-form-builder', 'neo-card'],
+      'marketing-site': ['neo-card', 'neo-button', 'neo-form-builder'],
+      'saas-app': ['neo-table', 'neo-form-builder', 'neo-card', 'neo-button', 'neo-data-grid'],
+      'minimal-app': ['neo-button', 'neo-card']
+    };
+
+    const templateRecommendations = recommendations[templateId] || [];
+
+    container.innerHTML = `
+      <h4>Recommended Components</h4>
+      <div class="recommendation-list">
+        ${templateRecommendations.map(comp => `
+          <div class="recommendation-item ${this.appBuilderState.selectedComponents.includes(comp) ? 'selected' : ''}">
+            <span class="component-name">${this.formatComponentName(comp)}</span>
+            ${this.appBuilderState.selectedComponents.includes(comp) ? 
+              '<span class="checkmark">✓</span>' : 
+              `<button class="add-component-btn" onclick="playgroundApp.addRecommendedComponent('${comp}')">Add</button>`
+            }
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  /**
+   * Add recommended component
+   */
+  addRecommendedComponent(componentName) {
+    if (!this.appBuilderState.selectedComponents.includes(componentName)) {
+      this.appBuilderState.selectedComponents.push(componentName);
+      
+      // Update the corresponding checkbox
+      const checkbox = document.querySelector(`[data-component="${componentName}"]`);
+      if (checkbox) {
+        checkbox.checked = true;
+      }
+
+      this.updateAppPreview();
+      this.updateComponentRecommendations(this.appBuilderState.selectedTemplate);
+    }
+  }
+
+  /**
+   * Setup app configuration form
+   */
+  setupAppConfigurationForm() {
+    const form = document.getElementById('app-config-form');
+    if (!form) return;
+
+    // Initialize default values
+    this.appBuilderState.appConfiguration = {
+      appName: '',
+      features: {
+        routing: false,
+        responsive: true,
+        auth: false
+      }
+    };
+  }
+
+  /**
+   * Update app configuration from form
+   */
+  updateAppConfiguration(event) {
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    // Update app name
+    this.appBuilderState.appConfiguration.appName = formData.get('appName') || '';
+
+    // Update features
+    this.appBuilderState.appConfiguration.features = {
+      routing: formData.has('routing'),
+      responsive: formData.has('responsive'),
+      auth: formData.has('auth')
+    };
+
+    this.updateConfigurationPreview();
+    this.updateWorkflowNavigation();
+  }
+
+  /**
+   * Update configuration preview
+   */
+  updateConfigurationPreview() {
+    const preview = document.getElementById('config-preview-content');
+    if (!preview) return;
+
+    const config = {
+      name: this.appBuilderState.appConfiguration.appName,
+      template: this.appBuilderState.selectedTemplate,
+      components: this.appBuilderState.selectedComponents,
+      features: this.appBuilderState.appConfiguration.features
+    };
+
+    preview.textContent = JSON.stringify(config, null, 2);
+  }
+
+  /**
+   * Go to next workflow step
+   */
+  goToNextStep() {
+    if (this.canProceedToNextStep()) {
+      this.appBuilderState.currentStep++;
+      this.updateWorkflowStep(this.appBuilderState.currentStep);
+    }
+  }
+
+  /**
+   * Go to previous workflow step
+   */
+  goToPreviousStep() {
+    if (this.appBuilderState.currentStep > 1) {
+      this.appBuilderState.currentStep--;
+      this.updateWorkflowStep(this.appBuilderState.currentStep);
+    }
+  }
+
+  /**
+   * Update workflow step display
+   */
+  updateWorkflowStep(stepNumber) {
+    // Update progress indicators
+    document.querySelectorAll('.workflow-step').forEach(step => {
+      step.classList.remove('active');
+    });
+    
+    const activeStep = document.querySelector(`[data-step="${stepNumber}"]`);
+    if (activeStep) {
+      activeStep.classList.add('active');
+    }
+
+    // Update step content
+    document.querySelectorAll('.workflow-step-content').forEach(content => {
+      content.classList.remove('active');
+    });
+
+    const activeContent = document.querySelector(`.workflow-step-content[data-step="${stepNumber}"]`);
+    if (activeContent) {
+      activeContent.classList.add('active');
+    }
+
+    this.updateWorkflowNavigation();
+  }
+
+  /**
+   * Update workflow navigation buttons
+   */
+  updateWorkflowNavigation() {
+    const prevButton = document.getElementById('prev-step-button');
+    const nextButton = document.getElementById('next-step-button');
+    
+    if (prevButton) {
+      prevButton.disabled = this.appBuilderState.currentStep <= 1;
+    }
+
+    if (nextButton) {
+      nextButton.disabled = !this.canProceedToNextStep();
+    }
+
+    // Update generate button in step 4
+    const generateButton = document.getElementById('generate-app-button');
+    if (generateButton) {
+      const canGenerate = this.appBuilderState.selectedComponents.length > 0 && 
+                         this.appBuilderState.selectedTemplate && 
+                         this.appBuilderState.appConfiguration.appName;
+      generateButton.disabled = !canGenerate;
+    }
+  }
+
+  /**
+   * Check if can proceed to next step
+   */
+  canProceedToNextStep() {
+    switch (this.appBuilderState.currentStep) {
+      case 1: // Component selection
+        return this.appBuilderState.selectedComponents.length > 0;
+      case 2: // Template selection
+        return this.appBuilderState.selectedTemplate !== null;
+      case 3: // App configuration
+        return this.appBuilderState.appConfiguration.appName && 
+               this.appBuilderState.appConfiguration.appName.length > 0;
+      case 4: // Generation
+        return false; // Final step
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Generate the application
+   */
+  async generateApplication() {
+    const progressIndicator = document.getElementById('generation-progress');
+    const downloadSection = document.getElementById('download-section');
+    const generateButton = document.getElementById('generate-app-button');
+
+    // Show progress
+    if (progressIndicator) {
+      progressIndicator.style.display = 'block';
+    }
+    generateButton.disabled = true;
+
+    try {
+      const appConfig = {
+        name: this.appBuilderState.appConfiguration.appName,
+        template: this.appBuilderState.selectedTemplate,
+        components: this.appBuilderState.selectedComponents,
+        features: Object.keys(this.appBuilderState.appConfiguration.features)
+          .filter(key => this.appBuilderState.appConfiguration.features[key])
+      };
+
+      // Generate the application
+      const result = await this.appTemplateGenerator.generateApp(appConfig);
+      this.appBuilderState.generatedApp = result;
+
+      // Hide progress, show download options
+      if (progressIndicator) {
+        progressIndicator.style.display = 'none';
+      }
+      if (downloadSection) {
+        downloadSection.style.display = 'block';
+      }
+
+      this.showNotification('success', 'Application generated successfully!');
+
+    } catch (error) {
+      console.error('App generation failed:', error);
+      this.showNotification('error', `Generation failed: ${error.message}`);
+      
+      // Hide progress
+      if (progressIndicator) {
+        progressIndicator.style.display = 'none';
+      }
+      generateButton.disabled = false;
+    }
+  }
+
+  /**
+   * Validate app performance
+   */
+  async validateAppPerformance() {
+    const resultsPanel = document.getElementById('performance-validation-panel');
+    const resultsContainer = document.getElementById('performance-results');
+    
+    if (resultsPanel) {
+      resultsPanel.style.display = 'block';
+    }
+
+    if (!this.appBuilderState.selectedComponents.length) {
+      if (resultsContainer) {
+        resultsContainer.innerHTML = '<p>Please select components first.</p>';
+      }
+      return;
+    }
+
+    try {
+      const scenario = {
+        components: this.appBuilderState.selectedComponents,
+        dataSize: 'medium',
+        interactions: ['sort', 'filter', 'submit'],
+        targetMetrics: {
+          firstContentfulPaint: 2000,
+          largestContentfulPaint: 3000,
+          cumulativeLayoutShift: 0.15
+        }
+      };
+
+      const result = await this.performanceValidator.validateScenario(scenario);
+
+      if (resultsContainer) {
+        resultsContainer.innerHTML = `
+          <div class="performance-results">
+            <h4>Performance Validation Results</h4>
+            <div class="metrics-summary ${result.passed ? 'passed' : 'failed'}">
+              <strong>Status:</strong> ${result.passed ? '✅ Passed' : '❌ Issues Found'}
+            </div>
+            <div class="metrics-details">
+              <div class="metric">
+                <span>First Contentful Paint:</span> 
+                <span>${result.metrics.firstContentfulPaint}ms</span>
+              </div>
+              <div class="metric">
+                <span>Largest Contentful Paint:</span> 
+                <span>${result.metrics.largestContentfulPaint}ms</span>
+              </div>
+              <div class="metric">
+                <span>Cumulative Layout Shift:</span> 
+                <span>${result.metrics.cumulativeLayoutShift}</span>
+              </div>
+            </div>
+            ${result.recommendations.length > 0 ? `
+              <div class="recommendations">
+                <h5>Recommendations:</h5>
+                <ul>
+                  ${result.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
+    } catch (error) {
+      console.error('Performance validation failed:', error);
+      if (resultsContainer) {
+        resultsContainer.innerHTML = `<p class="error">Validation failed: ${error.message}</p>`;
+      }
+    }
+  }
+
+  /**
+   * Download the generated application
+   */
+  downloadApplication() {
+    if (!this.appBuilderState.generatedApp) {
+      this.showNotification('error', 'No application to download. Generate one first.');
+      return;
+    }
+
+    // Create ZIP file content (simplified for demo)
+    const appData = JSON.stringify(this.appBuilderState.generatedApp, null, 2);
+    const blob = new Blob([appData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${this.appBuilderState.appConfiguration.appName}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.showNotification('success', 'Application downloaded successfully!');
+  }
+
+  /**
+   * Copy application code to clipboard
+   */
+  async copyApplicationCode() {
+    if (!this.appBuilderState.generatedApp) {
+      this.showNotification('error', 'No application to copy. Generate one first.');
+      return;
+    }
+
+    try {
+      const codeContent = JSON.stringify(this.appBuilderState.generatedApp, null, 2);
+      await navigator.clipboard.writeText(codeContent);
+      this.showNotification('success', 'Application code copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      this.showNotification('error', 'Failed to copy to clipboard.');
+    }
+  }
+
+  /**
+   * Show deployment options
+   */
+  showDeploymentOptions() {
+    const deploymentOptions = document.getElementById('deployment-options');
+    if (deploymentOptions) {
+      deploymentOptions.style.display = 'block';
+    }
+
+    // Populate deployment guides
+    const guides = this.deploymentExamples.getGuides();
+    console.log('Available deployment guides:', guides);
+  }
+
+  /**
+   * Select deployment platform
+   */
+  selectDeploymentPlatform(platform) {
+    const guides = this.deploymentExamples.getGuides();
+    const selectedGuide = guides.find(guide => guide.platform === platform);
+    
+    if (selectedGuide) {
+      console.log('Selected deployment platform:', selectedGuide);
+      this.showNotification('info', `Deployment guide for ${platform} loaded. Check console for details.`);
+    }
   }
 }
 

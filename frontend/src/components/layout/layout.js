@@ -2,7 +2,7 @@ import {
   LitElement,
   html,
   css,
- } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+ } from 'lit';
 
 // Layout Component with improved mobile support
 export class Layout extends LitElement {

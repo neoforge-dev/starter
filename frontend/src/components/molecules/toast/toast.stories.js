@@ -1,4 +1,4 @@
-import {   html   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {   html   } from 'lit';
 import { ToastService } from "../../../services/toast-service.js"; // Adjust path as needed
 import "./toast.js"; // Assuming toast component is defined here
 import "../../atoms/button/button.js";

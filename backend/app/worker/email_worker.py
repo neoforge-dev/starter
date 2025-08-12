@@ -1,11 +1,14 @@
 import logging
 import asyncio
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, TYPE_CHECKING
 from celery import Task
 from app.db.session import AsyncSessionLocal
 from app.core.email import send_email, EmailContent
 from app.core.config import get_settings
 from app.core.celery import celery_app
+
+if TYPE_CHECKING:
+    from app.core.queue import EmailQueue
 
 logger = logging.getLogger(__name__)
 
@@ -137,3 +140,110 @@ async def _send_password_reset_email_async(user_email: str, user_name: str, rese
     
     logger.info(f"Password reset email sent successfully to {user_email}")
     return {"status": "success", "email": user_email, "type": "password_reset"}
+
+
+class EmailWorker:
+    """Email worker that processes emails from a queue."""
+    
+    def __init__(self, queue: Optional["EmailQueue"] = None):
+        """Initialize the email worker with a queue."""
+        self.queue = queue
+        self.is_running = False
+        self.processing_task: Optional[asyncio.Task] = None
+        self.processing_interval = 1.0  # seconds between processing attempts
+        self.error_interval = 5.0  # seconds to wait after errors
+        
+    async def process_one(self) -> bool:
+        """Process one email from the queue.
+        
+        Returns:
+            bool: True if an email was processed, False if queue was empty
+        """
+        if not self.queue:
+            logger.warning("No queue configured for EmailWorker")
+            return False
+            
+        try:
+            # Get next email from queue
+            result = await self.queue.dequeue()
+            if not result:
+                return False  # Queue is empty
+                
+            email_id, email_item = result
+            logger.info(f"Processing email {email_id} to {email_item.email_to}")
+            
+            # Convert queue item to EmailContent
+            email_content = EmailContent(
+                to=email_item.email_to,
+                subject=email_item.subject,
+                template_name=email_item.template_name,
+                template_data=email_item.template_data or {}
+            )
+            
+            # Send the email
+            async with AsyncSessionLocal() as db:
+                await send_email(
+                    db=db,
+                    email_id=email_id,
+                    email_content=email_content,
+                    settings=get_settings()
+                )
+            
+            # Mark as completed
+            await self.queue.mark_completed(email_id)
+            logger.info(f"Successfully processed email {email_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error processing email {email_id if 'email_id' in locals() else 'unknown'}: {e}")
+            if 'email_id' in locals():
+                await self.queue.mark_failed(email_id, str(e))
+            return False
+    
+    def start(self) -> None:
+        """Start the email worker."""
+        if not self.queue:
+            logger.warning("Cannot start EmailWorker without a queue")
+            return
+            
+        if self.is_running:
+            logger.warning("EmailWorker is already running")
+            return
+            
+        self.is_running = True
+        self.processing_task = asyncio.create_task(self._process_loop())
+        logger.info("EmailWorker started")
+    
+    def stop(self) -> None:
+        """Stop the email worker."""
+        if not self.is_running:
+            return
+            
+        self.is_running = False
+        if self.processing_task:
+            self.processing_task.cancel()
+        logger.info("EmailWorker stopped")
+    
+    async def _process_loop(self) -> None:
+        """Main processing loop."""
+        while self.is_running:
+            try:
+                try:
+                    processed = await self.process_one()
+                    if processed:
+                        # If we processed an email, check for more soon
+                        await asyncio.sleep(self.processing_interval * 0.1)
+                    else:
+                        # If queue was empty, wait longer before checking again
+                        await asyncio.sleep(self.processing_interval)
+                except Exception as e:
+                    # Handle errors from process_one but continue loop
+                    logger.error(f"Error in EmailWorker processing loop: {e}")
+                    await asyncio.sleep(self.error_interval)
+                    # Continue with the loop after error
+                    
+            except asyncio.CancelledError:
+                logger.info("EmailWorker processing loop cancelled")
+                break
+        
+        self.is_running = False

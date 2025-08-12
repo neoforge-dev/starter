@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { BaseComponent } from "../components/base-component.js";
-import {   LitElement   } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+import {   LitElement   } from 'lit';
 
 describe("BaseComponent", () => {
   it("should extend LitElement", () => {

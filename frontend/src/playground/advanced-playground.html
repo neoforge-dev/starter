@@ -32,6 +32,9 @@
                 </div>
                 
                 <div class="toolbar-actions">
+                    <button id="build-app-button" class="tool-button tool-button-success" title="Generate production application from selected components">
+                        🚀 Build App
+                    </button>
                     <button id="generate-component-button" class="tool-button tool-button-primary" title="Generate New Component">
                         🧩 Generate
                     </button>
@@ -104,6 +107,190 @@
             <!-- Analytics Dashboard Panel -->
             <section class="analytics-panel" id="analytics-panel" style="display: none;">
                 <playground-analytics id="playground-analytics"></playground-analytics>
+            </section>
+
+            <!-- Application Integration Panel -->
+            <section class="app-integration-panel" id="app-integration-panel" style="display: none;">
+                <div class="panel-header">
+                    <h2>🚀 Build Production App</h2>
+                    <button class="close-panel-btn" id="close-app-panel">✕</button>
+                </div>
+                
+                <div class="workflow-container">
+                    <!-- Workflow Progress -->
+                    <div class="workflow-progress">
+                        <div class="workflow-step active" data-step="1">
+                            <div class="step-number">1</div>
+                            <div class="step-label">Select Components</div>
+                        </div>
+                        <div class="workflow-step" data-step="2">
+                            <div class="step-number">2</div>
+                            <div class="step-label">Choose Template</div>
+                        </div>
+                        <div class="workflow-step" data-step="3">
+                            <div class="step-number">3</div>
+                            <div class="step-label">Configure App</div>
+                        </div>
+                        <div class="workflow-step" data-step="4">
+                            <div class="step-number">4</div>
+                            <div class="step-label">Generate & Deploy</div>
+                        </div>
+                    </div>
+
+                    <!-- Step Content -->
+                    <div class="workflow-content">
+                        <!-- Step 1: Component Selection -->
+                        <div class="workflow-step-content active" data-step="1">
+                            <h3>Select Components for Your App</h3>
+                            <div id="component-selection" class="component-selection">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                            <div id="app-preview" class="app-preview">
+                                <p>Selected components will appear here...</p>
+                            </div>
+                            <div id="validation-results" class="validation-results"></div>
+                        </div>
+
+                        <!-- Step 2: Template Selection -->
+                        <div class="workflow-step-content" data-step="2">
+                            <h3>Choose Application Template</h3>
+                            <div id="template-selection" class="template-selection">
+                                <div class="template-option" data-template="dashboard-app">
+                                    <h4>📊 Dashboard App</h4>
+                                    <p>Admin dashboard with tables and forms</p>
+                                </div>
+                                <div class="template-option" data-template="marketing-site">
+                                    <h4>🌐 Marketing Site</h4>
+                                    <p>Marketing website with landing pages</p>
+                                </div>
+                                <div class="template-option" data-template="saas-app">
+                                    <h4>💼 SaaS App</h4>
+                                    <p>SaaS application with auth and billing</p>
+                                </div>
+                                <div class="template-option" data-template="minimal-app">
+                                    <h4>⚡ Minimal App</h4>
+                                    <p>Minimal starting point with essential components</p>
+                                </div>
+                            </div>
+                            <div id="template-preview" class="template-preview">
+                                <p>Select a template to see preview...</p>
+                            </div>
+                            <div id="component-recommendations" class="component-recommendations">
+                                <h4>Recommended Components</h4>
+                                <p>Choose a template to see recommendations</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: App Configuration -->
+                        <div class="workflow-step-content" data-step="3">
+                            <h3>Configure Your Application</h3>
+                            <form id="app-config-form" class="app-config-form">
+                                <div class="form-group">
+                                    <label for="app-name">Application Name</label>
+                                    <input type="text" id="app-name" name="appName" placeholder="My Awesome App" required>
+                                    <div class="config-error" style="display: none;"></div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Features</label>
+                                    <div class="checkbox-group">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" class="feature-checkbox" name="routing" value="routing">
+                                            <span>Client-side Routing</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" class="feature-checkbox" name="responsive" value="responsive" checked>
+                                            <span>Responsive Design</span>
+                                        </label>
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" class="feature-checkbox" name="auth" value="auth">
+                                            <span>Authentication</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </form>
+                            
+                            <div id="config-preview" class="config-preview">
+                                <h4>Configuration Preview</h4>
+                                <pre id="config-preview-content">{}</pre>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Generation & Deployment -->
+                        <div class="workflow-step-content" data-step="4">
+                            <h3>Generate & Deploy Your App</h3>
+                            
+                            <div class="generation-section">
+                                <button id="generate-app-button" class="btn btn-primary" disabled>
+                                    Generate Application
+                                </button>
+                                <div id="generation-progress" class="progress-indicator" style="display: none;">
+                                    <div class="progress-bar"></div>
+                                    <div class="progress-text">Generating your application...</div>
+                                </div>
+                            </div>
+
+                            <div id="download-section" class="download-section" style="display: none;">
+                                <h4>Your App is Ready!</h4>
+                                <div class="action-buttons">
+                                    <button id="download-app-button" class="btn btn-success">
+                                        📥 Download ZIP
+                                    </button>
+                                    <button id="copy-code-button" class="btn btn-secondary">
+                                        📋 Copy Code
+                                    </button>
+                                    <button id="deploy-app-button" class="btn btn-primary">
+                                        🚀 Deploy Now
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Performance Validation -->
+                            <div class="performance-section">
+                                <button id="validate-performance-button" class="btn btn-outline">
+                                    ⚡ Validate Performance
+                                </button>
+                                <div id="performance-validation-panel" class="validation-panel" style="display: none;">
+                                    <h4>Performance Validation Results</h4>
+                                    <div id="performance-results"></div>
+                                </div>
+                            </div>
+
+                            <!-- Deployment Options -->
+                            <div id="deployment-options" class="deployment-options" style="display: none;">
+                                <h4>Choose Deployment Platform</h4>
+                                <div class="deployment-grid">
+                                    <div class="deployment-option" data-platform="vercel">
+                                        <h5>▲ Vercel</h5>
+                                        <p>Zero configuration deployment</p>
+                                    </div>
+                                    <div class="deployment-option" data-platform="netlify">
+                                        <h5>🌐 Netlify</h5>
+                                        <p>Drag-and-drop or Git deployment</p>
+                                    </div>
+                                    <div class="deployment-option" data-platform="github-pages">
+                                        <h5>📄 GitHub Pages</h5>
+                                        <p>Deploy with GitHub Actions</p>
+                                    </div>
+                                    <div class="deployment-option" data-platform="docker">
+                                        <h5>🐳 Docker</h5>
+                                        <p>Containerized deployment</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="workflow-navigation">
+                        <button id="prev-step-button" class="btn btn-secondary" disabled>
+                            ← Previous
+                        </button>
+                        <button id="next-step-button" class="btn btn-primary" disabled>
+                            Next →
+                        </button>
+                    </div>
+                </div>
             </section>
         </main>
     </div>
