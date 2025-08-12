@@ -90,7 +90,8 @@ export class AppTemplateGenerator {
     });
 
     // Routing configuration
-    if (appConfig.features.includes('routing')) {
+    const features = appConfig.features || [];
+    if (features.includes('routing')) {
       files.push({
         path: 'src/routes.js',
         type: 'routing',
@@ -147,7 +148,8 @@ export class AppTemplateGenerator {
    * Generate main app.js
    */
   generateMainApp(appConfig) {
-    const hasRouting = appConfig.features.includes('routing');
+    const features = appConfig.features || [];
+    const hasRouting = features.includes('routing');
     const routingImport = hasRouting ? "import { router } from './routes.js';" : '';
     const initMethod = hasRouting ? 'this.setupRouting();' : 'this.render();';
     
@@ -286,7 +288,8 @@ export const router = {
    * Generate component imports
    */
   generateComponentImports(appConfig) {
-    const imports = appConfig.components.map(component => {
+    const components = appConfig.components || [];
+    const imports = components.map(component => {
       // Map component names to import paths
       const importMap = {
         'neo-button': "import '../../../components/atoms/button/button.js';",
@@ -319,7 +322,8 @@ console.log('Components loaded for ${appConfig.name}');`;
    * Generate page files for routing-enabled apps
    */
   generatePages(appConfig, template) {
-    if (!appConfig.features.includes('routing')) {
+    const features = appConfig.features || [];
+    if (!features.includes('routing')) {
       return [];
     }
 
@@ -455,8 +459,9 @@ export default class DashboardPage {
    */
   generateDependencies(appConfig) {
     const deps = ['@neoforge/web-components'];
+    const features = appConfig.features || [];
     
-    if (appConfig.features.includes('routing')) {
+    if (features.includes('routing')) {
       // For simple routing, we're not adding external deps
       // Using vanilla JS routing implementation
     }
@@ -468,15 +473,16 @@ export default class DashboardPage {
    * Generate build configuration
    */
   generateBuildConfig(appConfig) {
+    const features = appConfig.features || [];
     return {
       bundler: 'vite',
       entry: 'src/app.js',
       outDir: 'dist',
-      features: appConfig.features,
+      features: features,
       optimization: {
         minify: true,
         treeshaking: true,
-        codesplitting: appConfig.features.includes('routing')
+        codesplitting: features.includes('routing')
       }
     };
   }

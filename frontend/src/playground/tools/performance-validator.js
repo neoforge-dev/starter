@@ -362,7 +362,7 @@ export class PerformanceValidator {
   /**
    * Analyze results against thresholds
    */
-  analyzeResults(metrics, targetMetrics) {
+  analyzeResults(metrics, targetMetrics = {}) {
     const issues = [];
     const passed = true;
 
