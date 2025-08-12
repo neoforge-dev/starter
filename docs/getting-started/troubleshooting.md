@@ -19,11 +19,11 @@ make setup
 **Database connection failed:**
 ```bash
 # Verify PostgreSQL is running
-docker compose -f backend/docker-compose.dev.yml ps
+docker compose ps db
 
 # Reset database
-docker compose -f backend/docker-compose.dev.yml down -v
-docker compose -f backend/docker-compose.dev.yml up -d db
+docker compose down -v
+docker compose up -d db
 ```
 
 **Frontend build errors:**
@@ -45,7 +45,7 @@ npm run build
 **Import errors or module not found:**
 ```bash
 # Ensure you're in the backend container
-docker compose -f backend/docker-compose.dev.yml run --rm api python -c "import app"
+docker compose run --rm api python -c "import app"
 
 # Or install dependencies locally
 cd backend
@@ -55,20 +55,20 @@ pip install -r requirements.txt
 **Database migration issues:**
 ```bash
 # Check current migration status
-docker compose -f backend/docker-compose.dev.yml run --rm api alembic current
+docker compose run --rm api alembic current
 
 # Reset migrations (CAUTION: destroys data)
-docker compose -f backend/docker-compose.dev.yml run --rm api alembic downgrade base
-docker compose -f backend/docker-compose.dev.yml run --rm api alembic upgrade head
+docker compose run --rm api alembic downgrade base
+docker compose run --rm api alembic upgrade head
 ```
 
 **Test failures:**
 ```bash
 # Run specific test
-docker compose -f backend/docker-compose.dev.yml run --rm api pytest tests/api/test_auth.py -v
+docker compose run --rm api_test pytest tests/api/test_auth.py -v
 
 # Check test database
-docker compose -f backend/docker-compose.dev.yml run --rm api pytest --setup-show
+docker compose run --rm api_test pytest --setup-show
 ```
 
 ### Frontend Troubleshooting
@@ -250,7 +250,7 @@ npm run test:performance
 **Backend logs:**
 ```bash
 # Real-time logs
-docker compose -f backend/docker-compose.dev.yml logs -f api
+docker compose logs -f api
 
 # Specific service logs
 docker compose logs celery-worker

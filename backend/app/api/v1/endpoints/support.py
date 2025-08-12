@@ -1,6 +1,6 @@
 """Support ticket endpoints backed by database."""
 from typing import List
-from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, Request, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.crud.support_ticket import support_ticket as st_crud
@@ -10,6 +10,7 @@ from app.schemas.support_ticket import (
     SupportTicketRead,
 )
 from app.schemas.common import PaginatedResponse
+from app.utils.http_cache import set_etag, not_modified
 from app.utils.idempotency import (
     get_idempotency_manager,
     IdempotencyManager,
@@ -39,17 +40,23 @@ async def list_tickets(
     db: AsyncSession = Depends(deps.get_db),
     page: int = 1,
     page_size: int = 10,
+    request: Request = None,
+    response: Response = None,
 ) -> PaginatedResponse:
     skip = (page - 1) * page_size
     items, total = await st_crud.get_multi_with_count(db, skip=skip, limit=page_size)
     pages = (total + page_size - 1) // page_size if page_size else 1
-    return PaginatedResponse(
+    payload = PaginatedResponse(
         items=[SupportTicketRead.model_validate(it) for it in items],
         total=total,
         page=page,
         page_size=page_size,
         pages=pages,
     )
+    etag = set_etag(response, payload.model_dump())
+    if not_modified(request, etag):
+        raise HTTPException(status_code=304, detail="Not Modified")
+    return payload
 
 
 @router.patch("/support/tickets/{ticket_id}", response_model=SupportTicketRead)

@@ -72,16 +72,16 @@ erDiagram
 
 ```bash
 # Run migrations
-docker compose -f backend/docker-compose.dev.yml run --rm api alembic upgrade head
+docker compose run --rm api alembic upgrade head
 
 # Create new migration
-docker compose -f backend/docker-compose.dev.yml run --rm api alembic revision --autogenerate -m "description"
+docker compose run --rm api alembic revision --autogenerate -m "description"
 
 # Rollback migration
-docker compose -f backend/docker-compose.dev.yml run --rm api alembic downgrade -1
+docker compose run --rm api alembic downgrade -1
 
 # Reset database (development only)
-docker compose -f backend/docker-compose.dev.yml down -v
+docker compose down -v
 make dev
 ```
 
@@ -89,16 +89,16 @@ make dev
 
 ```bash
 # Run all tests
-docker compose -f backend/docker-compose.dev.yml run --rm api pytest
+docker compose run --rm api_test pytest
 
 # Run with coverage
-docker compose -f backend/docker-compose.dev.yml run --rm api pytest --cov --cov-report=html
+docker compose run --rm api_test pytest --cov --cov-report=html
 
 # Run specific test
-docker compose -f backend/docker-compose.dev.yml run --rm api pytest tests/api/test_auth.py::test_login -v
+docker compose run --rm api_test pytest tests/api/test_auth.py::test_login -v
 
 # Run integration tests
-docker compose -f backend/docker-compose.dev.yml run --rm api pytest tests/integration/ -v
+docker compose run --rm api_test pytest tests/integration/ -v
 ```
 
 ### Code Quality

@@ -24,6 +24,12 @@ async def test_projects_crud_and_pagination(client: AsyncClient):
     data = rlist.json()
     assert "items" in data and "total" in data and data["page"] == 1
 
+    # Boundary: page beyond last should return empty items
+    pages = data.get("pages", 1)
+    rbeyond = await client.get("/api/v1/projects", params={"page": pages + 10, "page_size": 50})
+    assert rbeyond.status_code == 200
+    assert rbeyond.json()["items"] == []
+
     # Get by id with ETag
     gid = await client.get(f"/api/v1/projects/{p1['id']}")
     assert gid.status_code == 200

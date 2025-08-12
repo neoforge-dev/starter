@@ -27,6 +27,11 @@ async def test_support_create_list_update(client: AsyncClient):
     data = rl.json()
     assert data["total"] >= 1
 
+    # Boundary: page_size 1 and page 999 returns empty items
+    rb = await client.get("/api/v1/support/tickets", params={"page": 999, "page_size": 1})
+    assert rb.status_code == 200
+    assert rb.json()["items"] == []
+
     # Update ticket
     up = await client.patch(f"/api/v1/support/tickets/{t['id']}", json={"status": "closed"})
     assert up.status_code == 200

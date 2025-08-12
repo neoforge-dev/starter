@@ -22,3 +22,8 @@ async def test_community_create_list_idempotent(client: AsyncClient):
     assert rl.status_code == 200
     data = rl.json()
     assert "items" in data and data["total"] >= 1
+
+    # Boundary: high page request returns empty
+    rb = await client.get("/api/v1/community/posts", params={"page": 500, "page_size": 1})
+    assert rb.status_code == 200
+    assert rb.json()["items"] == []

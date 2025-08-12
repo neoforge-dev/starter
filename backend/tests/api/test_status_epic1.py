@@ -7,7 +7,7 @@ async def test_status_overall_and_service(client: AsyncClient):
     # Initially unknown
     r0 = await client.get("/api/v1/status")
     assert r0.status_code == 200
-    assert r0.json()["status"] in ("operational", "degraded")
+    assert r0.json()["status"] in ("operational", "degraded", "unknown")
 
     # Create events
     e1 = await client.post("/api/v1/status/events", json={
