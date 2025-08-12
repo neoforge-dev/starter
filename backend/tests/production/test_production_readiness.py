@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock, patch, Mock
 from datetime import datetime, timedelta, UTC
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from httpx import AsyncClient
 
 from app.core.config import Settings, get_settings
 from app.core.queue import EmailQueue, EmailQueueItem

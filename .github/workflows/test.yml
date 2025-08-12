@@ -11,26 +11,24 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x]
+        bun-version: [latest]
         shard: [1, 2, 3] # Split unit tests into 3 shards
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: ${{ matrix.bun-version }}
 
       - name: Install Dependencies
         working-directory: frontend
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run Unit Tests
         working-directory: frontend
-        run: npm run test -- --shard=${{ matrix.shard }}/3
+        run: bun run test -- --shard=${{ matrix.shard }}/3
 
       - name: Upload Coverage
         if: matrix.shard == 1
@@ -47,24 +45,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: 18.x
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Install Dependencies
         working-directory: frontend
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Install Playwright
         working-directory: frontend
-        run: npx playwright install --with-deps
+        run: bunx playwright install --with-deps
 
       - name: Run Visual Tests
         working-directory: frontend
-        run: npm run test:visual
+        run: bun run test:visual
 
       - name: Upload Visual Test Results
         if: always()
@@ -80,24 +76,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: 18.x
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Install Dependencies
         working-directory: frontend
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Install Playwright
         working-directory: frontend
-        run: npx playwright install --with-deps
+        run: bunx playwright install --with-deps
 
       - name: Run A11y Tests
         working-directory: frontend
-        run: npm run test:a11y
+        run: bun run test:a11y
 
       - name: Upload A11y Test Results
         if: always()
@@ -113,23 +107,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: 18.x
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Install Dependencies
         working-directory: frontend
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run Performance Tests
         working-directory: frontend
         run: |
-          # Warm up the environment
-          node --expose-gc -e 'global.gc()'
-          npm run test:perf
+          # Warm up the environment with Bun runtime
+          bun --version
+          bun run test:perf
 
       - name: Upload Performance Results
         if: always()
