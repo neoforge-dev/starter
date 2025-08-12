@@ -4,7 +4,7 @@ import {
   css,
  } from 'lit';
 import { baseStyles } from "../../styles/base.js";
-import { registerComponent } from "../../base-component.js";
+import { registerComponent } from "../../utils/component-registration.js";
 
 /**
  * Modal component for displaying content in a dialog overlay

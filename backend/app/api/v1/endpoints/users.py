@@ -22,6 +22,14 @@ async def read_user_me(
     return current_user
 
 
+@router.get("/profile", response_model=UserResponse)
+async def read_user_profile(
+    current_user: Annotated[models.User, Depends(deps.get_current_active_user)]
+) -> Any:
+    """Alias for current user profile to match frontend client."""
+    return current_user
+
+
 @router.put("/me", response_model=UserResponse)
 async def update_user_me(
     *,
@@ -30,6 +38,17 @@ async def update_user_me(
     current_user: Annotated[models.User, Depends(deps.get_current_active_user)],
 ) -> Any:
     """Update current user."""
+    return await crud.user.update(db, db_obj=current_user, obj_in=user_in)
+
+
+@router.patch("/profile", response_model=UserResponse)
+async def update_user_profile(
+    *,
+    db: Annotated[AsyncSession, Depends(deps.get_db)],
+    user_in: UserUpdate,
+    current_user: Annotated[models.User, Depends(deps.get_current_active_user)],
+) -> Any:
+    """Update current user profile (PATCH) to match frontend client."""
     return await crud.user.update(db, db_obj=current_user, obj_in=user_in)
 
 

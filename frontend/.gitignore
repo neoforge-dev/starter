@@ -1,3 +1,7 @@
+# Build artifacts
+/dist
+/build
+
 # Coverage reports
 /coverage
 .nyc_output

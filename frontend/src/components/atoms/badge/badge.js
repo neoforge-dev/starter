@@ -5,7 +5,7 @@ import {
  } from "lit";
 import { baseStyles } from "../../styles/base.js";
 import "../../atoms/icon/icon.js";
-import { registerComponent } from "../../base-component.js";
+import { registerComponent } from "../../utils/component-registration.js";
 
 /**
  * Badge component for displaying status, labels, or counts

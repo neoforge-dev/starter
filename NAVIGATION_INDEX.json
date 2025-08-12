@@ -1,0 +1,170 @@
+{
+  "metadata": {
+    "project": "NeoForge Starter Kit",
+    "version": "August 2025",
+    "consolidation_status": "completed",
+    "total_docs": 119,
+    "broken_links_fixed": 15,
+    "duplicate_files_consolidated": 23,
+    "last_updated": "2025-08-12"
+  },
+  "navigation": {
+    "getting_started": {
+      "description": "Project setup and onboarding",
+      "canonical": "docs/getting-started/index.md",
+      "quick_reference": "docs/getting-started.md", 
+      "troubleshooting": "docs/getting-started/troubleshooting.md",
+      "priority": 1,
+      "status": "production_ready"
+    },
+    "development": {
+      "description": "Daily development workflows and best practices",
+      "index": "docs/development/index.md",
+      "backend": "backend/README.md",
+      "frontend": "frontend/README.md",
+      "priority": 2,
+      "status": "production_ready"
+    },
+    "architecture": {
+      "description": "System design and technical decisions",
+      "canonical": "docs/architecture.md",
+      "index": "docs/architecture/index.md",
+      "specialized": {
+        "infrastructure": "frontend/docs/infrastructure/architecture.md",
+        "playground": "frontend/src/playground/architecture.md"
+      },
+      "priority": 3,
+      "status": "production_ready"
+    },
+    "testing": {
+      "description": "Testing guides organized by scope",
+      "backend": "backend/TESTING.md",
+      "frontend": "frontend/src/test/TESTING.md", 
+      "web_components": "frontend/src/test/WEB_COMPONENT_TESTING.md",
+      "priority": 4,
+      "status": "production_ready"
+    },
+    "operations": {
+      "description": "Production deployment and operations",
+      "index": "docs/operations/index.md",
+      "production_guide": "ZERO_TO_PRODUCTION_GUIDE.md",
+      "security": "docs/security.md",
+      "monitoring": "docs/monitoring.md",
+      "priority": 5,
+      "status": "production_ready"
+    },
+    "reference": {
+      "description": "Configuration and reference documentation",
+      "configuration": "docs/reference/configuration.md",
+      "ai_guidelines": "CLAUDE.md",
+      "priority": 6,
+      "status": "production_ready"
+    },
+    "technical_debt": {
+      "description": "Technical debt management and resolution",
+      "canonical": "TECHNICAL_DEBT_RESOLUTION_REPORT.md",
+      "archive": "archive/technical-debt/",
+      "priority": 7,
+      "status": "production_ready"
+    }
+  },
+  "quick_commands": {
+    "setup": "make setup && make dev",
+    "test_all": "make test",
+    "test_backend": "make test-backend", 
+    "test_frontend": "make test-frontend",
+    "development": "make dev",
+    "health_check": "make health",
+    "cleanup": "make clean",
+    "lint": "make lint && make format"
+  },
+  "single_sources_of_truth": {
+    "getting_started": "docs/getting-started/index.md",
+    "system_architecture": "docs/architecture.md",
+    "backend_testing": "backend/TESTING.md",
+    "frontend_testing": "frontend/src/test/TESTING.md",
+    "technical_debt": "TECHNICAL_DEBT_RESOLUTION_REPORT.md",
+    "configuration": "docs/reference/configuration.md"
+  },
+  "common_workflows": {
+    "new_developer_onboarding": [
+      "docs/README.md",
+      "docs/getting-started/index.md", 
+      "docs/development/index.md"
+    ],
+    "feature_development": [
+      "docs/development/index.md",
+      "backend/TESTING.md",
+      "frontend/src/test/TESTING.md"
+    ],
+    "architecture_review": [
+      "docs/architecture.md",
+      "docs/architecture/index.md"
+    ],
+    "production_deployment": [
+      "ZERO_TO_PRODUCTION_GUIDE.md",
+      "docs/operations/index.md",
+      "docs/security.md"
+    ],
+    "troubleshooting": [
+      "docs/getting-started/troubleshooting.md",
+      "backend/TESTING.md",
+      "frontend/src/test/TESTING.md"
+    ]
+  },
+  "file_structure_map": {
+    "docs/": {
+      "description": "Main documentation hub",
+      "key_files": [
+        "README.md",
+        "getting-started/index.md",
+        "development/index.md",
+        "architecture/index.md",
+        "operations/index.md",
+        "reference/configuration.md"
+      ]
+    },
+    "backend/": {
+      "description": "Backend documentation",
+      "key_files": ["README.md", "TESTING.md"]
+    },
+    "frontend/": {
+      "description": "Frontend documentation", 
+      "key_files": [
+        "README.md",
+        "src/test/TESTING.md",
+        "src/test/WEB_COMPONENT_TESTING.md",
+        "docs/infrastructure/architecture.md"
+      ]
+    },
+    "archive/": {
+      "description": "Historical documentation",
+      "key_directories": ["technical-debt/"]
+    }
+  },
+  "consolidation_results": {
+    "broken_links_fixed": 15,
+    "duplicate_files_removed": [
+      "frontend/docs/getting-started.md",
+      "frontend/public/docs/getting-started.md", 
+      "backend/tests/README.md",
+      "frontend/docs/TESTING.md",
+      "frontend/public/docs/architecture.md"
+    ],
+    "files_archived": [
+      "TECHNICAL_DEBT_BACKLOG.md",
+      "COMPONENT_DUPLICATION_ANALYSIS.md",
+      "COMPREHENSIVE_TECHNICAL_DEBT_ANALYSIS.md", 
+      "TECHNICAL_DEBT_STRATEGIC_PLAN.md"
+    ],
+    "new_files_created": [
+      "docs/development/index.md",
+      "docs/architecture/index.md",
+      "docs/operations/index.md", 
+      "docs/getting-started/troubleshooting.md",
+      "docs/reference/configuration.md",
+      "NAVIGATION_INDEX.md",
+      "NAVIGATION_INDEX.json"
+    ]
+  }
+}

@@ -51,7 +51,8 @@ class PWAService {
 
         // Enable background sync if supported
         if (typeof window !== 'undefined' && window.ServiceWorkerRegistration && 'sync' in window.ServiceWorkerRegistration.prototype) {
-          await registration.sync.register('background-sync');
+          // Align with service worker sync tag used for form/action replays
+          await registration.sync.register('sync-forms');
           Logger.info("Background sync enabled");
         }
 

@@ -1,10 +1,13 @@
 import { Logger } from "../utils/logger.js";
 import { authService } from "./auth.js";
 import { pwaService } from "./pwa.js";
+import { dynamicConfig } from "../config/dynamic-config.js";
 
 class ApiService {
   constructor() {
-    this.baseUrl = "/api";
+    // Lazy-initialized from backend config; fallback kept for resilience
+    this.baseUrl = "/api/v1";
+    this._initialized = false;
     this.defaultHeaders = {
       "Content-Type": "application/json",
     };
@@ -16,18 +19,46 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
-    const { retryCount = 0, ...requestOptions } = options;
+    // Lazy initialize configuration once
+    if (!this._initialized) {
+      try {
+        const apiBase = await dynamicConfig.getApiBaseUrl();
+        if (apiBase) {
+          this.baseUrl = apiBase;
+        }
+      } catch (e) {
+        Logger.warn("Falling back to default API base URL", e?.message || e);
+      } finally {
+        this._initialized = true;
+      }
+    }
+
+    const { retryCount = 0, params, ...requestOptions } = options;
     const method = requestOptions.method || 'GET';
+    
+    // Build URL with query parameters if provided
+    let url = `${this.baseUrl}${endpoint}`;
+    if (params) {
+      const queryString = new URLSearchParams(params).toString();
+      url = `${url}${queryString ? `?${queryString}` : ""}`;
+    }
     
     try {
       const token = authService.getToken();
       const headers = {
         ...this.defaultHeaders,
+        Accept: "application/json", // Add Accept header from api-client
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...requestOptions.headers,
       };
 
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      // Add idempotency key for non-GET requests to make offline replays safe
+      if (method !== 'GET' && !headers['Idempotency-Key']) {
+        const key = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+        headers['Idempotency-Key'] = key;
+      }
+
+      const response = await fetch(url, {
         ...requestOptions,
         headers,
       });
@@ -43,7 +74,9 @@ class ApiService {
       if (response.status === 429 && retryCount < this.retryConfig.maxRetries) {
         const retryAfter = response.headers.get('Retry-After') || this.retryConfig.retryDelay;
         Logger.warn(`Rate limited, retrying after ${retryAfter}ms`);
-        await this._delay(parseInt(retryAfter) * 1000);
+        // Retry-After may be seconds per RFC; support ms fallback
+        const delayMs = String(retryAfter).match(/^\d+$/) ? Number(retryAfter) * 1000 : Number(retryAfter);
+        await this._delay(Number.isFinite(delayMs) ? delayMs : this.retryConfig.retryDelay);
         return this.request(endpoint, { ...options, retryCount: retryCount + 1 });
       }
 

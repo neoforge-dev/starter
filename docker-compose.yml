@@ -77,7 +77,7 @@ services:
   db:
     image: postgres:15-alpine
     ports:
-      - "5432:5432"
+      - "55432:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -93,7 +93,7 @@ services:
   db_test:
     image: postgres:15-alpine
     ports:
-      - "5433:5432"
+      - "55433:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -115,6 +115,28 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  email-worker:
+    build:
+      context: ./backend
+      target: development
+    command: python -m app.worker.run_worker
+    volumes:
+      - ./backend:/app
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/neoforge
+      - REDIS_URL=redis://cache:6379/0
+      - SECRET_KEY=dev_secret_key_replace_in_production_7e1a34bd93b148f0
+      - CORS_ORIGINS=["http://localhost:3000", "http://localhost:8000"]
+      - SMTP_USER=${SMTP_USER:-neoforge@example.com}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-password}
+      - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      - db
+      - cache
+    restart: unless-stopped
 
 volumes:
   postgres_data:

@@ -16,10 +16,10 @@ if [ "$1" = "new" ]; then
         exit 1
     fi
     echo "Creating new migration: $2"
-    docker compose -f docker-compose.dev.yml run --rm migrate alembic revision --autogenerate -m "$2"
+    docker compose run --rm api alembic revision --autogenerate -m "$2"
     exit 0
 fi
 
 # Run migrations
 echo "Running migrations..."
-docker compose -f docker-compose.dev.yml run --rm migrate alembic upgrade head 
+docker compose run --rm api alembic upgrade head 

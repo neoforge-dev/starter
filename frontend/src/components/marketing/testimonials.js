@@ -3,7 +3,7 @@ import {
   html,
   css,
  } from 'lit';
-import { registerComponent } from "../base-component.js";
+import { registerComponent } from "../utils/component-registration.js";
 
 export class Testimonials extends LitElement {
   static get properties() {

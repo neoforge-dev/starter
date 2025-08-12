@@ -40,6 +40,69 @@ graph TD
    - Migration management
    - Backup strategies
 
+## Design Principles
+
+1. **Simplicity First**
+   - Minimal dependencies
+   - Native browser features
+   - Clear separation of concerns
+
+2. **Performance Focused**
+   - Optimized bundle sizes
+   - Efficient caching strategies
+   - Lazy loading patterns
+
+3. **Developer Experience**
+   - Hot module reloading
+   - Type safety
+   - Clear documentation
+   - Automated testing
+
+4. **Production Ready**
+   - Scalable infrastructure
+   - Monitoring built-in
+   - Security best practices
+
+## Data Flow Architecture
+
+### Frontend Data Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Component
+    participant Service
+    participant API
+    
+    User->>Component: Interaction
+    Component->>Service: Request Data
+    Service->>API: API Call
+    API-->>Service: Response
+    Service-->>Component: Updated Data
+    Component-->>User: UI Update
+```
+
+### Backend Data Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant FastAPI
+    participant Cache
+    participant Database
+    
+    Client->>FastAPI: Request
+    FastAPI->>Cache: Check Cache
+    alt Cache Hit
+        Cache-->>FastAPI: Return Data
+    else Cache Miss
+        FastAPI->>Database: Query
+        Database-->>FastAPI: Data
+        FastAPI->>Cache: Update Cache
+    end
+    FastAPI-->>Client: Response
+```
+
 ## Key Technical Decisions
 
 ### 1. Frontend Framework Selection

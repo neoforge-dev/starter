@@ -44,8 +44,12 @@ class Settings(BaseSettings):
     algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
     rate_limit_requests: int = Field(default=100, env="RATE_LIMIT_REQUESTS")
     rate_limit_window: int = Field(default=60, env="RATE_LIMIT_WINDOW")
+    rate_limit_auth_requests: int = Field(default=200, env="RATE_LIMIT_AUTH_REQUESTS")
+    rate_limit_by_ip: bool = Field(default=True, env="RATE_LIMIT_BY_IP")
+    rate_limit_by_key: bool = Field(default=False, env="RATE_LIMIT_BY_KEY")
+    enable_rate_limiting: bool = Field(default=False, env="ENABLE_RATE_LIMITING")
     api_v1_str: str = Field(default="/api/v1", env="API_V1_STR")
-    database_url_for_env: str = Field(default="postgresql+asyncpg://postgres:postgres@db:5432/app", env="DATABASE_URL")
+    database_url_for_env: str = Field(default="", env="DATABASE_URL")
     debug: bool = Field(default=False, env="DEBUG")
     testing: bool = Field(default=False, env="TESTING")
     redis_url: RedisDsn = Field(default="redis://redis:6379/0", env="REDIS_URL")
@@ -196,6 +200,30 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return str(v).lower() in ("true", "1", "t", "yes", "y")
         return False
+
+    @field_validator("database_url_for_env", mode="before")
+    def adjust_database_url_for_environment(cls, v: Optional[str], info: ValidationInfo) -> str:
+        """Ensure sensible DB defaults per environment if not explicitly set.
+
+        - Prefer provided env var value
+        - For test env, default to db_test + neoforge_test
+        - For development, default to db + neoforge
+        """
+        try:
+            env = info.data.get("environment")
+        except Exception:
+            env = None
+        if v and isinstance(v, str) and v.strip():
+            # If driver is missing for async, upgrade to asyncpg
+            if v.startswith("postgresql://"):
+                return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return v
+        # No value provided; choose sensible default by environment
+        env_val = env.value if isinstance(env, Environment) else str(env).lower() if env else None
+        if env_val == Environment.TEST.value or env_val == "test":
+            return "postgresql+asyncpg://postgres:postgres@db_test:5432/neoforge_test"
+        # Development default
+        return "postgresql+asyncpg://postgres:postgres@db:5432/neoforge"
 
     @field_validator("testing", mode="before")
     def validate_testing(cls, v: Union[str, bool]) -> bool:

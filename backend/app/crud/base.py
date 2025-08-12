@@ -2,7 +2,7 @@
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base_class import Base
@@ -42,6 +42,24 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             select(self.model).offset(skip).limit(limit),
         )
         return list(result.scalars().all())
+
+    async def get_multi_with_count(
+        self,
+        db: AsyncSession,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> tuple[List[ModelType], int]:
+        """Get multiple records with pagination and total count."""
+        # Items
+        items_result = await db.execute(
+            select(self.model).offset(skip).limit(limit)
+        )
+        items = list(items_result.scalars().all())
+        # Total count
+        count_result = await db.execute(select(func.count()).select_from(self.model))
+        total = int(count_result.scalar() or 0)
+        return items, total
 
     async def create(
         self,

@@ -1,4 +1,4 @@
-import { authService } from "./services/auth-service.js";
+import { authService } from "./services/auth.js";
 import { lazyLoad } from "./utils/lazy-load.js";
 
 // Route definitions with metadata
@@ -127,7 +127,8 @@ const routes = [
 class Router {
   constructor() {
     this._routes = new Map(routes.map((route) => [route.path, route]));
-    this._mainContent = document.querySelector("main");
+    // Prefer dedicated router outlet if present, otherwise fallback to <main>
+    this._mainContent = document.querySelector("#router-outlet") || document.querySelector("main");
 
     window.addEventListener("popstate", () => this.handleRoute());
     window.addEventListener("DOMContentLoaded", () => this.handleRoute());

@@ -35,14 +35,14 @@ make clean          # Clean up all containers and cached data
 
 ### Backend Development
 ```bash
-# Testing
-docker compose -f backend/docker-compose.dev.yml run --rm api pytest [path]
-docker compose -f backend/docker-compose.dev.yml run --rm api pytest --cov --cov-report=html
-docker compose -f backend/docker-compose.dev.yml run --rm api pytest tests/path/to/test_file.py::test_function_name -v
+# Testing (use api_test service)
+docker compose run --rm api_test pytest [path]
+docker compose run --rm api_test pytest --cov --cov-report=html
+docker compose run --rm api_test pytest tests/path/to/test_file.py::test_function_name -v
 
 # Database
-docker compose -f backend/docker-compose.dev.yml run --rm api alembic upgrade head
-docker compose -f backend/docker-compose.dev.yml run --rm api alembic revision --autogenerate -m "description"
+docker compose exec api alembic upgrade head
+docker compose exec api alembic revision --autogenerate -m "description"
 
 # Background Tasks (Celery)
 python -m app.worker.run_worker                    # Start Celery worker

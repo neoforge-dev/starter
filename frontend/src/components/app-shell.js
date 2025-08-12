@@ -1,6 +1,6 @@
 import {   LitElement, html, css   } from 'lit';
 import { baseStyles } from "../styles/base.js";
-import { authService } from "../services/auth-service.js";
+import { authService } from "../services/auth.js";
 import { router } from "../router.js";
 
 class AppShell extends LitElement {

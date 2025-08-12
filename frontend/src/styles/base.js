@@ -2,46 +2,7 @@ import { css } from "lit";
 
 export const baseStyles = css`
   :host {
-    --color-primary: #3b82f6;
-    --color-primary-hover: #2563eb;
-    --color-text: #1f2937;
-    --color-text-secondary: #6b7280;
-    --color-background: #ffffff;
-    --color-surface: #f3f4f6;
-    --color-surface-hover: #e5e7eb;
-    --color-border: #d1d5db;
-    --color-error: #ef4444;
-    --color-error-bg: #fee2e2;
-
-    --spacing-xs: 4px;
-    --spacing-sm: 8px;
-    --spacing-md: 16px;
-    --spacing-lg: 24px;
-    --spacing-xl: 32px;
-
-    --radius-sm: 4px;
-    --radius-md: 6px;
-    --radius-lg: 8px;
-
-    --transition-fast: 150ms ease;
-    --transition-normal: 250ms ease;
-
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-
     box-sizing: border-box;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :host {
-      --color-text: #f3f4f6;
-      --color-text-secondary: #9ca3af;
-      --color-background: #111827;
-      --color-surface: #1f2937;
-      --color-surface-hover: #374151;
-      --color-border: #4b5563;
-    }
   }
 
   :host *,
@@ -71,22 +32,23 @@ export const baseStyles = css`
     align-items: center;
     justify-content: center;
     padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--color-primary);
+    background: var(--primary-color);
     color: white;
     border: none;
     border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 500;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: background var(--transition-fast);
   }
 
   button:hover {
-    background: var(--color-primary-hover);
+    background: var(--primary-color);
+    filter: brightness(0.95);
   }
 
   button:focus {
-    outline: 2px solid var(--color-primary);
+    outline: 2px solid var(--primary-color);
     outline-offset: 2px;
   }
 
@@ -111,19 +73,17 @@ export const buttonStyles = css`
     user-select: none;
     transition: all var(--transition-fast);
     border: none;
-    background: var(--brand);
+    background: var(--primary-color);
     color: white;
   }
 
   .button:hover {
-    background: var(--brand-hover);
+    filter: brightness(0.95);
   }
 
   .button:focus-visible {
-    outline: none;
-    box-shadow:
-      0 0 0 var(--focus-ring-offset) var(--surface-1),
-      0 0 0 calc(var(--focus-ring-offset) + 2px) var(--focus-ring-color);
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
   }
 
   .button:disabled {
@@ -136,17 +96,17 @@ export const buttonStyles = css`
   }
 
   .button--secondary:hover {
-    background: var(--surface-3);
+    filter: brightness(0.95);
   }
 
   .button--ghost {
     background: transparent;
-    color: var(--text-1);
-    border: 1px solid var(--surface-3);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
   }
 
   .button--ghost:hover {
-    background: var(--surface-2);
+    background: var(--surface-color);
   }
 
   .button--small {
@@ -176,21 +136,21 @@ export const inputStyles = css`
     padding: var(--spacing-sm) var(--spacing-md);
     font-size: var(--font-size-base);
     line-height: var(--line-height-normal);
-    color: var(--text-1);
-    background: var(--surface-1);
-    border: 1px solid var(--surface-3);
+    color: var(--text-color);
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     transition: all var(--transition-fast);
   }
 
   .input:focus {
     outline: none;
-    border-color: var(--brand);
-    box-shadow: 0 0 0 1px var(--brand);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px var(--primary-color);
   }
 
   .input::placeholder {
-    color: var(--text-3);
+    color: var(--text-tertiary);
   }
 
   .input:disabled {
@@ -199,11 +159,11 @@ export const inputStyles = css`
   }
 
   .input--error {
-    border-color: var(--error);
+    border-color: var(--error-color);
   }
 
   .input--error:focus {
-    box-shadow: 0 0 0 1px var(--error);
+    box-shadow: 0 0 0 1px var(--error-color);
   }
 
   .input-label {
@@ -211,13 +171,13 @@ export const inputStyles = css`
     margin-bottom: var(--spacing-xs);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
-    color: var(--text-2);
+    color: var(--text-secondary);
   }
 
   .error-message {
     margin-top: var(--spacing-xs);
     font-size: var(--font-size-sm);
-    color: var(--error);
+    color: var(--error-color);
   }
 `;
 

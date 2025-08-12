@@ -10,7 +10,7 @@ const CORE_ASSETS = [
   "/src/styles/global.css",
   "/src/styles/loading.css",
   "/src/components/core/app-shell.js",
-  "/src/components/core/app-header.js",
+  "/src/components/header.js",
   "/src/components/core/app-footer.js",
   "/vendor/lit-core.min.js",
   "/src/utils/logger.js",

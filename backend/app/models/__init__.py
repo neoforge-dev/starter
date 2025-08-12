@@ -1,4 +1,7 @@
 from .user import User
 from .item import Item
 from .password_reset_token import PasswordResetToken
-# Add other model imports here if needed later 
+from .project import Project
+from .support_ticket import SupportTicket
+from .community_post import CommunityPost
+from .idempotency_key import IdempotencyKey

@@ -1,6 +1,19 @@
-# Browser Compatibility
+# Browser Support & Compatibility Guide
 
-## Support Matrix
+## Browser Support Policy
+
+| Browser         | Minimum Version | Notes                                    |
+|----------------|----------------|------------------------------------------|
+| Chrome         | 90+            | Full support for all features            |
+| Firefox        | 85+            | Full support with minor visual differences|
+| Safari         | 14+            | Requires some polyfills                  |
+| Edge           | 90+            | Chromium-based, full support             |
+| iOS Safari     | 14+            | Limited View Transitions support         |
+| Android Chrome | 90+            | Full support                             |
+
+**Support Policy**: Drop support when usage falls below 1% | Review quarterly | Test beta versions
+
+## Feature Support Matrix
 
 ### Desktop Browsers
 

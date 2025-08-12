@@ -1,235 +1,197 @@
 /**
- * Security configuration
+ * Security configuration - now uses dynamic config from backend
+ * Eliminates hardcoded duplication and creates single source of truth
  */
-export const securityConfig = {
-  // CSP nonces for trusted inline scripts
-  nonces: {
-    scripts: new Set(),
-    styles: new Set(),
-  },
 
-  // Trusted domains for external resources
-  trustedDomains: {
-    scripts: ["cdn.jsdelivr.net", "unpkg.com"],
-    styles: ["fonts.googleapis.com", "fonts.gstatic.com"],
-    images: ["images.neoforge.dev", "cdn.neoforge.dev"],
-    connects: ["api.neoforge.dev", "monitoring.neoforge.dev"],
-  },
-
-  // CORS configuration
-  cors: {
-    // Additional allowed origins beyond the default ones
-    additionalOrigins: [
-      "https://staging.neoforge.dev",
-      "https://dev.neoforge.dev",
-    ],
-    // Methods allowed for CORS requests
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    // Headers allowed in CORS requests
-    headers: [
-      "Authorization",
-      "Content-Type",
-      "X-Requested-With",
-      "Accept",
-      "Origin",
-      "X-CSRF-Token",
-    ],
-  },
-
-  // Security headers configuration
-  headers: {
-    // HSTS configuration
-    hsts: {
-      maxAge: 31536000, // 1 year
-      includeSubDomains: true,
-      preload: true,
-    },
-    // Frame ancestors configuration
-    frameAncestors: {
-      allowed: [], // Empty array means 'none'
-    },
-    // Referrer policy configuration
-    referrerPolicy: "strict-origin-when-cross-origin",
-    // Permissions policy configuration
-    permissions: {
-      camera: [],
-      microphone: [],
-      geolocation: [],
-      payment: [],
-      fullscreen: ["self"],
-    },
-  },
-
-  // Security reporting configuration
-  reporting: {
-    // Reporting endpoints
-    endpoints: {
-      default: "https://monitoring.neoforge.dev/reports/default",
-      csp: "https://monitoring.neoforge.dev/reports/csp",
-      cors: "https://monitoring.neoforge.dev/reports/cors",
-      crashes: "https://monitoring.neoforge.dev/reports/crashes",
-      deprecations: "https://monitoring.neoforge.dev/reports/deprecations",
-    },
-    // Report sampling rates (0-1)
-    samplingRates: {
-      csp: 1.0, // Report all CSP violations
-      cors: 0.1, // Report 10% of CORS issues
-      crashes: 1.0, // Report all crashes
-      deprecations: 0.01, // Report 1% of deprecation warnings
-    },
-    // Report batching configuration
-    batching: {
-      maxSize: 100, // Maximum reports per batch
-      maxAge: 60000, // Maximum age of a batch in ms (1 minute)
-    },
-  },
-
-  // XSS protection configuration
-  xss: {
-    // Enable built-in browser XSS protection
-    enableBrowserProtection: true,
-    // Mode for XSS protection (block or filter)
-    mode: "block",
-    // Enable XSS auditor
-    enableAuditor: true,
-    // Custom XSS patterns to block
-    blockPatterns: [
-      "<script\\b[^>]*>",
-      "javascript:",
-      "data:text/html",
-      "vbscript:",
-    ],
-  },
-
-  // Content type options
-  contentTypeOptions: {
-    // Prevent MIME type sniffing
-    nosniff: true,
-  },
-
-  // Feature policy configuration
-  featurePolicy: {
-    // Disable potentially dangerous features
-    features: {
-      accelerometer: [],
-      ambientLightSensor: [],
-      autoplay: ["self"],
-      battery: [],
-      camera: [],
-      displayCapture: [],
-      documentDomain: [],
-      encryptedMedia: ["self"],
-      fullscreen: ["self"],
-      geolocation: [],
-      gyroscope: [],
-      magnetometer: [],
-      microphone: [],
-      midi: [],
-      payment: [],
-      pictureInPicture: [],
-      speaker: [],
-      usb: [],
-      vibrate: [],
-      vr: [],
-    },
-  },
-
-  // Cookie security configuration
-  cookies: {
-    // Default cookie options
-    defaults: {
-      secure: true,
-      sameSite: "Strict",
-      httpOnly: true,
-      path: "/",
-    },
-    // Session cookie configuration
-    session: {
-      name: "neoforge_session",
-      maxAge: 86400, // 24 hours
-    },
-    // CSRF token configuration
-    csrf: {
-      name: "neoforge_csrf",
-      maxAge: 3600, // 1 hour
-    },
-  },
-
-  // Rate limiting configuration
-  rateLimit: {
-    // Window size in milliseconds
-    windowMs: 60000, // 1 minute
-    // Maximum requests per window
-    max: 100,
-    // Response headers
-    headers: true,
-    // Skip rate limiting for trusted IPs
-    trustProxy: true,
-    // Custom key generation
-    keyGenerator: (req) => req.ip,
-  },
-};
+import { dynamicConfig } from './dynamic-config.js';
 
 /**
- * Generate a random nonce for CSP
- * @returns {string} Random nonce
+ * Security configuration that adapts to backend settings
  */
-export function generateNonce() {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    ""
-  );
-}
-
-/**
- * Add a trusted domain to the configuration
- * @param {string} type - Domain type (scripts, styles, images, connects)
- * @param {string} domain - Domain to add
- */
-export function addTrustedDomain(type, domain) {
-  if (securityConfig.trustedDomains[type]) {
-    securityConfig.trustedDomains[type].push(domain);
+export class SecurityConfig {
+  constructor() {
+    this.nonces = {
+      scripts: new Set(),
+      styles: new Set(),
+    };
   }
-}
 
-/**
- * Add an allowed origin for CORS
- * @param {string} origin - Origin to allow
- */
-export function addAllowedOrigin(origin) {
-  securityConfig.cors.additionalOrigins.push(origin);
-}
+  /**
+   * Get CORS configuration from backend
+   */
+  async getCorsConfig() {
+    return dynamicConfig.getCorsConfig();
+  }
 
-/**
- * Update security header configuration
- * @param {string} header - Header name
- * @param {Object} config - Header configuration
- */
-export function updateHeaderConfig(header, config) {
-  if (securityConfig.headers[header]) {
-    securityConfig.headers[header] = {
-      ...securityConfig.headers[header],
-      ...config,
+  /**
+   * Get trusted domains from backend
+   */
+  async getTrustedDomains() {
+    const config = await dynamicConfig.getSecurityConfig();
+    return config.trustedDomains;
+  }
+
+  /**
+   * Get security headers configuration from backend
+   */
+  async getSecurityHeaders() {
+    const config = await dynamicConfig.getSecurityConfig();
+    return config.headers;
+  }
+
+  /**
+   * Check if CSP nonces are required (production mode)
+   */
+  async requiresNonces() {
+    const config = await dynamicConfig.getSecurityConfig();
+    return config.cspNonceRequired;
+  }
+
+  /**
+   * Check if security reporting is enabled
+   */
+  async isReportingEnabled() {
+    const config = await dynamicConfig.getSecurityConfig();
+    return config.reportingEnabled;
+  }
+
+  /**
+   * Generate and store a nonce for scripts
+   */
+  generateScriptNonce() {
+    const nonce = this.generateNonce();
+    this.nonces.scripts.add(nonce);
+    return nonce;
+  }
+
+  /**
+   * Generate and store a nonce for styles
+   */
+  generateStyleNonce() {
+    const nonce = this.generateNonce();
+    this.nonces.styles.add(nonce);
+    return nonce;
+  }
+
+  /**
+   * Generate a random nonce
+   */
+  generateNonce() {
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    return btoa(String.fromCharCode.apply(null, array));
+  }
+
+  /**
+   * Clear old nonces
+   */
+  clearNonces() {
+    this.nonces.scripts.clear();
+    this.nonces.styles.clear();
+  }
+
+  /**
+   * Build Content Security Policy header value
+   */
+  async buildCSPHeader() {
+    const config = await dynamicConfig.getSecurityConfig();
+    const trustedDomains = config.trustedDomains;
+    const isProduction = await dynamicConfig.isProduction();
+
+    const csp = {
+      'default-src': ["'self'"],
+      'script-src': [
+        "'self'",
+        ...trustedDomains.scripts
+      ],
+      'style-src': [
+        "'self'",
+        "'unsafe-inline'", // Required for many CSS-in-JS libraries
+        ...trustedDomains.styles
+      ],
+      'img-src': [
+        "'self'",
+        'data:',
+        'https:',
+        ...trustedDomains.images
+      ],
+      'connect-src': [
+        "'self'",
+        ...trustedDomains.connects
+      ],
+      'font-src': [
+        "'self'",
+        'https:',
+        'data:'
+      ],
+      'object-src': ["'none'"],
+      'frame-ancestors': ["'none'"],
+      'form-action': ["'self'"],
+      'base-uri': ["'self'"]
+    };
+
+    // Add nonces in production if available
+    if (isProduction && this.nonces.scripts.size > 0) {
+      const nonceValues = Array.from(this.nonces.scripts)
+        .map(nonce => `'nonce-${nonce}'`);
+      csp['script-src'].push(...nonceValues);
+    } else if (!isProduction) {
+      // Allow unsafe-eval in development for tools like Vite
+      csp['script-src'].push("'unsafe-inline'", "'unsafe-eval'");
+    }
+
+    // Build CSP string
+    return Object.entries(csp)
+      .map(([key, values]) => `${key} ${values.join(' ')}`)
+      .join('; ');
+  }
+
+  /**
+   * Validate if a URL is from a trusted domain
+   */
+  async isTrustedDomain(url, type = 'connects') {
+    try {
+      const trustedDomains = await this.getTrustedDomains();
+      const allowedDomains = trustedDomains[type] || [];
+      const urlObj = new URL(url);
+      
+      return allowedDomains.some(domain => {
+        return urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain);
+      });
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get configuration status for debugging
+   */
+  async getStatus() {
+    const dynamicStatus = dynamicConfig.getStatus();
+    const securityConfig = dynamicStatus.loaded ? await this.getSecurityConfig() : null;
+    
+    return {
+      dynamic: dynamicStatus,
+      security: {
+        configured: !!securityConfig,
+        nonces: {
+          scripts: this.nonces.scripts.size,
+          styles: this.nonces.styles.size
+        }
+      }
     };
   }
 }
 
-/**
- * Update rate limiting configuration
- * @param {Object} config - Rate limiting configuration
- */
-export function updateRateLimitConfig(config) {
-  securityConfig.rateLimit = {
-    ...securityConfig.rateLimit,
-    ...config,
-  };
-}
+// Export singleton instance
+export const securityConfig = new SecurityConfig();
 
-/**
- * Get current security configuration
- * @returns {Object} Current security configuration
- */
-export function getSecurityConfig() {
-  return { ...securityConfig };
+// Maintain backward compatibility with legacy code
+export default securityConfig;
+
+// Clear nonces periodically to prevent memory leaks
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    securityConfig.clearNonces();
+  }, 300000); // Every 5 minutes
 }

@@ -1,6 +1,6 @@
 import { showToast } from "../components/ui/toast/index.js";
 import { Logger } from "../utils/logger.js";
-import { apiClient } from "./api-client.js";
+import { apiService } from "./api.js";
 
 /**
  * Error types enum
@@ -237,7 +237,10 @@ class ErrorService {
       };
 
       // Send the error to the backend
-      await apiClient.post("/errors", payload);
+      await apiService.request("/errors", { 
+        method: "POST", 
+        body: JSON.stringify(payload) 
+      });
     } catch (err) {
       Logger.error("Failed to report error:", err);
     }

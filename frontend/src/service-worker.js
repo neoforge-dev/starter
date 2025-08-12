@@ -162,10 +162,54 @@ self.addEventListener("message", (event) => {
 
 // Sync offline form submissions
 async function syncForms() {
-  // Retrieve stored form submissions from IndexedDB
-  // This function should sync offline forms with the server
   console.log("Syncing offline forms...");
-  // TODO: Implement actual form sync logic
+  // Open IndexedDB and read queued actions
+  try {
+    const db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open('neoforge-offline', 1);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+
+    const getAllActions = () =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction(['offline_actions'], 'readonly');
+        const store = tx.objectStore('offline_actions');
+        const req = store.getAll();
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => resolve(req.result || []);
+      });
+
+    const deleteAction = (id) =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction(['offline_actions'], 'readwrite');
+        const store = tx.objectStore('offline_actions');
+        const req = store.delete(id);
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => resolve();
+      });
+
+    const actions = await getAllActions();
+    for (const action of actions) {
+      try {
+        const res = await fetch(action.url, {
+          method: action.method || 'POST',
+          headers: action.headers || {},
+          body: action.body,
+        });
+        if (res && res.ok) {
+          await deleteAction(action.id);
+        } else {
+          // Leave it in the queue for retry on next sync
+          console.warn('Sync failed for action', action.id, res && res.status);
+        }
+      } catch (err) {
+        console.warn('Network error syncing action', action.id, err);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to sync offline forms/actions', e);
+  }
 }
 
 // Background sync for offline form submissions

@@ -29,6 +29,7 @@ from app.core.celery import celery_app
 # Import specific middleware setup functions
 from app.api.middleware import setup_security_middleware, setup_validation_middleware
 from app.core.metrics import get_metrics
+from app.utils.idempotency import cleanup_idempotency_keys
 from app.schemas.user import UserResponse
 from app.api import deps
 
@@ -103,11 +104,34 @@ async def lifespan(app: FastAPI):
         debug=get_settings().debug,
     )
     
+    # Start background task for periodic idempotency key cleanup (simple loop)
+    async def _cleanup_loop():
+        from app.db.session import AsyncSessionLocal
+        while True:
+            try:
+                async with AsyncSessionLocal() as session:
+                    await cleanup_idempotency_keys(session, max_age_seconds=86400)
+                await asyncio.sleep(3600)
+            except Exception as e:
+                logger.warning("idempotency_cleanup_error", error=str(e))
+                await asyncio.sleep(3600)
+
+    import asyncio
+    app.state._idem_cleanup_task = asyncio.create_task(_cleanup_loop())
+
     yield
     
     # Celery workers are managed separately - no cleanup needed in FastAPI app
     logger.info("celery_integration_shutdown_complete")
     
+    # Cancel cleanup task on shutdown
+    try:
+        task = getattr(app.state, "_idem_cleanup_task", None)
+        if task:
+            task.cancel()
+    except Exception:
+        pass
+
     await close_redis()
     
     logger.info("application_shutdown")

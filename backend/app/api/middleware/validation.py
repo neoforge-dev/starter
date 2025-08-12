@@ -11,6 +11,7 @@ from starlette.types import ASGIApp
 import structlog
 from pydantic import ValidationError, BaseModel, create_model
 from app.core.metrics import get_metrics
+from prometheus_client import Counter
 from app.core.config import Settings, get_settings, Environment
 
 logger = structlog.get_logger()
@@ -39,10 +40,10 @@ class SecurityValidator:
         r"on\w+\s*=",
         r"<iframe[^>]*>.*?</iframe>"
     ]
-    
-    # Suspicious paths that might indicate attacks
+
+    # Suspicious paths that might indicate attacks (avoid blocking legit /api/v1/admin)
     SUSPICIOUS_PATHS = [
-        "/.env", "/config", "/admin", "/wp-admin", "/phpMyAdmin",
+        "/.env", "/config", "/wp-admin", "/phpMyAdmin",
         "/.git", "/backup", "/db", "/database", "/api/internal"
     ]
     
@@ -110,6 +111,12 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         self.is_production = settings.environment == Environment.PRODUCTION
         # Initialize metrics at middleware startup
         self.metrics = get_metrics()
+        # Threat metrics
+        self.threat_blocks = Counter(
+            "security_threat_blocks_total",
+            "Total blocked requests for security reasons",
+            ["reason"],
+        )
         
         # Define required headers based on environment
         if self.is_production:
@@ -149,13 +156,15 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 
         try:
             # Security check: Block suspicious paths
-            if self.security_validator.is_suspicious_path(endpoint):
+            # Do not treat API admin endpoints as suspicious
+            if self.security_validator.is_suspicious_path(endpoint) and not endpoint.startswith(f"{self.settings.api_v1_str}/admin"):
                 logger.warning(
                     "suspicious_path_blocked",
                     path=endpoint,
                     client_ip=client_ip,
                     method=method
                 )
+                self.threat_blocks.labels(reason="suspicious_path").inc()
                 return JSONResponse(
                     status_code=403,
                     content={"detail": "Access forbidden"}
@@ -170,6 +179,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                     client_ip=client_ip,
                     path=endpoint
                 )
+                self.threat_blocks.labels(reason="malicious_ua").inc()
                 return JSONResponse(
                     status_code=400,
                     content={"detail": "Invalid User-Agent"}

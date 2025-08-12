@@ -54,21 +54,8 @@ export const themeConfig = {
   },
 };
 
-// Define theme variables for dynamic theming; these can be used in CSS-in-JS or runtime logic
-export const themeVariables = {
-  primaryColor: "#2563eb",
-  primaryDark: "#1d4ed8",
-  primaryLight: "#60a5fa",
-  secondaryColor: "#4f46e5",
-  accentColor: "#0ea5e9",
-  successColor: "#059669",
-  warningColor: "#d97706",
-  errorColor: "#dc2626",
-  backgroundColor: "#ffffff",
-  surfaceColor: "#f8fafc",
-  borderColor: "#e2e8f0",
-  // You can extend this object with additional variables
-};
+// Theme variables are now centralized in global.css
+// Use CSS custom properties for runtime theming: var(--primary-color), etc.
 
 // ThemeToggleMixin adds a 'theme' property and a 'toggleTheme' method to a LitElement-based component
 export const ThemeToggleMixin = (superClass) =>

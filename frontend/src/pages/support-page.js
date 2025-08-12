@@ -2,9 +2,8 @@ import {
   html,
   css,
  } from 'lit';
-import {
-  BaseComponent,
-} from "../components/base-component.js";
+import { BaseComponent } from "../components/base-component.js";
+import { apiService } from "../services/api.js";
 
 export class SupportPage extends BaseComponent {
   static properties = {
@@ -125,7 +124,7 @@ export class SupportPage extends BaseComponent {
   async _loadTickets() {
     try {
       this.loading = true;
-      this.tickets = await window.api.getSupportTickets();
+      this.tickets = await apiService.getSupportTickets();
     } catch (error) {
       this.error = "Failed to load support tickets";
       console.error("Error loading tickets:", error);
@@ -273,18 +272,22 @@ export class SupportPage extends BaseComponent {
     e.preventDefault();
     const form = e.target;
     const data = {
-      name: form.name.value,
       email: form.email.value,
+      subject: `Support request from ${form.name.value}`,
       message: form.message.value,
     };
 
-    this.dispatchEvent(
-      new CustomEvent("contact-submit", {
-        detail: data,
-        bubbles: true,
-        composed: true,
-      })
-    );
+    try {
+      this.loading = true;
+      await apiService.submitSupportTicket(data);
+      this.showToast("Support request submitted", "success");
+      form.reset();
+      await this._loadTickets();
+    } catch (e) {
+      this.showToast("Failed to submit support request", "error");
+    } finally {
+      this.loading = false;
+    }
   }
 
   async _toggleStatus(ticket) {

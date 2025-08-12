@@ -1,6 +1,6 @@
 import {   LitElement, html, css   } from 'lit';
-import { apiService } from "../services/api.js";
-import { Logger } from "../utils/logger.js";
+import { apiService } from "@services/api.js";
+import { Logger } from "@utils/logger.js";
 
 export class ProjectsPage extends LitElement {
   static properties = {
@@ -181,7 +181,8 @@ export class ProjectsPage extends LitElement {
   async loadProjects() {
     try {
       const data = await apiService.getProjects();
-      this.projects = data.projects;
+      // Support both legacy array and new paginated shape
+      this.projects = Array.isArray(data) ? data : (data.items || data.projects || []);
     } catch (error) {
       Logger.error("Failed to load projects:", error);
       this.error = "Failed to load projects. Please try again later.";

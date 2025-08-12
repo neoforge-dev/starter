@@ -1,0 +1,710 @@
+{
+  "project_metadata": {
+    "name": "NeoForge Starter Kit",
+    "analysis_date": "2025-08-12",
+    "total_markdown_files": 119,
+    "total_directories": 50,
+    "analysis_scope": "Complete project documentation and file classification"
+  },
+  "file_inventory": {
+    "root_level_documentation": {
+      "critical_core_docs": [
+        {
+          "file": "README.md",
+          "type": "primary_readme",
+          "importance": "critical",
+          "purpose": "Main project introduction and quick start",
+          "status": "well_maintained",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "CLAUDE.md",
+          "type": "ai_instructions",
+          "importance": "critical",
+          "purpose": "AI development guidelines and project context",
+          "status": "comprehensive",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "ZERO_TO_PRODUCTION_GUIDE.md",
+          "type": "user_guide",
+          "importance": "critical",
+          "purpose": "Complete deployment and production guide",
+          "status": "comprehensive",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        }
+      ],
+      "technical_debt_reports": [
+        {
+          "file": "TECHNICAL_DEBT_RESOLUTION_REPORT.md",
+          "type": "analysis_report",
+          "importance": "important",
+          "purpose": "Historical technical debt resolution tracking",
+          "status": "comprehensive",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "COMPREHENSIVE_TECHNICAL_DEBT_ANALYSIS.md",
+          "type": "analysis_report",
+          "importance": "important",
+          "purpose": "Detailed technical debt analysis",
+          "status": "comprehensive",
+          "conflicts": "overlaps with other debt reports",
+          "action": "consolidate"
+        },
+        {
+          "file": "TECHNICAL_DEBT_STRATEGIC_PLAN.md",
+          "type": "planning_document",
+          "importance": "important",
+          "purpose": "Strategic technical debt planning",
+          "status": "comprehensive",
+          "conflicts": "may overlap with other planning docs",
+          "action": "consolidate"
+        },
+        {
+          "file": "TECHNICAL_DEBT_BACKLOG.md",
+          "type": "tracking_document",
+          "importance": "nice_to_have",
+          "purpose": "Technical debt backlog tracking",
+          "status": "outdated",
+          "conflicts": "redundant with resolution report",
+          "action": "archive"
+        }
+      ],
+      "analysis_reports": [
+        {
+          "file": "COMPONENT_DUPLICATION_ANALYSIS.md",
+          "type": "analysis_report",
+          "importance": "nice_to_have",
+          "purpose": "Component duplication analysis",
+          "status": "specific_analysis",
+          "conflicts": "none",
+          "action": "archive"
+        },
+        {
+          "file": "DOCUMENTATION_AUDIT.md",
+          "type": "audit_report",
+          "importance": "nice_to_have",
+          "purpose": "Documentation audit findings",
+          "status": "audit_document",
+          "conflicts": "superseded by this analysis",
+          "action": "archive"
+        },
+        {
+          "file": "INFORMATION_ARCHITECTURE.md",
+          "type": "architecture_doc",
+          "importance": "important",
+          "purpose": "Information architecture design",
+          "status": "design_document",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        }
+      ],
+      "standard_project_docs": [
+        {
+          "file": "CHANGELOG.md",
+          "type": "version_history",
+          "importance": "important",
+          "purpose": "Version history tracking",
+          "status": "maintained",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "TODO.md",
+          "type": "task_list",
+          "importance": "nice_to_have",
+          "purpose": "Project todo tracking",
+          "status": "active",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "CODE_OF_CONDUCT.md",
+          "type": "governance",
+          "importance": "important",
+          "purpose": "Community guidelines",
+          "status": "standard",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "CONTRIBUTING",
+          "type": "governance",
+          "importance": "important",
+          "purpose": "Contributing guidelines",
+          "status": "standard",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        }
+      ],
+      "ai_agent_configs": [
+        {
+          "file": "GEMINI.md",
+          "type": "ai_instructions",
+          "importance": "nice_to_have",
+          "purpose": "Gemini AI agent instructions",
+          "status": "alternative_ai_config",
+          "conflicts": "overlaps with CLAUDE.md",
+          "action": "consolidate_or_archive"
+        }
+      ]
+    },
+    "backend_documentation": {
+      "primary_docs": [
+        {
+          "file": "backend/README.md",
+          "type": "component_readme",
+          "importance": "critical",
+          "purpose": "Backend setup and development guide",
+          "status": "comprehensive",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "backend/TESTING.md",
+          "type": "testing_guide",
+          "importance": "important",
+          "purpose": "Backend testing procedures",
+          "status": "detailed",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        }
+      ],
+      "component_specific": [
+        {
+          "file": "backend/app/worker/README.md",
+          "type": "component_doc",
+          "importance": "important",
+          "purpose": "Worker/Celery documentation",
+          "status": "component_specific",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "backend/tests/README.md",
+          "type": "testing_doc",
+          "importance": "important",
+          "purpose": "Test suite documentation",
+          "status": "testing_specific",
+          "conflicts": "may overlap with TESTING.md",
+          "action": "consolidate_check"
+        },
+        {
+          "file": "backend/tests/TESTING.md",
+          "type": "testing_guide",
+          "importance": "important",
+          "purpose": "Detailed testing guide",
+          "status": "comprehensive",
+          "conflicts": "potential overlap with tests/README.md",
+          "action": "consolidate_check"
+        },
+        {
+          "file": "backend/tests/test_db/README.md",
+          "type": "component_doc",
+          "importance": "nice_to_have",
+          "purpose": "Database testing documentation",
+          "status": "specific_component",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        }
+      ]
+    },
+    "frontend_documentation": {
+      "primary_docs": [
+        {
+          "file": "frontend/README.md",
+          "type": "component_readme",
+          "importance": "critical",
+          "purpose": "Frontend setup and development guide",
+          "status": "comprehensive",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        }
+      ],
+      "strategic_reports": [
+        {
+          "file": "frontend/PLAYGROUND_TEAM_GUIDE.md",
+          "type": "user_guide",
+          "importance": "important",
+          "purpose": "Playground usage guide",
+          "status": "comprehensive",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "frontend/FRONTEND_STRATEGY_2025.md",
+          "type": "strategy_doc",
+          "importance": "important",
+          "purpose": "Frontend strategic direction",
+          "status": "strategic",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "frontend/DEVELOPER_EXPERIENCE.md",
+          "type": "analysis_doc",
+          "importance": "important",
+          "purpose": "Developer experience analysis",
+          "status": "analysis",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        }
+      ],
+      "implementation_reports": [
+        {
+          "file": "frontend/PRODUCTION_READINESS_REPORT.md",
+          "type": "status_report",
+          "importance": "important",
+          "purpose": "Production readiness status",
+          "status": "status_tracking",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "frontend/ADVANCED_TESTING_SUITE_REPORT.md",
+          "type": "implementation_report",
+          "importance": "nice_to_have",
+          "purpose": "Testing implementation details",
+          "status": "detailed_report",
+          "conflicts": "may overlap with testing docs",
+          "action": "consolidate_check"
+        },
+        {
+          "file": "frontend/DESIGN_SYSTEM_IMPLEMENTATION_REPORT.md",
+          "type": "implementation_report",
+          "importance": "nice_to_have",
+          "purpose": "Design system implementation",
+          "status": "detailed_report",
+          "conflicts": "none",
+          "action": "archive"
+        },
+        {
+          "file": "frontend/VISUAL_TESTING_IMPLEMENTATION_REPORT.md",
+          "type": "implementation_report",
+          "importance": "nice_to_have",
+          "purpose": "Visual testing implementation",
+          "status": "detailed_report",
+          "conflicts": "overlaps with testing docs",
+          "action": "consolidate"
+        },
+        {
+          "file": "frontend/CI_CD_IMPLEMENTATION_REPORT.md",
+          "type": "implementation_report",
+          "importance": "nice_to_have",
+          "purpose": "CI/CD implementation details",
+          "status": "detailed_report",
+          "conflicts": "none",
+          "action": "archive"
+        },
+        {
+          "file": "frontend/BUN_PERFORMANCE_BENCHMARK.md",
+          "type": "benchmark_report",
+          "importance": "nice_to_have",
+          "purpose": "Bun performance benchmarks",
+          "status": "benchmark_data",
+          "conflicts": "none",
+          "action": "keep_as_reference"
+        }
+      ],
+      "status_and_planning": [
+        {
+          "file": "frontend/DEVELOPMENT_STATUS.md",
+          "type": "status_doc",
+          "importance": "nice_to_have",
+          "purpose": "Current development status",
+          "status": "status_tracking",
+          "conflicts": "may be outdated",
+          "action": "update_or_archive"
+        },
+        {
+          "file": "frontend/IMPLEMENTATION_ROADMAP.md",
+          "type": "planning_doc",
+          "importance": "nice_to_have",
+          "purpose": "Implementation roadmap",
+          "status": "planning",
+          "conflicts": "may be outdated",
+          "action": "update_or_archive"
+        },
+        {
+          "file": "frontend/TODO.md",
+          "type": "task_list",
+          "importance": "nice_to_have",
+          "purpose": "Frontend-specific todos",
+          "status": "task_tracking",
+          "conflicts": "overlaps with root TODO.md",
+          "action": "consolidate"
+        }
+      ],
+      "scattered_frontend_docs": [
+        {
+          "file": "frontend/docs/getting-started.md",
+          "type": "user_guide",
+          "importance": "important",
+          "purpose": "Frontend getting started",
+          "status": "user_documentation",
+          "conflicts": "overlaps with main getting started",
+          "action": "consolidate"
+        },
+        {
+          "file": "frontend/docs/ATOMIC_DESIGN.md",
+          "type": "design_guide",
+          "importance": "important",
+          "purpose": "Atomic design methodology",
+          "status": "design_documentation",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "frontend/docs/PATTERN_LIBRARY.md",
+          "type": "design_guide",
+          "importance": "important",
+          "purpose": "Pattern library documentation",
+          "status": "design_documentation",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "frontend/docs/COMPONENT_REGISTRY.md",
+          "type": "technical_doc",
+          "importance": "important",
+          "purpose": "Component registry system",
+          "status": "technical_documentation",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        }
+      ],
+      "duplicate_locations": [
+        {
+          "pattern": "frontend/public/docs/*.md",
+          "files": [
+            "frontend/public/docs/getting-started.md",
+            "frontend/public/docs/installation.md",
+            "frontend/public/docs/architecture.md",
+            "frontend/public/docs/components.md"
+          ],
+          "type": "public_docs",
+          "importance": "nice_to_have",
+          "purpose": "Public documentation copies",
+          "status": "duplicated_content",
+          "conflicts": "duplicates other docs",
+          "action": "consolidate_or_remove"
+        },
+        {
+          "pattern": "frontend/dist/docs/*.md",
+          "files": [
+            "frontend/dist/docs/architecture.md",
+            "frontend/dist/docs/components.md",
+            "frontend/dist/docs/getting-started.md",
+            "frontend/dist/docs/installation.md"
+          ],
+          "type": "build_artifacts",
+          "importance": "obsolete",
+          "purpose": "Built documentation copies",
+          "status": "generated_files",
+          "conflicts": "build artifacts",
+          "action": "delete"
+        }
+      ]
+    },
+    "central_docs_directory": {
+      "primary_structure": [
+        {
+          "file": "docs/README.md",
+          "type": "documentation_hub",
+          "importance": "critical",
+          "purpose": "Central documentation navigation",
+          "status": "comprehensive_hub",
+          "conflicts": "references non-existent directories",
+          "action": "fix_broken_references"
+        }
+      ],
+      "topic_specific": [
+        {
+          "file": "docs/architecture.md",
+          "type": "architecture_doc",
+          "importance": "important",
+          "purpose": "System architecture overview",
+          "status": "technical_documentation",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "docs/deployment.md",
+          "type": "deployment_guide",
+          "importance": "important",
+          "purpose": "Deployment procedures",
+          "status": "operational_doc",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "docs/security.md",
+          "type": "security_guide",
+          "importance": "important",
+          "purpose": "Security guidelines",
+          "status": "security_documentation",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "docs/monitoring.md",
+          "type": "operations_guide",
+          "importance": "important",
+          "purpose": "Monitoring and observability",
+          "status": "operational_doc",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "docs/costs.md",
+          "type": "business_doc",
+          "importance": "important",
+          "purpose": "Cost analysis and optimization",
+          "status": "business_documentation",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "docs/best-practices.md",
+          "type": "development_guide",
+          "importance": "important",
+          "purpose": "Development best practices",
+          "status": "development_documentation",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        }
+      ],
+      "email_system_docs": [
+        {
+          "file": "docs/EMAIL_SYSTEM_API.md",
+          "type": "api_doc",
+          "importance": "important",
+          "purpose": "Email system API documentation",
+          "status": "feature_specific",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "docs/EMAIL_SYSTEM_PRODUCTION_GUIDE.md",
+          "type": "deployment_guide",
+          "importance": "important",
+          "purpose": "Email system production deployment",
+          "status": "operational_doc",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        },
+        {
+          "file": "docs/EMAIL_SYSTEM_STRATEGY.md",
+          "type": "strategy_doc",
+          "importance": "nice_to_have",
+          "purpose": "Email system strategic decisions",
+          "status": "strategic",
+          "conflicts": "none",
+          "action": "consolidate_into_main_docs"
+        },
+        {
+          "file": "docs/EMAIL_SYSTEM_TROUBLESHOOTING.md",
+          "type": "troubleshooting_guide",
+          "importance": "important",
+          "purpose": "Email system troubleshooting",
+          "status": "operational_doc",
+          "conflicts": "none",
+          "action": "keep_as_is"
+        }
+      ],
+      "specialized_docs": [
+        {
+          "file": "docs/CLI_AUTOMATION_TOOLKIT.md",
+          "type": "tooling_doc",
+          "importance": "nice_to_have",
+          "purpose": "CLI automation documentation",
+          "status": "tooling_documentation",
+          "conflicts": "none",
+          "action": "keep_as_reference"
+        },
+        {
+          "file": "docs/development-plan.md",
+          "type": "planning_doc",
+          "importance": "nice_to_have",
+          "purpose": "Development planning document",
+          "status": "planning",
+          "conflicts": "may be outdated",
+          "action": "update_or_archive"
+        },
+        {
+          "file": "docs/tree.md",
+          "type": "reference_doc",
+          "importance": "nice_to_have",
+          "purpose": "Project structure reference",
+          "status": "reference",
+          "conflicts": "may be outdated",
+          "action": "update_or_remove"
+        }
+      ],
+      "incomplete_directories": [
+        {
+          "directory": "docs/getting-started/",
+          "status": "partial_implementation",
+          "files": ["index.md"],
+          "missing": ["troubleshooting.md", "first-deployment.md"],
+          "action": "complete_or_consolidate"
+        },
+        {
+          "directory": "docs/development/",
+          "status": "empty_structure",
+          "files": ["backend/", "frontend/", "integration/"],
+          "missing": ["actual documentation files"],
+          "action": "populate_or_remove"
+        },
+        {
+          "directory": "docs/architecture/",
+          "status": "empty_directory",
+          "files": [],
+          "missing": ["all referenced architecture docs"],
+          "action": "populate_or_remove"
+        },
+        {
+          "directory": "docs/operations/",
+          "status": "empty_directory",
+          "files": [],
+          "missing": ["all referenced operations docs"],
+          "action": "populate_or_remove"
+        },
+        {
+          "directory": "docs/reference/",
+          "status": "empty_structure",
+          "files": ["api/", "components/"],
+          "missing": ["actual reference documentation"],
+          "action": "populate_or_remove"
+        }
+      ]
+    },
+    "archive_directory": {
+      "historical_reports": [
+        {
+          "pattern": "archive/*.md",
+          "total_files": 9,
+          "importance": "archive",
+          "purpose": "Historical analysis and planning documents",
+          "status": "archived",
+          "conflicts": "none",
+          "action": "keep_as_archive"
+        },
+        {
+          "pattern": "archive/memory-bank/*.md",
+          "total_files": 8,
+          "importance": "archive",
+          "purpose": "AI session memory and context",
+          "status": "historical",
+          "conflicts": "none",
+          "action": "keep_as_archive"
+        },
+        {
+          "pattern": "archive/frontend-memory-bank/*.md",
+          "total_files": 3,
+          "importance": "archive",
+          "purpose": "Frontend-specific AI session memory",
+          "status": "historical",
+          "conflicts": "none",
+          "action": "keep_as_archive"
+        }
+      ]
+    }
+  },
+  "documentation_conflicts": {
+    "duplicate_readmes": [
+      {
+        "issue": "Multiple README files at different levels",
+        "files": ["README.md", "backend/README.md", "frontend/README.md", "docs/README.md"],
+        "type": "legitimate_hierarchy",
+        "action": "keep_all_distinct_purposes"
+      }
+    ],
+    "duplicate_getting_started": [
+      {
+        "issue": "Getting started information scattered",
+        "files": [
+          "docs/getting-started.md",
+          "docs/getting-started/index.md",
+          "frontend/docs/getting-started.md",
+          "frontend/public/docs/getting-started.md"
+        ],
+        "type": "content_duplication",
+        "action": "consolidate_into_single_source"
+      }
+    ],
+    "testing_documentation_overlap": [
+      {
+        "issue": "Testing documentation scattered across multiple files",
+        "files": [
+          "backend/TESTING.md",
+          "backend/tests/README.md",
+          "backend/tests/TESTING.md",
+          "frontend/src/test/TESTING.md",
+          "frontend/src/test/WEB_COMPONENT_TESTING.md",
+          "frontend/docs/TESTING.md"
+        ],
+        "type": "scattered_information",
+        "action": "consolidate_by_scope"
+      }
+    ],
+    "architecture_documentation": [
+      {
+        "issue": "Architecture information in multiple places",
+        "files": [
+          "docs/architecture.md",
+          "frontend/docs/infrastructure/architecture.md",
+          "frontend/public/docs/architecture.md",
+          "frontend/src/playground/architecture.md"
+        ],
+        "type": "scope_confusion",
+        "action": "clarify_scope_and_consolidate"
+      }
+    ],
+    "broken_references": [
+      {
+        "issue": "Documentation hub references non-existent directories",
+        "source": "docs/README.md",
+        "broken_links": [
+          "getting-started/troubleshooting.md",
+          "development/index.md", 
+          "architecture/index.md",
+          "operations/index.md"
+        ],
+        "action": "create_missing_or_update_references"
+      }
+    ]
+  },
+  "classification_summary": {
+    "by_importance": {
+      "critical": 7,
+      "important": 45,
+      "nice_to_have": 35,
+      "obsolete": 8,
+      "archive": 24
+    },
+    "by_action_needed": {
+      "keep_as_is": 48,
+      "consolidate": 23,
+      "archive": 25,
+      "delete": 8,
+      "update_or_fix": 15
+    },
+    "by_type": {
+      "readme_files": 8,
+      "technical_documentation": 32,
+      "implementation_reports": 15,
+      "analysis_reports": 12,
+      "user_guides": 8,
+      "testing_documentation": 9,
+      "planning_documents": 7,
+      "build_artifacts": 4,
+      "archive_content": 24
+    }
+  }
+}
