@@ -90,7 +90,10 @@ smoke: ## Quick smoke test: build, up api+deps, check /health
 	@echo "Waiting for API health..."
 	@for i in 1 2 3 4 5; do \
 		STATUS=$$(curl -sf http://localhost:8000/health | jq -r '.status' 2>/dev/null || echo 'unhealthy'); \
-		if [ "$$STATUS" = "healthy" ]; then echo "API healthy"; exit 0; fi; \
+		if [ "$$STATUS" = "healthy" ]; then echo "API healthy"; break; fi; \
 		echo "Attempt $$i: $$STATUS"; sleep 3; \
 	done; \
-	echo "API failed health check"; exit 1
+	if [ "$$STATUS" != "healthy" ]; then echo "API failed health check"; exit 1; fi; \
+	CONFIG_ENV=$$(curl -sf http://localhost:8000/api/v1/config | jq -r '.environment' 2>/dev/null || echo ''); \
+	if [ -z "$$CONFIG_ENV" ]; then echo "API v1 config probe failed"; exit 1; fi; \
+	echo "Smoke OK"

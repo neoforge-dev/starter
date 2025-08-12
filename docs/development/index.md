@@ -19,6 +19,9 @@
 - **[Best Practices](../best-practices.md)** - Development best practices
 - **[Performance](../monitoring.md)** - Performance monitoring & optimization
 
+### Planning & Roadmap
+- **[Next 4 Epics – Detailed Execution Plan](./epics-detailed-plan.md)**
+
 ## 📋 Development Workflows
 
 ### Daily Development
