@@ -1,5 +1,8 @@
 .PHONY: setup serve dev dev-build test clean frontend backend test-lf beep test-frontend test-frontend-watch test-frontend-coverage test-frontend-visual test-frontend-a11y test-frontend-perf test-frontend-all test-metrics
 
+# Configurable ports (match docker-compose.yml defaults)
+API_PORT ?= 8000
+
 setup: ## Initial setup of development environment
     @echo "Creating development environment..."
     cp .env.example .env || true
@@ -89,11 +92,11 @@ smoke: ## Quick smoke test: build, up api+deps, check /health
 	@sleep 5
 	@echo "Waiting for API health..."
 	@for i in 1 2 3 4 5; do \
-		STATUS=$$(curl -sf http://localhost:8000/health | jq -r '.status' 2>/dev/null || echo 'unhealthy'); \
+		STATUS=$$(curl -sf http://localhost:$(API_PORT)/health | jq -r '.status' 2>/dev/null || echo 'unhealthy'); \
 		if [ "$$STATUS" = "healthy" ]; then echo "API healthy"; break; fi; \
 		echo "Attempt $$i: $$STATUS"; sleep 3; \
 	done; \
 	if [ "$$STATUS" != "healthy" ]; then echo "API failed health check"; exit 1; fi; \
-	CONFIG_ENV=$$(curl -sf http://localhost:8000/api/v1/config | jq -r '.environment' 2>/dev/null || echo ''); \
+	CONFIG_ENV=$$(curl -sf http://localhost:$(API_PORT)/api/v1/config | jq -r '.environment' 2>/dev/null || echo ''); \
 	if [ -z "$$CONFIG_ENV" ]; then echo "API v1 config probe failed"; exit 1; fi; \
 	echo "Smoke OK"
