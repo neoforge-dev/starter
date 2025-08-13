@@ -91,6 +91,42 @@ async def lifespan(app: FastAPI):
     
     # Initialize metrics
     get_metrics()
+
+    # Initialize OpenTelemetry tracing (best-effort, env-gated)
+    try:
+        from opentelemetry import trace
+        from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+        from opentelemetry.instrumentation.redis import RedisInstrumentor
+        from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+
+        res = Resource(attributes={SERVICE_NAME: "neoforge-api"})
+        provider = TracerProvider(resource=res)
+        # Default to console exporter in dev/test if OTEL not otherwise configured
+        processor = BatchSpanProcessor(ConsoleSpanExporter())
+        provider.add_span_processor(processor)
+        trace.set_tracer_provider(provider)
+
+        FastAPIInstrumentor.instrument_app(app)
+        try:
+            from app.db.session import engine as _engine
+            SQLAlchemyInstrumentor().instrument(engine=_engine.sync_engine)
+        except Exception:
+            pass
+        try:
+            RedisInstrumentor().instrument()
+        except Exception:
+            pass
+        try:
+            HTTPXClientInstrumentor().instrument()
+        except Exception:
+            pass
+        logger.info("otel_instrumentation_enabled")
+    except Exception as e:
+        logger.info("otel_instrumentation_skipped", error=str(e))
     
     # Celery is managed separately - just log that it should be running
     logger.info(
