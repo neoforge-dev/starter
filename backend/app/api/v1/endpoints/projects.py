@@ -11,6 +11,7 @@ from app.utils.idempotency import (
     IdempotencyManager,
 )
 from app.utils.http_cache import set_etag, not_modified
+from app.utils.audit import audit_event
 import json
 
 router = APIRouter()
@@ -70,6 +71,8 @@ async def create_project(
         return ProjectRead(**cached)
 
     created = await project_crud.create(db, obj_in=payload)
+    # Audit (best-effort)
+    await audit_event(db, user_id=None, action="project.create", resource=f"project:{created.id}")
     await idem.store(ProjectRead.model_validate(created).model_dump(), status_code=201)
     return created
 
@@ -89,6 +92,7 @@ async def update_project(
         return ProjectRead(**cached)
 
     updated = await project_crud.update(db, db_obj=proj, obj_in=payload)
+    await audit_event(db, user_id=None, action="project.update", resource=f"project:{proj.id}")
     await idem.store(ProjectRead.model_validate(updated).model_dump(), status_code=200)
     return updated
 
@@ -99,4 +103,5 @@ async def delete_project(project_id: int, db: AsyncSession = Depends(deps.get_db
     if not proj:
         raise HTTPException(status_code=404, detail="Project not found")
     await project_crud.remove(db, id=project_id)
+    await audit_event(db, user_id=None, action="project.delete", resource=f"project:{project_id}")
     return None

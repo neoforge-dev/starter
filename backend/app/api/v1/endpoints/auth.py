@@ -12,6 +12,7 @@ from app.crud.user import user as user_crud
 from app.api.deps import get_db
 from app.schemas.auth import Token, TokenPayload, PasswordResetRequest, PasswordResetConfirm, EmailVerification, ResendVerification
 from app.crud.user_session import user_session, hash_token
+from app.utils.audit import audit_event
 import secrets
 from app.schemas.user import UserCreate, UserResponse
 from app.models.user import User
@@ -57,6 +58,7 @@ async def login_access_token(
         ip_address=None,
         expires_in_days=settings.refresh_token_expire_days,
     )
+    await audit_event(db, user_id=user.id, action="auth.login", resource=f"user:{user.id}")
     return {"access_token": access, "token_type": "bearer", "refresh_token": refresh}
 
 
@@ -72,6 +74,7 @@ async def refresh_access_token(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access = create_access_token(subject=session.user_id, settings=settings, expires_delta=access_token_expires)
+    await audit_event(db, user_id=session.user_id, action="auth.refresh", resource=f"session:{session.id}")
     return Token(access_token=access, token_type="bearer")
 
 
