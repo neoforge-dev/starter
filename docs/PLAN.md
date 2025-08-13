@@ -20,6 +20,11 @@ This plan captures the missing details and the exact work remaining to complete 
 - Security/Observability support:
   - Threat & rate-limit Prometheus counters
   - CSP report-only endpoint; Report-To header in non-prod
+- Observability & Readiness:
+  - OpenTelemetry basic instrumentation (FastAPI, SQLAlchemy, Redis, HTTPX)
+  - X-Trace-Id response header; trace_id included in structured logs
+  - Celery queue depth gauges on /metrics
+  - Readiness endpoint `/ready` (200 only when DB+Redis OK)
 - Frontend integration:
   - Dynamic API base URL and idempotency keys added to `api.js`
   - Router consolidated; PWA offline sync implemented
@@ -40,15 +45,19 @@ This plan captures the missing details and the exact work remaining to complete 
 - [ ] Idempotency tests (duplicate POST/PATCH returning identical payloads; verify 201->200 semantics on replay)
 - [ ] Status events tests – compute overall/per-service (operational/degraded from latest events)
 - [x] Auth sessions list/revoke tests (slice for Epic 2)
+ - [x] Readiness endpoint `/ready` returns 200/503 with database/redis fields
+ - [x] Metrics smoke (core counters present, celery_queue_depth)
 
 ### 3) Idempotency Middleware & TTL Cleanup
 - [x] Convert support/community endpoints to use `IdempotencyManager`
 - [x] Add periodic TTL cleanup job using `cleanup_idempotency_keys()` (app startup task)
 - [ ] Add a smoke test that verifies expired keys are removed after TTL (unit/integration)
+ - [x] Session pruning job: revoked and long-expired sessions are deleted periodically
 
 ### 4) Caching
 - [x] ETag on support/community list
 - [ ] Consider `Cache-Control` headers for list endpoints (low TTL; dev only)
+ - [x] Add short TTL `Cache-Control` for list endpoints in non-production; verify presence in tests
 
 ### 5) CI/CD
 - [x] Add workflow step to run: `make setup && make test && make smoke`
@@ -59,11 +68,13 @@ This plan captures the missing details and the exact work remaining to complete 
 - [x] Restrict pre-commit gates to PRs & Node 20
 - [ ] Consider ESLint scope/ignore patterns to exclude playground and heavy tests from PR gates
 - [ ] Tune pre-push hook to ignore credential-like strings in `backend/tests/**` and `docs/**`
+ - [x] Makefile updated to always emit `backend/coverage.xml`; artifact upload aligned
 
 ### 6) Documentation
 - [ ] API semantics: pagination, idempotency, ETag usage (If-None-Match), auth sessions (list/revoke)
 - [ ] Dev guide: migrations + smoke, backend test commands, Docker notes (ports)
 - [ ] CSP reporting: endpoint usage, troubleshooting patterns, aggregation guidance
+ - [x] Observability: /metrics, X-Trace-Id, /ready readiness semantics documented (security.md + backend-development.md)
 
 ## Epic 2 – Security & Account Lifecycle (Execution Details)
 
@@ -76,6 +87,7 @@ This plan captures the missing details and the exact work remaining to complete 
   - [x] Session revocation: `POST /api/v1/auth/sessions/{session_id}/revoke`
     - Sets `revoked_at`; denies subsequent refresh; owner-only
   - [ ] Revoke all except current: `POST /api/v1/auth/sessions/revoke-others` (optional stretch)
+  - [x] Revoke all except current: `POST /api/v1/auth/sessions/revoke-others`
   - [ ] Tests: `backend/tests/api/test_auth_sessions.py`
     - Validate pagination metadata (total/pages/page_size)
     - Ensure sensitive data redaction (no raw refresh token exposure)
@@ -109,9 +121,10 @@ This plan captures the missing details and the exact work remaining to complete 
 
 ## Acceptance Criteria – Epic 2 (phase slice)
 - [x] Users can view and revoke refresh sessions via API (endpoint implemented; test added)
+- [x] Revoke-others endpoint implemented and tested
 - [x] Login route exposes rate limit headers; behavior tested
 - [ ] CSP reporting documented and endpoint verified via smoke
-- [ ] DB indices verified or added for hot paths
+- [x] DB indices verified or added for hot paths (status_events indices; sessions)
 
 ## Execution Playbook (Next Engineer)
 
@@ -142,6 +155,69 @@ This plan captures the missing details and the exact work remaining to complete 
 3) Update docs (API semantics + CSP + Dev steps)
 4) Tidy CI lint scope for PRs if too noisy; keep a non-blocking full lint report
 5) Ensure smoke passes and CI green
+
+---
+
+# Next Epics – Detailed Plan (Execution-Ready)
+
+## Epic A: Observability & SLOs (Finish and Harden)
+
+Scope completed:
+- Basic OTEL instrumentation; X-Trace-Id header; Celery queue gauges; /ready endpoint; metrics tests.
+
+Remaining tasks:
+- [ ] Add error-rate counters per route (4xx/5xx) in `app/core/metrics.py` and record in validation/security middleware
+- [ ] Add p95/p99 latency panels in Grafana (commit JSON to `ops/grafana/`)
+- [ ] Prometheus alert rules (5xx rate, readiness failures, queue depth) in `ops/prometheus/alerts.yml`
+- [ ] Correlate request_id + trace_id into all error logs consistently (audit uses)
+
+Acceptance:
+- Dashboards render p95/p99, error-rate; basic alerts configured; logs have request_id and trace_id.
+
+## Epic B: Frontend Type Safety, A11y, and PWA UX
+
+Tasks:
+- [ ] Introduce minimal TS: add `frontend/tsconfig.json` and allow JS/TS interop without breaking build
+- [ ] Migrate `frontend/src/services/api.js` to `api.ts` with typed signatures for core endpoints
+- [ ] Add `frontend/src/types/api.d.ts` with `PaginatedResponse`, `Project`, `SupportTicket`, `CommunityPost`, `Status` types
+- [ ] Add axe-core CI on core pages (Playwright a11y config already present); fix easy violations in forms/auth components
+- [ ] Offline replay UX: show conflict-resolution banner on replay failures (simple diff and retry)
+
+Acceptance:
+- Services typed; CI a11y tests pass for core pages; offline replay banner present and tested.
+
+## Epic C: Performance & Cost Optimization
+
+Tasks:
+- [ ] Optional keyset pagination: add `cursor` param support in hot paths (projects/support/community) with fallback to page/size
+- [x] Dev Cache-Control on list endpoints; ETag consistency across lists (already done)
+- [ ] Production-safe `Cache-Control` (short TTL) for public anonymous lists; gated by environment
+- [ ] DB index audit; add composite indices for common filters; migration(s) as needed
+- [ ] Docker image slimming (multi-stage; remove build deps in prod), resource limits in compose
+- [ ] CI caching of Python/Node dependencies and Docker layers; split workflows for BE/FE
+
+Acceptance:
+- Reduced p95 latency on lists; smaller images; faster CI; no correctness regressions.
+
+## Epic D: Security & Account Lifecycle (Phase 2)
+
+Tasks:
+- [ ] Refresh token rotation with reuse detection; revoke all sessions on reuse
+- [ ] Device labeling: store client-friendly name; include in `SessionOut`
+- [ ] Tiered rate limits: stricter on auth/email/verify routes; use user+IP keys
+- [ ] Config hardening: enforce HTTPS-only CORS and 32+ char secrets in prod (fail-fast)
+
+Acceptance:
+- Rotation + reuse tests pass; device names visible; tiered RL verified; prod config validation strict.
+
+---
+
+# Readiness & Operations
+
+- `/health` remains informational; `/ready` is the probe used for gating traffic.
+- Smoke: `make setup && make test && make smoke` (ensure Docker is running locally; compose exposes DB on 55432 and Redis on 56379).
+- Backend coverage artifact guaranteed at `backend/coverage.xml`.
+
 
 ## Future Epics (High-Level)
 
