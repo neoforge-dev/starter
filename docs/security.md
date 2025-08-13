@@ -114,6 +114,25 @@ Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Resource-Policy: same-site
 ```
 
+### 2.1 Content Security Policy Reporting
+
+- Report-only mode is enabled in non-production. The middleware sets:
+  - `Content-Security-Policy-Report-Only: <policy>`
+  - `Report-To: {"group":"csp-endpoint","max_age":10886400,"endpoints":[{"url":"/api/v1/security/report"}]}`
+- Backend endpoint: `POST /api/v1/security/report` accepts relaxed CSP reports and logs minimal, redacted fields.
+
+Smoke test example:
+```bash
+curl -s -X POST http://localhost:8000/api/v1/security/report \
+  -H 'Content-Type: application/json' \
+  -d '{"csp-report": {"violated-directive": "script-src", "blocked-uri": "http://example.com"}}'
+# => {"status":"ok"}
+```
+
+Troubleshooting:
+- Ensure you're in non-production (`ENVIRONMENT=development`) to receive Report-Only headers.
+- Check application logs for `csp_violation_report` entries (fields are redacted by design).
+
 #### Development Headers (Relaxed)
 - Allows `unsafe-inline` and `unsafe-eval` for dev tools
 - Permits `http:` connections
