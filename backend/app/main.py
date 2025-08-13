@@ -103,10 +103,47 @@ async def lifespan(app: FastAPI):
         from opentelemetry.instrumentation.redis import RedisInstrumentor
         from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 
-        res = Resource(attributes={SERVICE_NAME: "neoforge-api"})
+        settings = get_settings()
+        res = Resource(attributes={SERVICE_NAME: settings.otel_service_name})
         provider = TracerProvider(resource=res)
-        # Default to console exporter in dev/test if OTEL not otherwise configured
-        processor = BatchSpanProcessor(ConsoleSpanExporter())
+        
+        # Configure exporter based on environment settings
+        if settings.otel_traces_exporter == "otlp" and settings.otel_exporter_otlp_endpoint:
+            try:
+                from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+                
+                # Parse headers if provided
+                headers = {}
+                if settings.otel_exporter_otlp_headers:
+                    for header_pair in settings.otel_exporter_otlp_headers.split(","):
+                        if "=" in header_pair:
+                            key, value = header_pair.strip().split("=", 1)
+                            headers[key.strip()] = value.strip()
+                
+                otlp_exporter = OTLPSpanExporter(
+                    endpoint=settings.otel_exporter_otlp_endpoint,
+                    headers=headers if headers else None,
+                )
+                processor = BatchSpanProcessor(otlp_exporter)
+                logger.info("otel_otlp_exporter_configured", 
+                           endpoint=settings.otel_exporter_otlp_endpoint,
+                           service_name=settings.otel_service_name)
+            except ImportError:
+                logger.warning("otel_otlp_exporter_unavailable", 
+                              fallback="console",
+                              note="Install opentelemetry-exporter-otlp for OTLP support")
+                processor = BatchSpanProcessor(ConsoleSpanExporter())
+        elif settings.otel_traces_exporter == "console":
+            processor = BatchSpanProcessor(ConsoleSpanExporter())
+            logger.info("otel_console_exporter_configured")
+        elif settings.otel_traces_exporter == "none":
+            logger.info("otel_tracing_disabled")
+            return  # Skip tracing setup entirely
+        else:
+            # Default fallback
+            processor = BatchSpanProcessor(ConsoleSpanExporter())
+            logger.info("otel_default_console_exporter")
+        
         provider.add_span_processor(processor)
         trace.set_tracer_provider(provider)
 

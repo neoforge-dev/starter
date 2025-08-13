@@ -66,6 +66,13 @@ class Settings(BaseSettings):
     # Webhook settings
     SENDGRID_WEBHOOK_PUBLIC_KEY: Optional[str] = Field(default=None, env="SENDGRID_WEBHOOK_PUBLIC_KEY")
     WEBHOOK_SECRET_KEY: Optional[str] = Field(default=None, env="WEBHOOK_SECRET_KEY")
+    
+    # OpenTelemetry OTLP Configuration
+    otel_exporter_otlp_endpoint: Optional[str] = Field(default=None, env="OTEL_EXPORTER_OTLP_ENDPOINT")
+    otel_exporter_otlp_headers: Optional[str] = Field(default=None, env="OTEL_EXPORTER_OTLP_HEADERS")
+    otel_exporter_otlp_protocol: str = Field(default="http/protobuf", env="OTEL_EXPORTER_OTLP_PROTOCOL")
+    otel_service_name: str = Field(default="neoforge-api", env="OTEL_SERVICE_NAME")
+    otel_traces_exporter: str = Field(default="console", env="OTEL_TRACES_EXPORTER")  # console, otlp, none
 
     model_config = SettingsConfigDict(
         env_file=".env",
