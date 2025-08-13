@@ -89,9 +89,16 @@ def upgrade() -> None:
         sa.Column('description', sa.String(), nullable=True),
         sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP')),
     )
+    # Indices for status_events hot paths
+    op.create_index('ix_status_events_service_id', 'status_events', ['service_id'], unique=False)
+    op.create_index('ix_status_events_status', 'status_events', ['status'], unique=False)
+    op.create_index('ix_status_events_created_at', 'status_events', ['created_at'], unique=False)
 
 
 def downgrade() -> None:
+    op.drop_index('ix_status_events_created_at', table_name='status_events')
+    op.drop_index('ix_status_events_status', table_name='status_events')
+    op.drop_index('ix_status_events_service_id', table_name='status_events')
     op.drop_index('ix_user_sessions_revoked_at', table_name='user_sessions')
     op.drop_index('ix_user_sessions_expires_at', table_name='user_sessions')
     op.drop_index('ix_user_sessions_created_at', table_name='user_sessions')

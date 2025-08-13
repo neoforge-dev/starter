@@ -211,6 +211,19 @@ npm run test:perf || echo "⚠️ Performance tests failed or not available"
 echo "🛡️ Running security audit..."
 npm audit --audit-level moderate
 
+# Ignore credential-like strings in backend/tests and docs to reduce false positives
+echo "🔒 Scanning for secrets (excluding tests and docs)..."
+if git rev-parse --git-dir > /dev/null 2>&1; then
+  CHANGED_FILES=$(git diff --cached --name-only | grep -vE '^(backend/tests/|docs/)' || true)
+  if [[ -n "$CHANGED_FILES" ]]; then
+    if grep -r -E "(password|secret|key|token).*(=|:).*(\"[^\"]{8,}\"|'[^']{8,}')" $CHANGED_FILES 2>/dev/null; then
+      echo "❌ Potential hardcoded secrets detected in staged app files"
+      echo "Please review and remove any sensitive data before pushing"
+      exit 1
+    fi
+  fi
+fi
+
 # 8. Technical debt analysis
 echo "📊 Analyzing technical debt..."
 npm run debt:analyze
