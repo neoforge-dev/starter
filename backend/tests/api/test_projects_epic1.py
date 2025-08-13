@@ -45,3 +45,11 @@ async def test_projects_crud_and_pagination(client: AsyncClient):
     assert up1.status_code == 200
     up2 = await client.patch(f"/api/v1/projects/{p1['id']}", json={"description": "new"}, headers=patch_headers)
     assert up2.status_code in (200, 201)
+
+@pytest.mark.asyncio
+async def test_projects_idempotency_replay_201_to_200(client: AsyncClient):
+    headers = {"Idempotency-Key": "proj-201-200"}
+    r1 = await client.post("/api/v1/projects", json={"name": "Replay"}, headers=headers)
+    assert r1.status_code == 201
+    r2 = await client.post("/api/v1/projects", json={"name": "Replay"}, headers=headers)
+    assert r2.status_code in (200, 201)

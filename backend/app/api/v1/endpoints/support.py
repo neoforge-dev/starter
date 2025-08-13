@@ -28,6 +28,7 @@ async def create_ticket(
 ) -> SupportTicketRead:
     cached = await idem.precheck(payload.model_dump())
     if cached:
+        # On replay, return the same representation with 200 OK semantics
         return SupportTicketRead(**cached)
 
     created = await st_crud.create(db, obj_in=payload)

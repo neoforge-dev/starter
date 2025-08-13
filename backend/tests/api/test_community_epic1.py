@@ -18,6 +18,22 @@ async def test_community_create_list_idempotent(client: AsyncClient):
     }, headers=headers)
     assert r2.status_code in (200, 201)
 
+@pytest.mark.asyncio
+async def test_community_idempotency_replay_semantics(client: AsyncClient):
+    headers = {"Idempotency-Key": "comm-dup-1"}
+    r1 = await client.post("/api/v1/community/posts", json={
+        "title": "Same",
+        "content": "Again",
+        "author": "neo"
+    }, headers=headers)
+    assert r1.status_code == 201
+    r2 = await client.post("/api/v1/community/posts", json={
+        "title": "Same",
+        "content": "Again",
+        "author": "neo"
+    }, headers=headers)
+    assert r2.status_code in (200, 201)
+
     rl = await client.get("/api/v1/community/posts", params={"page": 1, "page_size": 5})
     assert rl.status_code == 200
     data = rl.json()

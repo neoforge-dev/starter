@@ -21,6 +21,22 @@ async def test_support_create_list_update(client: AsyncClient):
     }, headers=headers)
     assert r2.status_code in (200, 201)
 
+@pytest.mark.asyncio
+async def test_support_idempotency_replay_semantics(client: AsyncClient):
+    headers = {"Idempotency-Key": "support-dup-1"}
+    r1 = await client.post("/api/v1/support/tickets", json={
+        "email": "dup@example.com",
+        "subject": "Same",
+        "message": "Again"
+    }, headers=headers)
+    assert r1.status_code == 201
+    r2 = await client.post("/api/v1/support/tickets", json={
+        "email": "dup@example.com",
+        "subject": "Same",
+        "message": "Again"
+    }, headers=headers)
+    assert r2.status_code in (200, 201)
+
     # List paginated
     rl = await client.get("/api/v1/support/tickets", params={"page": 1, "page_size": 10})
     assert rl.status_code == 200

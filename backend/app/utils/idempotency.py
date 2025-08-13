@@ -149,12 +149,13 @@ async def get_idempotency_manager(
 async def cleanup_idempotency_keys(db: AsyncSession, max_age_seconds: int = 86400) -> None:
     """Delete idempotency entries older than max_age_seconds if no explicit expires_at set."""
     from sqlalchemy import text
+    # Use a parameterized interval expression compatible with Postgres
     await db.execute(
         text(
             """
             DELETE FROM idempotency_keys
             WHERE (expires_at IS NOT NULL AND expires_at < NOW())
-               OR (expires_at IS NULL AND created_at < NOW() - INTERVAL ':age seconds')
+               OR (expires_at IS NULL AND created_at < (NOW() - (:age || ' seconds')::interval))
             """
         ),
         {"age": max_age_seconds},

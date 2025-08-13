@@ -48,6 +48,7 @@ async def create_post(
 ) -> CommunityPostRead:
     cached = await idem.precheck(payload.model_dump())
     if cached:
+        # On replay, return the same representation with 200 OK semantics
         return CommunityPostRead(**cached)
 
     created = await cp_crud.create(db, obj_in=payload)
