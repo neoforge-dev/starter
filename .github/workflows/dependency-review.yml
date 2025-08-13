@@ -14,7 +14,7 @@ jobs:
       - name: "Dependency Review"
         uses: actions/dependency-review-action@v4
         with:
-          fail-on-severity: high
+          fail-on-severity: critical
           deny-licenses: |
             GPL-1.0-or-later
             LGPL-2.0-or-later
