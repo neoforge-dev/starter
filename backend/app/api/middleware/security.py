@@ -390,6 +390,14 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 request_id=getattr(request.state, 'request_id', None),
                 trace_id=self._get_trace_id()
             )
+
+            # Count any 5xx responses (including HTTPException cases not caught below)
+            try:
+                if response.status_code >= 500:
+                    metrics = get_metrics()
+                    metrics["http_5xx_responses"].labels(method=request.method, endpoint=request.url.path).inc()
+            except Exception:
+                pass
             
             return response
             

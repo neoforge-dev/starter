@@ -13,3 +13,5 @@ async def test_metrics_endpoint_exposes_core_metrics(client: AsyncClient):
     assert "db_pool_size" in txt
     # Celery depth gauges should exist even if zero
     assert "celery_queue_depth" in txt
+    # 5xx error counter should be registered
+    assert "http_5xx_responses_total" in txt
