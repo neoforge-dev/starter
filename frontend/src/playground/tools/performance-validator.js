@@ -96,7 +96,10 @@ export class PerformanceValidator {
     };
 
     const generator = dataGenerators[appScenario.dataSize] || dataGenerators.medium;
-    return generator();
+    const data = generator();
+    // Keep a reference for later property assignment in DOM
+    this._lastGeneratedData = data;
+    return data;
   }
 
   generateLargeDataset(size) {
@@ -177,13 +180,8 @@ export class PerformanceValidator {
     const componentHTML = appScenario.components.map(componentName => {
       switch (componentName) {
         case 'neo-table':
-          return `<neo-table 
-            data='${JSON.stringify(testData)}' 
-            columns='[{"key":"name","label":"Name"},{"key":"email","label":"Email"},{"key":"department","label":"Department"}]'
-            page-size="50"
-            sortable="true"
-            filterable="true">
-          </neo-table>`;
+          // Create element and set properties programmatically to avoid invalid attribute JSON
+          return `<neo-table id="perf-neo-table" page-size="50"></neo-table>`;
 
         case 'neo-form-builder':
           return `<neo-form-builder 
@@ -241,7 +239,20 @@ export class PerformanceValidator {
     });
 
     await Promise.all(readyPromises);
-    
+
+    // If neo-table placeholder exists, populate properties now
+    const neoTable = container.querySelector('#perf-neo-table');
+    if (neoTable) {
+      try {
+        neoTable.columns = [
+          { field: 'name', header: 'Name' },
+          { field: 'email', header: 'Email' },
+          { field: 'department', header: 'Department' }
+        ];
+        neoTable.data = this._lastGeneratedData || [];
+      } catch (_) {}
+    }
+
     // Additional wait for layout stabilization
     await new Promise(resolve => setTimeout(resolve, 100));
   }

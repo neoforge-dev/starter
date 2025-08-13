@@ -75,7 +75,7 @@ export class NeoTable extends LitElement {
 
     .table-wrapper {
       overflow: auto;
-      max-height: ${this.virtualScroll ? '400px' : 'none'};
+      max-height: var(--neo-table-max-height, none);
     }
 
     table {
@@ -130,18 +130,21 @@ export class NeoTable extends LitElement {
       transition: background-color 0.15s;
     }
 
-    tbody tr:nth-child(even) {
-      background: ${this.striped ? '#f9fafb' : 'transparent'};
+    :host(.striped) tbody tr:nth-child(even) {
+      background: #f9fafb;
     }
 
-    tbody tr:hover {
-      background: ${this.hover ? '#eff6ff' : 'transparent'};
+    :host(.hoverable) tbody tr:hover {
+      background: #eff6ff;
     }
 
     td {
       padding: 12px 16px;
-      border-bottom: ${this.bordered ? '1px solid #e5e5e5' : 'none'};
       vertical-align: middle;
+    }
+
+    :host(.bordered) td {
+      border-bottom: 1px solid #e5e5e5;
     }
 
     .checkbox {
@@ -282,6 +285,18 @@ export class NeoTable extends LitElement {
     this.loading = false;
     this.emptyMessage = "No data available";
     this.globalFilter = "";
+  }
+
+  updated(changed) {
+    // Reflect boolean style state via host classes for CSS selectors
+    this.classList.toggle('striped', !!this.striped)
+    this.classList.toggle('bordered', !!this.bordered)
+    this.classList.toggle('hoverable', !!this.hover)
+    // Control max-height via CSS variable to avoid dynamic CSS in static styles
+    this.style.setProperty(
+      '--neo-table-max-height',
+      this.virtualScroll ? '400px' : 'none'
+    )
   }
 
   get filteredData() {

@@ -87,8 +87,11 @@ class DynamicConfigService {
     this.error = null;
 
     try {
-      // Use relative URL that works in all environments
-      const response = await fetch('/api/v1/config', {
+      // Resolve base URL robustly for node/jsdom environments
+      const base = (typeof window !== 'undefined' && window.location && window.location.origin)
+        ? window.location.origin
+        : 'http://localhost';
+      const response = await fetch(new URL('/api/v1/config', base), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
