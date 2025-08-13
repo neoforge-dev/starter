@@ -23,6 +23,8 @@ async def test_projects_crud_and_pagination(client: AsyncClient):
     assert rlist.status_code == 200
     data = rlist.json()
     assert "items" in data and "total" in data and data["page"] == 1
+    # Cache-Control present in non-prod
+    assert "Cache-Control" in rlist.headers
 
     # Boundary: page beyond last should return empty items
     pages = data.get("pages", 1)

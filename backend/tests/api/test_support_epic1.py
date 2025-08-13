@@ -42,6 +42,7 @@ async def test_support_idempotency_replay_semantics(client: AsyncClient):
     assert rl.status_code == 200
     data = rl.json()
     assert data["total"] >= 1
+    assert "Cache-Control" in rl.headers
 
     # Boundary: page_size 1 and page 999 returns empty items
     rb = await client.get("/api/v1/support/tickets", params={"page": 999, "page_size": 1})

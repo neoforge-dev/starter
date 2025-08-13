@@ -7,6 +7,7 @@ from app.crud.community_post import community_post as cp_crud
 from app.schemas.community_post import CommunityPostCreate, CommunityPostRead
 from app.schemas.common import PaginatedResponse
 from app.utils.http_cache import set_etag, not_modified
+from app.core.config import get_settings, Environment
 from app.utils.idempotency import (
     get_idempotency_manager,
     IdempotencyManager,
@@ -37,6 +38,9 @@ async def list_posts(
     etag = set_etag(response, payload.model_dump())
     if not_modified(request, etag):
         raise HTTPException(status_code=304, detail="Not Modified")
+    settings = get_settings()
+    if settings.environment != Environment.PRODUCTION:
+        response.headers["Cache-Control"] = "public, max-age=30"
     return payload
 
 

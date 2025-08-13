@@ -11,6 +11,7 @@ from app.utils.idempotency import (
     IdempotencyManager,
 )
 from app.utils.http_cache import set_etag, not_modified
+from app.core.config import get_settings, Environment
 from app.utils.audit import audit_event
 import json
 
@@ -39,6 +40,10 @@ async def list_projects(
     etag = set_etag(response, payload.model_dump())
     if not_modified(request, etag):
         raise HTTPException(status_code=304, detail="Not Modified")
+    # Dev-only Cache-Control
+    settings = get_settings()
+    if settings.environment != Environment.PRODUCTION:
+        response.headers["Cache-Control"] = "public, max-age=30"
     return payload
 
 

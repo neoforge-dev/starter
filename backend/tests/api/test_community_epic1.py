@@ -38,6 +38,7 @@ async def test_community_idempotency_replay_semantics(client: AsyncClient):
     assert rl.status_code == 200
     data = rl.json()
     assert "items" in data and data["total"] >= 1
+    assert "Cache-Control" in rl.headers
 
     # Boundary: high page request returns empty
     rb = await client.get("/api/v1/community/posts", params={"page": 500, "page_size": 1})

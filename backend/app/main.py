@@ -143,10 +143,13 @@ async def lifespan(app: FastAPI):
     # Start background task for periodic idempotency key cleanup (simple loop)
     async def _cleanup_loop():
         from app.db.session import AsyncSessionLocal
+        from app.crud.user_session import user_session as user_session_crud
         while True:
             try:
                 async with AsyncSessionLocal() as session:
                     await cleanup_idempotency_keys(session, max_age_seconds=86400)
+                    # Prune sessions (revoked and old expired)
+                    await user_session_crud.prune_expired_and_revoked(session, older_than_days=30)
                 await asyncio.sleep(3600)
             except Exception as e:
                 logger.warning("idempotency_cleanup_error", error=str(e))

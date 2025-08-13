@@ -11,6 +11,7 @@ from app.schemas.support_ticket import (
 )
 from app.schemas.common import PaginatedResponse
 from app.utils.http_cache import set_etag, not_modified
+from app.core.config import get_settings, Environment
 from app.utils.idempotency import (
     get_idempotency_manager,
     IdempotencyManager,
@@ -57,6 +58,9 @@ async def list_tickets(
     etag = set_etag(response, payload.model_dump())
     if not_modified(request, etag):
         raise HTTPException(status_code=304, detail="Not Modified")
+    settings = get_settings()
+    if settings.environment != Environment.PRODUCTION:
+        response.headers["Cache-Control"] = "public, max-age=30"
     return payload
 
 

@@ -94,5 +94,29 @@ class CRUDUserSession:
         total = len(list(res_all.scalars().all()))
         return items, total
 
+    async def prune_expired_and_revoked(
+        self,
+        db: AsyncSession,
+        *,
+        older_than_days: int = 30,
+    ) -> int:
+        """Delete revoked sessions and expired sessions older than threshold.
+
+        Returns number of sessions pruned.
+        """
+        cutoff = datetime.utcnow() - timedelta(days=older_than_days)
+        # Fetch candidates, then delete
+        res = await db.execute(
+            select(UserSession).where(
+                (UserSession.revoked_at.is_not(None)) | (UserSession.expires_at < cutoff)
+            )
+        )
+        sessions = list(res.scalars().all())
+        count = len(sessions)
+        for s in sessions:
+            await db.delete(s)
+        await db.commit()
+        return count
+
 
 user_session = CRUDUserSession()
