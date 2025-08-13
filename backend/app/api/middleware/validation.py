@@ -286,6 +286,15 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 status="500",
             ).inc()
 
+            # Increment dedicated 5xx counter
+            try:
+                self.metrics["http_5xx_responses"].labels(
+                    method=method,
+                    endpoint=endpoint,
+                ).inc()
+            except Exception:
+                pass
+
             logger.error(
                 json.dumps({
                     "method": method,
@@ -298,6 +307,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                     "timestamp": time.time(),
                     "environment": self.settings.environment,
                     "app_version": self.settings.version,
+                    "request_id": getattr(request.state, "request_id", None),
                 })
             )
             return JSONResponse(

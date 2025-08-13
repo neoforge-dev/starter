@@ -6,6 +6,22 @@ from typing import Any, Dict
 
 import structlog
 from structlog.types import EventDict, Processor
+from structlog import contextvars as structlog_contextvars
+
+
+def add_trace_id(_: Any, __: Any, event_dict: EventDict) -> EventDict:
+    """Add OpenTelemetry trace_id to the event dict if available."""
+    try:
+        from opentelemetry import trace as _otel_trace  # type: ignore
+
+        span = _otel_trace.get_current_span()
+        ctx = span.get_span_context() if span else None
+        if ctx and getattr(ctx, "trace_id", 0):
+            event_dict["trace_id"] = f"{ctx.trace_id:032x}"
+    except Exception:
+        # Best-effort; do not block logging
+        pass
+    return event_dict
 
 def add_timestamp(_, __, event_dict: EventDict) -> EventDict:
     """Add timestamp to the event dict."""
@@ -28,8 +44,11 @@ def setup_logging(config: Dict[str, Any]) -> None:
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
+        # Merge any bound contextvars (e.g., request_id) into the log event
+        structlog_contextvars.merge_contextvars,
         add_timestamp,
         add_environment(config),
+        add_trace_id,
         structlog.processors.JSONRenderer()
     ]
 

@@ -10,9 +10,11 @@ from sqlalchemy.exc import SQLAlchemyError
 import structlog
 import time
 import uuid
+from structlog import contextvars as structlog_contextvars
 
 from app.core.config import Settings, get_settings, Environment
 from prometheus_client import Counter
+from app.core.metrics import get_metrics
 
 logger = structlog.get_logger()
 
@@ -30,7 +32,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Generate request ID for tracing
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
-        
+        # Bind request_id into structured log context so all logs include it
+        try:
+            structlog_contextvars.bind_contextvars(request_id=request_id)
+        except Exception:
+            pass
+
         response = await call_next(request)
         
         # Add request ID to response headers
@@ -85,6 +92,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         except Exception:
             pass
         
+        try:
+            # Avoid leaking context across requests
+            structlog_contextvars.unbind_contextvars("request_id")
+        except Exception:
+            pass
         return response
     
     def _build_csp_header(self) -> str:
@@ -362,6 +374,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Process the request and handle any errors."""
         start_time = time.time()
+        metrics = get_metrics()
         
         try:
             response = await call_next(request)
@@ -408,6 +421,10 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 request_id=getattr(request.state, 'request_id', None),
                 trace_id=self._get_trace_id()
             )
+            try:
+                metrics["http_5xx_responses"].labels(method=request.method, endpoint=request.url.path).inc()
+            except Exception:
+                pass
             return JSONResponse(
                 status_code=500,
                 content={
@@ -426,6 +443,10 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 request_id=getattr(request.state, 'request_id', None),
                 trace_id=self._get_trace_id()
             )
+            try:
+                metrics["http_5xx_responses"].labels(method=request.method, endpoint=request.url.path).inc()
+            except Exception:
+                pass
             return JSONResponse(
                 status_code=500,
                 content={

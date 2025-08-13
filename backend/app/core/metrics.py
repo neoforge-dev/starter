@@ -19,6 +19,13 @@ def initialize_metrics() -> Dict[str, Any]:
          ["method", "endpoint", "status"]
     )
 
+    # Per-route 5xx error counter for fast error-rate computations
+    _metrics["http_5xx_responses"] = Counter(
+         "http_5xx_responses_total",
+         "Total number of 5xx HTTP responses per route",
+         ["method", "endpoint"]
+    )
+
     hist_http = Histogram(
          "http_request_duration_seconds",
          "HTTP request duration in seconds",
@@ -93,6 +100,22 @@ def initialize_metrics() -> Dict[str, Any]:
          "Current depth of Celery queues",
          ["queue"]
     )
+
+    # Email metrics (totals reported from tracking table)
+    _metrics["email_metrics"] = {
+        "sent": Gauge(
+            "email_sent_total",
+            "Total emails sent"
+        ),
+        "delivered": Gauge(
+            "email_delivered_total",
+            "Total emails delivered"
+        ),
+        "failed": Gauge(
+            "email_failed_total",
+            "Total emails failed"
+        ),
+    }
 
     return _metrics
 
