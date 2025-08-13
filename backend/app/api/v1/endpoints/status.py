@@ -1,6 +1,6 @@
 """System status endpoints with basic persistence for events."""
 from typing import Dict, List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request, Response, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from app.api import deps
@@ -9,6 +9,8 @@ from app.schemas.status_event import StatusEventCreate, StatusEventRead
 from app.schemas.common import PaginatedResponse
 from app.models.status_event import StatusEvent
 from sqlalchemy import select, desc
+from app.utils.http_cache import set_etag, not_modified
+from app.core.config import get_settings, Environment
 
 router = APIRouter()
 
@@ -55,15 +57,29 @@ async def create_status_event(
 
 @router.get("/status/events", response_model=PaginatedResponse)
 async def list_status_events(
-    db: AsyncSession = Depends(deps.get_db), page: int = 1, page_size: int = 20
+    db: AsyncSession = Depends(deps.get_db),
+    page: int = 1,
+    page_size: int = 20,
+    request: Request = None,
+    response: Response = None,
 ) -> PaginatedResponse:
     skip = (page - 1) * page_size
     items, total = await se_crud.get_multi_with_count(db, skip=skip, limit=page_size)
     pages = (total + page_size - 1) // page_size if page_size else 1
-    return PaginatedResponse(
+    payload = PaginatedResponse(
         items=[StatusEventRead.model_validate(it) for it in items],
         total=total,
         page=page,
         page_size=page_size,
         pages=pages,
     )
+    # ETag for list
+    etag = set_etag(response, payload.model_dump())
+    if not_modified(request, etag):
+        raise HTTPException(status_code=304, detail="Not Modified")
+
+    # Dev-only Cache-Control to improve perf
+    settings = get_settings()
+    if settings.environment != Environment.PRODUCTION:
+        response.headers["Cache-Control"] = "public, max-age=30"
+    return payload
