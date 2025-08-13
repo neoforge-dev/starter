@@ -4,19 +4,19 @@
 API_PORT ?= 8000
 
 setup: ## Initial setup of development environment
-    @echo "Creating development environment..."
-    cp .env.example .env || true
-    docker compose build
-    cd frontend && npm install
-    mkdir -p frontend/public/icons
+	@echo "Creating development environment..."
+	cp .env.example .env || true
+	docker compose build
+	cd frontend && npm install
+	mkdir -p frontend/public/icons
 
 frontend: ## Start frontend development server
 	@echo "Starting frontend development server..."
 	cd frontend && npm run dev
 
 backend: ## Start backend development server
-    @echo "Starting backend development server..."
-    docker compose up api
+	@echo "Starting backend development server..."
+	docker compose up api
 
 serve: frontend ## Alias for frontend
 
@@ -25,10 +25,10 @@ dev: ## Start full development environment
 	make -j2 frontend backend
 
 dev-build: ## Rebuild and start development environment
-    @echo "Rebuilding development environment..."
-    docker compose build --no-cache
-    cd frontend && npm install
-    make dev
+	@echo "Rebuilding development environment..."
+	docker compose build --no-cache
+	cd frontend && npm install
+	make dev
 
 test-frontend: ## Run frontend tests
 	@echo "Running frontend tests..."
@@ -62,17 +62,17 @@ test-frontend-all: ## Run all frontend tests
 	make test-frontend-perf
 
 test: ## Run backend tests in api_test service
-    @echo "Running backend tests..."
-    docker compose run --rm api_test pytest --maxfail=5
+	@echo "Running backend tests..."
+	docker compose run --rm api_test pytest --maxfail=5
 
 test-metrics: ## Run metrics tests directly without pytest
 	@echo "Running metrics tests directly..."
 	docker compose run --rm api_test bash -c "pip install -q psutil && python run_metrics_test.py"
 
 clean: ## Clean up development environment
-    @echo "Cleaning up..."
-    docker compose down -v
-    rm -rf frontend/node_modules frontend/dist
+	@echo "Cleaning up..."
+	docker compose down -v
+	rm -rf frontend/node_modules frontend/dist
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

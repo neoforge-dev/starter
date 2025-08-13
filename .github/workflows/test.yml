@@ -28,7 +28,7 @@ jobs:
 
       - name: Run Unit Tests
         working-directory: frontend
-        run: bun run test -- --shard=${{ matrix.shard }}/3
+        run: bun vitest run --shard=${{ matrix.shard }}/3
 
       - name: Upload Coverage
         if: matrix.shard == 1
