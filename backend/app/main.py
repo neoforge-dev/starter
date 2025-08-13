@@ -306,6 +306,34 @@ async def health_check(
         celery_status=celery_status
     )
 
+@app.get("/ready", tags=["system"])
+async def readiness_probe(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    redis: Annotated[Redis, Depends(get_redis)]
+) -> dict:
+    """K8s-friendly readiness check: 200 only when DB and Redis are reachable."""
+    db_ok = True
+    redis_ok = True
+    try:
+        await db.execute(text("SELECT 1"))
+    except Exception:
+        db_ok = False
+    try:
+        await redis.ping()
+    except Exception:
+        redis_ok = False
+    overall_ok = db_ok and redis_ok
+    status_code = 200 if overall_ok else 503
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "status": "ready" if overall_ok else "not_ready",
+            "database": "ok" if db_ok else "error",
+            "redis": "ok" if redis_ok else "error",
+        },
+    )
+
 @app.get("/health/detailed", response_model=DetailedHealthCheck, tags=["system"])
 async def detailed_health_check(
     db: Annotated[AsyncSession, Depends(get_db)],
