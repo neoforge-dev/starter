@@ -279,12 +279,14 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
             logger.error("Redis connection not available for rate limiting")
             return False
         
-        # Get appropriate rate limit based on authentication
-        rate_limit = (
-            self.settings.rate_limit_auth_requests
-            if user_id
-            else self.settings.rate_limit_requests
-        )
+        # Get appropriate rate limit based on authentication and endpoint
+        is_login = request.url.path.endswith("/auth/token")
+        if is_login:
+            rate_limit = self.settings.rate_limit_login_requests
+        else:
+            rate_limit = (
+                self.settings.rate_limit_auth_requests if user_id else self.settings.rate_limit_requests
+            )
         
         # Get rate limit key
         key = self._get_rate_limit_key(request, client_ip, user_id)
