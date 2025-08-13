@@ -62,9 +62,9 @@ test-frontend-all: ## Run all frontend tests
 	make test-frontend-perf
 
 test: ## Run backend tests in api_test service (with coverage artifacts)
-    @echo "Running backend tests with coverage..."
-    # Generate XML and HTML coverage reports under backend/
-    docker compose run --rm api_test pytest --maxfail=5 --cov=app --cov-report=xml:coverage.xml --cov-report=html:coverage_html
+	@echo "Running backend tests with coverage..."
+	# Generate XML and HTML coverage reports under backend/
+	docker compose run --rm api_test pytest --maxfail=5 --cov=app --cov-report=xml:coverage.xml --cov-report=html:coverage_html
 
 test-metrics: ## Run metrics tests directly without pytest
 	@echo "Running metrics tests directly..."
