@@ -58,3 +58,8 @@ class SessionOut(BaseModel):
     expires_at: datetime
     revoked_at: Optional[datetime] = None
     # is_current is not computed server-side yet; clients may compute via refresh token
+
+
+class RevokeOthersRequest(BaseModel):
+    """Request body to revoke all sessions except one."""
+    keep_session_id: int

@@ -18,6 +18,7 @@ from app.schemas.auth import (
     EmailVerification,
     ResendVerification,
     SessionOut,
+    RevokeOthersRequest,
 )
 from app.crud.user_session import user_session, hash_token
 from app.utils.audit import audit_event
@@ -136,6 +137,25 @@ async def revoke_session(
         expires_at=sess.expires_at,
         revoked_at=sess.revoked_at,
     )
+
+
+@router.post("/sessions/revoke-others", response_model=dict)
+async def revoke_other_sessions(
+    body: RevokeOthersRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> dict:
+    """Revoke all refresh sessions for the current user except the provided one."""
+    # Ensure the keep_session_id belongs to the current user
+    res = await db.execute(select(UserSession).where(UserSession.id == body.keep_session_id))
+    keep = res.scalar_one_or_none()
+    if not keep or keep.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    revoked = await user_session.revoke_all_except(
+        db, user_id=current_user.id, keep_session_id=body.keep_session_id
+    )
+    await audit_event(db, user_id=current_user.id, action="auth.sessions.revoke_others", resource=f"user:{current_user.id}")
+    return {"revoked_count": revoked}
 
 
 @router.post("/register", response_model=dict)

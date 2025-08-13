@@ -47,6 +47,32 @@ class CRUDUserSession:
         await db.refresh(session)
         return session
 
+    async def revoke_all_except(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: int,
+        keep_session_id: int,
+    ) -> int:
+        """Revoke all sessions for a user except the specified session.
+
+        Returns the number of sessions revoked.
+        """
+        res = await db.execute(
+            select(UserSession).where(
+                UserSession.user_id == user_id,
+            )
+        )
+        sessions = list(res.scalars().all())
+        revoked_count = 0
+        now = datetime.utcnow()
+        for s in sessions:
+            if s.id != keep_session_id and s.revoked_at is None:
+                s.revoked_at = now
+                revoked_count += 1
+        await db.commit()
+        return revoked_count
+
     async def list_for_user(
         self,
         db: AsyncSession,
