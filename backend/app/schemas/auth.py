@@ -1,5 +1,6 @@
 """Authentication schemas."""
 from typing import Optional
+from datetime import datetime
 
 from pydantic import BaseModel, EmailStr
 
@@ -8,6 +9,7 @@ class Token(BaseModel):
     """Token schema."""
     access_token: str
     token_type: str
+    refresh_token: Optional[str] = None
 
 
 class TokenPayload(BaseModel):
@@ -45,3 +47,14 @@ class EmailVerification(BaseModel):
 class ResendVerification(BaseModel):
     """Resend verification email schema."""
     email: EmailStr 
+
+
+class SessionOut(BaseModel):
+    """User session representation for listing/revocation APIs."""
+    id: int
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None
+    created_at: datetime
+    expires_at: datetime
+    revoked_at: Optional[datetime] = None
+    # is_current is not computed server-side yet; clients may compute via refresh token

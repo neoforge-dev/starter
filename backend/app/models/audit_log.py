@@ -13,5 +13,5 @@ class AuditLog(SQLModel, table=True):
     user_id: Optional[int] = Field(default=None, index=True)
     action: str = Field(index=True, description="Action performed, e.g., project.create")
     resource: Optional[str] = Field(default=None, index=True, description="Resource id, e.g., project:123")
-    metadata: Optional[str] = Field(default=None, description="JSON-encoded metadata about the event")
+    event_metadata: Optional[str] = Field(default=None, description="JSON-encoded metadata about the event")
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)

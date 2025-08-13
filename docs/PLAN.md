@@ -45,10 +45,69 @@ This plan captures the missing details and the exact work remaining to complete 
 ### 5) CI/CD
 - [ ] Add workflow step to run: `make setup && make test && make smoke`
 - [ ] Publish coverage and artifacts (logs, reports)
+ - [x] Frontend unit sharding runs `vitest run --shard` (non-watch)
+ - [x] Fix Makefile tab separators to unblock backend CI job
+ - [x] Restrict pre-commit quality gates to PRs and set Node 20
+ - [ ] Backend job: add coverage upload `backend/coverage.xml` and ensure always-artifact on failure
+ - [ ] Consider ESLint config or ignore patterns to exclude playground heavy files from PR gates (see "Affecting Pre-commit Quality Gates" below)
 
 ### 6) Documentation
 - [ ] Add endpoint docs (paths, params, response shapes, ETag and idempotency semantics)
 - [ ] Update dev guide with new Make targets and smoke
+
+## Epic 2 – Security & Account Lifecycle (Execution Details)
+
+### A) Refresh token sessions (foundation done)
+- Models/CRUD: `UserSession` exists; opaque refresh tokens issued at `POST /api/v1/auth/token`; `POST /api/v1/auth/refresh` exchanges refresh→access.
+- Remaining work:
+  - [ ] Session listing for current user: `GET /api/v1/auth/sessions`
+    - Query `UserSession` by `user_id`, default sort `created_at desc`, pagination via standard params
+    - Response: `PaginatedResponse[SessionOut]` (id, created_at, last_used_at, user_agent, ip, expires_at, is_current)
+  - [ ] Session revocation: `DELETE /api/v1/auth/sessions/{session_id}`
+    - Soft-delete or set `revoked_at`; invalidate server cache and deny subsequent refresh using that session
+    - Authorization: only owner; 204 on success; idempotent
+  - [ ] Revoke all except current: `POST /api/v1/auth/sessions/revoke-others` (optional stretch)
+  - [ ] Tests: `backend/tests/api/test_auth_sessions.py`
+    - List sessions returns current + previous; pagination; redaction of sensitive token values
+    - Revoke single session prevents future refresh; status codes; ownership enforcement
+
+### B) Rate limiting response headers
+- Add standard headers on limited routes (especially login):
+  - `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` (epoch seconds)
+- Implementation point: `backend/app/api/middleware/security.py`
+  - After computing the allowance decision, attach headers to the response
+  - Tests: hit the login route repeatedly, assert headers decrement and 429 contains headers
+
+### C) CSP reporting docs
+- Document CSP report endpoint and sample `Content-Security-Policy-Report-Only` and `Report-To` values
+- Add troubleshooting for common violations and how to aggregate in logs
+
+### D) Indices and DB performance
+- Ensure indices exist for:
+  - `status_events (service, created_at desc)`
+  - `idempotency_keys (key)` unique index
+  - `user_sessions (user_id, created_at desc)`
+- If missing, generate and apply a migration (zero-downtime safe)
+
+### E) Affecting Pre-commit Quality Gates (PR-only)
+- ESLint currently flags numerous issues under `frontend/src/playground/**` and advanced tests.
+- Options (pick one):
+  - Relax PR gate to run `npm run lint` only on `src/components/**`, `src/services/**`, `src/pages/**`
+  - Add `.eslintignore` entries for `src/playground/**`, `src/test/advanced/**`, `src/test/visual/**` (kept in main lint but not PR gate)
+  - Introduce a separate slower, non-blocking workflow that lints full tree and posts a report
+
+## Acceptance Criteria – Epic 2 (phase slice)
+- [ ] Users can view and revoke refresh sessions via API with tests passing
+- [ ] Login route exposes rate limit headers; behavior tested
+- [ ] CSP reporting documented and endpoint verified via smoke
+- [ ] DB indices verified or added for hot paths
+
+## Operational Steps to Close This Phase
+1) Implement and test sessions list/revoke
+2) Add RL headers; extend tests
+3) Update docs (API semantics + CSP + Dev steps)
+4) Tidy CI lint scope for PRs if too noisy; keep a non-blocking full lint report
+5) Ensure smoke passes and CI green
 
 ## Future Epics (High-Level)
 

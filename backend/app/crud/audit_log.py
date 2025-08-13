@@ -19,7 +19,7 @@ class CRUDAuditLog:
         resource: Optional[str] = None,
         metadata: Optional[str] = None,
     ) -> AuditLog:
-        entry = AuditLog(user_id=user_id, action=action, resource=resource, metadata=metadata)
+        entry = AuditLog(user_id=user_id, action=action, resource=resource, event_metadata=metadata)
         db.add(entry)
         await db.commit()
         await db.refresh(entry)

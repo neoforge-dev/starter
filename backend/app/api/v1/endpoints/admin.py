@@ -221,7 +221,7 @@ async def list_audit_logs(
             "user_id": it.user_id,
             "action": it.action,
             "resource": it.resource,
-            "metadata": it.metadata,
+            "metadata": it.event_metadata,
             "created_at": it.created_at.isoformat(),
         }
         for it in items

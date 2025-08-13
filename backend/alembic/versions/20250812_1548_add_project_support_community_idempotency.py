@@ -18,6 +18,24 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # user_sessions
+    op.create_table(
+        'user_sessions',
+        sa.Column('id', sa.Integer, primary_key=True, index=True),
+        sa.Column('user_id', sa.Integer, nullable=False, index=True),
+        sa.Column('hashed_refresh_token', sa.String(), nullable=False, index=True),
+        sa.Column('user_agent', sa.String(), nullable=True),
+        sa.Column('ip_address', sa.String(), nullable=True),
+        sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP')),
+        sa.Column('expires_at', sa.DateTime(), nullable=False),
+        sa.Column('revoked_at', sa.DateTime(), nullable=True, index=True),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_user_sessions_user_id_users', ondelete='CASCADE'),
+    )
+    op.create_index('ix_user_sessions_user_id', 'user_sessions', ['user_id'], unique=False)
+    op.create_index('ix_user_sessions_hashed_refresh_token', 'user_sessions', ['hashed_refresh_token'], unique=True)
+    op.create_index('ix_user_sessions_created_at', 'user_sessions', ['created_at'], unique=False)
+    op.create_index('ix_user_sessions_expires_at', 'user_sessions', ['expires_at'], unique=False)
+    op.create_index('ix_user_sessions_revoked_at', 'user_sessions', ['revoked_at'], unique=False)
     op.create_table(
         'projects',
         sa.Column('id', sa.Integer, primary_key=True, index=True),
@@ -74,6 +92,12 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_index('ix_user_sessions_revoked_at', table_name='user_sessions')
+    op.drop_index('ix_user_sessions_expires_at', table_name='user_sessions')
+    op.drop_index('ix_user_sessions_created_at', table_name='user_sessions')
+    op.drop_index('ix_user_sessions_hashed_refresh_token', table_name='user_sessions')
+    op.drop_index('ix_user_sessions_user_id', table_name='user_sessions')
+    op.drop_table('user_sessions')
     op.drop_table('status_events')
     op.drop_table('idempotency_keys')
     op.drop_table('community_posts')

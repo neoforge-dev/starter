@@ -243,41 +243,50 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
             return base_key
         
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        """Apply rate limiting per client IP and/or user."""
+        """Apply rate limiting per client IP and/or user, attach standard headers."""
         # Skip rate limiting for health/monitoring endpoints
         if request.url.path in ["/health", "/metrics"]:
             return await call_next(request)
-        
+
         client_ip = self._get_client_ip(request)
         user_id = await self._get_user_id(request)
-        
-        # Check if request should be rate limited
-        if await self._is_rate_limited(request, client_ip, user_id):
+
+        limited, headers = await self._rate_limit_check_and_headers(request, client_ip, user_id)
+        if limited:
             logger.warning(
                 "rate_limit_exceeded",
                 client_ip=client_ip,
                 user_id=user_id,
                 path=request.url.path,
-                method=request.method
+                method=request.method,
             )
             try:
                 self.rate_limit_violations.labels(endpoint=request.url.path).inc()
             except Exception:
                 pass
-            return Response(
-                content="Rate limit exceeded",
+            return JSONResponse(
                 status_code=429,
-                headers={"Retry-After": str(self.settings.rate_limit_window)}
+                content={"detail": "Rate limit exceeded. Please try again later."},
+                headers={**headers, "Retry-After": str(self.settings.rate_limit_window)},
             )
-        
-        return await call_next(request)
+
+        response = await call_next(request)
+        for key, value in headers.items():
+            response.headers[key] = value
+        return response
     
-    async def _is_rate_limited(self, request: Request, client_ip: str, user_id=None) -> bool:
-        """Check if request should be rate limited using Redis."""
+    async def _rate_limit_check_and_headers(self, request: Request, client_ip: str, user_id=None) -> tuple[bool, dict[str, str]]:
+        """Check limit and compute X-RateLimit headers."""
         redis = await self._get_redis()
         if not redis:
             logger.error("Redis connection not available for rate limiting")
-            return False
+            now = int(time.time())
+            headers = {
+                "X-RateLimit-Limit": str(self.settings.rate_limit_requests),
+                "X-RateLimit-Remaining": str(self.settings.rate_limit_requests),
+                "X-RateLimit-Reset": str(now + self.settings.rate_limit_window),
+            }
+            return False, headers
         
         # Get appropriate rate limit based on authentication and endpoint
         is_login = request.url.path.endswith("/auth/token")
@@ -312,9 +321,16 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
                 user_id=user_id,
                 client_ip=client_ip
             )
-            
-            # Check if rate limit exceeded
-            return request_count > rate_limit
+            # Compute headers
+            now = int(time.time())
+            limited = int(request_count) > int(rate_limit)
+            remaining = max(0, int(rate_limit) - int(request_count))
+            headers = {
+                "X-RateLimit-Limit": str(rate_limit),
+                "X-RateLimit-Remaining": str(0 if limited else remaining),
+                "X-RateLimit-Reset": str(now + self.settings.rate_limit_window),
+            }
+            return limited, headers
             
         except Exception as e:
             logger.exception(
@@ -322,7 +338,13 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
                 key=key,
                 error=str(e),
             )
-            return False
+            now = int(time.time())
+            headers = {
+                "X-RateLimit-Limit": str(self.settings.rate_limit_requests),
+                "X-RateLimit-Remaining": str(self.settings.rate_limit_requests),
+                "X-RateLimit-Reset": str(now + self.settings.rate_limit_window),
+            }
+            return False, headers
 
 class ErrorHandlerMiddleware(BaseHTTPMiddleware):
     """Middleware for handling errors and logging requests."""

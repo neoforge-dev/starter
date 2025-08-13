@@ -1,4 +1,7 @@
-You are a senior Cursor agent taking over a partially delivered multi-epic effort in the NeoForge starter repo. Your goals are to finish Epic 1 (persistence + API polish) and kick off CI and docs hardening, then prepare for security and observability work.
+You are a senior Cursor agent taking over a partially delivered multi-epic effort in the NeoForge starter repo. Your immediate goals are:
+1) Finish Epic 1 (persistence + API polish)
+2) Harden CI and docs for repeatable green builds
+3) Begin Epic 2 (security & account lifecycle) with a narrow, high-value slice
 
 Context highlights
 - Backend: FastAPI, SQLAlchemy 2.x, async DB, Alembic.
@@ -23,6 +26,11 @@ What’s already done
   - CSP report endpoint and Report-To header in non-prod
 - Tests added: initial integration tests for projects, support, community (in `backend/tests/api/test_*_epic1.py`)
 - Migrations: `backend/alembic/versions/20250812_1548_add_project_support_community_idempotency.py` creates tables: projects, support_tickets, community_posts, idempotency_keys, status_events
+
+Recent CI fixes already implemented on main branch:
+- Frontend unit tests use `bun vitest run --shard` (non-watch) for matrix shards
+- Makefile targets fixed to use tabs (no “missing separator” error)
+- Pre-commit quality gates run on PRs only and Node 20
 
 Your mission (do this first)
 1) Apply migrations in dev/runtime
@@ -68,6 +76,22 @@ Where to start (files)
 - CI: `.github/workflows/test.yml` (add a small backend job)
 
 Definition of done for your handoff
+— Also ensure plan alignment:
+- Update `docs/PLAN.md` with any refinements you make along the way
+
+Operating rules (be pragmatic, high-signal):
+- Prioritize the 20% that yields 80% of value (Pareto). Focus on core user journeys.
+- TDD for critical paths: write failing tests, implement minimally, refactor while green.
+- Use clean architecture and dependency injection for testability.
+- Keep CI fast; avoid long-lived processes.
+
+Execution checklist (in order):
+1) Apply DB migrations and run smoke tests
+2) Make idempotency consistent across endpoints and add TTL cleanup
+3) Expand and stabilize tests for pagination, idempotency, and status
+4) Tighten CI backend job with coverage/artifacts
+5) Update API semantics docs and troubleshooting
+6) Start Epic 2 slice: session list/revoke and RL headers
 - Migrations applied and verified locally.
 - Tests green locally and in CI (unit/integration; not necessarily full e2e).
 - Idempotency via `IdempotencyManager` on all create/update endpoints.

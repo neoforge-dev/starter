@@ -1,24 +1,34 @@
 """Authentication endpoints."""
-from datetime import timedelta
+from datetime import timedelta, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.core.security import create_access_token, validate_verification_token
 from app.core.config import Settings, get_settings
-from app.crud.user import user as user_crud
-from app.api.deps import get_db
-from app.schemas.auth import Token, TokenPayload, PasswordResetRequest, PasswordResetConfirm, EmailVerification, ResendVerification
+from app.api.deps import get_db, get_current_active_user
+from app.schemas.auth import (
+    Token,
+    TokenPayload,
+    PasswordResetRequest,
+    PasswordResetConfirm,
+    EmailVerification,
+    ResendVerification,
+    SessionOut,
+)
 from app.crud.user_session import user_session, hash_token
 from app.utils.audit import audit_event
 import secrets
 from app.schemas.user import UserCreate, UserResponse
 from app.models.user import User
+from app.models.user_session import UserSession
 from app.worker.email_worker import send_welcome_email_task, send_verification_email_task, send_password_reset_email_task
 from app.core.auth import verify_password, get_password_hash
 from app.crud import user as user_crud, password_reset_token
+from app.schemas.common import PaginatedResponse
 import logging # Import logging
 
 router = APIRouter()
@@ -76,6 +86,56 @@ async def refresh_access_token(
     access = create_access_token(subject=session.user_id, settings=settings, expires_delta=access_token_expires)
     await audit_event(db, user_id=session.user_id, action="auth.refresh", resource=f"session:{session.id}")
     return Token(access_token=access, token_type="bearer")
+
+
+@router.get("/sessions", response_model=PaginatedResponse)
+async def list_sessions(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    page: int = 1,
+    page_size: int = 10,
+) -> PaginatedResponse:
+    skip = (page - 1) * page_size
+    items, total = await user_session.list_for_user(
+        db, user_id=current_user.id, skip=skip, limit=page_size
+    )
+    sessions = [
+        SessionOut(
+            id=it.id,
+            user_agent=it.user_agent,
+            ip_address=it.ip_address,
+            created_at=it.created_at,
+            expires_at=it.expires_at,
+            revoked_at=it.revoked_at,
+        )
+        for it in items
+    ]
+    pages = (total + page_size - 1) // page_size if page_size else 1
+    return PaginatedResponse(
+        items=sessions, total=total, page=page, page_size=page_size, pages=pages
+    )
+
+
+@router.post("/sessions/{session_id}/revoke", response_model=SessionOut)
+async def revoke_session(
+    session_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> SessionOut:
+    res = await db.execute(select(UserSession).where(UserSession.id == session_id))
+    sess = res.scalar_one_or_none()
+    if not sess or sess.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if sess.revoked_at is None:
+        await user_session.revoke(db, session=sess)
+    return SessionOut(
+        id=sess.id,
+        user_agent=sess.user_agent,
+        ip_address=sess.ip_address,
+        created_at=sess.created_at,
+        expires_at=sess.expires_at,
+        revoked_at=sess.revoked_at,
+    )
 
 
 @router.post("/register", response_model=dict)
