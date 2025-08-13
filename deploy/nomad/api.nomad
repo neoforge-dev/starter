@@ -17,7 +17,7 @@ job "api" {
 
       check {
         type     = "http"
-        path     = "/health"
+        path     = "/ready"
         interval = "10s"
         timeout  = "2s"
       }

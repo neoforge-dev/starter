@@ -2,13 +2,18 @@ groups:
   - name: neoforge-api
     rules:
       - alert: High5xxErrorRate
-        expr: sum(rate(http_5xx_responses_total[5m])) by (endpoint) / sum(rate(http_requests_total{status=~"5.."}[5m])) by (endpoint) > 0.05
+        expr: sum(rate(http_5xx_responses_total[5m])) by (endpoint)
+          /
+          sum(rate(http_requests_total[5m])) by (endpoint)
+          > 0.05
         for: 10m
         labels:
           severity: page
         annotations:
           summary: High 5xx error rate on {{ $labels.endpoint }}
           description: "More than 5% 5xx responses over 10m"
+          runbook_url: "https://github.com/neoforge-dev/starter/blob/main/docs/runbooks/high-5xx-rate.md"
+          dashboard: "NeoForge API - SLOs > 5xx error rate"
 
       - alert: ReadinessProbeFailing
         expr: probe_success{job="neoforge-ready"} == 0
@@ -18,6 +23,8 @@ groups:
         annotations:
           summary: Readiness endpoint failing
           description: "The /ready probe is failing for 5 minutes"
+          runbook_url: "https://github.com/neoforge-dev/starter/blob/main/docs/runbooks/readiness-failing.md"
+          dashboard: "NeoForge API - SLOs > Readiness"
 
       - alert: CeleryQueueDepthHigh
         expr: sum(celery_queue_depth) by (queue) > 100
@@ -27,3 +34,5 @@ groups:
         annotations:
           summary: Celery queue depth high ({{ $labels.queue }})
           description: "Queue depth over 100 for 10m"
+          runbook_url: "https://github.com/neoforge-dev/starter/blob/main/docs/runbooks/queue-depth-high.md"
+          dashboard: "NeoForge API - SLOs > Celery queue depth"

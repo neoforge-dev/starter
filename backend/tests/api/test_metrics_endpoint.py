@@ -15,3 +15,14 @@ async def test_metrics_endpoint_exposes_core_metrics(client: AsyncClient):
     assert "celery_queue_depth" in txt
     # 5xx error counter should be registered
     assert "http_5xx_responses_total" in txt
+
+
+@pytest.mark.asyncio
+async def test_metrics_endpoint_5xx_counter_increments_on_error(client: AsyncClient):
+    # Trigger a 5xx via examples error endpoint (non-existing table)
+    r = await client.get("/api/v1/examples/error-handling")
+    assert r.status_code == 500
+    m = await client.get("/metrics")
+    assert m.status_code == 200
+    # Verify counter line is present
+    assert "http_5xx_responses_total" in m.text
