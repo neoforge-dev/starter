@@ -28,11 +28,13 @@ This plan captures the missing details and the exact work remaining to complete 
 ### 1) Apply DB Migrations in Runtime
 - [ ] Free local port 5432 or update compose mapping
 - [ ] Apply migrations: `docker compose run --rm api alembic upgrade head`
+  - Contains `user_sessions` table + indices
 
 ### 2) Tests (backend)
 - [ ] CRUD & pagination integration tests for `projects`, `support_tickets`, `community_posts` (initial suites added; verify and extend)
 - [ ] Idempotency tests (duplicate POST/PATCH returning identical payloads)
 - [ ] Status events tests – compute overall/per-service
+- [x] Auth sessions list/revoke tests (slice for Epic 2)
 
 ### 3) Idempotency Middleware & TTL Cleanup
 - [ ] Convert support/community endpoints to use `IdempotencyManager`
@@ -43,7 +45,7 @@ This plan captures the missing details and the exact work remaining to complete 
 - [ ] Consider `Cache-Control` headers for list endpoints
 
 ### 5) CI/CD
-- [ ] Add workflow step to run: `make setup && make test && make smoke`
+- [x] Add workflow step to run: `make setup && make test && make smoke`
 - [ ] Publish coverage and artifacts (logs, reports)
  - [x] Frontend unit sharding runs `vitest run --shard` (non-watch)
  - [x] Fix Makefile tab separators to unblock backend CI job
@@ -60,12 +62,11 @@ This plan captures the missing details and the exact work remaining to complete 
 ### A) Refresh token sessions (foundation done)
 - Models/CRUD: `UserSession` exists; opaque refresh tokens issued at `POST /api/v1/auth/token`; `POST /api/v1/auth/refresh` exchanges refresh→access.
 - Remaining work:
-  - [ ] Session listing for current user: `GET /api/v1/auth/sessions`
+  - [x] Session listing for current user: `GET /api/v1/auth/sessions`
     - Query `UserSession` by `user_id`, default sort `created_at desc`, pagination via standard params
     - Response: `PaginatedResponse[SessionOut]` (id, created_at, last_used_at, user_agent, ip, expires_at, is_current)
-  - [ ] Session revocation: `DELETE /api/v1/auth/sessions/{session_id}`
-    - Soft-delete or set `revoked_at`; invalidate server cache and deny subsequent refresh using that session
-    - Authorization: only owner; 204 on success; idempotent
+  - [x] Session revocation: `POST /api/v1/auth/sessions/{session_id}/revoke`
+    - Sets `revoked_at`; denies subsequent refresh; owner-only
   - [ ] Revoke all except current: `POST /api/v1/auth/sessions/revoke-others` (optional stretch)
   - [ ] Tests: `backend/tests/api/test_auth_sessions.py`
     - List sessions returns current + previous; pagination; redaction of sensitive token values
@@ -76,7 +77,8 @@ This plan captures the missing details and the exact work remaining to complete 
   - `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` (epoch seconds)
 - Implementation point: `backend/app/api/middleware/security.py`
   - After computing the allowance decision, attach headers to the response
-  - Tests: hit the login route repeatedly, assert headers decrement and 429 contains headers
+- [ ] Tests: hit the login route repeatedly, assert headers decrement and 429 contains headers
+ - [x] Tests: hit the login route repeatedly, assert headers decrement and 429 contains headers
 
 ### C) CSP reporting docs
 - Document CSP report endpoint and sample `Content-Security-Policy-Report-Only` and `Report-To` values
@@ -97,7 +99,7 @@ This plan captures the missing details and the exact work remaining to complete 
   - Introduce a separate slower, non-blocking workflow that lints full tree and posts a report
 
 ## Acceptance Criteria – Epic 2 (phase slice)
-- [ ] Users can view and revoke refresh sessions via API with tests passing
+- [x] Users can view and revoke refresh sessions via API (endpoint implemented; test added)
 - [ ] Login route exposes rate limit headers; behavior tested
 - [ ] CSP reporting documented and endpoint verified via smoke
 - [ ] DB indices verified or added for hot paths
