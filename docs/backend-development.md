@@ -68,6 +68,27 @@ erDiagram
 
 ## Development Workflow
 
+## API Semantics
+
+### Pagination
+- Query params: `page` (default 1), `page_size` (default 10)
+- Response shape: `PaginatedResponse { items, total, page, page_size, pages }`
+- Boundary behavior: pages beyond last return `items: []` with valid metadata
+
+### Idempotency
+- Header: `Idempotency-Key: <opaque-id>` on POST/PATCH
+- Behavior: first request creates/updates and returns 201/200; exact replay returns the same body with 200 or 201
+- Scope: applied to `projects` create/patch, `support_tickets` create, `community_posts` create
+
+### ETag Caching
+- Endpoints: `GET /api/v1/projects/{id}`, `GET /api/v1/projects`, `GET /api/v1/support/tickets`, `GET /api/v1/community/posts`
+- Clients should send `If-None-Match` with prior ETag to receive `304 Not Modified`
+
+### Auth Sessions
+- `GET /api/v1/auth/sessions`: paginated list of refresh sessions for current user
+- `POST /api/v1/auth/sessions/{session_id}/revoke`: revoke a specific session (owner-only)
+- Fields include: `id, created_at, last_used_at, user_agent, ip, expires_at, revoked_at, is_current`
+
 ### Database Operations
 
 ```bash
@@ -84,6 +105,12 @@ docker compose run --rm api alembic downgrade -1
 docker compose down -v
 make dev
 ```
+
+### Docker Port Notes
+- PostgreSQL exposed on host via `${DB_PORT:-55432}` (service `db` maps container 5432)
+- Test DB exposed via `${DB_TEST_PORT:-55433}` (service `db_test`)
+- Redis exposed via `${REDIS_PORT:-56379}`
+- API exposed via `${API_PORT:-8000}`
 
 ### Testing
 
