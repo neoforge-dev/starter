@@ -14,8 +14,9 @@ vi.mock('import.meta.env', () => ({
 if (!globalThis.document) {
   const { JSDOM } = await import('jsdom');
   const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
-    url: 'http://localhost',
+    url: 'http://localhost:3000',
     pretendToBeVisual: true,
+    resources: 'usable',
   });
   
   globalThis.window = dom.window;
@@ -25,6 +26,8 @@ if (!globalThis.document) {
   globalThis.Event = dom.window.Event;
   globalThis.Node = dom.window.Node;
   globalThis.navigator = dom.window.navigator;
+  globalThis.location = dom.window.location;
+  globalThis.URL = dom.window.URL;
   
   // Add missing browser APIs
   globalThis.window.matchMedia = vi.fn().mockImplementation(query => ({

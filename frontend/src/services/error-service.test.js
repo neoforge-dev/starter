@@ -2,7 +2,7 @@ import { expect } from "@esm-bundle/chai";
 import { waitUntil } from "@open-wc/testing";
 import { AppError, ErrorType, errorService } from "./error-service.js";
 import { showToast } from "../components/ui/toast/index.js";
-import { apiClient } from "./api-client.js";
+import { apiClient } from "./api.js";
 import { describe, it, beforeEach, vi, expect as viExpect } from "vitest";
 
 // Mock dependencies
