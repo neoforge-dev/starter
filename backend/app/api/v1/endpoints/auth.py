@@ -11,6 +11,8 @@ from app.core.config import Settings, get_settings
 from app.crud.user import user as user_crud
 from app.api.deps import get_db
 from app.schemas.auth import Token, TokenPayload, PasswordResetRequest, PasswordResetConfirm, EmailVerification, ResendVerification
+from app.crud.user_session import user_session, hash_token
+import secrets
 from app.schemas.user import UserCreate, UserResponse
 from app.models.user import User
 from app.worker.email_worker import send_welcome_email_task, send_verification_email_task, send_password_reset_email_task
@@ -44,12 +46,33 @@ async def login_access_token(
     logger.info(f"Generating token for User ID: {user.id}")
     
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-    return Token(
-        access_token=create_access_token(
-            subject=user.id, settings=settings, expires_delta=access_token_expires
-        ),
-        token_type="bearer",
+    access = create_access_token(subject=user.id, settings=settings, expires_delta=access_token_expires)
+    # Issue refresh token (opaque) and store session
+    refresh = secrets.token_urlsafe(32)
+    await user_session.create(
+        db,
+        user_id=user.id,
+        refresh_token=refresh,
+        user_agent=getattr(form_data, "client_id", None),
+        ip_address=None,
+        expires_in_days=settings.refresh_token_expire_days,
     )
+    return {"access_token": access, "token_type": "bearer", "refresh_token": refresh}
+
+
+@router.post("/refresh", response_model=Token)
+async def refresh_access_token(
+    settings: Annotated[Settings, Depends(get_settings)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    refresh_token: str,
+) -> Token:
+    hashed = hash_token(refresh_token)
+    session = await user_session.get_by_hashed(db, hashed=hashed)
+    if not session or session.revoked_at is not None or session.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    access = create_access_token(subject=session.user_id, settings=settings, expires_delta=access_token_expires)
+    return Token(access_token=access, token_type="bearer")
 
 
 @router.post("/register", response_model=dict)
