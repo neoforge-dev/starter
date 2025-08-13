@@ -87,6 +87,13 @@ def initialize_metrics() -> Dict[str, Any]:
          ["error_type"]
     )
 
+    # Celery queue depth gauges (Redis broker)
+    _metrics["celery_queue_depth"] = Gauge(
+         "celery_queue_depth",
+         "Current depth of Celery queues",
+         ["queue"]
+    )
+
     return _metrics
 
 def get_metrics() -> Dict[str, Any]:

@@ -16,6 +16,7 @@ from app.crud import email_tracking
 from app.db.session import get_db
 from app.core.redis import get_redis
 from app.core.metrics import get_metrics
+from app.core.celery import celery_app
 
 router = APIRouter()
 
@@ -55,6 +56,24 @@ async def get_metrics_endpoint(
             metrics["db_pool_size"].set(0)  # NullPool case
 
         # Redis metrics are handled by the Redis module
+
+        # Celery queue depth (if broker is Redis and inspect available)
+        try:
+            inspect = celery_app.control.inspect()
+            # Approximate queue depth via active/reserved/scheduled tasks
+            active = inspect.active() or {}
+            reserved = inspect.reserved() or {}
+            scheduled = inspect.scheduled() or {}
+            total_active = sum(len(v) for v in active.values()) if active else 0
+            total_reserved = sum(len(v) for v in reserved.values()) if reserved else 0
+            total_scheduled = sum(len(v) for v in scheduled.values()) if scheduled else 0
+            # Report per logical queue names where available; fallback to aggregates
+            metrics["celery_queue_depth"].labels(queue="active").set(total_active)
+            metrics["celery_queue_depth"].labels(queue="reserved").set(total_reserved)
+            metrics["celery_queue_depth"].labels(queue="scheduled").set(total_scheduled)
+        except Exception:
+            # Best-effort; do not fail metrics endpoint
+            pass
 
         # Update email metrics from tracking data
         stats = await email_tracking.get_stats(db)
