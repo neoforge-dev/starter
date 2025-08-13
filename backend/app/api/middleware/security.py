@@ -35,6 +35,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         
         # Add request ID to response headers
         response.headers["X-Request-ID"] = request_id
+        # Add trace correlation header if available (OpenTelemetry)
+        try:
+            from opentelemetry import trace as _otel_trace
+            span = _otel_trace.get_current_span()
+            ctx = span.get_span_context() if span else None
+            if ctx and getattr(ctx, "trace_id", 0):
+                trace_id_hex = f"{ctx.trace_id:032x}"
+                response.headers["X-Trace-Id"] = trace_id_hex
+        except Exception:
+            pass
         
         # Core security headers
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -364,7 +374,8 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 url=str(request.url),
                 status_code=response.status_code,
                 processing_time_ms=round(process_time, 2),
-                request_id=getattr(request.state, 'request_id', None)
+                request_id=getattr(request.state, 'request_id', None),
+                trace_id=self._get_trace_id()
             )
             
             return response
@@ -376,7 +387,8 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 method=request.method,
                 url=str(request.url),
                 errors=str(e.errors()),
-                request_id=getattr(request.state, 'request_id', None)
+                request_id=getattr(request.state, 'request_id', None),
+                trace_id=self._get_trace_id()
             )
             return JSONResponse(
                 status_code=422,
@@ -393,7 +405,8 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 method=request.method,
                 url=str(request.url),
                 error=str(e),
-                request_id=getattr(request.state, 'request_id', None)
+                request_id=getattr(request.state, 'request_id', None),
+                trace_id=self._get_trace_id()
             )
             return JSONResponse(
                 status_code=500,
@@ -410,7 +423,8 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 method=request.method,
                 url=str(request.url),
                 error=str(e),
-                request_id=getattr(request.state, 'request_id', None)
+                request_id=getattr(request.state, 'request_id', None),
+                trace_id=self._get_trace_id()
             )
             return JSONResponse(
                 status_code=500,
@@ -467,3 +481,15 @@ def setup_security_middleware(app: FastAPI) -> None:
         rate_limit_window=current_settings.rate_limit_window,
         production_mode=current_settings.environment == Environment.PRODUCTION
     ) 
+
+    
+def _get_trace_id(self) -> str | None:
+    try:
+        from opentelemetry import trace as _otel_trace
+        span = _otel_trace.get_current_span()
+        ctx = span.get_span_context() if span else None
+        if ctx and getattr(ctx, "trace_id", 0):
+            return f"{ctx.trace_id:032x}"
+    except Exception:
+        return None
+    return None
