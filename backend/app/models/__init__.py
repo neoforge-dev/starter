@@ -7,3 +7,5 @@ from .community_post import CommunityPost
 from .idempotency_key import IdempotencyKey
 from .audit_log import AuditLog
 from .user_session import UserSession
+from .event import Event
+from .ab_test import AbTest, AbTestVariant, AbTestAssignment

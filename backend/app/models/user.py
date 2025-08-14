@@ -10,6 +10,8 @@ from app.db.base_class import Base
 if TYPE_CHECKING:
     from .item import Item
     from .admin import Admin
+    from .event import Event
+    from .ab_test import AbTest, AbTestAssignment
 
 
 class User(Base):
@@ -37,4 +39,25 @@ class User(Base):
         back_populates="user",
         uselist=False,
         lazy="selectin",
+    )
+    events: Mapped[List["Event"]] = relationship(
+        "Event",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    
+    # A/B Testing relationships
+    created_ab_tests: Mapped[List["AbTest"]] = relationship(
+        "AbTest",
+        back_populates="creator",
+        cascade="all, delete-orphan",
+        lazy="select",
+        foreign_keys="AbTest.created_by"
+    )
+    ab_test_assignments: Mapped[List["AbTestAssignment"]] = relationship(
+        "AbTestAssignment",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="select",
     ) 

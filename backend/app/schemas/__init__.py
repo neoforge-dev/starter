@@ -7,6 +7,19 @@ from .admin import (
 )
 from .common import PaginatedResponse
 from .email_tracking import EmailTracking, EmailTrackingCreate
+from .event import (
+    EventCreate, EventCreateBulk, EventResponse, EventAnalyticsQuery,
+    EventAnalyticsResponse, EventType, EventSource, EventProcessingStatus,
+    EventStreamConfig, EventAnonymizationRequest, EventRetentionPolicy,
+    EventDataExportRequest
+)
+from .ab_test import (
+    AbTestStatus, StatisticalMethod, AbTestVariantCreate, AbTestVariantUpdate,
+    AbTestVariantResponse, AbTestCreate, AbTestUpdate, AbTestResponse,
+    AbTestAssignmentRequest, AbTestAssignmentResponse, AbTestConversionRequest,
+    AbTestAnalyticsQuery, AbTestAnalyticsResponse, AbTestListResponse,
+    AbTestStatisticalReport, VariantStatistics
+)
 
 __all__ = [
     "Token",
@@ -26,4 +39,32 @@ __all__ = [
     "PaginatedResponse",
     "EmailTracking",
     "EmailTrackingCreate",
+    "EventCreate",
+    "EventCreateBulk", 
+    "EventResponse",
+    "EventAnalyticsQuery",
+    "EventAnalyticsResponse",
+    "EventType",
+    "EventSource",
+    "EventProcessingStatus",
+    "EventStreamConfig",
+    "EventAnonymizationRequest",
+    "EventRetentionPolicy",
+    "EventDataExportRequest",
+    "AbTestStatus",
+    "StatisticalMethod",
+    "AbTestVariantCreate",
+    "AbTestVariantUpdate",
+    "AbTestVariantResponse",
+    "AbTestCreate",
+    "AbTestUpdate",
+    "AbTestResponse",
+    "AbTestAssignmentRequest",
+    "AbTestAssignmentResponse",
+    "AbTestConversionRequest",
+    "AbTestAnalyticsQuery",
+    "AbTestAnalyticsResponse",
+    "AbTestListResponse",
+    "AbTestStatisticalReport",
+    "VariantStatistics",
 ] 
