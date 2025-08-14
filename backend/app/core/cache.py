@@ -344,4 +344,11 @@ async def clear_cache() -> bool:
     from app.core.redis import get_redis
     redis = await anext(get_redis())
     cache = Cache(redis)
-    return await cache.clear_cache() 
+    return await cache.clear_cache()
+
+
+async def get_cache() -> Cache:
+    """Get a Cache instance."""
+    from app.core.redis import get_redis
+    redis = await anext(get_redis())
+    return Cache(redis) 

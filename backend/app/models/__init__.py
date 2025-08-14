@@ -9,3 +9,4 @@ from .audit_log import AuditLog
 from .user_session import UserSession
 from .event import Event
 from .ab_test import AbTest, AbTestVariant, AbTestAssignment
+from .recommendation import Recommendation, UserPreferences, RecommendationFeedback, SimilarUsers
