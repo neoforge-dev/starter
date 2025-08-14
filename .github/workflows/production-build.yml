@@ -1,0 +1,291 @@
+name: Production Build & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+      deploy: ${{ steps.changes.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'docker-compose*.yml'
+              - '.github/workflows/production-build.yml'
+            frontend:
+              - 'frontend/**'
+              - 'docker-compose*.yml' 
+              - '.github/workflows/production-build.yml'
+            deploy:
+              - 'deploy/**'
+              - 'docker-compose*.yml'
+              - '.github/workflows/production-build.yml'
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  build-backend:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache-backend
+          key: ${{ runner.os }}-buildx-backend-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-backend-
+      
+      - name: Build and export backend
+        uses: docker/build-push-action@v5
+        with:
+          context: backend
+          target: production
+          platforms: linux/amd64
+          cache-from: type=local,src=/tmp/.buildx-cache-backend
+          cache-to: type=local,dest=/tmp/.buildx-cache-backend-new,mode=max
+          outputs: type=docker,dest=/tmp/backend-image.tar
+          tags: |
+            neoforge-backend:latest
+            neoforge-backend:${{ github.sha }}
+      
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-image
+          path: /tmp/backend-image.tar
+          retention-days: 1
+      
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache-backend
+          mv /tmp/.buildx-cache-backend-new /tmp/.buildx-cache-backend || true
+
+  build-frontend:
+    needs: changes  
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache-frontend
+          key: ${{ runner.os }}-buildx-frontend-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-frontend-
+      
+      - name: Build and export frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          target: production
+          platforms: linux/amd64
+          cache-from: type=local,src=/tmp/.buildx-cache-frontend
+          cache-to: type=local,dest=/tmp/.buildx-cache-frontend-new,mode=max
+          outputs: type=docker,dest=/tmp/frontend-image.tar
+          tags: |
+            neoforge-frontend:latest
+            neoforge-frontend:${{ github.sha }}
+      
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-image
+          path: /tmp/frontend-image.tar
+          retention-days: 1
+      
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache-frontend
+          mv /tmp/.buildx-cache-frontend-new /tmp/.buildx-cache-frontend || true
+
+  size-analysis:
+    needs: [build-backend, build-frontend]
+    if: ${{ always() && (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download backend artifact
+        if: ${{ needs.build-backend.result == 'success' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-image
+      
+      - name: Download frontend artifact
+        if: ${{ needs.build-frontend.result == 'success' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-image
+      
+      - name: Load and analyze images
+        run: |
+          echo "## Docker Image Size Analysis" > size-report.md
+          echo "" >> size-report.md
+          
+          if [ -f backend-image.tar ]; then
+            docker load < backend-image.tar
+            BACKEND_SIZE=$(docker images neoforge-backend:latest --format "{{.Size}}")
+            echo "- **Backend**: $BACKEND_SIZE" >> size-report.md
+          fi
+          
+          if [ -f frontend-image.tar ]; then
+            docker load < frontend-image.tar
+            FRONTEND_SIZE=$(docker images neoforge-frontend:latest --format "{{.Size}}")
+            echo "- **Frontend**: $FRONTEND_SIZE" >> size-report.md
+          fi
+          
+          echo "" >> size-report.md
+          echo "### Target Sizes" >> size-report.md
+          echo "- Backend: <200MB" >> size-report.md
+          echo "- Frontend: <50MB" >> size-report.md
+          
+          cat size-report.md
+      
+      - name: Comment size analysis
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('size-report.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+
+  production-test:
+    needs: [build-backend, build-frontend]
+    if: ${{ always() && (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-image"
+          merge-multiple: true
+      
+      - name: Load images
+        run: |
+          [ -f backend-image.tar ] && docker load < backend-image.tar
+          [ -f frontend-image.tar ] && docker load < frontend-image.tar
+      
+      - name: Run production stack
+        run: |
+          # Start production services
+          docker compose -f docker-compose.prod.yml up -d --no-build
+          
+          # Wait for services to be ready
+          sleep 30
+          
+          # Basic health checks
+          curl -f http://localhost:80/health || exit 1
+          curl -f http://localhost:8000/health || exit 1
+          
+          echo "✅ Production stack health checks passed"
+      
+      - name: Performance test
+        run: |
+          # Basic load test
+          for i in {1..10}; do
+            curl -s http://localhost:80 > /dev/null &
+            curl -s http://localhost:8000/health > /dev/null &
+          done
+          wait
+          
+          echo "✅ Basic load test completed"
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose -f docker-compose.prod.yml down -v
+
+  deploy-staging:
+    needs: [security-scan, production-test]
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Deploy to staging
+        run: |
+          echo "🚀 Deploying to staging environment"
+          echo "This would typically involve:"
+          echo "- Downloading production images"
+          echo "- Deploying to staging infrastructure"
+          echo "- Running smoke tests"
+          echo "- Updating deployment status"
+
+  deploy-production:
+    needs: [deploy-staging]
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Deploy to production
+        run: |
+          echo "🚀 Deploying to production environment"
+          echo "This would typically involve:"
+          echo "- Blue-green deployment strategy"
+          echo "- Database migrations"
+          echo "- Health checks and monitoring"
+          echo "- Rollback capability"

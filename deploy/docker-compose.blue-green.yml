@@ -1,0 +1,305 @@
+version: "3.8"
+
+# Blue-Green Deployment Configuration
+# Enables zero-downtime deployments with instant rollback capability
+
+services:
+  # Load balancer / Reverse proxy
+  traefik:
+    image: traefik:v3.0
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.api.address=:8080"
+      - "--accesslog=true"
+      - "--log.level=INFO"
+    ports:
+      - "80:80"
+      - "8080:8080"  # API
+      - "9090:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_logs:/var/log/traefik
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: 128M
+        reservations:
+          cpus: "0.10"
+          memory: 64M
+    restart: unless-stopped
+    networks:
+      - frontend
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+
+  # Blue Frontend (Current Production)
+  frontend-blue:
+    build:
+      context: ../frontend
+      target: production
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://api-blue:8000
+      - DEPLOYMENT_SLOT=blue
+    depends_on:
+      - api-blue
+    networks:
+      - frontend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: 256M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+      replicas: 2
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=frontend"
+      - "traefik.http.routers.frontend-blue.rule=Host(`app.localhost`)"
+      - "traefik.http.routers.frontend-blue.entrypoints=web"
+      - "traefik.http.services.frontend-blue.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend-blue.priority=100"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Green Frontend (New Deployment)
+  frontend-green:
+    build:
+      context: ../frontend
+      target: production
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://api-green:8000
+      - DEPLOYMENT_SLOT=green
+    depends_on:
+      - api-green
+    networks:
+      - frontend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: 256M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+      replicas: 0  # Start with 0 replicas, scale up during deployment
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"  # Initially disabled
+      - "traefik.docker.network=frontend"
+      - "traefik.http.routers.frontend-green.rule=Host(`app.localhost`)"
+      - "traefik.http.routers.frontend-green.entrypoints=web"
+      - "traefik.http.services.frontend-green.loadbalancer.server.port=80"
+      - "traefik.http.routers.frontend-green.priority=50"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Blue API (Current Production)
+  api-blue:
+    build:
+      context: ../backend
+      target: production
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/neoforge
+      - REDIS_URL=redis://cache:6379/0
+      - DEPLOYMENT_SLOT=blue
+      - WORKERS=1
+    depends_on:
+      - db
+      - cache
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.80"
+          memory: 768M
+        reservations:
+          cpus: "0.30"
+          memory: 384M
+      replicas: 2
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=backend"
+      - "traefik.http.routers.api-blue.rule=Host(`api.localhost`) || PathPrefix(`/api`)"
+      - "traefik.http.routers.api-blue.entrypoints=api"
+      - "traefik.http.services.api-blue.loadbalancer.server.port=8000"
+      - "traefik.http.routers.api-blue.priority=100"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Green API (New Deployment)
+  api-green:
+    build:
+      context: ../backend
+      target: production
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/neoforge
+      - REDIS_URL=redis://cache:6379/1  # Different Redis DB
+      - DEPLOYMENT_SLOT=green
+      - WORKERS=1
+    depends_on:
+      - db
+      - cache
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.80"
+          memory: 768M
+        reservations:
+          cpus: "0.30"
+          memory: 384M
+      replicas: 0  # Start with 0 replicas, scale up during deployment
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"  # Initially disabled
+      - "traefik.docker.network=backend"
+      - "traefik.http.routers.api-green.rule=Host(`api.localhost`) || PathPrefix(`/api`)"
+      - "traefik.http.routers.api-green.entrypoints=api"
+      - "traefik.http.services.api-green.loadbalancer.server.port=8000"
+      - "traefik.http.routers.api-green.priority=50"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Shared Database
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=neoforge
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../deploy/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.20"
+          memory: 256M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Shared Cache
+  cache:
+    image: redis:alpine
+    environment:
+      - REDIS_MAXMEMORY=200mb
+      - REDIS_MAXMEMORY_POLICY=allkeys-lru
+    volumes:
+      - redis_data:/data
+      - ../deploy/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: 256M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  # Migration runner (runs before deployments)
+  migrator:
+    build:
+      context: ../backend
+      target: production
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/neoforge
+    depends_on:
+      - db
+    networks:
+      - backend
+    restart: "no"
+    deploy:
+      replicas: 0  # Only run when needed
+
+  # Deployment health checker
+  health-checker:
+    image: alpine:latest
+    command: |
+      sh -c '
+        apk add --no-cache curl;
+        while true; do
+          # Check blue deployment health
+          if curl -f http://traefik:80/health 2>/dev/null; then
+            echo "Blue deployment healthy at $(date)";
+          else
+            echo "Blue deployment unhealthy at $(date)";
+          fi
+          sleep 30;
+        done
+      '
+    depends_on:
+      - traefik
+    networks:
+      - frontend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.05"
+          memory: 16M
+
+volumes:
+  postgres_data:
+  redis_data:
+  traefik_logs:
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge

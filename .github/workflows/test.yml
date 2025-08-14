@@ -183,35 +183,78 @@ jobs:
           --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Cache pip
+          cache: 'pip'
+          cache-dependency-path: 'backend/requirements*.txt'
+      
+      - name: Setup UV package manager
+        run: pip install --no-cache-dir uv==0.5.29
+      
+      - name: Cache UV dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('backend/requirements*.txt', 'backend/pyproject.toml') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Install backend deps
+            ${{ runner.os }}-uv-
+      
+      - name: Install backend dependencies
         working-directory: backend
         run: |
-          python -m pip install -U pip
-          pip install -r requirements.txt
-      - name: Run backend tests (with coverage) and smoke
+          uv pip install --system -r requirements.txt
+          uv pip install --system -r requirements.test.txt
+      
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-backend-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-backend-
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |="/tmp/.buildx-cache"
+      
+      - name: Build optimized test image
+        run: |
+          docker buildx build \
+            --target development \
+            --cache-from type=local,src=/tmp/.buildx-cache \
+            --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            --tag neoforge-api-test:latest \
+            backend/
+      
+      - name: Run backend tests with parallel execution
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:55432/neoforge
           REDIS_URL: redis://localhost:56379/1
           ENVIRONMENT: test
+          PYTEST_WORKERS: 2
         run: |
           make setup
-          docker compose run --rm api_test pytest -q
-          docker compose run --rm api_test pytest --cov=app --cov-report=xml:coverage.xml -q || true
-          make smoke || true
+          docker compose run --rm api_test pytest -n 2 --maxfail=3 -q
+          docker compose run --rm api_test pytest --cov=app --cov-report=xml:coverage.xml -q --tb=short
+          make smoke
+      
       - name: Upload backend coverage
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
           path: backend/coverage.xml
+          retention-days: 7
+      
+      - name: Move cache
+        if: always()
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache || true
