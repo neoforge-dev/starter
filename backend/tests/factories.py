@@ -19,6 +19,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.models.item import Item
 from app.models.user import User
 from app.models.admin import Admin, AdminRole
+from app.models.project import Project
+from app.models.support_ticket import SupportTicket
+from app.models.community_post import CommunityPost
 from app.schemas.user import UserCreate
 
 # Configure faker globally
@@ -230,4 +233,44 @@ class ItemFactory(AsyncModelFactory):
         elif "owner" in kwargs:
             kwargs["owner_id"] = kwargs.pop("owner").id
 
-        return await super()._create(model_class, session, *args, **kwargs) 
+        return await super()._create(model_class, session, *args, **kwargs)
+
+
+class ProjectFactory(ModelFactory):
+    """Factory for creating Project instances."""
+
+    class Meta:
+        model = Project
+
+    name = Faker("company", locale="en_US")
+    description = Faker("paragraph", locale="en_US")
+    owner_id = fuzzy.FuzzyInteger(1, 100)
+    created_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+
+
+class SupportTicketFactory(ModelFactory):
+    """Factory for creating SupportTicket instances."""
+
+    class Meta:
+        model = SupportTicket
+
+    email = Faker("email", locale="en_US")
+    subject = Faker("sentence", nb_words=6, locale="en_US")
+    message = Faker("paragraph", locale="en_US")
+    status = fuzzy.FuzzyChoice(["open", "closed", "pending", "resolved"])
+    created_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+
+
+class CommunityPostFactory(ModelFactory):
+    """Factory for creating CommunityPost instances."""
+
+    class Meta:
+        model = CommunityPost
+
+    title = Faker("sentence", nb_words=8, locale="en_US")
+    content = Faker("text", max_nb_chars=500, locale="en_US")
+    author = Faker("name", locale="en_US")
+    created_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc)) 

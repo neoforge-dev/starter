@@ -68,6 +68,7 @@ export class NeoInput extends LitElement {
 
         input {
           width: 100%;
+          min-height: 44px; /* WCAG AA touch target minimum */
           padding: var(--spacing-sm);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-sm);
@@ -75,6 +76,7 @@ export class NeoInput extends LitElement {
           font-size: var(--font-size-base);
           line-height: 1.5;
           transition: all var(--transition-fast);
+          box-sizing: border-box;
         }
 
         input:focus {
@@ -118,7 +120,9 @@ export class NeoInput extends LitElement {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 0;
+          padding: 8px; /* Minimum touch target padding */
+          min-width: 44px; /* WCAG AA touch target minimum */
+          min-height: 44px; /* WCAG AA touch target minimum */
         }
 
         .prefix-slot {

@@ -31,6 +31,8 @@
     "test:watch": "bun vitest",
     "test:perf": "bun vitest run src/test/performance/performance.test.js",
     "test:a11y": "playwright test --config=playwright.a11y.config.js",
+    "test:a11y:components": "vitest run src/test/accessibility/",
+    "test:a11y:audit": "playwright test --config=playwright.a11y.config.js --grep='audit'",
     "test:visual": "playwright test --config=playwright.visual.config.js",
     "test:migrate": "bun run scripts/migrate-tests.js",
     "playground": "bun vite --config vite.config.playground.js",

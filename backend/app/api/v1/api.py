@@ -3,7 +3,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import users, items, auth, admin, webhooks
 from app.api.v1.endpoints import projects, support, community, status as status_ep, analytics
-from app.api.endpoints import health, examples, config, csp
+from app.api.endpoints import health, examples, config, csp, pagination_metrics
 
 api_router = APIRouter()
 
@@ -20,4 +20,5 @@ api_router.include_router(projects.router, tags=["projects"])
 api_router.include_router(support.router, tags=["support"])
 api_router.include_router(community.router, tags=["community"])
 api_router.include_router(status_ep.router, tags=["status"]) 
-api_router.include_router(analytics.router, tags=["analytics"]) 
+api_router.include_router(analytics.router, tags=["analytics"])
+api_router.include_router(pagination_metrics.router, prefix="/metrics", tags=["monitoring"]) 

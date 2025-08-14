@@ -5,6 +5,9 @@ import { dynamicConfig } from "../config/dynamic-config.js";
 import type {
   ApiResponse,
   PaginatedResponse,
+  CursorPaginatedResponse,
+  PaginationInfo,
+  CursorPaginationParams,
   ApiErrorResponse,
   RequestConfig,
   BulkRequest,
@@ -19,6 +22,7 @@ import type {
   ProfileUpdateRequest,
   SupportTicket,
   SupportTicketCreateRequest,
+  SupportTicketQueryParams,
   CommunityPost,
   CommunityPostCreateRequest,
   CommunityPostQueryParams,
@@ -190,10 +194,19 @@ class ApiService {
     return this.request<DocumentationResponse>(`/docs/${type}`);
   }
 
-  // Project endpoints
-  async getProjects(params: ProjectQueryParams = {}): Promise<PaginatedResponse<Project>> {
-    const queryString = new URLSearchParams(params as Record<string, string>).toString();
-    return this.request<PaginatedResponse<Project>>(`/projects?${queryString}`);
+  // Project endpoints with cursor pagination support
+  async getProjects(params: ProjectQueryParams = {}): Promise<PaginatedResponse<Project> | CursorPaginatedResponse<Project>> {
+    // Build query parameters, filtering out undefined values
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined && value !== null)
+    );
+    
+    const queryString = new URLSearchParams(cleanParams as Record<string, string>).toString();
+    
+    // Return type is determined by the backend based on parameter presence
+    // If cursor params are used, backend returns CursorPaginatedResponse
+    // If offset params are used, backend returns PaginatedResponse
+    return this.request<PaginatedResponse<Project> | CursorPaginatedResponse<Project>>(`/projects?${queryString}`);
   }
 
   async getProject(id: string | number): Promise<Project> {
@@ -232,7 +245,7 @@ class ApiService {
     });
   }
 
-  // Support endpoints
+  // Support endpoints with cursor pagination support
   async submitSupportTicket(data: SupportTicketCreateRequest): Promise<SupportTicket> {
     return this.request<SupportTicket>("/support/tickets", {
       method: "POST",
@@ -240,14 +253,29 @@ class ApiService {
     });
   }
 
-  async getSupportTickets(): Promise<SupportTicket[]> {
-    return this.request<SupportTicket[]>("/support/tickets");
+  async getSupportTickets(params: SupportTicketQueryParams = {}): Promise<PaginatedResponse<SupportTicket> | CursorPaginatedResponse<SupportTicket>> {
+    // Build query parameters, filtering out undefined values
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined && value !== null)
+    );
+    
+    const queryString = new URLSearchParams(cleanParams as Record<string, string>).toString();
+    
+    // Return type is determined by the backend based on parameter presence
+    return this.request<PaginatedResponse<SupportTicket> | CursorPaginatedResponse<SupportTicket>>(`/support/tickets?${queryString}`);
   }
 
-  // Community endpoints
-  async getCommunityPosts(params: CommunityPostQueryParams = {}): Promise<PaginatedResponse<CommunityPost>> {
-    const queryString = new URLSearchParams(params as Record<string, string>).toString();
-    return this.request<PaginatedResponse<CommunityPost>>(`/community/posts?${queryString}`);
+  // Community endpoints with cursor pagination support
+  async getCommunityPosts(params: CommunityPostQueryParams = {}): Promise<PaginatedResponse<CommunityPost> | CursorPaginatedResponse<CommunityPost>> {
+    // Build query parameters, filtering out undefined values
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined && value !== null)
+    );
+    
+    const queryString = new URLSearchParams(cleanParams as Record<string, string>).toString();
+    
+    // Return type is determined by the backend based on parameter presence
+    return this.request<PaginatedResponse<CommunityPost> | CursorPaginatedResponse<CommunityPost>>(`/community/posts?${queryString}`);
   }
 
   async createCommunityPost(data: CommunityPostCreateRequest): Promise<CommunityPost> {
@@ -397,6 +425,112 @@ class ApiService {
       return result;
     } finally {
       clearTimeout(timeoutId);
+    }
+  }
+
+  // Cursor pagination utility methods
+  
+  /**
+   * Create cursor pagination parameters for first page
+   */
+  createCursorParams(
+    limit: number = 20,
+    sortBy: string = 'created_at',
+    sortDirection: 'asc' | 'desc' = 'desc',
+    includeTotal: boolean = false,
+    filters: Record<string, any> = {}
+  ): CursorPaginationParams & Record<string, any> {
+    return {
+      limit,
+      sort_by: sortBy,
+      sort_direction: sortDirection,
+      include_total: includeTotal,
+      ...filters
+    };
+  }
+
+  /**
+   * Create pagination parameters for next page using cursor
+   */
+  createNextPageParams(
+    currentResponse: CursorPaginatedResponse<any>,
+    additionalFilters: Record<string, any> = {}
+  ): CursorPaginationParams & Record<string, any> | null {
+    if (!currentResponse.pagination.has_next || !currentResponse.pagination.next_cursor) {
+      return null;
+    }
+
+    return {
+      cursor: currentResponse.pagination.next_cursor,
+      limit: 20, // Default limit
+      sort_by: currentResponse.pagination.current_sort || 'created_at',
+      sort_direction: currentResponse.pagination.current_direction || 'desc',
+      include_total: false, // Usually don't need total on subsequent pages
+      ...additionalFilters
+    };
+  }
+
+  /**
+   * Create pagination parameters for previous page using cursor
+   */
+  createPreviousPageParams(
+    currentResponse: CursorPaginatedResponse<any>,
+    additionalFilters: Record<string, any> = {}
+  ): CursorPaginationParams & Record<string, any> | null {
+    if (!currentResponse.pagination.has_previous || !currentResponse.pagination.previous_cursor) {
+      return null;
+    }
+
+    return {
+      cursor: currentResponse.pagination.previous_cursor,
+      limit: 20, // Default limit
+      sort_by: currentResponse.pagination.current_sort || 'created_at',
+      sort_direction: currentResponse.pagination.current_direction || 'desc',
+      include_total: false,
+      ...additionalFilters
+    };
+  }
+
+  /**
+   * Check if response uses cursor pagination
+   */
+  isCursorPaginated<T>(response: PaginatedResponse<T> | CursorPaginatedResponse<T>): response is CursorPaginatedResponse<T> {
+    return 'pagination' in response && 
+           'next_cursor' in response.pagination && 
+           'has_next' in response.pagination;
+  }
+
+  /**
+   * Extract data array from either pagination response type
+   */
+  extractPaginatedData<T>(response: PaginatedResponse<T> | CursorPaginatedResponse<T>): T[] {
+    return response.data;
+  }
+
+  /**
+   * Get pagination info in a normalized format
+   */
+  getPaginationInfo<T>(response: PaginatedResponse<T> | CursorPaginatedResponse<T>): {
+    hasNext: boolean;
+    hasPrevious: boolean;
+    total?: number;
+    currentPage?: number;
+    totalPages?: number;
+  } {
+    if (this.isCursorPaginated(response)) {
+      return {
+        hasNext: response.pagination.has_next,
+        hasPrevious: response.pagination.has_previous,
+        total: response.pagination.total_count
+      };
+    } else {
+      return {
+        hasNext: response.pagination.has_next,
+        hasPrevious: response.pagination.has_prev,
+        total: response.pagination.total,
+        currentPage: response.pagination.page,
+        totalPages: response.pagination.total_pages
+      };
     }
   }
 }
