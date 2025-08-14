@@ -187,25 +187,33 @@ export class NeoModal extends LitElement {
     this.preventScroll = true;
     this._animating = false;
     this._handleEscape = this._handleEscape.bind(this);
+    this._handleTabKey = this._handleTabKey.bind(this);
+    this._previousActiveElement = null;
+    this._modalId = `modal-${Math.random().toString(36).substr(2, 9)}`;
   }
 
   connectedCallback() {
     super.connectedCallback();
     document.addEventListener("keydown", this._handleEscape);
+    document.addEventListener("keydown", this._handleTabKey);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener("keydown", this._handleEscape);
+    document.removeEventListener("keydown", this._handleTabKey);
     this._enableScroll();
+    this._restoreFocus();
   }
 
   updated(changedProperties) {
     if (changedProperties.has("open")) {
       if (this.open) {
         this._disableScroll();
+        this._trapFocus();
       } else {
         this._enableScroll();
+        this._restoreFocus();
       }
     }
   }
@@ -255,6 +263,82 @@ export class NeoModal extends LitElement {
     );
   }
 
+  /**
+   * Trap focus within the modal
+   */
+  _trapFocus() {
+    // Store the currently focused element
+    this._previousActiveElement = document.activeElement;
+    
+    // Focus the first focusable element in the modal
+    this.updateComplete.then(() => {
+      const focusableElements = this._getFocusableElements();
+      if (focusableElements.length > 0) {
+        focusableElements[0].focus();
+      }
+    });
+  }
+
+  /**
+   * Restore focus to the previously focused element
+   */
+  _restoreFocus() {
+    if (this._previousActiveElement && this._previousActiveElement.focus) {
+      this._previousActiveElement.focus();
+      this._previousActiveElement = null;
+    }
+  }
+
+  /**
+   * Handle Tab key for focus trapping
+   */
+  _handleTabKey(e) {
+    if (!this.open || e.key !== 'Tab') return;
+
+    const focusableElements = this._getFocusableElements();
+    if (focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (e.shiftKey) {
+      // Shift + Tab
+      if (document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      }
+    } else {
+      // Tab
+      if (document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    }
+  }
+
+  /**
+   * Get all focusable elements within the modal
+   */
+  _getFocusableElements() {
+    const selectors = [
+      'button:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      'a[href]',
+      '[tabindex]:not([tabindex="-1"])',
+      '[contenteditable="true"]'
+    ].join(', ');
+
+    const modalContent = this.shadowRoot.querySelector('.modal');
+    if (!modalContent) return [];
+
+    return Array.from(modalContent.querySelectorAll(selectors)).filter(el => {
+      return el.offsetParent !== null && 
+             getComputedStyle(el).visibility !== 'hidden';
+    });
+  }
+
   render() {
     if (!this.open && !this._animating) return null;
 
@@ -272,11 +356,13 @@ export class NeoModal extends LitElement {
         @click=${this._handleOverlayClick}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="${this._modalId}-title"
+        aria-describedby="${this._modalId}-body"
       >
         <div class=${modalClasses.trim()}>
           <div class="modal-header">
             <slot name="header">
-              <h2 class="modal-title">
+              <h2 class="modal-title" id="${this._modalId}-title">
                 <slot name="title">Modal Title</slot>
               </h2>
             </slot>
@@ -284,11 +370,14 @@ export class NeoModal extends LitElement {
               class="modal-close"
               @click=${this.close}
               aria-label="Close modal"
+              title="Close modal"
+              type="button"
+              style="min-width: 44px; min-height: 44px;"
             >
-              <span class="material-icons">close</span>
+              <span class="material-icons" aria-hidden="true">close</span>
             </button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body" id="${this._modalId}-body" role="document">
             <slot></slot>
           </div>
           <div class="modal-footer">
