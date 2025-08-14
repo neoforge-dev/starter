@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { authService } from "../../services/auth.js";
+import { authService } from "../../services/auth.ts";
 
 export class LoginForm extends LitElement {
   static properties = {

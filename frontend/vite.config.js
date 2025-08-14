@@ -204,6 +204,11 @@ export default defineConfig({
         "top-level-await": true,
       },
       minify: false,
+      tsconfigRaw: {
+        compilerOptions: {
+          experimentalDecorators: true,
+        },
+      },
     },
     force: true, // Force re-optimization for Bun compatibility
   },

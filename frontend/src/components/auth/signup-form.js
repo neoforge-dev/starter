@@ -1,7 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { baseStyles } from "../../styles/base.js";
 import { LoadingMixin, ErrorMixin } from "../../styles/base.js";
-import { authService } from "../../services/auth.js";
+import { authService } from "../../services/auth.ts";
 
 export class SignupForm extends LoadingMixin(ErrorMixin(LitElement)) {
   static properties = {

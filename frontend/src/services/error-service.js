@@ -1,6 +1,6 @@
 import { showToast } from "../components/ui/toast/index.js";
 import { Logger } from "../utils/logger.js";
-import { apiService } from "./api.js";
+import { apiService } from "./api.ts";
 
 /**
  * Error types enum

@@ -4,12 +4,12 @@
  */
 
 // Core services
-export { authService } from './auth.js';
+export { authService } from './auth.ts';
 export { default as analytics } from './analytics.js';
 export { i18n } from './i18n.js';
 
 // API services - consolidated
-export { apiService } from './api.js';
+export { apiService } from './api.ts';
 
 // Data services
 export { default as store } from './store.js';

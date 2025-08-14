@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AuthService } from '../../services/auth.js';
+import { AuthService } from '../../services/auth.ts';
 import { authTestUtils } from './helpers/auth-test-utils.js';
 import { mockBackend } from './helpers/mock-backend.js';
 
