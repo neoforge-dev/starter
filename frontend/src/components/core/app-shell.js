@@ -1,7 +1,7 @@
 import {   LitElement, html, css   } from 'lit';
 import { authService } from "../../services/auth.ts";
 import { Logger } from "../../utils/logger.js";
-import "./app-header.js";
+import "../header.js";
 import "./app-footer.js";
 import "../auth/auth-modal.js";
 import "../../pages/docs-page.js";

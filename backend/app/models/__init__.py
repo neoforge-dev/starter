@@ -10,3 +10,10 @@ from .user_session import UserSession
 from .event import Event
 from .ab_test import AbTest, AbTestVariant, AbTestAssignment
 from .recommendation import Recommendation, UserPreferences, RecommendationFeedback, SimilarUsers
+from .personalization import (
+    PersonalizationProfile,
+    PersonalizationRule,
+    PersonalizationInteraction,
+    UserPersonalizationRules,
+    PersonalizationSegmentAnalysis,
+)

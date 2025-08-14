@@ -6,3 +6,4 @@ export * from "./date-picker.js";
 export * from "./select.js";
 export * from "./phone-input.js";
 export * from "./language-selector.js";
+export * from "./funnel-chart.js";

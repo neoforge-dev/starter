@@ -6,6 +6,7 @@
 // Core services
 export { authService } from './auth.ts';
 export { default as analytics } from './analytics.js';
+export { journeyIntelligence } from './journey-intelligence.js';
 export { i18n } from './i18n.js';
 
 // API services - consolidated
