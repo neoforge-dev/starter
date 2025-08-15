@@ -1,0 +1,48 @@
+{
+  "title": "NeoForge API - SLOs",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HTTP p95 latency",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP p99 latency",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "5xx error rate",
+      "targets": [
+        {
+          "expr": "sum(rate(http_5xx_responses_total[5m])) by (endpoint) / sum(rate(http_requests_total[5m])) by (endpoint)"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Readiness",
+      "targets": [
+        {
+          "expr": "probe_success{job=\"neoforge-ready\"}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Celery queue depth",
+      "targets": [
+        { "expr": "sum(celery_queue_depth) by (queue)" }
+      ]
+    }
+  ]
+}

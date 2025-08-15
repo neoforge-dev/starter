@@ -5,4 +5,4 @@
  */
 
 // Export page components when they are created
-// Currently no page components are implemented in the components/pages directory
+export * from "./journey-analytics-dashboard.js";

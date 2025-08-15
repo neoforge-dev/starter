@@ -9,3 +9,4 @@ export * from "./charts.js";
 export * from "./form.js";
 export * from "./form-validation.js";
 export * from "./pagination.js";
+export * from "./user-flow-diagram.js";

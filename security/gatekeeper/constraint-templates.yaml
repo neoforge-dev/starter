@@ -1,0 +1,290 @@
+# OPA Gatekeeper Constraint Templates for NeoForge Platform Security
+# These templates define reusable security policy constraints
+
+---
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: neoforgerequiredsecuritycontext
+  annotations:
+    metadata.gatekeeper.sh/title: "Required Security Context"
+    metadata.gatekeeper.sh/version: "1.0.0"
+    description: "Requires pods to have proper security context configuration"
+spec:
+  crd:
+    spec:
+      names:
+        kind: NeoForgeRequiredSecurityContext
+      validation:
+        type: object
+        properties:
+          runAsNonRoot:
+            type: boolean
+            description: "Require containers to run as non-root user"
+          readOnlyRootFilesystem:
+            type: boolean
+            description: "Require read-only root filesystem"
+          allowPrivilegeEscalation:
+            type: boolean
+            description: "Allow privilege escalation (should be false)"
+          requiredDropCapabilities:
+            type: array
+            items:
+              type: string
+            description: "Capabilities that must be dropped"
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package neoforgerequiredsecuritycontext
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.securityContext.runAsNonRoot == input.parameters.runAsNonRoot
+          msg := sprintf("Container <%v> must set runAsNonRoot to %v", [container.name, input.parameters.runAsNonRoot])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          input.parameters.readOnlyRootFilesystem
+          not container.securityContext.readOnlyRootFilesystem == true
+          msg := sprintf("Container <%v> must set readOnlyRootFilesystem to true", [container.name])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.securityContext.allowPrivilegeEscalation == input.parameters.allowPrivilegeEscalation
+          msg := sprintf("Container <%v> must set allowPrivilegeEscalation to %v", [container.name, input.parameters.allowPrivilegeEscalation])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          required := input.parameters.requiredDropCapabilities
+          provided := object.get(container, ["securityContext", "capabilities", "drop"], [])
+          missing := required[_]
+          not missing in provided
+          msg := sprintf("Container <%v> must drop capability %v", [container.name, missing])
+        }
+
+---
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: neoforgeimagepolicy
+  annotations:
+    metadata.gatekeeper.sh/title: "Container Image Policy"
+    metadata.gatekeeper.sh/version: "1.0.0"
+    description: "Enforces container image security policies"
+spec:
+  crd:
+    spec:
+      names:
+        kind: NeoForgeImagePolicy
+      validation:
+        type: object
+        properties:
+          allowedRegistries:
+            type: array
+            items:
+              type: string
+            description: "List of allowed container registries"
+          requireDigest:
+            type: boolean
+            description: "Require images to use digest instead of tags"
+          blockedTags:
+            type: array
+            items:
+              type: string
+            description: "List of blocked image tags"
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package neoforgeimagepolicy
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          image := container.image
+          not image_from_allowed_registry(image)
+          msg := sprintf("Container <%v> uses image <%v> from disallowed registry", [container.name, image])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          image := container.image
+          input.parameters.requireDigest
+          not contains(image, "@sha256:")
+          msg := sprintf("Container <%v> must use image digest, not tag: <%v>", [container.name, image])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          image := container.image
+          blocked_tag := input.parameters.blockedTags[_]
+          endswith(image, sprintf(":%v", [blocked_tag]))
+          msg := sprintf("Container <%v> uses blocked image tag <%v>", [container.name, blocked_tag])
+        }
+
+        image_from_allowed_registry(image) {
+          allowed_registry := input.parameters.allowedRegistries[_]
+          startswith(image, allowed_registry)
+        }
+
+---
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: neoforgeresourcepolicy
+  annotations:
+    metadata.gatekeeper.sh/title: "Resource Limits Policy"
+    metadata.gatekeeper.sh/version: "1.0.0"
+    description: "Enforces resource limits and requests on containers"
+spec:
+  crd:
+    spec:
+      names:
+        kind: NeoForgeResourcePolicy
+      validation:
+        type: object
+        properties:
+          requireLimits:
+            type: array
+            items:
+              type: string
+            description: "List of required resource limits (cpu, memory)"
+          requireRequests:
+            type: array
+            items:
+              type: string
+            description: "List of required resource requests (cpu, memory)"
+          maxCpu:
+            type: string
+            description: "Maximum CPU limit allowed"
+          maxMemory:
+            type: string
+            description: "Maximum memory limit allowed"
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package neoforgeresourcepolicy
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          required_limit := input.parameters.requireLimits[_]
+          not container.resources.limits[required_limit]
+          msg := sprintf("Container <%v> must specify %v limit", [container.name, required_limit])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          required_request := input.parameters.requireRequests[_]
+          not container.resources.requests[required_request]
+          msg := sprintf("Container <%v> must specify %v request", [container.name, required_request])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          input.parameters.maxCpu
+          cpu_limit := container.resources.limits.cpu
+          cpu_limit_value := parse_cpu(cpu_limit)
+          max_cpu_value := parse_cpu(input.parameters.maxCpu)
+          cpu_limit_value > max_cpu_value
+          msg := sprintf("Container <%v> CPU limit <%v> exceeds maximum <%v>", [container.name, cpu_limit, input.parameters.maxCpu])
+        }
+
+        parse_cpu(cpu_str) = result {
+          # Simplified CPU parsing - in practice, this would be more robust
+          endswith(cpu_str, "m")
+          result := to_number(trim_suffix(cpu_str, "m"))
+        }
+
+        parse_cpu(cpu_str) = result {
+          not endswith(cpu_str, "m")
+          result := to_number(cpu_str) * 1000
+        }
+
+---
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: neoforgedisallowedresources
+  annotations:
+    metadata.gatekeeper.sh/title: "Disallowed Resources"
+    metadata.gatekeeper.sh/version: "1.0.0"
+    description: "Blocks creation of disallowed Kubernetes resources"
+spec:
+  crd:
+    spec:
+      names:
+        kind: NeoForgeDisallowedResources
+      validation:
+        type: object
+        properties:
+          disallowedKinds:
+            type: array
+            items:
+              type: string
+            description: "List of disallowed resource kinds"
+          exemptNamespaces:
+            type: array
+            items:
+              type: string
+            description: "Namespaces exempt from this policy"
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package neoforgedisallowedresources
+
+        violation[{"msg": msg}] {
+          disallowed_kind := input.parameters.disallowedKinds[_]
+          input.review.kind.kind == disallowed_kind
+          not namespace_exempt
+          msg := sprintf("Resource kind <%v> is not allowed", [disallowed_kind])
+        }
+
+        namespace_exempt {
+          exempt_namespace := input.parameters.exemptNamespaces[_]
+          input.review.object.metadata.namespace == exempt_namespace
+        }
+
+---
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: neoforgerequiredlabels
+  annotations:
+    metadata.gatekeeper.sh/title: "Required Labels"
+    metadata.gatekeeper.sh/version: "1.0.0"
+    description: "Requires specific labels on resources"
+spec:
+  crd:
+    spec:
+      names:
+        kind: NeoForgeRequiredLabels
+      validation:
+        type: object
+        properties:
+          requiredLabels:
+            type: array
+            items:
+              type: string
+            description: "List of required label keys"
+          allowedValues:
+            type: object
+            description: "Allowed values for specific labels"
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package neoforgerequiredlabels
+
+        violation[{"msg": msg}] {
+          required_label := input.parameters.requiredLabels[_]
+          not input.review.object.metadata.labels[required_label]
+          msg := sprintf("Resource must have label <%v>", [required_label])
+        }
+
+        violation[{"msg": msg}] {
+          label_key := input.parameters.allowedValues[_][0]
+          allowed_values := input.parameters.allowedValues[label_key]
+          actual_value := input.review.object.metadata.labels[label_key]
+          not actual_value in allowed_values
+          msg := sprintf("Label <%v> has value <%v> but must be one of %v", [label_key, actual_value, allowed_values])
+        }

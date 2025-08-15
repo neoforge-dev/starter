@@ -1,0 +1,530 @@
+# Elasticsearch Index Lifecycle Management (ILM) Policies
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch-ilm-policies
+  namespace: neoforge-logging
+  labels:
+    app: elasticsearch
+    component: lifecycle-management
+    app.kubernetes.io/name: elasticsearch-ilm
+    app.kubernetes.io/component: lifecycle-management
+    app.kubernetes.io/part-of: neoforge
+data:
+  application-logs-policy.json: |
+    {
+      "policy": {
+        "phases": {
+          "hot": {
+            "min_age": "0ms",
+            "actions": {
+              "rollover": {
+                "max_size": "10gb",
+                "max_age": "1d",
+                "max_docs": 10000000
+              },
+              "set_priority": {
+                "priority": 100
+              }
+            }
+          },
+          "warm": {
+            "min_age": "7d",
+            "actions": {
+              "allocate": {
+                "number_of_replicas": 0,
+                "include": {},
+                "exclude": {},
+                "require": {}
+              },
+              "forcemerge": {
+                "max_num_segments": 1
+              },
+              "set_priority": {
+                "priority": 50
+              }
+            }
+          },
+          "cold": {
+            "min_age": "30d",
+            "actions": {
+              "set_priority": {
+                "priority": 0
+              },
+              "allocate": {
+                "number_of_replicas": 0
+              }
+            }
+          },
+          "delete": {
+            "min_age": "90d",
+            "actions": {
+              "delete": {}
+            }
+          }
+        }
+      }
+    }
+  
+  security-logs-policy.json: |
+    {
+      "policy": {
+        "phases": {
+          "hot": {
+            "min_age": "0ms",
+            "actions": {
+              "rollover": {
+                "max_size": "5gb",
+                "max_age": "1d",
+                "max_docs": 5000000
+              },
+              "set_priority": {
+                "priority": 200
+              }
+            }
+          },
+          "warm": {
+            "min_age": "30d",
+            "actions": {
+              "allocate": {
+                "number_of_replicas": 1,
+                "include": {},
+                "exclude": {},
+                "require": {}
+              },
+              "forcemerge": {
+                "max_num_segments": 1
+              },
+              "set_priority": {
+                "priority": 100
+              }
+            }
+          },
+          "cold": {
+            "min_age": "90d",
+            "actions": {
+              "set_priority": {
+                "priority": 25
+              }
+            }
+          },
+          "delete": {
+            "min_age": "365d",
+            "actions": {
+              "delete": {}
+            }
+          }
+        }
+      }
+    }
+  
+  performance-logs-policy.json: |
+    {
+      "policy": {
+        "phases": {
+          "hot": {
+            "min_age": "0ms",
+            "actions": {
+              "rollover": {
+                "max_size": "2gb",
+                "max_age": "6h",
+                "max_docs": 2000000
+              },
+              "set_priority": {
+                "priority": 150
+              }
+            }
+          },
+          "warm": {
+            "min_age": "3d",
+            "actions": {
+              "allocate": {
+                "number_of_replicas": 0
+              },
+              "forcemerge": {
+                "max_num_segments": 1
+              },
+              "set_priority": {
+                "priority": 75
+              }
+            }
+          },
+          "delete": {
+            "min_age": "30d",
+            "actions": {
+              "delete": {}
+            }
+          }
+        }
+      }
+    }
+  
+  system-logs-policy.json: |
+    {
+      "policy": {
+        "phases": {
+          "hot": {
+            "min_age": "0ms",
+            "actions": {
+              "rollover": {
+                "max_size": "5gb",
+                "max_age": "1d"
+              },
+              "set_priority": {
+                "priority": 75
+              }
+            }
+          },
+          "warm": {
+            "min_age": "7d",
+            "actions": {
+              "allocate": {
+                "number_of_replicas": 0
+              },
+              "forcemerge": {
+                "max_num_segments": 1
+              }
+            }
+          },
+          "delete": {
+            "min_age": "60d",
+            "actions": {
+              "delete": {}
+            }
+          }
+        }
+      }
+    }
+---
+# Index Templates for different log types
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch-index-templates
+  namespace: neoforge-logging
+  labels:
+    app: elasticsearch
+    component: index-templates
+    app.kubernetes.io/name: elasticsearch-templates
+    app.kubernetes.io/component: index-templates
+    app.kubernetes.io/part-of: neoforge
+data:
+  neoforge-logs-template.json: |
+    {
+      "index_patterns": ["neoforge-logs-*"],
+      "template": {
+        "settings": {
+          "number_of_shards": 1,
+          "number_of_replicas": 1,
+          "index.lifecycle.name": "application-logs-policy",
+          "index.lifecycle.rollover_alias": "neoforge-logs",
+          "index.codec": "best_compression",
+          "index.refresh_interval": "30s",
+          "index.mapping.total_fields.limit": 2000
+        },
+        "mappings": {
+          "properties": {
+            "@timestamp": {
+              "type": "date",
+              "format": "strict_date_optional_time||epoch_millis"
+            },
+            "timestamp": {
+              "type": "date",
+              "format": "epoch_second"
+            },
+            "level": {
+              "type": "keyword"
+            },
+            "logger_name": {
+              "type": "keyword"
+            },
+            "event": {
+              "type": "text",
+              "analyzer": "standard",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 256
+                }
+              }
+            },
+            "correlation_id": {
+              "type": "keyword"
+            },
+            "request_id": {
+              "type": "keyword"
+            },
+            "user_id": {
+              "type": "keyword"
+            },
+            "session_id": {
+              "type": "keyword"
+            },
+            "trace_id": {
+              "type": "keyword"
+            },
+            "span_id": {
+              "type": "keyword"
+            },
+            "log_category": {
+              "type": "keyword"
+            },
+            "security_severity": {
+              "type": "keyword"
+            },
+            "environment": {
+              "type": "keyword"
+            },
+            "service_name": {
+              "type": "keyword"
+            },
+            "log_source": {
+              "type": "keyword"
+            },
+            "method": {
+              "type": "keyword"
+            },
+            "url": {
+              "type": "keyword"
+            },
+            "path": {
+              "type": "keyword"
+            },
+            "status_code": {
+              "type": "integer"
+            },
+            "response_time": {
+              "type": "float"
+            },
+            "client_ip": {
+              "type": "ip"
+            },
+            "user_agent": {
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 256
+                }
+              }
+            },
+            "kubernetes": {
+              "properties": {
+                "pod": {
+                  "properties": {
+                    "name": {"type": "keyword"},
+                    "uid": {"type": "keyword"}
+                  }
+                },
+                "namespace": {"type": "keyword"},
+                "container": {
+                  "properties": {
+                    "name": {"type": "keyword"},
+                    "image": {"type": "keyword"}
+                  }
+                },
+                "node": {
+                  "properties": {
+                    "name": {"type": "keyword"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "priority": 100,
+      "version": 1
+    }
+  
+  neoforge-security-template.json: |
+    {
+      "index_patterns": ["neoforge-security-*"],
+      "template": {
+        "settings": {
+          "number_of_shards": 1,
+          "number_of_replicas": 2,
+          "index.lifecycle.name": "security-logs-policy",
+          "index.lifecycle.rollover_alias": "neoforge-security",
+          "index.codec": "best_compression",
+          "index.refresh_interval": "5s"
+        },
+        "mappings": {
+          "properties": {
+            "@timestamp": {"type": "date"},
+            "timestamp": {"type": "date", "format": "epoch_second"},
+            "level": {"type": "keyword"},
+            "event": {"type": "text"},
+            "correlation_id": {"type": "keyword"},
+            "user_id": {"type": "keyword"},
+            "ip_address": {"type": "ip"},
+            "security_severity": {"type": "keyword"},
+            "action": {"type": "keyword"},
+            "resource": {"type": "keyword"},
+            "failure_reason": {"type": "text"},
+            "username": {"type": "keyword"},
+            "authentication_method": {"type": "keyword"}
+          }
+        }
+      },
+      "priority": 200,
+      "version": 1
+    }
+---
+# Curator configuration for log cleanup
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: curator-config
+  namespace: neoforge-logging
+  labels:
+    app: curator
+    component: log-cleanup
+    app.kubernetes.io/name: curator-config
+    app.kubernetes.io/component: log-cleanup
+    app.kubernetes.io/part-of: neoforge
+data:
+  curator.yml: |
+    client:
+      hosts:
+        - elasticsearch:9200
+      port: 9200
+      url_prefix:
+      use_ssl: False
+      certificate:
+      client_cert:
+      client_key:
+      ssl_no_validate: False
+      http_auth:
+      timeout: 30
+      master_only: False
+    
+    logging:
+      loglevel: INFO
+      logfile:
+      logformat: default
+      blacklist: ['elasticsearch', 'urllib3']
+  
+  cleanup-old-indices.yml: |
+    actions:
+      1:
+        action: delete_indices
+        description: "Delete indices older than 90 days (application logs)"
+        options:
+          ignore_empty_list: True
+          timeout_override:
+          continue_if_exception: False
+          disable_action: False
+        filters:
+        - filtertype: pattern
+          kind: prefix
+          value: neoforge-logs-
+          exclude:
+        - filtertype: age
+          source: name
+          direction: older
+          timestring: '%Y.%m.%d'
+          unit: days
+          unit_count: 90
+          exclude:
+      2:
+        action: delete_indices
+        description: "Delete security indices older than 365 days"
+        options:
+          ignore_empty_list: True
+        filters:
+        - filtertype: pattern
+          kind: prefix
+          value: neoforge-security-
+        - filtertype: age
+          source: name
+          direction: older
+          timestring: '%Y.%m.%d'
+          unit: days
+          unit_count: 365
+      3:
+        action: delete_indices
+        description: "Delete performance indices older than 30 days"
+        options:
+          ignore_empty_list: True
+        filters:
+        - filtertype: pattern
+          kind: prefix
+          value: neoforge-performance-
+        - filtertype: age
+          source: name
+          direction: older
+          timestring: '%Y.%m.%d'
+          unit: days
+          unit_count: 30
+      4:
+        action: delete_indices
+        description: "Delete system indices older than 60 days"
+        options:
+          ignore_empty_list: True
+        filters:
+        - filtertype: pattern
+          kind: prefix
+          value: neoforge-system-
+        - filtertype: age
+          source: name
+          direction: older
+          timestring: '%Y.%m.%d'
+          unit: days
+          unit_count: 60
+---
+# Curator CronJob for automated cleanup
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: elasticsearch-curator
+  namespace: neoforge-logging
+  labels:
+    app: curator
+    component: log-cleanup
+    app.kubernetes.io/name: elasticsearch-curator
+    app.kubernetes.io/component: log-cleanup
+    app.kubernetes.io/part-of: neoforge
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: curator
+            component: log-cleanup
+        spec:
+          serviceAccountName: neoforge-logging
+          restartPolicy: OnFailure
+          containers:
+          - name: curator
+            image: untergeek/curator:5.8.4
+            imagePullPolicy: IfNotPresent
+            command:
+            - curator
+            - --config
+            - /etc/curator/curator.yml
+            - /etc/curator/cleanup-old-indices.yml
+            volumeMounts:
+            - name: curator-config
+              mountPath: /etc/curator
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+          volumes:
+          - name: curator-config
+            configMap:
+              name: curator-config

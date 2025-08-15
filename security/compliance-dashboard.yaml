@@ -1,0 +1,472 @@
+# Security Compliance Dashboard Configuration for NeoForge Platform
+# Grafana dashboard for comprehensive security monitoring and compliance reporting
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: neoforge-security-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/name: grafana-dashboard
+    app.kubernetes.io/component: security-monitoring
+data:
+  neoforge-security-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "NeoForge Security Compliance Dashboard",
+        "description": "Comprehensive security monitoring and compliance reporting for NeoForge platform",
+        "tags": [
+          "security",
+          "compliance", 
+          "neoforge",
+          "vulnerability",
+          "runtime-security"
+        ],
+        "style": "dark",
+        "timezone": "UTC",
+        "refresh": "5m",
+        "time": {
+          "from": "now-24h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Security Overview",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(security_scan_vulnerabilities_total{severity=\"critical\"})",
+                "legendFormat": "Critical Vulnerabilities"
+              },
+              {
+                "expr": "sum(security_scan_vulnerabilities_total{severity=\"high\"})",
+                "legendFormat": "High Vulnerabilities"
+              },
+              {
+                "expr": "sum(security_scan_vulnerabilities_total{severity=\"medium\"})",
+                "legendFormat": "Medium Vulnerabilities"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 0
+            },
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 1},
+                    {"color": "red", "value": 5}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 2,
+            "title": "Container Security Scans",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(trivy_scans_total[5m])",
+                "legendFormat": "Trivy Scans/min"
+              },
+              {
+                "expr": "rate(trivy_scan_failures_total[5m])",
+                "legendFormat": "Scan Failures/min"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 0
+            },
+            "yAxes": [
+              {
+                "label": "Rate",
+                "min": 0
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Runtime Security Events",
+            "type": "graph", 
+            "targets": [
+              {
+                "expr": "rate(falco_events_total[5m])",
+                "legendFormat": "{{priority}} Events/min"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 24,
+              "x": 0,
+              "y": 8
+            },
+            "legend": {
+              "show": true,
+              "values": true,
+              "current": true
+            }
+          },
+          {
+            "id": 4,
+            "title": "Policy Violations",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "gatekeeper_violations_total",
+                "format": "table",
+                "instant": true
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 16
+            },
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {},
+                  "indexByName": {},
+                  "renameByName": {
+                    "constraint": "Constraint",
+                    "namespace": "Namespace",
+                    "Value": "Violations"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Secret Scanning Results",
+            "type": "pie",
+            "targets": [
+              {
+                "expr": "sum by (severity) (secret_scan_findings_total)",
+                "legendFormat": "{{severity}}"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 16
+            },
+            "options": {
+              "reduceOptions": {
+                "values": false,
+                "calcs": ["lastNotNull"]
+              },
+              "pieType": "pie",
+              "tooltip": {
+                "mode": "single"
+              },
+              "legend": {
+                "displayMode": "visible",
+                "placement": "right"
+              }
+            }
+          },
+          {
+            "id": 6,
+            "title": "Dependency Vulnerabilities by Component",
+            "type": "heatmap",
+            "targets": [
+              {
+                "expr": "dependency_vulnerabilities_total",
+                "legendFormat": "{{component}}"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 24,
+              "x": 0,
+              "y": 24
+            },
+            "heatmap": {
+              "hideZeroBuckets": true
+            }
+          },
+          {
+            "id": 7,
+            "title": "Compliance Status",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "compliance_check_status{framework=\"SOC2\"}",
+                "legendFormat": "SOC2 Compliance"
+              },
+              {
+                "expr": "compliance_check_status{framework=\"ISO27001\"}",
+                "legendFormat": "ISO27001 Compliance"
+              },
+              {
+                "expr": "compliance_check_status{framework=\"NIST\"}",
+                "legendFormat": "NIST Compliance"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 32
+            },
+            "fieldConfig": {
+              "defaults": {
+                "mappings": [
+                  {
+                    "options": {
+                      "0": {"text": "Non-Compliant", "color": "red"},
+                      "1": {"text": "Compliant", "color": "green"}
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": 8,
+            "title": "Security Scan Timeline",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "security_scan_duration_seconds",
+                "legendFormat": "{{scan_type}} Duration"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 32
+            },
+            "yAxes": [
+              {
+                "label": "Duration (seconds)",
+                "min": 0
+              }
+            ]
+          },
+          {
+            "id": 9,
+            "title": "Top Vulnerabilities by CVSS Score",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "topk(10, vulnerability_cvss_score)",
+                "format": "table",
+                "instant": true
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 24,
+              "x": 0,
+              "y": 40
+            },
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "renameByName": {
+                    "cve_id": "CVE ID",
+                    "cvss_score": "CVSS Score",
+                    "component": "Component",
+                    "severity": "Severity"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": 10,
+            "title": "Security Alert Distribution",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(security_alerts_total[5m])",
+                "legendFormat": "{{severity}} Alerts/min"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 0,
+              "y": 48
+            },
+            "stack": true
+          },
+          {
+            "id": 11,
+            "title": "Infrastructure Security Posture",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "checkov_checks_passed_total / (checkov_checks_passed_total + checkov_checks_failed_total) * 100",
+                "legendFormat": "Pass Rate %"
+              }
+            ],
+            "gridPos": {
+              "h": 8,
+              "w": 12,
+              "x": 12,
+              "y": 48
+            },
+            "yAxes": [
+              {
+                "label": "Percentage",
+                "min": 0,
+                "max": 100
+              }
+            ]
+          }
+        ],
+        "annotations": {
+          "list": [
+            {
+              "name": "Security Incidents",
+              "datasource": "prometheus",
+              "enable": true,
+              "expr": "security_incident_created",
+              "iconColor": "red",
+              "titleFormat": "Security Incident: {{summary}}"
+            }
+          ]
+        },
+        "templating": {
+          "list": [
+            {
+              "name": "namespace",
+              "type": "query",
+              "query": "label_values(kube_pod_info, namespace)",
+              "refresh": 1,
+              "includeAll": true,
+              "allValue": ".*"
+            },
+            {
+              "name": "severity",
+              "type": "custom",
+              "query": "critical,high,medium,low,info",
+              "includeAll": true,
+              "allValue": ".*"
+            }
+          ]
+        }
+      }
+    }
+
+---
+# Prometheus Rules for Security Metrics
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: neoforge-security-rules
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: prometheus-rules
+    app.kubernetes.io/component: security-monitoring
+spec:
+  groups:
+  - name: neoforge.security.rules
+    interval: 30s
+    rules:
+    - alert: CriticalVulnerabilityDetected
+      expr: security_scan_vulnerabilities_total{severity="critical"} > 0
+      for: 0m
+      labels:
+        severity: critical
+        component: security
+      annotations:
+        summary: "Critical vulnerability detected in NeoForge platform"
+        description: "{{ $value }} critical vulnerabilities found in {{ $labels.component }}"
+        runbook_url: "https://docs.neoforge.io/runbooks/critical-vulnerability"
+
+    - alert: HighSecurityEventRate
+      expr: rate(falco_events_total{priority="error"}[5m]) > 1
+      for: 2m
+      labels:
+        severity: warning
+        component: runtime-security
+      annotations:
+        summary: "High rate of security events detected"
+        description: "Falco is reporting {{ $value }} security events per minute"
+        runbook_url: "https://docs.neoforge.io/runbooks/high-security-events"
+
+    - alert: PolicyViolationIncrease
+      expr: increase(gatekeeper_violations_total[10m]) > 5
+      for: 5m
+      labels:
+        severity: warning
+        component: policy-enforcement
+      annotations:
+        summary: "Increase in policy violations detected"
+        description: "{{ $value }} new policy violations in the last 10 minutes"
+
+    - alert: SecurityScanFailure
+      expr: rate(security_scan_failures_total[5m]) > 0.1
+      for: 1m
+      labels:
+        severity: warning
+        component: scanning
+      annotations:
+        summary: "Security scan failures detected"
+        description: "{{ $value }} security scans failing per minute"
+
+    - alert: ComplianceCheckFailure
+      expr: compliance_check_status == 0
+      for: 0m
+      labels:
+        severity: critical
+        component: compliance
+      annotations:
+        summary: "Compliance check failure"
+        description: "{{ $labels.framework }} compliance check is failing"
+
+    - alert: SecretExposureDetected
+      expr: secret_scan_findings_total{severity=~"critical|high"} > 0
+      for: 0m
+      labels:
+        severity: critical
+        component: secrets
+      annotations:
+        summary: "Potential secret exposure detected"
+        description: "{{ $value }} high-severity secret findings detected"
+
+  - name: neoforge.security.recording.rules
+    interval: 30s
+    rules:
+    - record: neoforge:security_posture_score
+      expr: |
+        (
+          sum(compliance_check_status) / count(compliance_check_status) * 0.3 +
+          (1 - sum(security_scan_vulnerabilities_total{severity=~"critical|high"}) / 100) * 0.4 +
+          (1 - rate(falco_events_total{priority="error"}[1h]) / 10) * 0.3
+        ) * 100
+
+    - record: neoforge:vulnerability_trend_7d
+      expr: |
+        (
+          sum(security_scan_vulnerabilities_total) - 
+          sum(security_scan_vulnerabilities_total offset 7d)
+        )
+
+    - record: neoforge:security_incidents_24h
+      expr: |
+        sum(increase(security_incident_created[24h]))

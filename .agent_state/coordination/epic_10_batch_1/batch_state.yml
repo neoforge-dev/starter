@@ -1,0 +1,21 @@
+batch_id: batch_1
+epic_id: epic_10
+estimated_time: 4-5 hours
+started_at: '2025-08-15T00:03:11.013919+00:00'
+tasks:
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: implement_acquisition_channel_tracking
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: create_viral_coefficient_analysis
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: add_customer_acquisition_cost_tracking
+tests: []

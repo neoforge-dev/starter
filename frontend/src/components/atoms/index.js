@@ -6,3 +6,4 @@ export * from "./spinner/spinner.js";
 export * from "./checkbox/checkbox.js";
 export * from "./radio/radio.js";
 export * from "./dropdown.js";
+export * from "./journey-tracker.js";

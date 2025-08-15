@@ -4,7 +4,7 @@ import {
  } from 'lit';
 import { baseStyles } from "../../styles/base.js";
 import { authStyles } from "../../styles/auth.js";
-import { authService } from "../../services/auth.js";
+import { authService } from "../../services/auth.ts";
 import { showToast } from "../../components/ui/toast/index.js";
 import "../../components/ui/button.js";
 import "../../components/ui/input.js";

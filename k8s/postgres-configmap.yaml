@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: neoforge
+  labels:
+    app: postgres
+    component: database
+data:
+  postgresql.conf: |
+    # PostgreSQL Configuration for Production
+    # Memory and Performance
+    shared_buffers = '256MB'
+    effective_cache_size = '1GB'
+    work_mem = '8MB'
+    maintenance_work_mem = '64MB'
+    
+    # Connections
+    max_connections = 200
+    superuser_reserved_connections = 3
+    
+    # WAL and Checkpoints
+    wal_level = replica
+    max_wal_size = '2GB'
+    min_wal_size = '80MB'
+    checkpoint_completion_target = 0.9
+    checkpoint_timeout = '10min'
+    
+    # Logging
+    log_destination = 'stderr'
+    log_statement = 'mod'
+    log_min_duration_statement = 1000
+    log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+    
+    # Autovacuum
+    autovacuum = on
+    log_autovacuum_min_duration = 0
+    
+    # Security
+    ssl = on
+    ssl_cert_file = '/var/lib/postgresql/server.crt'
+    ssl_key_file = '/var/lib/postgresql/server.key'
+    
+    # Replication
+    hot_standby = on
+    max_wal_senders = 3
+    wal_keep_size = '160MB'
+    
+    # Performance Monitoring
+    track_activities = on
+    track_counts = on
+    track_io_timing = on
+    track_functions = all
+    
+  pg_hba.conf: |
+    # PostgreSQL Client Authentication Configuration
+    # TYPE  DATABASE        USER            ADDRESS                 METHOD
+    
+    # "local" is for Unix domain socket connections only
+    local   all             all                                     trust
+    
+    # IPv4 local connections:
+    host    all             all             127.0.0.1/32            md5
+    host    all             all             10.0.0.0/8              md5
+    host    all             all             172.16.0.0/12           md5
+    host    all             all             192.168.0.0/16          md5
+    
+    # IPv6 local connections:
+    host    all             all             ::1/128                 md5
+    
+    # Replication connections
+    host    replication     replicator      10.0.0.0/8              md5
+    host    replication     replicator      172.16.0.0/12           md5
+    host    replication     replicator      192.168.0.0/16          md5
+  
+  backup-script.sh: |
+    #!/bin/bash
+    set -e
+    
+    # Backup configuration
+    BACKUP_DIR="/var/lib/postgresql/backups"
+    DATE=$(date +%Y%m%d_%H%M%S)
+    BACKUP_FILE="neoforge_backup_${DATE}.sql.gz"
+    
+    # Create backup directory
+    mkdir -p ${BACKUP_DIR}
+    
+    # Create database backup
+    echo "Starting backup at $(date)"
+    pg_dump -h localhost -U postgres -d neoforge | gzip > ${BACKUP_DIR}/${BACKUP_FILE}
+    
+    # Upload to cloud storage (if configured)
+    if [ ! -z "$AWS_ACCESS_KEY_ID" ]; then
+        aws s3 cp ${BACKUP_DIR}/${BACKUP_FILE} s3://${BACKUP_BUCKET}/postgres/${BACKUP_FILE}
+        echo "Backup uploaded to S3"
+    fi
+    
+    # Cleanup old backups (keep last 7 days)
+    find ${BACKUP_DIR} -name "*.sql.gz" -mtime +7 -delete
+    
+    echo "Backup completed at $(date)"
+  
+  init-scripts.sql: |
+    -- Initialize database for production
+    
+    -- Create application user
+    CREATE USER neoforge_app WITH PASSWORD 'neoforge_app_password_2025';
+    
+    -- Grant necessary permissions
+    GRANT CONNECT ON DATABASE neoforge TO neoforge_app;
+    GRANT USAGE ON SCHEMA public TO neoforge_app;
+    GRANT CREATE ON SCHEMA public TO neoforge_app;
+    
+    -- Create extensions
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+    CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+    
+    -- Performance monitoring
+    ALTER SYSTEM SET shared_preload_libraries = 'pg_stat_statements';
+    
+    -- Security settings
+    ALTER SYSTEM SET log_connections = 'on';
+    ALTER SYSTEM SET log_disconnections = 'on';

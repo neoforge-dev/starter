@@ -1,5 +1,5 @@
 import {   LitElement, html, css   } from 'lit';
-import { apiService } from "@services/api.js";
+import { apiService } from "@services/api.ts";
 import { Logger } from "@utils/logger.js";
 
 export class ProjectsPage extends LitElement {

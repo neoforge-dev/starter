@@ -95,10 +95,10 @@ export default defineConfig({
     globals: true,
     reporters: ["default", customReporter],
     
-    // Optimized threading for Bun runtime
-    threads: true,
-    pool: "threads",
-    isolate: false, // Disable isolation for faster test startup with Bun
+    // Disable threading to fix worker termination issues in CI
+    threads: false,
+    pool: "forks",
+    isolate: true, // Enable isolation for stability
     
     // Reduced timeout for faster feedback
     testTimeout: 8000,
@@ -169,14 +169,11 @@ export default defineConfig({
       "./vitest.setup.js",
     ],
     
-    // Optimized pool configuration for Bun
+    // Stable pool configuration for CI
     poolOptions: {
-      threads: {
-        singleThread: false,
-        minThreads: 2,
-        maxThreads: 6, // Increased for better parallelization with Bun
-        isolate: false, // Disable isolation for speed
-        useAtomics: true, // Enable atomics for better performance
+      forks: {
+        singleFork: true, // Use single fork for stability
+        isolate: true, // Enable isolation for stability
       },
     },
     

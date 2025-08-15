@@ -64,20 +64,23 @@ export class NeoButton extends BaseComponent {
           transition: all var(--transition-fast);
         }
 
-        /* Sizes */
+        /* Sizes - All meet WCAG AA touch target minimum of 44px */
         .size-sm {
-          height: 32px;
+          min-height: 44px;
+          height: 44px;
           padding: 0 var(--spacing-sm);
           font-size: var(--font-size-sm);
         }
 
         .size-md {
-          height: 40px;
+          min-height: 44px;
+          height: 44px;
           padding: 0 var(--spacing-md);
           font-size: var(--font-size-base);
         }
 
         .size-lg {
+          min-height: 48px;
           height: 48px;
           padding: 0 var(--spacing-lg);
           font-size: var(--font-size-lg);

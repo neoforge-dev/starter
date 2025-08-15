@@ -1,0 +1,355 @@
+# Fluent Bit ConfigMap for configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: neoforge-logging
+  labels:
+    app: fluent-bit
+    component: log-collector
+    app.kubernetes.io/name: fluent-bit-config
+    app.kubernetes.io/component: log-collector
+    app.kubernetes.io/part-of: neoforge
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush         5
+        Log_Level     info
+        Daemon        off
+        Parsers_File  parsers.conf
+        HTTP_Server   On
+        HTTP_Listen   0.0.0.0
+        HTTP_Port     2020
+        Health_Check  On
+        storage.path              /var/log/flb-storage/
+        storage.sync              normal
+        storage.checksum          off
+        storage.max_chunks_up     128
+
+    @INCLUDE input-kubernetes.conf
+    @INCLUDE filter-kubernetes.conf
+    @INCLUDE output-elasticsearch.conf
+
+  input-kubernetes.conf: |
+    [INPUT]
+        Name              tail
+        Tag               kube.*
+        Path              /var/log/containers/*.log
+        multiline.parser  docker, cri
+        DB                /var/log/flb_kube.db
+        Mem_Buf_Limit     50MB
+        Skip_Long_Lines   On
+        Refresh_Interval  10
+        Rotate_Wait       30
+        storage.type      filesystem
+
+    [INPUT]
+        Name                systemd
+        Tag                 host.*
+        Systemd_Filter      _SYSTEMD_UNIT=kubelet.service
+        Systemd_Filter      _SYSTEMD_UNIT=docker.service
+        Systemd_Filter      _SYSTEMD_UNIT=containerd.service
+        DB                  /var/log/journal.db
+        storage.type        filesystem
+
+  filter-kubernetes.conf: |
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Kube_URL            https://kubernetes.default.svc:443
+        Kube_CA_File        /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File     /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Tag_Prefix     kube.var.log.containers.
+        Merge_Log           On
+        Merge_Log_Key       log_processed
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude Off
+        Annotations         Off
+        Labels              On
+
+    [FILTER]
+        Name                parser
+        Match               kube.*
+        Key_Name            log
+        Parser              json
+        Parser              docker
+        Reserve_Data        On
+        Preserve_Key        On
+
+    [FILTER]
+        Name                nest
+        Match               kube.*
+        Operation           lift
+        Nested_under        kubernetes
+        Add_prefix          k8s_
+
+    [FILTER]
+        Name                modify
+        Match               kube.*
+        Add                 cluster_name neoforge
+        Add                 log_source kubernetes
+
+    [FILTER]
+        Name                lua
+        Match               kube.*
+        script              /fluent-bit/scripts/add_correlation_id.lua
+        call                add_correlation_id
+
+    [FILTER]
+        Name                grep
+        Match               kube.*
+        Exclude             k8s_namespace_name kube-system
+        Exclude             k8s_namespace_name kube-public
+        Exclude             k8s_namespace_name kube-node-lease
+
+  output-elasticsearch.conf: |
+    [OUTPUT]
+        Name            es
+        Match           kube.*
+        Host            elasticsearch.neoforge-logging.svc.cluster.local
+        Port            9200
+        Index           neoforge-logs
+        Type            _doc
+        Logstash_Format On
+        Logstash_Prefix neoforge-logs
+        Logstash_DateFormat %Y.%m.%d
+        Time_Key        @timestamp
+        Time_Key_Format %Y-%m-%dT%H:%M:%S.%L%z
+        Include_Tag_Key On
+        Tag_Key         tag
+        Retry_Limit     False
+        storage.total_limit_size 1G
+        Buffer_Size     4KB
+        Workers         1
+
+    [OUTPUT]
+        Name            es
+        Match           host.*
+        Host            elasticsearch.neoforge-logging.svc.cluster.local
+        Port            9200
+        Index           neoforge-system-logs
+        Type            _doc
+        Logstash_Format On
+        Logstash_Prefix neoforge-system
+        Logstash_DateFormat %Y.%m.%d
+        Time_Key        @timestamp
+        Include_Tag_Key On
+        Tag_Key         tag
+
+  parsers.conf: |
+    [PARSER]
+        Name        json
+        Format      json
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L%z
+        Time_Keep   On
+
+    [PARSER]
+        Name        docker
+        Format      json
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L%z
+        Time_Keep   On
+
+    [PARSER]
+        Name        neoforge-api
+        Format      json
+        Time_Key    timestamp
+        Time_Format %Y-%m-%dT%H:%M:%S.%L%z
+
+    [PARSER]
+        Name        nginx
+        Format      regex
+        Regex       ^(?<remote>[^ ]*) (?<host>[^ ]*) (?<user>[^ ]*) \[(?<time>[^\]]*)\] "(?<method>\S+)(?: +(?<path>[^\"]*?)(?: +\S*)?)?" (?<code>[^ ]*) (?<size>[^ ]*)(?: "(?<referer>[^\"]*)" "(?<agent>[^\"]*)")?$
+        Time_Key    time
+        Time_Format %d/%b/%Y:%H:%M:%S %z
+
+  add_correlation_id.lua: |
+    function add_correlation_id(tag, timestamp, record)
+        -- Add correlation ID if not present
+        if not record["correlation_id"] and record["log"] then
+            local log_str = record["log"]
+            local correlation_id = log_str:match('"correlation_id":"([^"]*)"')
+            if correlation_id then
+                record["correlation_id"] = correlation_id
+            end
+        end
+        
+        -- Add structured fields for common log patterns
+        if record["log"] then
+            local level = record["log"]:match('"level":"([^"]*)"') or record["log"]:match('LEVEL=([A-Z]+)')
+            if level then
+                record["log_level"] = level:upper()
+            end
+            
+            local user_id = record["log"]:match('"user_id":"([^"]*)"')
+            if user_id then
+                record["user_id"] = user_id
+            end
+            
+            local request_id = record["log"]:match('"request_id":"([^"]*)"')
+            if request_id then
+                record["request_id"] = request_id
+            end
+        end
+        
+        return 2, timestamp, record
+    end
+---
+# Fluent Bit DaemonSet
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+  namespace: neoforge-logging
+  labels:
+    app: fluent-bit
+    component: log-collector
+    app.kubernetes.io/name: fluent-bit
+    app.kubernetes.io/component: log-collector
+    app.kubernetes.io/part-of: neoforge
+spec:
+  selector:
+    matchLabels:
+      app: fluent-bit
+      component: log-collector
+  template:
+    metadata:
+      labels:
+        app: fluent-bit
+        component: log-collector
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "2020"
+        prometheus.io/path: "/api/v1/metrics/prometheus"
+    spec:
+      serviceAccountName: fluent-bit
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: "NoExecute"
+      - operator: "Exists"
+        effect: "NoSchedule"
+      hostNetwork: false
+      dnsPolicy: ClusterFirst
+      containers:
+      - name: fluent-bit
+        image: fluent/fluent-bit:2.2.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 2020
+          name: http-metrics
+          protocol: TCP
+        env:
+        - name: FLUENT_CONF
+          value: "/fluent-bit/etc/fluent-bit.conf"
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: fluent-bit-config
+          mountPath: /fluent-bit/etc/
+        - name: fluent-bit-scripts
+          mountPath: /fluent-bit/scripts/
+        - name: mnt
+          mountPath: /mnt
+          readOnly: true
+        - name: storage
+          mountPath: /var/log/flb-storage/
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 2020
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 2020
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: fluent-bit-config
+        configMap:
+          name: fluent-bit-config
+      - name: fluent-bit-scripts
+        configMap:
+          name: fluent-bit-config
+      - name: mnt
+        hostPath:
+          path: /mnt
+      - name: storage
+        emptyDir: {}
+---
+# Fluent Bit Service for metrics
+apiVersion: v1
+kind: Service
+metadata:
+  name: fluent-bit
+  namespace: neoforge-logging
+  labels:
+    app: fluent-bit
+    component: log-collector
+    app.kubernetes.io/name: fluent-bit
+    app.kubernetes.io/component: log-collector
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "2020"
+    prometheus.io/path: "/api/v1/metrics/prometheus"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 2020
+    targetPort: 2020
+    name: http-metrics
+    protocol: TCP
+  selector:
+    app: fluent-bit
+    component: log-collector

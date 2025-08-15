@@ -1,0 +1,24 @@
+batch_id: batch_3
+epic_id: epic_8
+estimated_time: 3-4 hours
+started_at: '2025-08-14T18:09:16.853761+00:00'
+tasks:
+- agent_assigned: frontend-builder
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: create_analytics_dashboard
+- agent_assigned: backend-engineer
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: implement_cohort_analysis
+- agent_assigned: backend-engineer
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: add_retention_metrics
+tests:
+- validate_dashboard_performance
+- test_metric_calculations
+- verify_data_visualization

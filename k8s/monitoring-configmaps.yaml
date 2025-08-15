@@ -1,0 +1,526 @@
+# Prometheus configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: neoforge-monitoring
+  labels:
+    app: prometheus
+    component: config
+    app.kubernetes.io/name: prometheus-config
+    app.kubernetes.io/instance: neoforge-prometheus-config
+    app.kubernetes.io/component: config
+    app.kubernetes.io/part-of: neoforge
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'neoforge-production'
+        environment: 'production'
+    
+    rule_files:
+    - "/etc/prometheus/alerts/*.yml"
+    
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets:
+          - alertmanager:9093
+        timeout: 10s
+        api_version: v2
+    
+    scrape_configs:
+    # Prometheus itself
+    - job_name: 'prometheus'
+      static_configs:
+      - targets: ['localhost:9090']
+      scrape_interval: 5s
+    
+    # Kubernetes API server
+    - job_name: 'kubernetes-apiservers'
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+          - default
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: default;kubernetes;https
+    
+    # Kubernetes nodes
+    - job_name: 'kubernetes-nodes'
+      kubernetes_sd_configs:
+      - role: node
+      scheme: https
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+    
+    # Kubernetes pods
+    - job_name: 'kubernetes-pods'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - neoforge
+          - neoforge-staging
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+    
+    # ServiceMonitor discovery
+    - job_name: 'kubernetes-service-endpoints'
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+          - neoforge
+          - neoforge-staging
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+        action: replace
+        target_label: __scheme__
+        regex: (https?)
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+        action: replace
+        target_label: __address__
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+      - action: labelmap
+        regex: __meta_kubernetes_service_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_service_name]
+        action: replace
+        target_label: kubernetes_name
+    
+    # NeoForge API
+    - job_name: 'neoforge-api'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - neoforge
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: api
+      - source_labels: [__meta_kubernetes_pod_container_port_number]
+        action: keep
+        regex: 8000
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+      scrape_interval: 10s
+      metrics_path: /metrics
+    
+    # NeoForge Frontend (Nginx)
+    - job_name: 'neoforge-frontend'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - neoforge
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: frontend
+      - source_labels: [__meta_kubernetes_pod_container_port_number]
+        action: keep
+        regex: 9113
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      scrape_interval: 30s
+      metrics_path: /metrics
+    
+    # PostgreSQL
+    - job_name: 'neoforge-postgres'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - neoforge
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: postgres
+      - source_labels: [__meta_kubernetes_pod_container_port_number]
+        action: keep
+        regex: 9187
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      scrape_interval: 30s
+      metrics_path: /metrics
+    
+    # Redis
+    - job_name: 'neoforge-redis'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - neoforge
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: redis
+      - source_labels: [__meta_kubernetes_pod_container_port_number]
+        action: keep
+        regex: 9121
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      scrape_interval: 30s
+      metrics_path: /metrics
+    
+    # Celery Workers
+    - job_name: 'neoforge-celery'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - neoforge
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: celery.*
+      - source_labels: [__meta_kubernetes_pod_container_port_number]
+        action: keep
+        regex: 9540
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      scrape_interval: 15s
+      metrics_path: /metrics
+    
+    # Node Exporter (if deployed)
+    - job_name: 'node-exporter'
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: node-exporter
+      - source_labels: [__meta_kubernetes_pod_container_port_number]
+        action: keep
+        regex: 9100
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      scrape_interval: 30s
+      metrics_path: /metrics
+  
+  alerts.yml: |
+    groups:
+    - name: neoforge.alerts
+      rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}"
+      
+      # High response time
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s for {{ $labels.job }}"
+      
+      # Database connection issues
+      - alert: DatabaseDown
+        expr: up{job="neoforge-postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL database has been down for more than 1 minute"
+      
+      # Redis connection issues
+      - alert: RedisDown
+        expr: up{job="neoforge-redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: cache
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis cache has been down for more than 1 minute"
+      
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total[5m]) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value | humanizePercentage }} for {{ $labels.pod }}"
+      
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanizePercentage }} for {{ $labels.pod }}"
+      
+      # Pod crash looping
+      - alert: PodCrashLooping
+        expr: increase(kube_pod_container_status_restarts_total[1h]) > 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pod is crash looping"
+          description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last hour"
+      
+      # Celery queue backup
+      - alert: CeleryQueueBackup
+        expr: celery_queue_length > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: "Celery queue backup detected"
+          description: "Celery queue {{ $labels.queue }} has {{ $value }} pending tasks"
+      
+      # Disk space low
+      - alert: DiskSpaceLow
+        expr: (1 - (node_filesystem_free_bytes / node_filesystem_size_bytes)) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+      
+      # SSL certificate expiring
+      - alert: SSLCertificateExpiringSoon
+        expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 7
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate for {{ $labels.instance }} expires in {{ $value | humanizeDuration }}"
+---
+# Grafana configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-config
+  namespace: neoforge-monitoring
+  labels:
+    app: grafana
+    component: config
+    app.kubernetes.io/name: grafana-config
+    app.kubernetes.io/instance: neoforge-grafana-config
+    app.kubernetes.io/component: config
+    app.kubernetes.io/part-of: neoforge
+data:
+  grafana.ini: |
+    [analytics]
+    check_for_updates = false
+    reporting_enabled = false
+    
+    [security]
+    admin_user = admin
+    disable_gravatar = true
+    
+    [users]
+    allow_sign_up = false
+    allow_org_create = false
+    auto_assign_org = true
+    auto_assign_org_role = Viewer
+    
+    [auth.anonymous]
+    enabled = false
+    
+    [log]
+    mode = console
+    level = info
+    
+    [server]
+    domain = monitoring.neoforge.example.com
+    root_url = https://monitoring.neoforge.example.com/grafana
+    serve_from_sub_path = true
+    
+    [database]
+    type = sqlite3
+    path = /var/lib/grafana/grafana.db
+    
+    [session]
+    provider = file
+    provider_config = /var/lib/grafana/sessions
+    
+    [dashboards]
+    default_home_dashboard_path = /var/lib/grafana/dashboards/overview.json
+    
+    [plugins]
+    allow_loading_unsigned_plugins = grafana-piechart-panel,grafana-worldmap-panel
+---
+# Grafana Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-secret
+  namespace: neoforge-monitoring
+  labels:
+    app: grafana
+    component: secret
+    app.kubernetes.io/name: grafana-secret
+    app.kubernetes.io/instance: neoforge-grafana-secret
+    app.kubernetes.io/component: secret
+    app.kubernetes.io/part-of: neoforge
+type: Opaque
+data:
+  # Base64 encoded: admin123 (change this!)
+  admin-password: YWRtaW4xMjM=
+---
+# AlertManager configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: neoforge-monitoring
+  labels:
+    app: alertmanager
+    component: config
+    app.kubernetes.io/name: alertmanager-config
+    app.kubernetes.io/instance: neoforge-alertmanager-config
+    app.kubernetes.io/component: config
+    app.kubernetes.io/part-of: neoforge
+data:
+  alertmanager.yml: |
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'alerts@neoforge.example.com'
+      smtp_auth_username: 'alerts@neoforge.example.com'
+      smtp_auth_password: 'your_smtp_password'
+      
+    templates:
+    - '/etc/alertmanager/templates/*.tmpl'
+    
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'default-receiver'
+      routes:
+      - match:
+          severity: critical
+        receiver: 'critical-receiver'
+      - match:
+          severity: warning
+        receiver: 'warning-receiver'
+    
+    receivers:
+    - name: 'default-receiver'
+      email_configs:
+      - to: 'admin@neoforge.example.com'
+        subject: '[NeoForge] Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Labels: {{ range .Labels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}
+          {{ end }}
+    
+    - name: 'critical-receiver'
+      email_configs:
+      - to: 'admin@neoforge.example.com,devops@neoforge.example.com'
+        subject: '[CRITICAL] NeoForge Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          🚨 CRITICAL ALERT 🚨
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Labels: {{ range .Labels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}
+          {{ end }}
+      slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        channel: '#alerts'
+        username: 'AlertManager'
+        icon_emoji: ':warning:'
+        title: 'Critical Alert: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ end }}
+    
+    - name: 'warning-receiver'
+      email_configs:
+      - to: 'admin@neoforge.example.com'
+        subject: '[WARNING] NeoForge Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          ⚠️  WARNING ALERT ⚠️
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Labels: {{ range .Labels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}
+          {{ end }}
+    
+    inhibit_rules:
+    - source_match:
+        severity: 'critical'
+      target_match:
+        severity: 'warning'
+      equal: ['alertname', 'instance']

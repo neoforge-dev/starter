@@ -1,0 +1,517 @@
+# Default deny all network policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: default-deny-all
+    app.kubernetes.io/instance: neoforge-default-deny
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+# Allow ingress to frontend from ingress controller
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-frontend
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: allow-ingress-to-frontend
+    app.kubernetes.io/instance: neoforge-ingress-frontend
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+      component: web
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow traffic from ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: TCP
+      port: 80
+  # Allow traffic from monitoring
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: neoforge-monitoring
+    ports:
+    - protocol: TCP
+      port: 9113  # nginx exporter metrics
+---
+# Allow ingress to API from ingress controller and frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-api
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: allow-ingress-to-api
+    app.kubernetes.io/instance: neoforge-ingress-api
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+      component: backend
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow traffic from ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: TCP
+      port: 8000
+  # Allow traffic from frontend (for SSR if needed)
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+          component: web
+    ports:
+    - protocol: TCP
+      port: 8000
+  # Allow traffic from monitoring
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: neoforge-monitoring
+    ports:
+    - protocol: TCP
+      port: 8000
+---
+# Allow API to access database
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-database
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: allow-api-to-database
+    app.kubernetes.io/instance: neoforge-api-database
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+      component: database
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow API to access database
+  - from:
+    - podSelector:
+        matchLabels:
+          app: api
+          component: backend
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow Celery workers to access database
+  - from:
+    - podSelector:
+        matchLabels:
+          app: celery-worker
+    ports:
+    - protocol: TCP
+      port: 5432
+  - from:
+    - podSelector:
+        matchLabels:
+          app: celery-email-worker
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow monitoring to access database metrics
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: neoforge-monitoring
+    ports:
+    - protocol: TCP
+      port: 9187  # postgres exporter
+---
+# Allow API and workers to access Redis
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-access-to-redis
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: allow-access-to-redis
+    app.kubernetes.io/instance: neoforge-access-redis
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+      component: cache
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow API to access Redis
+  - from:
+    - podSelector:
+        matchLabels:
+          app: api
+          component: backend
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow Celery workers to access Redis
+  - from:
+    - podSelector:
+        matchLabels:
+          app: celery-worker
+    ports:
+    - protocol: TCP
+      port: 6379
+  - from:
+    - podSelector:
+        matchLabels:
+          app: celery-email-worker
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow monitoring to access Redis metrics
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: neoforge-monitoring
+    ports:
+    - protocol: TCP
+      port: 9121  # redis exporter
+---
+# Allow egress from API to external services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-egress
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: allow-api-egress
+    app.kubernetes.io/instance: neoforge-api-egress
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+      component: backend
+  policyTypes:
+  - Egress
+  egress:
+  # Allow access to database
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+          component: database
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow access to Redis
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+          component: cache
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow HTTPS to external APIs
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+  # Allow SMTP for email sending
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 587
+    - protocol: TCP
+      port: 465
+    - protocol: TCP
+      port: 25
+---
+# Allow egress from Celery workers
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-celery-egress
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: allow-celery-egress
+    app.kubernetes.io/instance: neoforge-celery-egress
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector:
+    matchLabels:
+      app: celery-worker
+  policyTypes:
+  - Egress
+  egress:
+  # Allow access to database
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+          component: database
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow access to Redis
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+          component: cache
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow HTTPS to external APIs
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+  # Allow SMTP for email sending
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 587
+    - protocol: TCP
+      port: 465
+    - protocol: TCP
+      port: 25
+---
+# Allow egress from email workers
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-email-worker-egress
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: allow-email-worker-egress
+    app.kubernetes.io/instance: neoforge-email-worker-egress
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector:
+    matchLabels:
+      app: celery-email-worker
+  policyTypes:
+  - Egress
+  egress:
+  # Allow access to database (for email templates, user info)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+          component: database
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow access to Redis
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+          component: cache
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow SMTP for email sending
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 587  # TLS
+    - protocol: TCP
+      port: 465  # SSL
+    - protocol: TCP
+      port: 25   # Plain
+  # Allow HTTPS for external email services (SendGrid, etc.)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+---
+# Allow frontend egress to API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-egress
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: allow-frontend-egress
+    app.kubernetes.io/instance: neoforge-frontend-egress
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+      component: web
+  policyTypes:
+  - Egress
+  egress:
+  # Allow access to API (for proxy requests)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: api
+          component: backend
+    ports:
+    - protocol: TCP
+      port: 8000
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+---
+# Allow monitoring namespace to access all metrics
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-access
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: allow-monitoring-access
+    app.kubernetes.io/instance: neoforge-monitoring-access
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow monitoring to access all pods for metrics
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: neoforge-monitoring
+    ports:
+    - protocol: TCP
+      port: 8000  # API metrics
+    - protocol: TCP
+      port: 9113  # nginx metrics
+    - protocol: TCP
+      port: 9121  # redis metrics
+    - protocol: TCP
+      port: 9187  # postgres metrics
+    - protocol: TCP
+      port: 9540  # celery metrics
+---
+# Network policy for cross-namespace monitoring communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-egress
+  namespace: neoforge-monitoring
+  labels:
+    app.kubernetes.io/name: allow-monitoring-egress
+    app.kubernetes.io/instance: neoforge-monitoring-egress
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  # Allow access to application metrics
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: neoforge
+  # Allow access to staging metrics
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: neoforge-staging
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Allow HTTPS for external services (alerting webhooks)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+---
+# Allow kube-system pods to access services (for ingress, dns, etc.)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-kube-system-access
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: allow-kube-system-access
+    app.kubernetes.io/instance: neoforge-kube-system-access
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow kube-system pods (ingress controller, etc.)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+  # Allow ingress-nginx namespace
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx

@@ -1,0 +1,103 @@
+# Logging namespace and RBAC configuration
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: neoforge-logging
+  labels:
+    name: neoforge-logging
+    app.kubernetes.io/name: neoforge-logging
+    app.kubernetes.io/component: logging
+    app.kubernetes.io/part-of: neoforge
+    purpose: centralized-logging
+---
+# ServiceAccount for logging components
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neoforge-logging
+  namespace: neoforge-logging
+  labels:
+    app.kubernetes.io/name: neoforge-logging-sa
+    app.kubernetes.io/component: logging
+    app.kubernetes.io/part-of: neoforge
+---
+# ClusterRole for log collection
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: neoforge-logging
+  labels:
+    app.kubernetes.io/name: neoforge-logging-role
+    app.kubernetes.io/component: logging
+    app.kubernetes.io/part-of: neoforge
+rules:
+- apiGroups: [""]
+  resources: ["pods", "namespaces", "nodes", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "daemonsets", "statefulsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list", "watch"]
+---
+# ClusterRoleBinding for log collection
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: neoforge-logging
+  labels:
+    app.kubernetes.io/name: neoforge-logging-binding
+    app.kubernetes.io/component: logging
+    app.kubernetes.io/part-of: neoforge
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: neoforge-logging
+subjects:
+- kind: ServiceAccount
+  name: neoforge-logging
+  namespace: neoforge-logging
+---
+# ServiceAccount for Fluent Bit
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fluent-bit
+  namespace: neoforge-logging
+  labels:
+    app.kubernetes.io/name: fluent-bit-sa
+    app.kubernetes.io/component: log-collector
+    app.kubernetes.io/part-of: neoforge
+---
+# ClusterRole for Fluent Bit
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fluent-bit
+  labels:
+    app.kubernetes.io/name: fluent-bit-role
+    app.kubernetes.io/component: log-collector
+    app.kubernetes.io/part-of: neoforge
+rules:
+- apiGroups: [""]
+  resources: ["pods", "nodes", "namespaces"]
+  verbs: ["get", "list", "watch"]
+---
+# ClusterRoleBinding for Fluent Bit
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: fluent-bit
+  labels:
+    app.kubernetes.io/name: fluent-bit-binding
+    app.kubernetes.io/component: log-collector
+    app.kubernetes.io/part-of: neoforge
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: fluent-bit
+subjects:
+- kind: ServiceAccount
+  name: fluent-bit
+  namespace: neoforge-logging

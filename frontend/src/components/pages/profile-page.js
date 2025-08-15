@@ -1,6 +1,6 @@
 import {   LitElement, html, css   } from 'lit';
 import { baseStyles } from "../styles/base.js";
-import { authService } from "../services/auth.js";
+import { authService } from "../services/auth.ts";
 import "../components/ui/card.js";
 import "../components/ui/button.js";
 import "../components/ui/input.js";

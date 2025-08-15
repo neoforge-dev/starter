@@ -1,0 +1,471 @@
+# Logging Security Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logging-security-config
+  namespace: neoforge-logging
+  labels:
+    app: logging-security
+    component: security
+    app.kubernetes.io/name: logging-security-config
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: neoforge
+data:
+  # Log encryption configuration
+  fluent-bit-tls.conf: |
+    [OUTPUT]
+        Name            es
+        Match           kube.*
+        Host            elasticsearch.neoforge-logging.svc.cluster.local
+        Port            9200
+        Index           neoforge-logs
+        Type            _doc
+        Logstash_Format On
+        Logstash_Prefix neoforge-logs
+        Logstash_DateFormat %Y.%m.%d
+        Time_Key        @timestamp
+        Include_Tag_Key On
+        Tag_Key         tag
+        
+        # TLS Configuration
+        tls             On
+        tls.verify      On
+        tls.ca_file     /fluent-bit/ssl/ca.crt
+        tls.crt_file    /fluent-bit/ssl/client.crt
+        tls.key_file    /fluent-bit/ssl/client.key
+        
+        # HTTP Authentication
+        HTTP_User       ${FLUENT_BIT_USER}
+        HTTP_Passwd     ${FLUENT_BIT_PASSWORD}
+        
+        # Buffer and retry configuration
+        storage.total_limit_size 1G
+        Buffer_Size     4KB
+        Workers         1
+        Retry_Limit     3
+  
+  # Access control policies
+  rbac-policy.yaml: |
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: log-viewer
+      namespace: neoforge-logging
+    rules:
+    - apiGroups: [""]
+      resources: ["services", "endpoints"]
+      verbs: ["get", "list"]
+    - apiGroups: [""]
+      resources: ["configmaps"]
+      verbs: ["get", "list"]
+      resourceNames: ["kibana-dashboards", "kibana-saved-searches"]
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: log-admin
+      namespace: neoforge-logging
+    rules:
+    - apiGroups: [""]
+      resources: ["*"]
+      verbs: ["*"]
+    - apiGroups: ["apps"]
+      resources: ["*"]
+      verbs: ["*"]
+    - apiGroups: ["batch"]
+      resources: ["*"]
+      verbs: ["*"]
+  
+  # Network policies for log isolation
+  network-policy.yaml: |
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: logging-isolation
+      namespace: neoforge-logging
+    spec:
+      podSelector: {}
+      policyTypes:
+      - Ingress
+      - Egress
+      ingress:
+      - from:
+        - namespaceSelector:
+            matchLabels:
+              name: neoforge-logging
+        - namespaceSelector:
+            matchLabels:
+              name: neoforge-monitoring
+        - namespaceSelector:
+            matchLabels:
+              name: neoforge
+      egress:
+      - to:
+        - namespaceSelector:
+            matchLabels:
+              name: neoforge-logging
+        ports:
+        - protocol: TCP
+          port: 9200
+        - protocol: TCP
+          port: 5601
+        - protocol: TCP
+          port: 9093
+      - to: []
+        ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 443
+---
+# TLS Certificates for secure communication
+apiVersion: v1
+kind: Secret
+metadata:
+  name: logging-tls-certs
+  namespace: neoforge-logging
+  labels:
+    app: logging-security
+    component: tls
+    app.kubernetes.io/name: logging-tls-certs
+    app.kubernetes.io/component: tls
+    app.kubernetes.io/part-of: neoforge
+type: kubernetes.io/tls
+data:
+  # These should be replaced with actual certificates in production
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t...
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t...
+  ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t...
+---
+# Basic Auth for Kibana and Elasticsearch access
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kibana-basic-auth
+  namespace: neoforge-logging
+  labels:
+    app: kibana
+    component: authentication
+    app.kubernetes.io/name: kibana-auth
+    app.kubernetes.io/component: authentication
+    app.kubernetes.io/part-of: neoforge
+type: Opaque
+data:
+  # admin:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/
+  # password: secretpassword
+  auth: YWRtaW46JGFwcjEkSDZ1c2tra1ckSWdYTFA2ZXdUclN1QmtUcnFFOHdqLw==
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elasticsearch-basic-auth
+  namespace: neoforge-logging
+  labels:
+    app: elasticsearch
+    component: authentication
+    app.kubernetes.io/name: elasticsearch-auth
+    app.kubernetes.io/component: authentication
+    app.kubernetes.io/part-of: neoforge
+type: Opaque
+data:
+  # admin:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/
+  auth: YWRtaW46JGFwcjEkSDZ1c2tra1ckSWdYTFA2ZXdUclN1QmtUcnFFOHdqLw==
+---
+# Fluent Bit authentication credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: fluent-bit-auth
+  namespace: neoforge-logging
+  labels:
+    app: fluent-bit
+    component: authentication
+    app.kubernetes.io/name: fluent-bit-auth
+    app.kubernetes.io/component: authentication
+    app.kubernetes.io/part-of: neoforge
+type: Opaque
+data:
+  username: Zmx1ZW50LWJpdA==  # fluent-bit
+  password: c2VjdXJlLXBhc3N3b3JkLWZvci1mbHVlbnQtYml0  # secure-password-for-fluent-bit
+---
+# Pod Security Policy for logging components
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: neoforge-logging-psp
+  namespace: neoforge-logging
+  labels:
+    app: logging-security
+    component: pod-security
+    app.kubernetes.io/name: logging-psp
+    app.kubernetes.io/component: pod-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+    - 'hostPath'  # Only for Fluent Bit log access
+  allowedHostPaths:
+    - pathPrefix: "/var/log"
+      readOnly: true
+    - pathPrefix: "/var/lib/docker/containers"
+      readOnly: true
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1000
+        max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1000
+        max: 65535
+  seLinux:
+    rule: 'RunAsAny'
+---
+# Security Monitoring and Audit Logging
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-monitoring-config
+  namespace: neoforge-logging
+  labels:
+    app: security-monitoring
+    component: audit
+    app.kubernetes.io/name: security-monitoring
+    app.kubernetes.io/component: audit
+    app.kubernetes.io/part-of: neoforge
+data:
+  audit-policy.yaml: |
+    apiVersion: audit.k8s.io/v1
+    kind: Policy
+    rules:
+    # Log all access to logging namespace resources
+    - level: RequestResponse
+      namespaces: ["neoforge-logging"]
+      resources:
+      - group: ""
+        resources: ["secrets", "configmaps"]
+      - group: "apps"
+        resources: ["deployments", "statefulsets", "daemonsets"]
+    
+    # Log all access to logging secrets
+    - level: RequestResponse
+      resources:
+      - group: ""
+        resources: ["secrets"]
+        resourceNames: ["logging-tls-certs", "kibana-basic-auth", "elasticsearch-basic-auth"]
+    
+    # Log privileged operations
+    - level: RequestResponse
+      verbs: ["create", "update", "patch", "delete"]
+      resources:
+      - group: ""
+        resources: ["pods/exec", "pods/portforward"]
+    
+    # Log authentication failures
+    - level: Request
+      users: ["system:anonymous"]
+      namespaces: ["neoforge-logging"]
+  
+  falco-rules.yaml: |
+    # Custom Falco rules for logging security
+    - rule: Logging Container Exec
+      desc: Detect shell execution in logging containers
+      condition: >
+        spawned_process and 
+        container and 
+        k8s_ns=neoforge-logging and
+        (proc.name in (shell_binaries) or proc.name in (shell_mgmt_binaries))
+      output: >
+        Shell execution in logging container
+        (user=%user.name command=%proc.cmdline container=%container.id 
+         image=%container.image.repository:%container.image.tag)
+      priority: WARNING
+      tags: [logging, security, shell]
+    
+    - rule: Logging Configuration Change
+      desc: Detect changes to logging configuration
+      condition: >
+        open_write and
+        k8s_ns=neoforge-logging and
+        (fd.name contains "/etc/" or fd.name contains "/opt/")
+      output: >
+        Configuration file modified in logging component
+        (file=%fd.name user=%user.name command=%proc.cmdline 
+         container=%container.id)
+      priority: WARNING
+      tags: [logging, security, configuration]
+    
+    - rule: Unauthorized Log Access
+      desc: Detect unauthorized access to log files
+      condition: >
+        open_read and
+        fd.name contains "/var/log" and
+        not (proc.name in (fluent-bit, elasticsearch, kibana))
+      output: >
+        Unauthorized access to log files
+        (file=%fd.name user=%user.name command=%proc.cmdline)
+      priority: WARNING
+      tags: [logging, security, access]
+---
+# Log Integrity Monitoring with checksums
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: log-integrity-config
+  namespace: neoforge-logging
+  labels:
+    app: log-integrity
+    component: monitoring
+    app.kubernetes.io/name: log-integrity
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: neoforge
+data:
+  integrity-check.sh: |
+    #!/bin/bash
+    
+    # Log integrity checking script
+    ELASTICSEARCH_URL="http://elasticsearch:9200"
+    INTEGRITY_INDEX="log-integrity"
+    
+    # Function to calculate log hash
+    calculate_log_hash() {
+        local index=$1
+        local query='{"query":{"range":{"@timestamp":{"gte":"now-1h"}}},"sort":[{"@timestamp":{"order":"asc"}}]}'
+        
+        curl -s "${ELASTICSEARCH_URL}/${index}/_search" \
+            -H "Content-Type: application/json" \
+            -d "$query" | \
+            jq -r '.hits.hits[]._source | tostring' | \
+            sha256sum | cut -d' ' -f1
+    }
+    
+    # Function to store integrity hash
+    store_integrity_hash() {
+        local index=$1
+        local hash=$2
+        local timestamp=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
+        
+        local doc="{
+            \"@timestamp\": \"$timestamp\",
+            \"index_name\": \"$index\",
+            \"integrity_hash\": \"$hash\",
+            \"check_type\": \"hourly_integrity\",
+            \"service_name\": \"log-integrity-monitor\"
+        }"
+        
+        curl -s -X POST "${ELASTICSEARCH_URL}/${INTEGRITY_INDEX}/_doc" \
+            -H "Content-Type: application/json" \
+            -d "$doc"
+    }
+    
+    # Check integrity for each log index
+    for index in neoforge-logs neoforge-security neoforge-performance neoforge-system; do
+        echo "Checking integrity for index: $index"
+        hash=$(calculate_log_hash "$index-*")
+        store_integrity_hash "$index" "$hash"
+        echo "Stored integrity hash for $index: $hash"
+    done
+    
+    echo "Log integrity check completed at $(date)"
+---
+# CronJob for regular integrity checks
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: log-integrity-monitor
+  namespace: neoforge-logging
+  labels:
+    app: log-integrity
+    component: monitoring
+    app.kubernetes.io/name: log-integrity-monitor
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: neoforge
+spec:
+  schedule: "0 * * * *"  # Every hour
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: log-integrity
+            component: monitoring
+        spec:
+          serviceAccountName: neoforge-logging
+          restartPolicy: OnFailure
+          containers:
+          - name: integrity-checker
+            image: curlimages/curl:8.4.0
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - /scripts/integrity-check.sh
+            volumeMounts:
+            - name: integrity-scripts
+              mountPath: /scripts
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+          volumes:
+          - name: integrity-scripts
+            configMap:
+              name: log-integrity-config
+              defaultMode: 0755
+---
+# Admission Controller for logging security
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionWebhook
+metadata:
+  name: logging-security-webhook
+  labels:
+    app: logging-security
+    component: admission-controller
+    app.kubernetes.io/name: logging-security-webhook
+    app.kubernetes.io/component: admission-controller
+    app.kubernetes.io/part-of: neoforge
+webhooks:
+- name: logging-security.neoforge.local
+  clientConfig:
+    service:
+      name: logging-security-webhook
+      namespace: neoforge-logging
+      path: "/validate"
+  rules:
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["secrets", "configmaps"]
+  namespaceSelector:
+    matchLabels:
+      name: neoforge-logging
+  admissionReviewVersions: ["v1", "v1beta1"]
+  sideEffects: None
+  failurePolicy: Fail

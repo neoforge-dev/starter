@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: neoforge
+  labels:
+    app: redis
+    component: cache
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: neoforge-redis
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9121"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  - port: 9121
+    targetPort: 9121
+    protocol: TCP
+    name: metrics
+  selector:
+    app: redis
+    component: cache
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 300
+---
+# Headless service for StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-headless
+  namespace: neoforge
+  labels:
+    app: redis
+    component: cache
+    service-type: headless
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/instance: neoforge-redis
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: neoforge
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app: redis
+    component: cache
+---
+# Service for Redis Exporter metrics
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-metrics
+  namespace: neoforge
+  labels:
+    app: redis
+    component: metrics
+    app.kubernetes.io/name: redis-metrics
+    app.kubernetes.io/instance: neoforge-redis-metrics
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9121"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9121
+    targetPort: 9121
+    protocol: TCP
+    name: metrics
+  selector:
+    app: redis
+    component: cache

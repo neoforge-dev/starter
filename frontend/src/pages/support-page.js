@@ -3,7 +3,7 @@ import {
   css,
  } from 'lit';
 import { BaseComponent } from "../components/base-component.js";
-import { apiService } from "../services/api.js";
+import { apiService } from "../services/api.ts";
 
 export class SupportPage extends BaseComponent {
   static properties = {

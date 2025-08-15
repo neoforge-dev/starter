@@ -1,0 +1,255 @@
+# Checkov Infrastructure Security Scanning Configuration
+# Comprehensive security policy checks for Infrastructure as Code
+
+# Global configuration
+framework:
+  - terraform
+  - kubernetes  
+  - dockerfile
+  - docker_compose
+  - github_actions
+  - yaml
+  - json
+
+# Output configuration
+output:
+  - cli
+  - json
+  - sarif
+  - junit
+  - github_failed_only
+
+# Severity threshold
+severity_threshold: MEDIUM
+
+# Exit code configuration (0 = don't fail on issues)
+soft_fail: false
+hard_fail_on:
+  - HIGH
+  - CRITICAL
+
+# Compact output for CI/CD
+compact: true
+
+# Include severity in output
+include_all_checkov_policies: true
+
+# Check configuration
+check:
+  # Skip specific checks with justification
+  skip_check:
+    # Docker checks to skip (with justification)
+    - CKV_DOCKER_2   # HEALTHCHECK not always required for init containers
+    - CKV_DOCKER_3   # USER instruction may not be applicable for system containers
+    
+    # Kubernetes checks to skip (with justification)  
+    - CKV_K8S_8      # Liveness probe not required for all workload types
+    - CKV_K8S_9      # Readiness probe not required for all workload types
+    
+    # Terraform checks to skip (environment-specific)
+    - CKV_AWS_79     # Instance metadata service v1 may be required for legacy
+    
+  # Run only specific checks (optional - comment out to run all)
+  # check:
+  #   - CKV_K8S_14   # Image pull policy
+  #   - CKV_K8S_15   # Image tag not latest
+  #   - CKV_K8S_16   # Container should not be privileged
+
+# Policy configuration
+policy_path:
+  - ./security/checkov-policies/
+
+# Custom policies directory
+external_checks_dir:
+  - ./security/checkov-plugins/
+
+# File patterns to include
+include_paths:
+  - "backend/Dockerfile"
+  - "frontend/Dockerfile" 
+  - "docker-compose*.yml"
+  - "k8s/*.yaml"
+  - "k8s/*.yml"
+  - "deploy/terraform/*.tf"
+  - ".github/workflows/*.yml"
+  - ".github/workflows/*.yaml"
+
+# File patterns to exclude
+exclude_paths:
+  - "node_modules/"
+  - ".git/"
+  - "__pycache__/"
+  - "*.min.js"
+  - "*.min.css"
+  - "dist/"
+  - "build/"
+  - ".terraform/"
+  - "terraform.tfstate*"
+  - "*.log"
+  - "htmlcov/"
+  - ".coverage"
+
+# Baseline configuration for managing exceptions
+baseline_path: .checkov.baseline
+
+# Download external data (CIS benchmarks, etc.)
+download_external_modules: true
+
+# Evaluate variables for Terraform
+evaluate_variables: true
+
+# Create JUnit XML output for CI integration
+output_file_path: ./checkov-report.xml
+
+# Repository configuration for private modules
+repo_root_for_plan_enrichment: ./
+
+# VCS configuration
+vcs_username: ""
+vcs_base_url: ""
+
+# API key for Checkov Cloud (optional)
+api_key: ""
+
+# Certificate validation
+ca_certificate: ""
+cert: ""
+check_ssl: true
+
+# Logging
+log_level: INFO
+quiet: false
+verbose: 0
+
+# Performance settings
+enable_secret_scan_all_files: false
+no_guide: true
+skip_download: false
+
+# Custom check configurations
+custom_policy_config:
+  neoforge_security:
+    # NeoForge-specific security policies
+    container_security:
+      require_non_root: true
+      require_readonly_fs: true
+      disallow_privileged: true
+      required_drop_capabilities:
+        - ALL
+      disallowed_capabilities:
+        - SYS_ADMIN
+        - NET_ADMIN
+        - SYS_MODULE
+        
+    kubernetes_security:
+      require_security_context: true
+      require_resource_limits: true
+      require_liveness_probes: false  # Optional for some workloads
+      require_readiness_probes: false # Optional for some workloads
+      disallow_host_network: true
+      disallow_host_pid: true
+      disallow_host_ipc: true
+      
+    image_security:
+      allowed_registries:
+        - "ghcr.io/neoforge-dev/"
+        - "docker.io/library/"
+        - "registry.k8s.io/"
+        - "quay.io/"
+        - "gcr.io/distroless/"
+      require_image_digest: true
+      disallowed_tags:
+        - "latest"
+        - "main"
+        - "master"
+        - "dev"
+        
+    network_security:
+      require_network_policies: true
+      default_deny_ingress: true
+      explicit_egress_rules: true
+      
+    rbac_security:
+      prevent_wildcard_permissions: true
+      prevent_cluster_admin: true
+      require_service_account: true
+
+# Severity mapping for custom policies  
+severity_levels:
+  CKV_NEOFORGE_1: HIGH      # Container must run as non-root
+  CKV_NEOFORGE_2: HIGH      # Container must have read-only root filesystem
+  CKV_NEOFORGE_3: CRITICAL  # Container must not be privileged
+  CKV_NEOFORGE_4: MEDIUM    # Container must drop ALL capabilities
+  CKV_NEOFORGE_5: HIGH      # Pod must not use host network
+  CKV_NEOFORGE_6: HIGH      # Pod must not use host PID
+  CKV_NEOFORGE_7: HIGH      # Pod must not use host IPC
+  CKV_NEOFORGE_8: MEDIUM    # Pod must have resource limits
+  CKV_NEOFORGE_9: HIGH      # Image must be from allowed registry
+  CKV_NEOFORGE_10: MEDIUM   # Image must use digest, not tag
+  CKV_NEOFORGE_11: LOW      # Image must not use latest tag
+
+# Compliance framework mappings
+compliance:
+  SOC2:
+    - CKV_K8S_14  # Image pull policy
+    - CKV_K8S_15  # Image tag not latest
+    - CKV_K8S_16  # Container should not be privileged
+    - CKV_K8S_17  # Container should not use host network
+    - CKV_K8S_18  # Container should not use host PID
+    - CKV_K8S_19  # Container should not use host IPC
+    
+  ISO27001:
+    - CKV_K8S_20  # Container should not run as root
+    - CKV_K8S_21  # Container should have read-only root filesystem
+    - CKV_K8S_22  # Container should not allow privilege escalation
+    - CKV_K8S_23  # Container runtime should be seccomp profile
+    
+  NIST:
+    - CKV_K8S_30  # Pod should have security context
+    - CKV_K8S_31  # Container should have resource limits
+    - CKV_K8S_32  # Service should not use NodePort
+    - CKV_K8S_33  # Ingress should use TLS
+
+# Integration settings
+integrations:
+  github:
+    enabled: true
+    pr_comments: true
+    fail_pr_on_high: true
+    
+  slack:
+    enabled: false
+    webhook_url: ""
+    channel: "#security-alerts"
+    
+  email:
+    enabled: false
+    smtp_server: ""
+    recipients: []
+    
+  prometheus:
+    enabled: true
+    port: 8080
+    path: /metrics
+
+# Reporting configuration  
+report:
+  include_passed_checks: false
+  include_skipped_checks: true
+  include_resource_details: true
+  include_severity: true
+  include_bc_ids: true
+  
+  format:
+    json:
+      enabled: true
+      pretty: true
+    sarif:
+      enabled: true
+      version: "2.1.0"
+    junit:
+      enabled: true
+      include_skipped: false
+    csv:
+      enabled: false
+      delimiter: ","

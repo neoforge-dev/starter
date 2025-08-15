@@ -1,0 +1,24 @@
+batch_id: batch_3
+epic_id: epic_15
+estimated_time: 3-4 hours
+started_at: '2025-08-15T09:12:08.967721+00:00'
+tasks:
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: create_integration_marketplace
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: implement_api_rate_limiting_billing
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: add_developer_analytics_dashboard
+tests:
+- marketplace_functionality
+- rate_limiting_accuracy
+- developer_analytics_validation

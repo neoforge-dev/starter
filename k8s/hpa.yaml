@@ -1,0 +1,381 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-hpa
+  namespace: neoforge
+  labels:
+    app: api
+    component: backend-autoscaler
+    app.kubernetes.io/name: neoforge-api-hpa
+    app.kubernetes.io/instance: neoforge-api-hpa
+    app.kubernetes.io/component: backend-autoscaler
+    app.kubernetes.io/part-of: neoforge
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  # CPU utilization target
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  # Memory utilization target
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Custom metrics for request rate (requires metrics server and custom metrics API)
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "100"
+  # Queue depth metric for API processing
+  - type: Object
+    object:
+      metric:
+        name: queue_depth
+      describedObject:
+        apiVersion: v1
+        kind: Service
+        name: api
+      target:
+        type: Value
+        value: "50"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+      - type: Pods
+        value: 4
+        periodSeconds: 30
+      selectPolicy: Max
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-hpa
+  namespace: neoforge
+  labels:
+    app: frontend
+    component: web-autoscaler
+    app.kubernetes.io/name: neoforge-frontend-hpa
+    app.kubernetes.io/instance: neoforge-frontend-hpa
+    app.kubernetes.io/component: web-autoscaler
+    app.kubernetes.io/part-of: neoforge
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: frontend
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+  # CPU utilization target (nginx is typically CPU-light)
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  # Memory utilization target
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70
+  # Request rate targeting
+  - type: Pods
+    pods:
+      metric:
+        name: nginx_http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "200"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 30
+      - type: Pods
+        value: 2
+        periodSeconds: 30
+      selectPolicy: Max
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: celery-worker-hpa
+  namespace: neoforge
+  labels:
+    app: celery-worker
+    component: worker-autoscaler
+    app.kubernetes.io/name: neoforge-celery-worker-hpa
+    app.kubernetes.io/instance: neoforge-celery-worker-hpa
+    app.kubernetes.io/component: worker-autoscaler
+    app.kubernetes.io/part-of: neoforge
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: celery-worker
+  minReplicas: 1
+  maxReplicas: 8
+  metrics:
+  # CPU utilization
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+  # Memory utilization
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Queue length for Celery tasks
+  - type: Object
+    object:
+      metric:
+        name: celery_queue_length
+      describedObject:
+        apiVersion: v1
+        kind: Service
+        name: redis
+      target:
+        type: Value
+        value: "100"
+  # Active tasks per worker
+  - type: Pods
+    pods:
+      metric:
+        name: celery_active_tasks
+      target:
+        type: AverageValue
+        averageValue: "10"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 600  # Longer stabilization for workers
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 120
+      - type: Pods
+        value: 1
+        periodSeconds: 120
+      selectPolicy: Min
+    scaleUp:
+      stabilizationWindowSeconds: 120
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 3
+        periodSeconds: 60
+      selectPolicy: Max
+---
+# Vertical Pod Autoscaler for database (optional - requires VPA controller)
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: postgres-vpa
+  namespace: neoforge
+  labels:
+    app: postgres
+    component: database-autoscaler
+    app.kubernetes.io/name: neoforge-postgres-vpa
+    app.kubernetes.io/instance: neoforge-postgres-vpa
+    app.kubernetes.io/component: database-autoscaler
+    app.kubernetes.io/part-of: neoforge
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: postgres
+  updatePolicy:
+    updateMode: "Auto"  # Can be "Off", "Initial", or "Auto"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: postgres
+      minAllowed:
+        memory: "256Mi"
+        cpu: "250m"
+      maxAllowed:
+        memory: "4Gi"
+        cpu: "2000m"
+      controlledResources: ["cpu", "memory"]
+    - containerName: postgres-exporter
+      mode: "Off"  # Don't autoscale the exporter
+---
+# Vertical Pod Autoscaler for Redis
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: redis-vpa
+  namespace: neoforge
+  labels:
+    app: redis
+    component: cache-autoscaler
+    app.kubernetes.io/name: neoforge-redis-vpa
+    app.kubernetes.io/instance: neoforge-redis-vpa
+    app.kubernetes.io/component: cache-autoscaler
+    app.kubernetes.io/part-of: neoforge
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: redis
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+    - containerName: redis
+      minAllowed:
+        memory: "128Mi"
+        cpu: "100m"
+      maxAllowed:
+        memory: "1Gi"
+        cpu: "1000m"
+      controlledResources: ["cpu", "memory"]
+    - containerName: redis-exporter
+      mode: "Off"
+---
+# Pod Disruption Budget for API
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-pdb
+  namespace: neoforge
+  labels:
+    app: api
+    component: backend-pdb
+    app.kubernetes.io/name: neoforge-api-pdb
+    app.kubernetes.io/instance: neoforge-api-pdb
+    app.kubernetes.io/component: backend-pdb
+    app.kubernetes.io/part-of: neoforge
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: api
+      component: backend
+---
+# Pod Disruption Budget for Frontend
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: frontend-pdb
+  namespace: neoforge
+  labels:
+    app: frontend
+    component: web-pdb
+    app.kubernetes.io/name: neoforge-frontend-pdb
+    app.kubernetes.io/instance: neoforge-frontend-pdb
+    app.kubernetes.io/component: web-pdb
+    app.kubernetes.io/part-of: neoforge
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: frontend
+      component: web
+---
+# Pod Disruption Budget for Celery Workers
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: celery-worker-pdb
+  namespace: neoforge
+  labels:
+    app: celery-worker
+    component: worker-pdb
+    app.kubernetes.io/name: neoforge-celery-worker-pdb
+    app.kubernetes.io/instance: neoforge-celery-worker-pdb
+    app.kubernetes.io/component: worker-pdb
+    app.kubernetes.io/part-of: neoforge
+spec:
+  maxUnavailable: 50%
+  selector:
+    matchLabels:
+      app: celery-worker
+      component: worker
+---
+# Pod Disruption Budget for Database
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: postgres-pdb
+  namespace: neoforge
+  labels:
+    app: postgres
+    component: database-pdb
+    app.kubernetes.io/name: neoforge-postgres-pdb
+    app.kubernetes.io/instance: neoforge-postgres-pdb
+    app.kubernetes.io/component: database-pdb
+    app.kubernetes.io/part-of: neoforge
+spec:
+  maxUnavailable: 0  # Never allow disruption of the database
+  selector:
+    matchLabels:
+      app: postgres
+      component: database
+---
+# Pod Disruption Budget for Redis
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: redis-pdb
+  namespace: neoforge
+  labels:
+    app: redis
+    component: cache-pdb
+    app.kubernetes.io/name: neoforge-redis-pdb
+    app.kubernetes.io/instance: neoforge-redis-pdb
+    app.kubernetes.io/component: cache-pdb
+    app.kubernetes.io/part-of: neoforge
+spec:
+  maxUnavailable: 0  # Never allow disruption of Redis
+  selector:
+    matchLabels:
+      app: redis
+      component: cache

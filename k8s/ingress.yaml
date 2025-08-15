@@ -1,0 +1,256 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neoforge-ingress
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-ingress
+    app.kubernetes.io/instance: neoforge-ingress
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    # Ingress class - adjust based on your cluster setup
+    kubernetes.io/ingress.class: "nginx"
+    
+    # SSL/TLS Configuration
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/acme-challenge-type: "http01"
+    
+    # Nginx-specific annotations
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-protocols: "TLSv1.2 TLSv1.3"
+    nginx.ingress.kubernetes.io/ssl-ciphers: "ECDHE-RSA-AES128-GCM-SHA256,ECDHE-RSA-AES256-GCM-SHA384,ECDHE-RSA-AES128-SHA256,ECDHE-RSA-AES256-SHA384"
+    
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    
+    # Rate limiting
+    nginx.ingress.kubernetes.io/rate-limit-connections: "100"
+    nginx.ingress.kubernetes.io/rate-limit-requests-per-minute: "300"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    
+    # Client body size
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "10"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+    
+    # Load balancing
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$remote_addr"
+    nginx.ingress.kubernetes.io/load-balance: "round_robin"
+    
+    # Enable session affinity for WebSocket connections
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "balanced"
+    nginx.ingress.kubernetes.io/session-cookie-name: "neoforge-session"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "86400"
+    
+    # CORS configuration
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://neoforge.example.com,https://www.neoforge.example.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,X-CSRF-Token"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-max-age: "86400"
+
+spec:
+  tls:
+  - hosts:
+    - neoforge.example.com
+    - www.neoforge.example.com
+    secretName: neoforge-tls-cert
+  - hosts:
+    - api.neoforge.example.com
+    secretName: neoforge-api-tls-cert
+  
+  rules:
+  # Main application domain
+  - host: neoforge.example.com
+    http:
+      paths:
+      # Frontend static files and SPA routing
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80
+      # API endpoints
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port:
+              number: 8000
+      # Health checks
+      - path: /health
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port:
+              number: 8000
+      # Metrics endpoint (internal only - add IP restrictions)
+      - path: /metrics
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port:
+              number: 8000
+  
+  # www subdomain redirect to main domain
+  - host: www.neoforge.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80
+  
+  # Dedicated API subdomain
+  - host: api.neoforge.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port:
+              number: 8000
+---
+# Ingress for staging environment
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neoforge-staging-ingress
+  namespace: neoforge-staging
+  labels:
+    app.kubernetes.io/name: neoforge-staging-ingress
+    app.kubernetes.io/instance: neoforge-staging-ingress
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: neoforge
+    environment: staging
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-staging"
+    cert-manager.io/acme-challenge-type: "http01"
+    
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    
+    # Basic auth for staging (optional)
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: staging-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "NeoForge Staging - Authentication Required"
+    
+    # Rate limiting (more lenient for staging)
+    nginx.ingress.kubernetes.io/rate-limit-connections: "50"
+    nginx.ingress.kubernetes.io/rate-limit-requests-per-minute: "200"
+    
+    # Staging environment headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Environment "staging" always;
+      add_header X-Robots-Tag "noindex, nofollow" always;
+
+spec:
+  tls:
+  - hosts:
+    - staging.neoforge.example.com
+    secretName: neoforge-staging-tls-cert
+  
+  rules:
+  - host: staging.neoforge.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port:
+              number: 8000
+---
+# Internal ingress for monitoring and admin interfaces
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neoforge-monitoring-ingress
+  namespace: neoforge-monitoring
+  labels:
+    app.kubernetes.io/name: neoforge-monitoring-ingress
+    app.kubernetes.io/instance: neoforge-monitoring-ingress
+    app.kubernetes.io/component: monitoring-ingress
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    
+    # Restrict access to monitoring tools
+    nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+    
+    # Basic auth for monitoring access
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: monitoring-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "NeoForge Monitoring - Authentication Required"
+    
+    # SSL configuration
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+
+spec:
+  tls:
+  - hosts:
+    - monitoring.neoforge.example.com
+    secretName: neoforge-monitoring-tls-cert
+  
+  rules:
+  - host: monitoring.neoforge.example.com
+    http:
+      paths:
+      # Grafana dashboard
+      - path: /grafana
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              number: 3000
+      # Prometheus UI
+      - path: /prometheus
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus
+            port:
+              number: 9090
+      # AlertManager
+      - path: /alertmanager
+        pathType: Prefix
+        backend:
+          service:
+            name: alertmanager
+            port:
+              number: 9093

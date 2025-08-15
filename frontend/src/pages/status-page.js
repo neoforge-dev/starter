@@ -1,7 +1,7 @@
 import {   html, css   } from 'lit';
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
-import { apiService } from "../services/api.js";
+import { apiService } from "../services/api.ts";
 
 /**
  * @element status-page

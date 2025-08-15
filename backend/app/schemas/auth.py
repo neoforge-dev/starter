@@ -63,3 +63,8 @@ class SessionOut(BaseModel):
 class RevokeOthersRequest(BaseModel):
     """Request body to revoke all sessions except one."""
     keep_session_id: int
+
+
+class RefreshTokenRequest(BaseModel):
+    """Refresh token request schema."""
+    refresh_token: str

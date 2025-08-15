@@ -1,4 +1,4 @@
-import { authService } from "./services/auth.js";
+import { authService } from "./services/auth.ts";
 import { lazyLoad } from "./utils/lazy-load.js";
 
 // Route definitions with metadata

@@ -1,0 +1,266 @@
+# Falco Runtime Security Rules for NeoForge Platform
+# Custom security monitoring rules for runtime threat detection
+
+# ==============================================================================
+# NEOFORGE APPLICATION-SPECIFIC RULES
+# ==============================================================================
+
+- rule: NeoForge Suspicious Network Activity
+  desc: Detect suspicious network connections from NeoForge containers
+  condition: >
+    (container.image.repository contains "neoforge" or 
+     k8s.pod.label.app contains "neoforge" or
+     k8s.namespace.name contains "neoforge") and
+    ((outbound and fd.typechar=4 and fd.ip != "" and 
+      not ((fd.net contains "10." or 
+            fd.net contains "192.168." or 
+            fd.net contains "172.") or 
+           fd.ip.name contains "kubernetes" or
+           fd.ip.name contains "consul" or
+           fd.ip.name endswith ".internal" or
+           fd.ip.name endswith ".local")) or
+    (inbound and fd.typechar=4 and fd.sport != "" and
+     not (fd.sport in (80, 443, 8000, 3000, 5432, 6379))))
+  output: >
+    Suspicious network activity in NeoForge container 
+    (user=%user.name container_id=%container.id container_name=%container.name 
+     image=%container.image.repository fd_name=%fd.name fd_type=%fd.type 
+     fd_sport=%fd.sport fd_dport=%fd.dport connection=%fd.name)
+  priority: WARNING
+  tags: [network, neoforge, suspicious]
+
+- rule: NeoForge Database Access from Unexpected Process
+  desc: Detect database access from processes other than expected ones
+  condition: >
+    (container.image.repository contains "neoforge" or 
+     k8s.pod.label.app contains "neoforge") and
+    ((outbound and fd.typechar=4 and fd.dport=5432) or
+     (outbound and fd.typechar=4 and fd.dport=6379)) and
+    not (proc.name in (python3, python, uvicorn, gunicorn, celery, redis-cli, psql))
+  output: >
+    Unexpected database access in NeoForge container 
+    (user=%user.name container_id=%container.id container_name=%container.name 
+     image=%container.image.repository process=%proc.name fd_name=%fd.name 
+     fd_dport=%fd.dport connection=%fd.name)
+  priority: ERROR
+  tags: [database, neoforge, unauthorized]
+
+- rule: NeoForge File System Tampering
+  desc: Detect unauthorized file system modifications in NeoForge containers
+  condition: >
+    (container.image.repository contains "neoforge" or 
+     k8s.pod.label.app contains "neoforge") and
+    ((open_write and fd.typechar='f' and
+      (fd.filename startswith /usr/bin or
+       fd.filename startswith /usr/sbin or
+       fd.filename startswith /bin or
+       fd.filename startswith /sbin or
+       fd.filename startswith /etc/passwd or
+       fd.filename startswith /etc/shadow or
+       fd.filename startswith /etc/ssh or
+       fd.filename startswith /root/.ssh)) or
+     (open_write and fd.typechar='f' and fd.filename startswith /app and
+      not (fd.filename contains "/tmp" or 
+           fd.filename contains "/logs" or
+           fd.filename contains "__pycache__")))
+  output: >
+    File system tampering detected in NeoForge container 
+    (user=%user.name container_id=%container.id container_name=%container.name 
+     image=%container.image.repository file=%fd.name process=%proc.name)
+  priority: CRITICAL
+  tags: [filesystem, neoforge, tampering]
+
+- rule: NeoForge Crypto Mining Activity
+  desc: Detect potential cryptocurrency mining in NeoForge containers
+  condition: >
+    (container.image.repository contains "neoforge" or 
+     k8s.pod.label.app contains "neoforge") and
+    (proc.name in (xmrig, ethminer, cgminer, bfgminer, sgminer, minerd, cpuminer) or
+     proc.cmdline contains "stratum+" or
+     proc.cmdline contains "mining" or
+     (outbound and fd.typechar=4 and 
+      (fd.dport in (4444, 3333, 3357, 3335, 8080, 8118) or
+       fd.ip.name contains "pool" or
+       fd.ip.name contains "mining")))
+  output: >
+    Crypto mining activity detected in NeoForge container 
+    (user=%user.name container_id=%container.id container_name=%container.name 
+     image=%container.image.repository process=%proc.name cmdline=%proc.cmdline 
+     connection=%fd.name)
+  priority: CRITICAL
+  tags: [crypto, mining, neoforge, malware]
+
+# ==============================================================================
+# SECURITY MONITORING RULES
+# ==============================================================================
+
+- rule: NeoForge Privilege Escalation Attempt
+  desc: Detect privilege escalation attempts in NeoForge containers
+  condition: >
+    (container.image.repository contains "neoforge" or 
+     k8s.pod.label.app contains "neoforge") and
+    (proc.name in (sudo, su, doas) or
+     spawned_process and proc.pname in (sudo, su, doas) or
+     (open_write and fd.name=/etc/sudoers) or
+     (proc.cmdline contains "chmod +s" or
+      proc.cmdline contains "chmod u+s" or
+      proc.cmdline contains "chmod 4755"))
+  output: >
+    Privilege escalation attempt in NeoForge container 
+    (user=%user.name container_id=%container.id container_name=%container.name 
+     image=%container.image.repository process=%proc.name parent=%proc.pname 
+     cmdline=%proc.cmdline file=%fd.name)
+  priority: HIGH
+  tags: [privilege_escalation, neoforge, security]
+
+- rule: NeoForge Shell Activity in Production
+  desc: Detect interactive shell activity in production NeoForge containers
+  condition: >
+    (container.image.repository contains "neoforge" or 
+     k8s.pod.label.app contains "neoforge") and
+    k8s.pod.label.environment in (production, prod) and
+    (shell_procs or proc.name in (bash, sh, zsh, fish, csh, tcsh))
+  output: >
+    Shell activity in production NeoForge container 
+    (user=%user.name container_id=%container.id container_name=%container.name 
+     image=%container.image.repository process=%proc.name parent=%proc.pname 
+     cmdline=%proc.cmdline tty=%proc.tty)
+  priority: WARNING
+  tags: [shell, production, neoforge, access]
+
+- rule: NeoForge Secret File Access
+  desc: Detect access to sensitive files containing secrets
+  condition: >
+    (container.image.repository contains "neoforge" or 
+     k8s.pod.label.app contains "neoforge") and
+    (open_read and fd.typechar='f' and
+     (fd.filename contains ".env" or
+      fd.filename contains "secret" or
+      fd.filename contains "password" or
+      fd.filename contains "private" or
+      fd.filename contains ".key" or
+      fd.filename contains ".pem" or
+      fd.filename endswith "id_rsa" or
+      fd.filename endswith "id_dsa" or
+      fd.filename endswith "id_ecdsa"))
+  output: >
+    Access to potential secret file in NeoForge container 
+    (user=%user.name container_id=%container.id container_name=%container.name 
+     image=%container.image.repository process=%proc.name file=%fd.name)
+  priority: INFO
+  tags: [secrets, neoforge, access]
+
+# ==============================================================================
+# COMPLIANCE AND AUDIT RULES
+# ==============================================================================
+
+- rule: NeoForge Non-Standard Process Execution
+  desc: Detect execution of non-standard processes in NeoForge containers
+  condition: >
+    (container.image.repository contains "neoforge" or 
+     k8s.pod.label.app contains "neoforge") and
+    spawned_process and
+    not (proc.name in (python3, python, uvicorn, gunicorn, celery, node, npm, 
+                       nginx, curl, wget, cat, grep, awk, sed, cut, sort, uniq, 
+                       head, tail, wc, find, ls, ps, df, du, free, top, htop, 
+                       ping, nslookup, dig, git, pip, poetry, yarn))
+  output: >
+    Non-standard process execution in NeoForge container 
+    (user=%user.name container_id=%container.id container_name=%container.name 
+     image=%container.image.repository process=%proc.name parent=%proc.pname 
+     cmdline=%proc.cmdline)
+  priority: INFO
+  tags: [process, neoforge, audit]
+
+- rule: NeoForge Outbound Connection to Suspicious Domain
+  desc: Detect outbound connections to potentially malicious domains
+  condition: >
+    (container.image.repository contains "neoforge" or 
+     k8s.pod.label.app contains "neoforge") and
+    outbound and fd.typechar=4 and
+    (fd.ip.name contains "pastebin" or
+     fd.ip.name contains "hastebin" or
+     fd.ip.name contains "transfer.sh" or
+     fd.ip.name contains "0x0.st" or
+     fd.ip.name contains ".tk" or
+     fd.ip.name contains ".ml" or
+     fd.ip.name contains ".ga" or
+     fd.ip.name contains "bit.ly" or
+     fd.ip.name contains "tinyurl" or
+     fd.ip.name contains "t.co")
+  output: >
+    Outbound connection to suspicious domain from NeoForge container 
+    (user=%user.name container_id=%container.id container_name=%container.name 
+     image=%container.image.repository process=%proc.name domain=%fd.ip.name 
+     port=%fd.dport)
+  priority: WARNING
+  tags: [network, neoforge, suspicious, domain]
+
+# ==============================================================================
+# PERFORMANCE AND RESOURCE MONITORING
+# ==============================================================================
+
+- rule: NeoForge High Resource Usage
+  desc: Detect containers using excessive resources
+  condition: >
+    (container.image.repository contains "neoforge" or 
+     k8s.pod.label.app contains "neoforge") and
+    (proc.pcpu > 80 or proc.pmem > 80)
+  output: >
+    High resource usage in NeoForge container 
+    (user=%user.name container_id=%container.id container_name=%container.name 
+     image=%container.image.repository process=%proc.name cpu=%proc.pcpu 
+     memory=%proc.pmem)
+  priority: WARNING
+  tags: [performance, neoforge, resources]
+  enabled: false  # Disabled by default as it might be noisy
+
+# ==============================================================================
+# MACRO DEFINITIONS FOR NEOFORGE
+# ==============================================================================
+
+- macro: neoforge_containers
+  condition: >
+    (container.image.repository contains "neoforge" or 
+     k8s.pod.label.app contains "neoforge" or
+     k8s.namespace.name contains "neoforge")
+
+- macro: neoforge_production
+  condition: >
+    neoforge_containers and
+    (k8s.pod.label.environment in (production, prod) or
+     k8s.namespace.name contains "prod")
+
+- macro: neoforge_write_below_etc
+  condition: >
+    fd.name startswith /etc and open_write
+
+- macro: neoforge_write_below_root_home
+  condition: >
+    fd.name startswith /root and open_write
+
+- macro: neoforge_write_below_binary_dir
+  condition: >
+    (fd.name startswith /bin or 
+     fd.name startswith /sbin or 
+     fd.name startswith /usr/bin or 
+     fd.name startswith /usr/sbin) and 
+    open_write
+
+# ==============================================================================
+# ALERTING CONFIGURATION
+# ==============================================================================
+
+- rule: NeoForge Security Alert Summary
+  desc: Generate periodic security summary for NeoForge containers
+  condition: >
+    neoforge_containers and
+    (spawned_process or open_write or outbound)
+  output: >
+    NeoForge security event summary 
+    (container_id=%container.id container_name=%container.name 
+     image=%container.image.repository namespace=%k8s.ns.name 
+     pod=%k8s.pod.name event_type=%evt.type process=%proc.name)
+  priority: INFO
+  tags: [neoforge, summary, audit]
+  enabled: false  # Enable for audit logging

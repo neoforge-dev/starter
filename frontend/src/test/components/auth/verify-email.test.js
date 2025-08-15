@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 // Mock the auth service before importing components
-vi.mock('../../../services/auth.js', () => ({
+vi.mock('../../../services/auth.ts', () => ({
   authService: {
     verifyEmail: vi.fn(),
     resendVerification: vi.fn(),
@@ -30,7 +30,7 @@ Object.defineProperty(window, 'history', {
 
 // Import components after mocking
 import '../../../components/auth/verify-email.js';
-import { authService } from '../../../services/auth.js';
+import { authService } from '../../../services/auth.ts';
 
 describe('VerifyEmail Component Tests', () => {
   let container;

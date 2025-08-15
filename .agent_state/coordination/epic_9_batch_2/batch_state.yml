@@ -1,0 +1,21 @@
+batch_id: batch_2
+epic_id: epic_9
+estimated_time: 3-4 hours
+started_at: '2025-08-15T00:01:46.227531+00:00'
+tasks:
+- agent_assigned: frontend-builder
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: build_contextual_help_system
+- agent_assigned: backend-engineer
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: implement_smart_error_resolution
+- agent_assigned: frontend-builder
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: add_predictive_user_guidance
+tests: []

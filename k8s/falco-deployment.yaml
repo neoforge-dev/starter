@@ -1,0 +1,392 @@
+# Falco Runtime Security Monitoring Deployment for NeoForge Platform
+# Deploys Falco as a DaemonSet for comprehensive runtime security monitoring
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: falco-system
+  labels:
+    name: falco-system
+    security.neoforge.io/classification: "internal"
+    app.kubernetes.io/managed-by: "kubectl"
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: falco
+  namespace: falco-system
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/instance: falco
+    app.kubernetes.io/component: security-monitoring
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: falco
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/instance: falco
+    app.kubernetes.io/component: security-monitoring
+rules:
+- apiGroups: [""]
+  resources: ["nodes", "pods", "services", "namespaces"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "daemonsets", "statefulsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: falco
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/instance: falco
+    app.kubernetes.io/component: security-monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: falco
+subjects:
+- kind: ServiceAccount
+  name: falco
+  namespace: falco-system
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: falco-config
+  namespace: falco-system
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/instance: falco
+    app.kubernetes.io/component: security-monitoring
+data:
+  falco.yaml: |
+    # Falco configuration for NeoForge platform security monitoring
+    
+    # Rules files to load
+    rules_file:
+      - /etc/falco/falco_rules.yaml
+      - /etc/falco/k8s_audit_rules.yaml
+      - /etc/falco/neoforge_rules.yaml
+    
+    # Time format for output
+    time_format_iso_8601: true
+    
+    # JSON output for better integration
+    json_output: true
+    json_include_output_property: true
+    json_include_tags_property: true
+    
+    # Log level (emergency, alert, critical, error, warning, notice, info, debug)
+    log_level: info
+    
+    # Log to stderr
+    log_stderr: true
+    
+    # Log to syslog
+    log_syslog: false
+    
+    # Minimum priority level to output (emergency, alert, critical, error, warning, notice, info, debug)
+    priority: info
+    
+    # Buffered outputs (reduce syscall overhead)
+    buffered_outputs: true
+    
+    # Rate limiting
+    outputs:
+      rate: 1
+      max_burst: 1000
+    
+    # Syscall event drops
+    syscall_event_drops:
+      threshold: 10
+      actions:
+        - log
+        - alert
+      rate: 0.03333
+      max_burst: 10
+    
+    # gRPC server settings
+    grpc:
+      enabled: true
+      bind_address: "0.0.0.0:5060"
+      threadiness: 8
+      max_message_size: 67108864  # 64MB
+    
+    # gRPC output service
+    grpc_output:
+      enabled: false
+    
+    # HTTP output service  
+    http_output:
+      enabled: true
+      url: "http://falcosidekick:2801/"
+      user_agent: "falco/0.36.0"
+      
+    # Webserver for health checks
+    webserver:
+      enabled: true
+      listen_port: 8765
+      k8s_healthz_endpoint: /healthz
+      ssl_enabled: false
+    
+    # Metadata download settings
+    metadata_download:
+      max_mb: 100
+      chunk_wait_us: 1000
+      watch_freq_sec: 1
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: falco-neoforge-rules
+  namespace: falco-system
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/instance: falco
+    app.kubernetes.io/component: security-monitoring
+data:
+  neoforge_rules.yaml: |
+    # NeoForge-specific Falco security rules
+    # These rules are loaded from the external file we created
+    
+    # This ConfigMap will be populated by the external falco-rules.yaml file
+    # during deployment using kubectl create configmap command
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: falco
+  namespace: falco-system
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/instance: falco
+    app.kubernetes.io/version: "0.36.0"
+    app.kubernetes.io/component: security-monitoring
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: falco
+      app.kubernetes.io/instance: falco
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: falco
+        app.kubernetes.io/instance: falco
+        app.kubernetes.io/version: "0.36.0"
+        app.kubernetes.io/component: security-monitoring
+      annotations:
+        checksum/config: placeholder-for-config-checksum
+        security.neoforge.io/classification: "internal"
+    spec:
+      serviceAccountName: falco
+      hostNetwork: false
+      hostPID: true  # Required for system call monitoring
+      hostIPC: false
+      securityContext:
+        runAsNonRoot: false  # Falco requires root privileges for kernel access
+        runAsUser: 0
+        fsGroup: 0
+      priorityClassName: system-node-critical
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/control-plane
+      containers:
+      - name: falco
+        image: docker.io/falcosecurity/falco-no-driver:0.36.0
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true  # Required for kernel module loading
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        args:
+          - /usr/bin/falco
+          - --cri=/run/containerd/containerd.sock
+          - --disable-source=k8s_audit
+          - --k8s-node=$(NODE_NAME)
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: FALCO_GRPC_BIND_ADDRESS
+          value: "0.0.0.0:5060"
+        - name: FALCO_GRPC_THREADINESS
+          value: "8"
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: dev
+          mountPath: /host/dev
+          readOnly: true
+        - name: containerd-socket
+          mountPath: /run/containerd/containerd.sock
+          readOnly: true
+        - name: config-volume
+          mountPath: /etc/falco
+        - name: neoforge-rules
+          mountPath: /etc/falco/neoforge_rules.yaml
+          subPath: neoforge_rules.yaml
+          readOnly: true
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: var-run-volume
+          mountPath: /var/run
+        ports:
+        - name: grpc
+          containerPort: 5060
+          protocol: TCP
+        - name: http-metrics
+          containerPort: 8765
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8765
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          periodSeconds: 15
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8765
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 15
+          failureThreshold: 3
+      initContainers:
+      - name: falco-driver-loader
+        image: docker.io/falcosecurity/falco-driver-loader:0.36.0
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: boot
+          mountPath: /host/boot
+          readOnly: true
+        - name: lib-modules
+          mountPath: /host/lib/modules
+          readOnly: true
+        - name: usr-src
+          mountPath: /host/usr/src
+          readOnly: true
+        - name: tmp-volume
+          mountPath: /tmp
+        env:
+        - name: FALCO_VERSION
+          value: "0.36.0"
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: dev
+        hostPath:
+          path: /dev
+      - name: boot
+        hostPath:
+          path: /boot
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
+      - name: usr-src
+        hostPath:
+          path: /usr/src
+      - name: containerd-socket
+        hostPath:
+          path: /run/containerd/containerd.sock
+          type: Socket
+      - name: config-volume
+        configMap:
+          name: falco-config
+          items:
+          - key: falco.yaml
+            path: falco.yaml
+      - name: neoforge-rules
+        configMap:
+          name: falco-neoforge-rules
+          items:
+          - key: neoforge_rules.yaml
+            path: neoforge_rules.yaml
+      - name: tmp-volume
+        emptyDir: {}
+      - name: var-run-volume
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: falco
+  namespace: falco-system
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/instance: falco
+    app.kubernetes.io/component: security-monitoring
+spec:
+  type: ClusterIP
+  ports:
+  - name: grpc
+    port: 5060
+    targetPort: grpc
+    protocol: TCP
+  - name: http-metrics
+    port: 8765
+    targetPort: http-metrics
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/instance: falco
+
+---
+# ServiceMonitor for Prometheus monitoring of Falco
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: falco
+  namespace: falco-system
+  labels:
+    app.kubernetes.io/name: falco
+    app.kubernetes.io/instance: falco
+    app.kubernetes.io/component: security-monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: falco
+      app.kubernetes.io/instance: falco
+  endpoints:
+  - port: http-metrics
+    interval: 30s
+    path: /metrics

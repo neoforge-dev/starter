@@ -1,0 +1,181 @@
+# Trivy Security Scanner Configuration
+# Comprehensive vulnerability scanning for containers and filesystems
+
+# Global scanner settings
+scanner:
+  # Scan timeout in seconds
+  timeout: 600s
+  # Parallel scan jobs
+  parallel: 4
+  # Skip files larger than this size (in MB)
+  skip-files-larger-than: 100
+
+# Vulnerability database settings
+db:
+  # Skip database update (useful for CI when using cached DB)
+  skip-update: false
+  # Light mode - only download vulnerability DB without Java index DB
+  light: false
+  # Download DB only, don't run vulnerability detection
+  download-only: false
+
+# Vulnerability detection settings
+vulnerability:
+  # Vulnerability types to detect
+  type:
+    - os        # OS packages
+    - library   # Language-specific packages
+  
+  # Severity levels to report (UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL)
+  severity:
+    - CRITICAL
+    - HIGH  
+    - MEDIUM
+    - LOW
+  
+  # Ignore unfixed vulnerabilities
+  ignore-unfixed: false
+  
+  # Ignore vulnerabilities with these IDs (CVE format)
+  ignore:
+    # Add specific CVEs to ignore if needed for exceptions
+    # - CVE-2023-12345
+  
+  # VEX (Vulnerability Exploitability eXchange) settings
+  vex:
+    enabled: true
+
+# Secret detection settings
+secret:
+  # Secret scanning configuration
+  config: |
+    rules:
+      - id: aws-access-key
+        regex: '(?i)(?:aws.{0,20})?(?-i)["\''`]?(?i)(AKIA[0-9A-Z]{16})["\''`]?'
+        keywords:
+          - akia
+      - id: aws-secret-key  
+        regex: '(?i)(?:aws.{0,20})?(?-i)["\''`]?([0-9a-zA-Z/+]{40})["\''`]?'
+        keywords:
+          - aws
+          - secret
+      - id: github-token
+        regex: '(?i)(?:github.{0,20})?(?-i)["\''`]?(ghp_[0-9a-zA-Z]{36}|github_pat_[0-9a-zA-Z]{22}_[0-9a-zA-Z]{59})["\''`]?'
+        keywords:
+          - ghp_
+          - github_pat_
+      - id: private-key
+        regex: '-----BEGIN [A-Z]+ PRIVATE KEY-----'
+        keywords:
+          - "-----BEGIN"
+          - "PRIVATE KEY"
+      - id: jwt-token
+        regex: 'ey[A-Za-z0-9_-]+\.ey[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'
+        keywords:
+          - jwt
+          - token
+      - id: database-url
+        regex: '(?i)(postgres|mysql|mongodb)://[^\s]+'
+        keywords:
+          - postgres://
+          - mysql://  
+          - mongodb://
+
+# License detection settings
+license:
+  # Detect licenses in dependencies
+  full: true
+  # Ignored licenses (allowed licenses)
+  ignored:
+    - MIT
+    - Apache-2.0
+    - BSD-2-Clause
+    - BSD-3-Clause
+    - ISC
+    - CC0-1.0
+  # Prohibited licenses that should cause scan failure
+  prohibited:
+    - GPL-3.0
+    - AGPL-3.0
+    - LGPL-3.0
+
+# Misconfiguration detection
+misconfiguration:
+  # Scan for misconfigurations in IaC files
+  enabled: true
+  # Include non-security checks
+  include-non-failures: false
+  # Helm chart scanning
+  helm:
+    enabled: true
+    # Helm values files to use for scanning
+    values-files: []
+  # Terraform scanning
+  terraform:
+    enabled: true
+    # Terraform plan file scanning
+    plan-file: ""
+  # CloudFormation scanning
+  cloudformation:
+    enabled: true
+
+# SBOM (Software Bill of Materials) generation
+sbom:
+  # SBOM format (spdx, cyclonedx)  
+  format: spdx-json
+  # Include vulnerability information in SBOM
+  include-vuln: true
+
+# Report formatting
+format:
+  # Output format options: table, json, sarif, template, github
+  template: |
+    {
+      "SchemaVersion": 2,
+      "ArtifactName": "{{ .ArtifactName }}",
+      "ArtifactType": "{{ .ArtifactType }}",  
+      "CreatedAt": "{{ .CreatedAt }}",
+      "Results": {{ .Results | toJson }}
+    }
+
+# File patterns to skip during scanning
+skip-dirs:
+  - .git
+  - node_modules  
+  - __pycache__
+  - .pytest_cache
+  - htmlcov
+  - .coverage
+  - dist
+  - build
+  - .next
+  - .nuxt
+
+skip-files:
+  - "*.min.js"
+  - "*.min.css" 
+  - "*.map"
+  - "*.lock"
+  - "*.log"
+
+# Cache settings
+cache:
+  # Cache directory
+  dir: /tmp/trivy-cache
+  # Clear cache before scanning  
+  clear: false
+  # TTL for cached results
+  ttl: 168h # 1 week
+
+# Exit code configuration
+exit-code: 1 # Exit with error code 1 if vulnerabilities found
+
+# Offline mode settings
+offline-scan: false
+
+# Custom policies directory (for OPA/Rego policies)
+policy-paths:
+  - ./security/opa-policies
+
+# Include dev dependencies in scanning
+include-dev-deps: true

@@ -19,7 +19,12 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.models.item import Item
 from app.models.user import User
 from app.models.admin import Admin, AdminRole
+from app.models.project import Project
+from app.models.support_ticket import SupportTicket
+from app.models.community_post import CommunityPost
+from app.models.event import Event
 from app.schemas.user import UserCreate
+from app.schemas.event import EventType, EventSource
 
 # Configure faker globally
 factory.Faker._DEFAULT_LOCALE = 'en_US'
@@ -230,4 +235,170 @@ class ItemFactory(AsyncModelFactory):
         elif "owner" in kwargs:
             kwargs["owner_id"] = kwargs.pop("owner").id
 
-        return await super()._create(model_class, session, *args, **kwargs) 
+        return await super()._create(model_class, session, *args, **kwargs)
+
+
+class ProjectFactory(ModelFactory):
+    """Factory for creating Project instances."""
+
+    class Meta:
+        model = Project
+
+    name = Faker("company", locale="en_US")
+    description = Faker("paragraph", locale="en_US")
+    owner_id = fuzzy.FuzzyInteger(1, 100)
+    created_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+
+
+class SupportTicketFactory(ModelFactory):
+    """Factory for creating SupportTicket instances."""
+
+    class Meta:
+        model = SupportTicket
+
+    email = Faker("email", locale="en_US")
+    subject = Faker("sentence", nb_words=6, locale="en_US")
+    message = Faker("paragraph", locale="en_US")
+    status = fuzzy.FuzzyChoice(["open", "closed", "pending", "resolved"])
+    created_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+
+
+class CommunityPostFactory(ModelFactory):
+    """Factory for creating CommunityPost instances."""
+
+    class Meta:
+        model = CommunityPost
+
+    title = Faker("sentence", nb_words=8, locale="en_US")
+    content = Faker("text", max_nb_chars=500, locale="en_US")
+    author = Faker("name", locale="en_US")
+    created_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+
+
+class EventFactory(AsyncModelFactory):
+    """Factory for creating Event instances for testing analytics."""
+
+    class Meta:
+        model = Event
+
+    event_id = factory.LazyFunction(lambda: str(uuid4()))
+    event_type = fuzzy.FuzzyChoice([e.value for e in EventType])
+    event_name = fuzzy.FuzzyChoice([
+        "page_view", "button_click", "form_submit", "api_response_time",
+        "conversion", "error_occurred", "user_login", "user_logout"
+    ])
+    source = fuzzy.FuzzyChoice([e.value for e in EventSource])
+    
+    # Optional fields
+    page_url = factory.Maybe(
+        'event_type',
+        yes_declaration=Faker("url", locale="en_US"),
+        no_declaration=None
+    )
+    user_agent = factory.Maybe(
+        'source',
+        yes_declaration="Mozilla/5.0 (compatible; TestBot/1.0)",
+        no_declaration=None
+    )
+    ip_address = factory.Maybe(
+        'user_id',
+        yes_declaration=Faker("ipv4", locale="en_US"),
+        no_declaration=None
+    )
+    session_id = factory.Maybe(
+        'user_id',
+        yes_declaration=factory.LazyFunction(lambda: str(uuid4())[:32]),
+        no_declaration=None
+    )
+    
+    # Event data
+    properties = factory.LazyFunction(lambda: {
+        "test_property": "test_value",
+        "element_id": "test_button",
+        "timestamp": datetime.utcnow().isoformat()
+    })
+    value = fuzzy.FuzzyFloat(0.0, 1000.0)
+    
+    # Timing
+    timestamp = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    
+    # Privacy and retention
+    anonymized = False
+    retention_date = factory.LazyFunction(
+        lambda: datetime.now(timezone.utc).replace(hour=0, minute=0, second=0) + 
+        factory.Faker("timedelta", days=365).evaluate(None, None, {})
+    )
+    
+    # Timestamps
+    created_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+
+    @classmethod
+    async def create_interaction_event(cls, session: AsyncSession, **kwargs):
+        """Create a specific interaction event."""
+        defaults = {
+            "event_type": EventType.INTERACTION.value,
+            "event_name": "button_click",
+            "source": EventSource.WEB.value,
+            "properties": {
+                "element_id": "submit_button",
+                "element_text": "Submit",
+                "page_section": "form"
+            }
+        }
+        defaults.update(kwargs)
+        return await cls.create(session=session, **defaults)
+
+    @classmethod
+    async def create_performance_event(cls, session: AsyncSession, **kwargs):
+        """Create a specific performance event."""
+        defaults = {
+            "event_type": EventType.PERFORMANCE.value,
+            "event_name": "api_response_time",
+            "source": EventSource.API.value,
+            "value": 150.0,
+            "properties": {
+                "endpoint": "/api/v1/users",
+                "method": "GET",
+                "status_code": 200
+            }
+        }
+        defaults.update(kwargs)
+        return await cls.create(session=session, **defaults)
+
+    @classmethod
+    async def create_business_event(cls, session: AsyncSession, **kwargs):
+        """Create a specific business event."""
+        defaults = {
+            "event_type": EventType.BUSINESS.value,
+            "event_name": "conversion",
+            "source": EventSource.WEB.value,
+            "value": 99.99,
+            "properties": {
+                "conversion_type": "purchase",
+                "product_id": "prod_123",
+                "revenue": 99.99
+            }
+        }
+        defaults.update(kwargs)
+        return await cls.create(session=session, **defaults)
+
+    @classmethod
+    async def create_error_event(cls, session: AsyncSession, **kwargs):
+        """Create a specific error event."""
+        defaults = {
+            "event_type": EventType.ERROR.value,
+            "event_name": "api_error",
+            "source": EventSource.API.value,
+            "properties": {
+                "error_type": "validation_error",
+                "error_message": "Invalid input data",
+                "status_code": 422,
+                "severity": "warning"
+            }
+        }
+        defaults.update(kwargs)
+        return await cls.create(session=session, **defaults) 

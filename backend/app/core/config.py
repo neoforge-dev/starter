@@ -61,11 +61,33 @@ class Settings(BaseSettings):
     cors_headers: List[str] = Field(default=["*"], env="CORS_HEADERS")
     cors_credentials: bool = Field(default=True, env="CORS_CREDENTIALS")
     access_token_expire_minutes: int = Field(default=10080, env="ACCESS_TOKEN_EXPIRE_MINUTES")  # 7 days
+    
+    # Enhanced security settings
+    enable_threat_detection: bool = Field(default=True, env="ENABLE_THREAT_DETECTION")
+    ip_block_duration: int = Field(default=3600, env="IP_BLOCK_DURATION")  # 1 hour in seconds
+    threat_threshold: int = Field(default=3, env="THREAT_THRESHOLD")  # Block IP after N threats
+    threat_window: int = Field(default=3600, env="THREAT_WINDOW")  # Time window in seconds for threat counting
+    enable_request_fingerprinting: bool = Field(default=True, env="ENABLE_REQUEST_FINGERPRINTING")
+    max_request_size: int = Field(default=10485760, env="MAX_REQUEST_SIZE")  # 10MB default
+    password_min_length: int = Field(default=8, env="PASSWORD_MIN_LENGTH")
+    password_require_uppercase: bool = Field(default=True, env="PASSWORD_REQUIRE_UPPERCASE")
+    password_require_lowercase: bool = Field(default=True, env="PASSWORD_REQUIRE_LOWERCASE")
+    password_require_numbers: bool = Field(default=True, env="PASSWORD_REQUIRE_NUMBERS")
+    password_require_special: bool = Field(default=True, env="PASSWORD_REQUIRE_SPECIAL")
+    account_lockout_threshold: int = Field(default=5, env="ACCOUNT_LOCKOUT_THRESHOLD")
+    account_lockout_duration: int = Field(default=1800, env="ACCOUNT_LOCKOUT_DURATION")  # 30 minutes
     smtp_user: Optional[str] = Field(default=None, env="SMTP_USER")
     smtp_password: Optional[str] = Field(default=None, env="SMTP_PASSWORD")
     # Webhook settings
     SENDGRID_WEBHOOK_PUBLIC_KEY: Optional[str] = Field(default=None, env="SENDGRID_WEBHOOK_PUBLIC_KEY")
     WEBHOOK_SECRET_KEY: Optional[str] = Field(default=None, env="WEBHOOK_SECRET_KEY")
+    
+    # OpenTelemetry OTLP Configuration
+    otel_exporter_otlp_endpoint: Optional[str] = Field(default=None, env="OTEL_EXPORTER_OTLP_ENDPOINT")
+    otel_exporter_otlp_headers: Optional[str] = Field(default=None, env="OTEL_EXPORTER_OTLP_HEADERS")
+    otel_exporter_otlp_protocol: str = Field(default="http/protobuf", env="OTEL_EXPORTER_OTLP_PROTOCOL")
+    otel_service_name: str = Field(default="neoforge-api", env="OTEL_SERVICE_NAME")
+    otel_traces_exporter: str = Field(default="console", env="OTEL_TRACES_EXPORTER")  # console, otlp, none
 
     model_config = SettingsConfigDict(
         env_file=".env",
