@@ -1,0 +1,21 @@
+batch_id: batch_2
+epic_id: epic_10
+estimated_time: 4-5 hours
+started_at: '2025-08-15T00:03:17.817057+00:00'
+tasks:
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: build_churn_prediction_model
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: implement_engagement_scoring
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: create_lifecycle_stage_tracking
+tests: []
