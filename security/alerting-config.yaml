@@ -1,0 +1,365 @@
+# Security Alerting Configuration for NeoForge Platform
+# Comprehensive alerting rules and notification channels for security events
+
+---
+# AlertManager Configuration for Security Alerts
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-security-config
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/component: security-alerting
+type: Opaque
+stringData:
+  alertmanager.yml: |
+    global:
+      # SMTP configuration for email alerts
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'neoforge-security@company.com'
+      smtp_auth_username: 'neoforge-security@company.com'
+      smtp_auth_password: '${SMTP_PASSWORD}'
+      smtp_auth_identity: 'neoforge-security@company.com'
+      
+      # Slack webhook URL (optional)
+      slack_api_url: '${SLACK_WEBHOOK_URL}'
+      
+      # PagerDuty integration key (optional)
+      pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+
+    # Template configuration
+    templates:
+    - '/etc/alertmanager/templates/*.tmpl'
+
+    # Routing configuration
+    route:
+      group_by: ['alertname', 'severity', 'component']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      receiver: 'default-receiver'
+      
+      # Security-specific routing
+      routes:
+      - match:
+          component: security
+        receiver: 'security-team'
+        group_wait: 0s
+        repeat_interval: 1h
+        
+      - match:
+          severity: critical
+        receiver: 'critical-alerts'
+        group_wait: 0s
+        repeat_interval: 30m
+        
+      - match_re:
+          alertname: '.*Vulnerability.*'
+        receiver: 'vulnerability-alerts'
+        group_wait: 5m
+        repeat_interval: 6h
+        
+      - match_re:
+          alertname: '.*Policy.*'
+        receiver: 'compliance-alerts'
+        group_wait: 2m
+        repeat_interval: 4h
+
+    # Notification receivers
+    receivers:
+    - name: 'default-receiver'
+      email_configs:
+      - to: 'devops@company.com'
+        subject: 'NeoForge Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Component: {{ .Labels.component }}
+          {{ end }}
+        html: |
+          <h2>NeoForge Platform Alert</h2>
+          {{ range .Alerts }}
+          <h3>{{ .Annotations.summary }}</h3>
+          <p><strong>Description:</strong> {{ .Annotations.description }}</p>
+          <p><strong>Severity:</strong> {{ .Labels.severity }}</p>
+          <p><strong>Component:</strong> {{ .Labels.component }}</p>
+          <p><strong>Time:</strong> {{ .StartsAt }}</p>
+          {{ if .Annotations.runbook_url }}
+          <p><a href="{{ .Annotations.runbook_url }}">Runbook</a></p>
+          {{ end }}
+          <hr>
+          {{ end }}
+
+    - name: 'security-team'
+      email_configs:
+      - to: 'security@company.com'
+        subject: '[SECURITY] NeoForge Security Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          🚨 SECURITY ALERT 🚨
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Component: {{ .Labels.component }}
+          Time: {{ .StartsAt }}
+          
+          {{ if .Annotations.runbook_url }}
+          Runbook: {{ .Annotations.runbook_url }}
+          {{ end }}
+          {{ end }}
+          
+          Please investigate immediately.
+        html: |
+          <div style="background-color: #ffebee; border: 1px solid #f44336; border-radius: 4px; padding: 16px;">
+            <h2 style="color: #d32f2f; margin: 0 0 16px 0;">🚨 SECURITY ALERT</h2>
+            {{ range .Alerts }}
+            <div style="margin-bottom: 16px; padding: 12px; background-color: white; border-radius: 4px;">
+              <h3 style="color: #d32f2f; margin: 0 0 8px 0;">{{ .Annotations.summary }}</h3>
+              <p><strong>Description:</strong> {{ .Annotations.description }}</p>
+              <p><strong>Severity:</strong> <span style="color: #d32f2f;">{{ .Labels.severity }}</span></p>
+              <p><strong>Component:</strong> {{ .Labels.component }}</p>
+              <p><strong>Time:</strong> {{ .StartsAt }}</p>
+              {{ if .Annotations.runbook_url }}
+              <p><a href="{{ .Annotations.runbook_url }}" style="background-color: #f44336; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">View Runbook</a></p>
+              {{ end }}
+            </div>
+            {{ end }}
+            <p style="color: #d32f2f; font-weight: bold;">Please investigate immediately.</p>
+          </div>
+      
+      slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#security-alerts'
+        title: '🚨 NeoForge Security Alert'
+        text: |
+          {{ range .Alerts }}
+          *{{ .Annotations.summary }}*
+          
+          *Description:* {{ .Annotations.description }}
+          *Severity:* {{ .Labels.severity }}
+          *Component:* {{ .Labels.component }}
+          *Time:* {{ .StartsAt }}
+          
+          {{ if .Annotations.runbook_url }}
+          <{{ .Annotations.runbook_url }}|View Runbook>
+          {{ end }}
+          {{ end }}
+        color: 'danger'
+        send_resolved: true
+
+    - name: 'critical-alerts'
+      email_configs:
+      - to: 'critical-alerts@company.com'
+        subject: '[CRITICAL] NeoForge Platform: {{ .GroupLabels.alertname }}'
+      
+      pagerduty_configs:
+      - routing_key: '${PAGERDUTY_INTEGRATION_KEY}'
+        description: '{{ .GroupLabels.alertname }}: {{ .Annotations.summary }}'
+        details:
+          severity: '{{ .Labels.severity }}'
+          component: '{{ .Labels.component }}'
+          description: '{{ .Annotations.description }}'
+        links:
+        - href: '{{ .Annotations.runbook_url }}'
+          text: 'Runbook'
+
+    - name: 'vulnerability-alerts'
+      email_configs:
+      - to: 'vulnerability-team@company.com'
+        subject: '[VULNERABILITY] NeoForge: {{ .GroupLabels.alertname }}'
+        body: |
+          Vulnerability Alert Details:
+          
+          {{ range .Alerts }}
+          Summary: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          CVE: {{ .Labels.cve_id }}
+          CVSS Score: {{ .Labels.cvss_score }}
+          Component: {{ .Labels.component }}
+          Severity: {{ .Labels.severity }}
+          
+          {{ if .Annotations.runbook_url }}
+          Remediation Guide: {{ .Annotations.runbook_url }}
+          {{ end }}
+          {{ end }}
+
+    - name: 'compliance-alerts'
+      email_configs:
+      - to: 'compliance@company.com'
+        subject: '[COMPLIANCE] NeoForge Policy Violation: {{ .GroupLabels.alertname }}'
+        body: |
+          Policy Compliance Alert:
+          
+          {{ range .Alerts }}
+          Policy: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Framework: {{ .Labels.framework }}
+          Namespace: {{ .Labels.namespace }}
+          Resource: {{ .Labels.resource }}
+          
+          {{ if .Annotations.runbook_url }}
+          Compliance Guide: {{ .Annotations.runbook_url }}
+          {{ end }}
+          {{ end }}
+
+    # Inhibition rules to reduce alert noise
+    inhibit_rules:
+    - source_match:
+        severity: 'critical'
+      target_match:
+        severity: 'warning'
+      equal: ['alertname', 'component', 'instance']
+      
+    - source_match:
+        alertname: 'NodeDown'
+      target_match_re:
+        alertname: '.*'
+      equal: ['instance']
+
+---
+# Security Metrics Exporter for Custom Alerts
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: security-metrics-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: security-metrics-exporter
+    app.kubernetes.io/component: security-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: security-metrics-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: security-metrics-exporter
+        app.kubernetes.io/component: security-monitoring
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: security-metrics-exporter
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+      containers:
+      - name: exporter
+        image: ghcr.io/neoforge-dev/security-metrics-exporter:v1.0.0
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        ports:
+        - name: metrics
+          containerPort: 8080
+          protocol: TCP
+        env:
+        - name: METRICS_PORT
+          value: "8080"
+        - name: SCAN_INTERVAL
+          value: "60"
+        - name: TRIVY_CONFIG_PATH
+          value: "/etc/trivy/config.yaml"
+        - name: FALCO_ENDPOINT
+          value: "http://falco.falco-system:8765"
+        volumeMounts:
+        - name: trivy-config
+          mountPath: /etc/trivy
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: metrics
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: metrics
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: trivy-config
+        configMap:
+          name: trivy-config
+      - name: tmp
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: security-metrics-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: security-metrics-exporter
+    app.kubernetes.io/component: security-monitoring
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: security-metrics-exporter
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "nodes", "namespaces"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "daemonsets", "statefulsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["config.gatekeeper.sh"]
+  resources: ["*"]
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: security-metrics-exporter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: security-metrics-exporter
+subjects:
+- kind: ServiceAccount
+  name: security-metrics-exporter
+  namespace: monitoring
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: security-metrics-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: security-metrics-exporter
+    app.kubernetes.io/component: security-monitoring
+spec:
+  type: ClusterIP
+  ports:
+  - name: metrics
+    port: 8080
+    targetPort: metrics
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: security-metrics-exporter

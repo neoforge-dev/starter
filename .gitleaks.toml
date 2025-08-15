@@ -1,0 +1,232 @@
+# GitLeaks Configuration for NeoForge Platform
+# Detects secrets, credentials, and sensitive information in git repositories
+
+title = "NeoForge Security - GitLeaks Configuration"
+
+# Global settings
+[extend]
+# Extend default rules
+useDefault = true
+
+[[rules]]
+id = "aws-access-key-id"
+description = "AWS Access Key ID"
+regex = '''(?i)(?:aws.{0,20})?(?-i)["\''`]?(?i)(AKIA[0-9A-Z]{16})["\''`]?'''
+keywords = ["akia"]
+secretGroup = 1
+severity = "high"
+entropy = 3.5
+
+[[rules]]
+id = "aws-secret-access-key"
+description = "AWS Secret Access Key" 
+regex = '''(?i)(?:aws.{0,20})?(?-i)["\''`]?([0-9a-zA-Z/+]{40})["\''`]?'''
+keywords = ["aws", "secret"]
+secretGroup = 1
+severity = "high"
+entropy = 4.0
+
+[[rules]]
+id = "github-token"
+description = "GitHub Personal Access Token"
+regex = '''(?i)(?:github.{0,20})?(?-i)["\''`]?(ghp_[0-9a-zA-Z]{36}|github_pat_[0-9a-zA-Z]{22}_[0-9a-zA-Z]{59})["\''`]?'''
+keywords = ["ghp_", "github_pat_"]
+secretGroup = 1
+severity = "high"
+
+[[rules]]
+id = "gitlab-token"
+description = "GitLab Personal Access Token"
+regex = '''(?i)(?:gitlab.{0,20})?(?-i)["\''`]?(glpat-[a-zA-Z0-9_-]{20,})["\''`]?'''
+keywords = ["glpat-"]
+secretGroup = 1
+severity = "high"
+
+[[rules]]
+id = "private-key"
+description = "Private Key (PEM format)"
+regex = '''-----BEGIN[ A-Z]*PRIVATE KEY-----'''
+keywords = ["-----BEGIN", "PRIVATE KEY"]
+severity = "critical"
+
+[[rules]]
+id = "certificate"
+description = "Certificate (PEM format)"
+regex = '''-----BEGIN CERTIFICATE-----'''
+keywords = ["-----BEGIN CERTIFICATE"]
+severity = "medium"
+
+[[rules]]
+id = "ssh-private-key"
+description = "SSH Private Key"
+regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
+keywords = ["-----BEGIN OPENSSH PRIVATE KEY"]
+severity = "critical"
+
+[[rules]]
+id = "jwt-token"
+description = "JSON Web Token"
+regex = '''ey[A-Za-z0-9_-]+\.ey[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'''
+keywords = ["jwt", "token", "eyJ"]
+secretGroup = 0
+severity = "medium"
+entropy = 4.5
+
+[[rules]]
+id = "database-connection-string"
+description = "Database Connection String"
+regex = '''(?i)(postgres|mysql|mongodb|redis)://[^\s\'"]+'''
+keywords = ["postgres://", "mysql://", "mongodb://", "redis://"]
+secretGroup = 0
+severity = "high"
+
+[[rules]]
+id = "api-key"
+description = "Generic API Key"
+regex = '''(?i)(?:api.{0,20})?(?-i)["\''`]?([a-zA-Z0-9]{32,})["\''`]?'''
+keywords = ["api_key", "api-key", "apikey"]
+secretGroup = 1
+severity = "medium"
+entropy = 3.0
+
+[[rules]]
+id = "secret-key"
+description = "Generic Secret Key"
+regex = '''(?i)(?:secret.{0,20})?(?-i)["\''`]?([a-zA-Z0-9+/]{40,})["\''`]?'''
+keywords = ["secret_key", "secret-key", "secretkey"]
+secretGroup = 1
+severity = "high"
+entropy = 4.0
+
+[[rules]]
+id = "password"
+description = "Password in configuration"
+regex = '''(?i)(?:password.{0,20})?(?-i)["\''`]?([^\s\'"]{8,})["\''`]?'''
+keywords = ["password", "passwd", "pwd"]
+secretGroup = 1
+severity = "medium"
+entropy = 2.5
+
+[[rules]]
+id = "slack-webhook"
+description = "Slack Webhook URL"
+regex = '''https://hooks\.slack\.com/services/[A-Z0-9/]+'''
+keywords = ["hooks.slack.com"]
+severity = "medium"
+
+[[rules]]
+id = "discord-webhook"
+description = "Discord Webhook URL"
+regex = '''https://discord(?:app)?\.com/api/webhooks/\d+/[a-zA-Z0-9_-]+'''
+keywords = ["discord.com", "discordapp.com", "webhooks"]
+severity = "medium"
+
+[[rules]]
+id = "stripe-key"
+description = "Stripe API Key"
+regex = '''(?i)(?:stripe.{0,20})?(?-i)["\''`]?(sk_live_[a-zA-Z0-9]+|pk_live_[a-zA-Z0-9]+)["\''`]?'''
+keywords = ["sk_live_", "pk_live_"]
+secretGroup = 1
+severity = "critical"
+
+[[rules]]
+id = "twilio-key"
+description = "Twilio API Key"  
+regex = '''(?i)(?:twilio.{0,20})?(?-i)["\''`]?(SK[a-z0-9]{32})["\''`]?'''
+keywords = ["twilio", "SK"]
+secretGroup = 1
+severity = "high"
+
+[[rules]]
+id = "mailgun-key"
+description = "Mailgun API Key"
+regex = '''(?i)(?:mailgun.{0,20})?(?-i)["\''`]?(key-[a-zA-Z0-9]{32})["\''`]?'''
+keywords = ["mailgun", "key-"]
+secretGroup = 1
+severity = "high"
+
+[[rules]]
+id = "sendgrid-key" 
+description = "SendGrid API Key"
+regex = '''(?i)(?:sendgrid.{0,20})?(?-i)["\''`]?(SG\.[a-zA-Z0-9_-]{66})["\''`]?'''
+keywords = ["sendgrid", "SG."]
+secretGroup = 1
+severity = "high"
+
+[[rules]]
+id = "docker-hub-token"
+description = "Docker Hub Token"
+regex = '''(?i)(?:docker.{0,20})?(?-i)["\''`]?(dckr_pat_[a-zA-Z0-9_-]{59})["\''`]?'''
+keywords = ["dckr_pat_"]
+secretGroup = 1
+severity = "high"
+
+# Allowlist configuration
+[allowlist]
+description = "Allowlisted files and patterns"
+files = [
+    # Configuration and documentation files
+    ".secrets.baseline",
+    ".gitleaks.toml",
+    "security/trivy-config.yaml",
+    "**/README.md",
+    "**/CHANGELOG.md",
+    "**/*.example",
+    "**/*.sample",
+    
+    # Test files (be cautious with this)
+    "**/test_*.py",
+    "**/*.test.js",
+    "**/tests/**",
+    
+    # Lock files and package manifests
+    "**/package-lock.json", 
+    "**/yarn.lock",
+    "**/poetry.lock",
+    "**/requirements*.txt"
+]
+
+paths = [
+    # Version control and CI
+    ".git/",
+    ".github/",
+    
+    # Dependencies and build artifacts
+    "node_modules/",
+    "__pycache__/",
+    "dist/",
+    "build/",
+    ".next/",
+    ".nuxt/",
+    
+    # Coverage and test reports
+    "htmlcov/",
+    ".coverage",
+    ".pytest_cache/",
+    "coverage/",
+    
+    # IDE and editor files
+    ".vscode/",
+    ".idea/",
+    "*.swp",
+    "*.swo"
+]
+
+regexes = [
+    # Common false positives
+    '''(?i)example|sample|test|demo|placeholder|dummy''',
+    '''(?i)password.*=.*\$\{.*\}''',  # Environment variable references
+    '''(?i)key.*=.*\$\{.*\}''',       # Environment variable references
+    '''(?i)token.*=.*\$\{.*\}''',     # Environment variable references
+    '''-----BEGIN CERTIFICATE REQUEST-----''',  # Certificate requests are not sensitive
+    '''(?i)fake|mock|stub''',         # Test/mock data
+    '''(?i)lorem ipsum''',            # Lorem ipsum text
+    '''(?i)0{8,}|1{8,}''',           # Repeated digits (likely test data)
+    '''(?i)[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}''',  # UUID format (often not secrets)
+]
+
+# Entropy settings
+[entropy]
+Min = "3.0"  # Minimum entropy for detection
+Max = "7.0"  # Maximum entropy (to avoid false positives)
+Group = 1    # Which regex group to calculate entropy for

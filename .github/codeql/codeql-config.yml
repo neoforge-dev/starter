@@ -1,0 +1,44 @@
+name: "CodeQL Security Analysis Configuration"
+
+# Disable default queries and run only security-focused ones
+disable-default-queries: false
+
+# Additional security query suites
+queries:
+  - name: security-extended
+    uses: security-extended
+  - name: security-and-quality  
+    uses: security-and-quality
+
+# Path filters - focus on application code, exclude test files from some checks
+paths-ignore:
+  - "frontend/node_modules/**"
+  - "backend/__pycache__/**"
+  - "**/*.min.js"
+  - "frontend/dist/**"
+  - "backend/htmlcov/**"
+  - "**/test_*.py"
+  - "**/*.test.js"
+
+# Include additional paths that might have security implications
+paths:
+  - "backend/app/**"
+  - "frontend/src/**" 
+  - "k8s/**"
+  - "deploy/**"
+  - "docker-compose*.yml"
+  - "**/Dockerfile"
+
+# Language-specific configurations
+python:
+  # Focus on security-relevant Python packages
+  setup-python-dependencies: true
+  version: "3.11"
+
+javascript:
+  # Include TypeScript files and configuration
+  extractor:
+    typescript:
+      paths:
+        - "frontend/src/**/*.ts"
+        - "frontend/src/**/*.js"

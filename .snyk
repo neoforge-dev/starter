@@ -1,0 +1,65 @@
+# Snyk (https://snyk.io) policy file
+version: v1.25.0
+
+# Language settings
+language-settings:
+  python: "3.11"
+  node: "20"
+
+# Patch settings - automatically apply patches where available
+patch: {}
+
+# Ignore specific vulnerabilities with justification
+ignore:
+  # Example of ignoring a vulnerability (uncomment and modify as needed)
+  # SNYK-PYTHON-REQUESTS-1234567:
+  #   - '*':
+  #       reason: False positive - not exploitable in our context
+  #       expires: '2025-12-31T23:59:59.999Z'
+
+# Remediation settings
+remediation:
+  # Pin vulnerable packages to secure versions
+  pin: true
+  
+  # Upgrade vulnerable packages
+  upgrade: true
+  
+  # Apply patches where available
+  patch: true
+
+# Policy settings  
+policy:
+  # Fail on these severities
+  failOn:
+    - critical
+    - high
+    - medium
+  
+  # Ignore development dependencies for certain checks
+  ignoreDevDeps: false
+  
+  # Ignore unfixable vulnerabilities
+  ignoreUnfixable: false
+
+# Monitoring settings
+monitor:
+  # Monitor project for new vulnerabilities
+  enabled: true
+  
+  # Notification settings
+  notifications:
+    email: true
+    webhook: false
+    
+# Organization settings (if using Snyk Enterprise)
+org: neoforge-security
+
+# Project settings
+project:
+  name: neoforge-starter
+  tags:
+    - backend
+    - frontend
+    - security
+    - production

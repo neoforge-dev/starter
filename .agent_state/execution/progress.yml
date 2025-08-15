@@ -13,7 +13,8 @@ completed_batches:
 - epic_11_batch_3
 - epic_12_batch_1
 - epic_12_batch_2
-current_batch: batch_3
-current_epic: epic_12
+- epic_12_batch_3
+current_batch: batch_1
+current_epic: epic_13
 failed_batches: []
-last_checkpoint: '2025-08-15T08:10:36.532489+00:00'
+last_checkpoint: '2025-08-15T08:24:32.150543+00:00'

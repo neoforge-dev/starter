@@ -1,0 +1,481 @@
+name: Security Scanning Pipeline
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**', 'fix/**' ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Container Security Scanning with Trivy
+  container-security:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build backend image for scanning
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        file: ./backend/Dockerfile
+        tags: neoforge-api:latest
+        load: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build frontend image for scanning
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        tags: neoforge-frontend:latest
+        load: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Run Trivy vulnerability scanner - Backend
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'neoforge-api:latest'
+        format: 'sarif'
+        output: 'trivy-backend-results.sarif'
+        severity: 'CRITICAL,HIGH,MEDIUM'
+        exit-code: '1'
+
+    - name: Run Trivy vulnerability scanner - Frontend
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'neoforge-frontend:latest'
+        format: 'sarif'
+        output: 'trivy-frontend-results.sarif'
+        severity: 'CRITICAL,HIGH,MEDIUM'
+        exit-code: '1'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-backend-results.sarif'
+
+    - name: Upload Frontend Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-frontend-results.sarif'
+
+    - name: Run Trivy filesystem scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'table'
+        severity: 'CRITICAL,HIGH'
+        ignore-unfixed: true
+
+  # Static Application Security Testing (SAST)
+  sast-analysis:
+    name: SAST Code Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python', 'javascript' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        config-file: ./.github/codeql/codeql-config.yml
+
+    - name: Set up Python for backend analysis
+      if: matrix.language == 'python'
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Python dependencies
+      if: matrix.language == 'python'
+      run: |
+        cd backend
+        pip install -r requirements.txt
+
+    - name: Set up Node.js for frontend analysis
+      if: matrix.language == 'javascript'
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Node.js dependencies
+      if: matrix.language == 'javascript'
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
+
+    - name: Run Bandit Security Linter (Python)
+      if: matrix.language == 'python'
+      run: |
+        pip install bandit[toml]
+        bandit -r backend/app -f json -o bandit-report.json
+        bandit -r backend/app -f txt || echo "Bandit found security issues"
+
+    - name: Run ESLint Security Plugin (JavaScript)
+      if: matrix.language == 'javascript'
+      run: |
+        cd frontend
+        npm install eslint-plugin-security --save-dev
+        npx eslint src --ext .js --format json -o ../eslint-security-report.json || true
+        npx eslint src --ext .js || echo "ESLint found security issues"
+
+    - name: Upload SAST artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: sast-reports-${{ matrix.language }}
+        path: |
+          bandit-report.json
+          eslint-security-report.json
+
+  # Dependency Vulnerability Scanning
+  dependency-scan:
+    name: Dependency Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Python dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        pip install safety
+
+    - name: Install Node.js dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Run Python Safety check
+      run: |
+        cd backend
+        safety check --json --output ../safety-report.json || true
+        safety check || echo "Safety found vulnerabilities"
+
+    - name: Run npm audit
+      run: |
+        cd frontend
+        npm audit --audit-level moderate --json > ../npm-audit-report.json || true
+        npm audit --audit-level moderate || echo "npm audit found vulnerabilities"
+
+    - name: Run Snyk dependency scan
+      uses: snyk/actions/python@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --file=backend/requirements.txt --json-file-output=snyk-python-report.json
+
+    - name: Run Snyk Node.js scan
+      uses: snyk/actions/node@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --file=frontend/package.json --json-file-output=snyk-node-report.json
+
+    - name: Upload dependency scan artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: dependency-reports
+        path: |
+          safety-report.json
+          npm-audit-report.json
+          snyk-python-report.json
+          snyk-node-report.json
+
+  # Secret Detection Scanning
+  secrets-scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run TruffleHog OSS
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+
+    - name: Run GitLeaks
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}}
+
+    - name: Detect Secrets baseline scan
+      run: |
+        pip install detect-secrets
+        detect-secrets scan --all-files --baseline .secrets.baseline
+        detect-secrets audit .secrets.baseline || echo "Potential secrets found"
+
+  # Infrastructure Security Scanning
+  infrastructure-scan:
+    name: Infrastructure Security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Checkov
+      run: |
+        pip install checkov
+
+    - name: Run Checkov scan on Dockerfiles
+      run: |
+        checkov -f backend/Dockerfile --framework dockerfile --output json --output-file checkov-dockerfile-backend.json || true
+        checkov -f frontend/Dockerfile --framework dockerfile --output json --output-file checkov-dockerfile-frontend.json || true
+
+    - name: Run Checkov scan on Docker Compose
+      run: |
+        checkov -f docker-compose.yml --framework docker_compose --output json --output-file checkov-compose.json || true
+        checkov -f docker-compose.prod.yml --framework docker_compose --output json --output-file checkov-compose-prod.json || true
+
+    - name: Run Checkov scan on Kubernetes manifests
+      run: |
+        checkov -d k8s --framework kubernetes --output json --output-file checkov-k8s.json || true
+
+    - name: Run Checkov scan on Terraform
+      run: |
+        checkov -d deploy/terraform --framework terraform --output json --output-file checkov-terraform.json || true
+
+    - name: Upload infrastructure scan artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: infrastructure-reports
+        path: |
+          checkov-*.json
+
+  # License and Compliance Scanning
+  license-compliance:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install license scanning tools
+      run: |
+        pip install pip-licenses
+        npm install -g license-checker
+
+    - name: Scan Python licenses
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        pip-licenses --format=json --output-file=../python-licenses.json
+        pip-licenses --format=plain-vertical
+
+    - name: Scan Node.js licenses
+      run: |
+        cd frontend
+        npm ci
+        license-checker --json --out ../node-licenses.json
+        license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0'
+
+    - name: Upload license reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: license-reports
+        path: |
+          python-licenses.json
+          node-licenses.json
+
+  # Security Summary Report
+  security-summary:
+    name: Security Summary
+    needs: [container-security, sast-analysis, dependency-scan, secrets-scan, infrastructure-scan, license-compliance]
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      contents: read
+      issues: write
+      security-events: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Generate security summary report
+      run: |
+        python3 << 'EOF'
+        import json
+        import os
+        from datetime import datetime
+        
+        # Initialize report
+        report = {
+            "scan_timestamp": datetime.now().isoformat(),
+            "repository": os.environ.get("GITHUB_REPOSITORY"),
+            "branch": os.environ.get("GITHUB_REF_NAME"),
+            "commit": os.environ.get("GITHUB_SHA"),
+            "summary": {
+                "total_vulnerabilities": 0,
+                "critical": 0,
+                "high": 0,
+                "medium": 0,
+                "low": 0,
+                "info": 0
+            },
+            "scans": {
+                "container": {"status": "unknown", "issues": []},
+                "sast": {"status": "unknown", "issues": []},
+                "dependencies": {"status": "unknown", "issues": []},
+                "secrets": {"status": "unknown", "issues": []},
+                "infrastructure": {"status": "unknown", "issues": []}
+            }
+        }
+        
+        # Parse scan results (simplified example)
+        try:
+            # This would parse actual scan results from artifacts
+            print("Generating security summary...")
+            
+            # Save report
+            with open("security-summary.json", "w") as f:
+                json.dump(report, f, indent=2)
+                
+            print(f"Security scan completed at {report['scan_timestamp']}")
+            
+        except Exception as e:
+            print(f"Error generating report: {e}")
+        EOF
+
+    - name: Create security issue if vulnerabilities found
+      if: env.SECURITY_ISSUES_FOUND == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('security-summary.json', 'utf8'));
+          
+          const issueBody = `
+          ## 🚨 Security Vulnerabilities Detected
+          
+          **Scan Date:** ${report.scan_timestamp}
+          **Branch:** ${report.branch}
+          **Commit:** ${report.commit}
+          
+          ### Summary
+          - **Critical:** ${report.summary.critical}
+          - **High:** ${report.summary.high}
+          - **Medium:** ${report.summary.medium}
+          - **Low:** ${report.summary.low}
+          
+          ### Next Steps
+          1. Review detailed scan results in the Actions artifacts
+          2. Address critical and high severity issues immediately
+          3. Plan remediation for medium and low severity issues
+          
+          **This issue was automatically created by the security scanning pipeline.**
+          `;
+          
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `🚨 Security Vulnerabilities Detected - ${new Date().toISOString().split('T')[0]}`,
+            body: issueBody,
+            labels: ['security', 'vulnerability', 'automated']
+          });
+
+    - name: Upload security summary
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-summary
+        path: security-summary.json

@@ -1,0 +1,189 @@
+# OPA Gatekeeper Constraints for NeoForge Platform
+# These constraints apply the security policies defined in constraint templates
+
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: NeoForgeRequiredSecurityContext
+metadata:
+  name: must-have-security-context
+  annotations:
+    description: "All pods must have proper security context configuration"
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    namespaces:
+      - "neoforge-api"
+      - "neoforge-frontend"
+      - "neoforge-workers"
+    excludedNamespaces:
+      - "kube-system"
+      - "kube-public"
+      - "gatekeeper-system"
+  parameters:
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    requiredDropCapabilities:
+      - "ALL"
+
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: NeoForgeImagePolicy
+metadata:
+  name: allowed-registries-only
+  annotations:
+    description: "Only allow images from approved registries"
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet"]
+    namespaces:
+      - "neoforge-api"
+      - "neoforge-frontend"
+      - "neoforge-workers"
+  parameters:
+    allowedRegistries:
+      - "ghcr.io/neoforge-dev/"
+      - "docker.io/library/"
+      - "registry.k8s.io/"
+      - "quay.io/"
+      - "gcr.io/distroless/"
+    requireDigest: true
+    blockedTags:
+      - "latest"
+      - "main"
+      - "master"
+      - "dev"
+      - "development"
+
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: NeoForgeResourcePolicy
+metadata:
+  name: must-have-resource-limits
+  annotations:
+    description: "All containers must have resource limits and requests"
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet"]
+    namespaces:
+      - "neoforge-api"
+      - "neoforge-frontend" 
+      - "neoforge-workers"
+  parameters:
+    requireLimits:
+      - "cpu"
+      - "memory"
+    requireRequests:
+      - "cpu"
+      - "memory"
+    maxCpu: "2000m"
+    maxMemory: "4Gi"
+
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: NeoForgeDisallowedResources
+metadata:
+  name: block-dangerous-resources
+  annotations:
+    description: "Block creation of potentially dangerous resources"
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod", "Service", "ConfigMap", "Secret"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "DaemonSet", "StatefulSet"]
+      - apiGroups: ["batch"]
+        kinds: ["Job", "CronJob"]
+  parameters:
+    disallowedKinds:
+      - "HostNetwork"
+      - "HostPID"
+      - "HostIPC"
+    exemptNamespaces:
+      - "kube-system"
+      - "monitoring"
+
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: NeoForgeRequiredLabels
+metadata:
+  name: must-have-required-labels
+  annotations:
+    description: "All resources must have required labels for governance"
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod", "Service", "ConfigMap", "Secret"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet"]
+      - apiGroups: ["networking.k8s.io"]
+        kinds: ["Ingress", "NetworkPolicy"]
+    namespaces:
+      - "neoforge-api"
+      - "neoforge-frontend"
+      - "neoforge-workers"
+  parameters:
+    requiredLabels:
+      - "app.kubernetes.io/name"
+      - "app.kubernetes.io/instance"
+      - "app.kubernetes.io/version"
+      - "app.kubernetes.io/component"
+      - "app.kubernetes.io/managed-by"
+      - "security.neoforge.io/classification"
+      - "cost.neoforge.io/team"
+    allowedValues:
+      security.neoforge.io/classification:
+        - "public"
+        - "internal"
+        - "restricted"
+        - "confidential"
+      app.kubernetes.io/managed-by:
+        - "Helm"
+        - "kubectl"
+        - "kustomize"
+        - "ArgoCD"
+      cost.neoforge.io/team:
+        - "platform"
+        - "backend"
+        - "frontend"
+        - "infrastructure"
+
+---
+# Additional constraint for network policies
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: NeoForgeRequiredLabels
+metadata:
+  name: networkpolicy-labels
+  annotations:
+    description: "Network policies must have specific security labels"
+spec:
+  match:
+    kinds:
+      - apiGroups: ["networking.k8s.io"]
+        kinds: ["NetworkPolicy"]
+  parameters:
+    requiredLabels:
+      - "security.neoforge.io/policy-type"
+      - "security.neoforge.io/enforcement-level"
+    allowedValues:
+      security.neoforge.io/policy-type:
+        - "ingress-deny"
+        - "egress-restrict"
+        - "micro-segmentation"
+        - "zero-trust"
+      security.neoforge.io/enforcement-level:
+        - "strict"
+        - "moderate"
+        - "permissive"
