@@ -165,7 +165,7 @@ jobs:
         npx eslint src --ext .js || echo "ESLint found security issues"
 
     - name: Upload SAST artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: sast-reports-${{ matrix.language }}
@@ -235,7 +235,7 @@ jobs:
         args: --file=frontend/package.json --json-file-output=snyk-node-report.json
 
     - name: Upload dependency scan artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: dependency-reports
@@ -319,7 +319,7 @@ jobs:
         checkov -d deploy/terraform --framework terraform --output json --output-file checkov-terraform.json || true
 
     - name: Upload infrastructure scan artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: infrastructure-reports
@@ -367,7 +367,7 @@ jobs:
         license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0'
 
     - name: Upload license reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: license-reports
         path: |
@@ -390,7 +390,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
 
     - name: Generate security summary report
       run: |
@@ -475,7 +475,7 @@ jobs:
           });
 
     - name: Upload security summary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-summary
         path: security-summary.json

@@ -15,7 +15,4 @@ jobs:
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: critical
-          deny-licenses: |
-            GPL-1.0-or-later
-            LGPL-2.0-or-later
           config-file: ".github/dependency-review-config.yml"
