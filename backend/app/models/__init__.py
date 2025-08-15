@@ -17,3 +17,13 @@ from .personalization import (
     UserPersonalizationRules,
     PersonalizationSegmentAnalysis,
 )
+from .content_suggestion import (
+    ContentItem,
+    ContentSuggestion,
+    ContentSuggestionFeedback,
+    ContentAnalysisJob,
+    ContentType,
+    ContentCategory,
+    SuggestionType,
+    ContentSuggestionStatus,
+)
