@@ -12,6 +12,31 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+def _setup_trace_context(traceparent: Optional[str] = None):
+    """Set up tracing context in Celery worker if traceparent provided."""
+    if not traceparent:
+        return
+        
+    try:
+        from opentelemetry import trace
+        from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+        
+        # Parse traceparent header and set as current span context
+        propagator = TraceContextTextMapPropagator()
+        carrier = {"traceparent": traceparent}
+        context = propagator.extract(carrier)
+        
+        # Set extracted context as current
+        token = context.attach()
+        return token
+    except ImportError:
+        # OpenTelemetry not available, skip tracing
+        pass
+    except Exception as e:
+        logger.debug(f"Failed to setup trace context: {e}")
+    
+    return None
+
 class AsyncTask(Task):
     """Custom Celery task that supports async operations."""
     
@@ -28,25 +53,63 @@ class AsyncTask(Task):
         raise NotImplementedError("Async tasks must implement run_async method")
 
 @celery_app.task(name="send_welcome_email_task", bind=True, max_retries=3, default_retry_delay=60)
-def send_welcome_email_task(self, user_email: str, user_name: str, verification_token: str) -> dict:
+def send_welcome_email_task(self, user_email: str, user_name: str, verification_token: str, traceparent: Optional[str] = None) -> dict:
     """Celery task to send welcome email with verification link."""
+    # Set up tracing context if provided
+    trace_token = _setup_trace_context(traceparent)
+    
     try:
-        return asyncio.run(_send_welcome_email_async(user_email, user_name, verification_token))
+        # Add trace span around email sending
+        try:
+            from opentelemetry import trace
+            tracer = trace.get_tracer(__name__)
+            with tracer.start_as_current_span("send_welcome_email_task") as span:
+                span.set_attribute("user.email", user_email)
+                span.set_attribute("task.type", "welcome_email")
+                result = asyncio.run(_send_welcome_email_async(user_email, user_name, verification_token))
+                span.set_attribute("email.sent", True)
+                return result
+        except ImportError:
+            # No tracing available, proceed normally
+            return asyncio.run(_send_welcome_email_async(user_email, user_name, verification_token))
     except Exception as e:
         logger.error(f"Error sending welcome email to {user_email}: {e}")
         # Retry with exponential backoff
         countdown = 2 ** self.request.retries * 60  # 60s, 120s, 240s
         raise self.retry(exc=e, countdown=countdown)
+    finally:
+        # Clean up trace context
+        if trace_token:
+            trace_token.detach()
 
 @celery_app.task(name="send_verification_email_task", bind=True, max_retries=3, default_retry_delay=60)
-def send_verification_email_task(self, user_email: str, user_name: str, verification_token: str) -> dict:
+def send_verification_email_task(self, user_email: str, user_name: str, verification_token: str, traceparent: Optional[str] = None) -> dict:
     """Celery task to send email verification link."""
+    # Set up tracing context if provided
+    trace_token = _setup_trace_context(traceparent)
+    
     try:
-        return asyncio.run(_send_verification_email_async(user_email, user_name, verification_token))
+        # Add trace span around email sending
+        try:
+            from opentelemetry import trace
+            tracer = trace.get_tracer(__name__)
+            with tracer.start_as_current_span("send_verification_email_task") as span:
+                span.set_attribute("user.email", user_email)
+                span.set_attribute("task.type", "verification_email")
+                result = asyncio.run(_send_verification_email_async(user_email, user_name, verification_token))
+                span.set_attribute("email.sent", True)
+                return result
+        except ImportError:
+            # No tracing available, proceed normally
+            return asyncio.run(_send_verification_email_async(user_email, user_name, verification_token))
     except Exception as e:
         logger.error(f"Error sending verification email to {user_email}: {e}")
         countdown = 2 ** self.request.retries * 60
         raise self.retry(exc=e, countdown=countdown)
+    finally:
+        # Clean up trace context
+        if trace_token:
+            trace_token.detach()
 
 @celery_app.task(name="send_password_reset_email_task", bind=True, max_retries=3, default_retry_delay=60)
 def send_password_reset_email_task(self, user_email: str, user_name: str, reset_token: str) -> dict:
