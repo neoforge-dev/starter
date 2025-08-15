@@ -1,0 +1,21 @@
+batch_id: batch_2
+epic_id: epic_11
+estimated_time: 5-6 hours
+started_at: '2025-08-15T00:04:23.427914+00:00'
+tasks:
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: build_failure_prediction_system
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: implement_capacity_planning_ai
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: create_cost_optimization_automation
+tests: []

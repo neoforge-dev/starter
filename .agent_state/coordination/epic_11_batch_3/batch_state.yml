@@ -1,0 +1,21 @@
+batch_id: batch_3
+epic_id: epic_11
+estimated_time: 4-5 hours
+started_at: '2025-08-15T00:04:33.103215+00:00'
+tasks:
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: integrate_ml_model_training_pipeline
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: implement_feature_engineering_automation
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: add_model_deployment_system
+tests: []
