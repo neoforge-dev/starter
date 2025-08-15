@@ -18,6 +18,7 @@ passlib[bcrypt]==1.7.4
 pydantic==2.6.1
 pydantic-settings==2.1.0
 pydantic-extra-types==2.4.1
+aiohttp==3.9.3
 
 # Database
 sqlalchemy==2.0.27
