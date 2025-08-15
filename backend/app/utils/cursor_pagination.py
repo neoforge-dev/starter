@@ -126,8 +126,9 @@ class CursorPaginationManager:
         json_str = json.dumps(json_data, sort_keys=True, separators=(',', ':'))
         
         # Create HMAC signature
+        secret_bytes = self.secret_key.get_secret_value().encode() if hasattr(self.secret_key, 'get_secret_value') else str(self.secret_key).encode()
         signature = hmac.new(
-            self.secret_key.encode(),
+            secret_bytes,
             json_str.encode(),
             self.algorithm
         ).hexdigest()
@@ -162,8 +163,9 @@ class CursorPaginationManager:
             
             # Verify signature
             json_str = json.dumps(data, sort_keys=True, separators=(',', ':'))
+            secret_bytes = self.secret_key.get_secret_value().encode() if hasattr(self.secret_key, 'get_secret_value') else str(self.secret_key).encode()
             expected_signature = hmac.new(
-                self.secret_key.encode(),
+                secret_bytes,
                 json_str.encode(),
                 self.algorithm
             ).hexdigest()

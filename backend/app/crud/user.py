@@ -188,5 +188,280 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         """
         return user.is_verified
 
+    async def deactivate_account(
+        self, 
+        db: AsyncSession, 
+        *, 
+        user_id: int, 
+        reason: str
+    ) -> Optional[User]:
+        """
+        Deactivate user account.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            reason: Reason for deactivation
+            
+        Returns:
+            Updated user if found, None otherwise
+        """
+        user = await self.get(db, id=user_id)
+        if not user:
+            return None
+        
+        # Mark as deactivated
+        user.is_active = False
+        user.deactivated_at = datetime.utcnow()
+        user.deactivation_reason = reason
+        
+        await db.flush()
+        await db.refresh(user)
+        return user
+    
+    async def reactivate_account(
+        self, 
+        db: AsyncSession, 
+        *, 
+        user_id: int
+    ) -> Optional[User]:
+        """
+        Reactivate user account.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            
+        Returns:
+            Updated user if found, None otherwise
+        """
+        user = await self.get(db, id=user_id)
+        if not user:
+            return None
+        
+        # Mark as active again
+        user.is_active = True
+        user.deactivated_at = None
+        user.deactivation_reason = None
+        
+        await db.flush()
+        await db.refresh(user)
+        return user
+    
+    async def lock_account(
+        self, 
+        db: AsyncSession, 
+        *, 
+        user_id: int, 
+        lock_duration_minutes: int = 30
+    ) -> Optional[User]:
+        """
+        Lock user account temporarily.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            lock_duration_minutes: Duration to lock account in minutes
+            
+        Returns:
+            Updated user if found, None otherwise
+        """
+        user = await self.get(db, id=user_id)
+        if not user:
+            return None
+        
+        from datetime import timedelta
+        
+        # Lock account until specified time
+        user.locked_until = datetime.utcnow() + timedelta(minutes=lock_duration_minutes)
+        
+        await db.flush()
+        await db.refresh(user)
+        return user
+    
+    async def unlock_account(
+        self, 
+        db: AsyncSession, 
+        *, 
+        user_id: int
+    ) -> Optional[User]:
+        """
+        Unlock user account.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            
+        Returns:
+            Updated user if found, None otherwise
+        """
+        user = await self.get(db, id=user_id)
+        if not user:
+            return None
+        
+        # Remove lock
+        user.locked_until = None
+        user.failed_login_attempts = 0
+        
+        await db.flush()
+        await db.refresh(user)
+        return user
+    
+    async def increment_failed_login(
+        self, 
+        db: AsyncSession, 
+        *, 
+        user_id: int
+    ) -> Optional[User]:
+        """
+        Increment failed login attempts counter.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            
+        Returns:
+            Updated user if found, None otherwise
+        """
+        user = await self.get(db, id=user_id)
+        if not user:
+            return None
+        
+        user.failed_login_attempts += 1
+        
+        # Auto-lock after 5 failed attempts
+        if user.failed_login_attempts >= 5:
+            from datetime import timedelta
+            user.locked_until = datetime.utcnow() + timedelta(minutes=30)
+        
+        await db.flush()
+        await db.refresh(user)
+        return user
+    
+    async def update_login_info(
+        self, 
+        db: AsyncSession, 
+        *, 
+        user_id: int, 
+        ip_address: Optional[str] = None
+    ) -> Optional[User]:
+        """
+        Update user login information.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            ip_address: Client IP address
+            
+        Returns:
+            Updated user if found, None otherwise
+        """
+        user = await self.get(db, id=user_id)
+        if not user:
+            return None
+        
+        # Update login info and reset failed attempts
+        user.last_login_at = datetime.utcnow()
+        user.last_login_ip = ip_address
+        user.failed_login_attempts = 0
+        
+        await db.flush()
+        await db.refresh(user)
+        return user
+    
+    async def schedule_deletion(
+        self, 
+        db: AsyncSession, 
+        *, 
+        user_id: int, 
+        retention_days: int = 30
+    ) -> Optional[User]:
+        """
+        Schedule user account for deletion after retention period.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            retention_days: Days to retain data before deletion
+            
+        Returns:
+            Updated user if found, None otherwise
+        """
+        user = await self.get(db, id=user_id)
+        if not user:
+            return None
+        
+        from datetime import timedelta
+        
+        # Schedule deletion and deactivate account
+        user.data_retention_until = datetime.utcnow() + timedelta(days=retention_days)
+        user.is_active = False
+        user.deactivated_at = datetime.utcnow()
+        user.deactivation_reason = "Account deletion requested"
+        
+        await db.flush()
+        await db.refresh(user)
+        return user
+    
+    async def cancel_deletion(
+        self, 
+        db: AsyncSession, 
+        *, 
+        user_id: int
+    ) -> Optional[User]:
+        """
+        Cancel scheduled account deletion.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            
+        Returns:
+            Updated user if found, None otherwise
+        """
+        user = await self.get(db, id=user_id)
+        if not user:
+            return None
+        
+        # Cancel deletion and reactivate if was only scheduled for deletion
+        if user.deactivation_reason == "Account deletion requested":
+            user.data_retention_until = None
+            user.is_active = True
+            user.deactivated_at = None
+            user.deactivation_reason = None
+        else:
+            # Just cancel deletion but keep deactivation
+            user.data_retention_until = None
+        
+        await db.flush()
+        await db.refresh(user)
+        return user
+    
+    async def update_password_changed(
+        self, 
+        db: AsyncSession, 
+        *, 
+        user_id: int
+    ) -> Optional[User]:
+        """
+        Update password change timestamp.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            
+        Returns:
+            Updated user if found, None otherwise
+        """
+        user = await self.get(db, id=user_id)
+        if not user:
+            return None
+        
+        user.password_changed_at = datetime.utcnow()
+        
+        await db.flush()
+        await db.refresh(user)
+        return user
+
 
 user = CRUDUser() 

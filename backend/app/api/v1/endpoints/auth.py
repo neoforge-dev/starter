@@ -19,6 +19,7 @@ from app.schemas.auth import (
     ResendVerification,
     SessionOut,
     RevokeOthersRequest,
+    RefreshTokenRequest,
 )
 from app.crud.user_session import user_session, hash_token
 from app.utils.audit import audit_event
@@ -27,7 +28,17 @@ from app.schemas.user import UserCreate, UserResponse
 from app.models.user import User
 from app.models.user_session import UserSession
 from app.worker.email_worker import send_welcome_email_task, send_verification_email_task, send_password_reset_email_task
-from app.core.auth import verify_password, get_password_hash
+from app.core.auth import (
+    verify_password, 
+    get_password_hash,
+    generate_refresh_token,
+    hash_refresh_token,
+    store_refresh_token,
+    validate_refresh_token,
+    rotate_refresh_token,
+    revoke_refresh_token
+)
+from app.core.redis import get_redis
 from app.crud import user as user_crud, password_reset_token
 from app.schemas.common import PaginatedResponse
 import logging # Import logging
@@ -59,34 +70,113 @@ async def login_access_token(
     
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access = create_access_token(subject=user.id, settings=settings, expires_delta=access_token_expires)
-    # Issue refresh token (opaque) and store session
-    refresh = secrets.token_urlsafe(32)
+    
+    # Generate secure refresh token and store in Redis
+    refresh_token = generate_refresh_token()
+    token_hash = hash_refresh_token(refresh_token)
+    session_id = secrets.token_urlsafe(16)  # Generate session ID
+    
+    # Store refresh token in Redis
+    async for redis in get_redis():
+        await store_refresh_token(
+            redis=redis,
+            user_id=user.id,
+            token_hash=token_hash,
+            session_id=session_id,
+            settings=settings,
+            expires_in_days=settings.refresh_token_expire_days
+        )
+    
+    # Also store session in database for compatibility
     await user_session.create(
         db,
         user_id=user.id,
-        refresh_token=refresh,
+        refresh_token=token_hash,  # Store hash in DB
         user_agent=getattr(form_data, "client_id", None),
         ip_address=None,
         expires_in_days=settings.refresh_token_expire_days,
     )
+    
     await audit_event(db, user_id=user.id, action="auth.login", resource=f"user:{user.id}")
-    return {"access_token": access, "token_type": "bearer", "refresh_token": refresh}
+    return {
+        "access_token": access, 
+        "token_type": "bearer", 
+        "refresh_token": refresh_token  # Return plain token to client
+    }
 
 
 @router.post("/refresh", response_model=Token)
 async def refresh_access_token(
     settings: Annotated[Settings, Depends(get_settings)],
     db: Annotated[AsyncSession, Depends(get_db)],
-    refresh_token: str,
+    refresh_request: RefreshTokenRequest,
 ) -> Token:
-    hashed = hash_token(refresh_token)
-    session = await user_session.get_by_hashed(db, hashed=hashed)
-    if not session or session.revoked_at is not None or session.expires_at < datetime.utcnow():
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
-    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-    access = create_access_token(subject=session.user_id, settings=settings, expires_delta=access_token_expires)
-    await audit_event(db, user_id=session.user_id, action="auth.refresh", resource=f"session:{session.id}")
-    return Token(access_token=access, token_type="bearer")
+    """
+    Refresh access token using refresh token rotation.
+    
+    This endpoint:
+    1. Validates the current refresh token
+    2. Generates new access and refresh tokens
+    3. Invalidates the old refresh token
+    4. Returns new tokens to the client
+    """
+    async for redis in get_redis():
+        # Validate current refresh token
+        token_data = await validate_refresh_token(redis, refresh_request.refresh_token)
+        if not token_data:
+            logger.warning("refresh_token_validation_failed")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid or expired refresh token"
+            )
+        
+        user_id = token_data["user_id"]
+        session_id = token_data["session_id"]
+        
+        # Rotate refresh token
+        new_refresh_token, success = await rotate_refresh_token(
+            redis=redis,
+            old_token=refresh_request.refresh_token,
+            user_id=user_id,
+            session_id=session_id,
+            settings=settings
+        )
+        
+        if not success:
+            logger.warning("refresh_token_rotation_failed", user_id=user_id)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token rotation failed"
+            )
+        
+        # Generate new access token
+        access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+        access_token = create_access_token(
+            subject=user_id, 
+            settings=settings, 
+            expires_delta=access_token_expires
+        )
+        
+        # Log successful refresh
+        await audit_event(
+            db, 
+            user_id=user_id, 
+            action="auth.token_refresh", 
+            resource=f"session:{session_id}"
+        )
+        
+        logger.info(
+            "access_token_refreshed",
+            user_id=user_id,
+            session_id=session_id,
+            rotations=token_data.get("rotations", 0) + 1
+        )
+        
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            refresh_token=new_refresh_token  # Return new refresh token
+        )
 
 
 @router.get("/sessions", response_model=PaginatedResponse)
@@ -151,11 +241,40 @@ async def revoke_other_sessions(
     keep = res.scalar_one_or_none()
     if not keep or keep.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
-    revoked = await user_session.revoke_all_except(
+    
+    # Revoke database sessions
+    revoked_db = await user_session.revoke_all_except(
         db, user_id=current_user.id, keep_session_id=body.keep_session_id
     )
-    await audit_event(db, user_id=current_user.id, action="auth.sessions.revoke_others", resource=f"user:{current_user.id}")
-    return {"revoked_count": revoked}
+    
+    # Also revoke Redis-based refresh tokens (except current session)
+    async for redis in get_redis():
+        # Note: This is a simplified approach. In production, you'd want to
+        # maintain session mapping to avoid revoking the current session's token
+        # For now, we'll implement basic user token revocation with session awareness
+        user_key = f"user_refresh_tokens:{current_user.id}"
+        token_hashes = await redis.smembers(user_key)
+        
+        revoked_redis = 0
+        for token_hash in token_hashes:
+            token_key = f"refresh_token:{token_hash}"
+            token_data = await redis.hgetall(token_key)
+            
+            # Skip the session we want to keep (basic implementation)
+            # In production, you'd have better session-to-token mapping
+            if token_data.get("session_id") != str(body.keep_session_id):
+                if await redis.delete(token_key):
+                    revoked_redis += 1
+                    await redis.srem(user_key, token_hash)
+    
+    await audit_event(
+        db, 
+        user_id=current_user.id, 
+        action="auth.sessions.revoke_others", 
+        resource=f"user:{current_user.id}"
+    )
+    
+    return {"revoked_count": revoked_db}
 
 
 @router.post("/register", response_model=dict)
@@ -214,6 +333,22 @@ async def register_user(
             logger.error(f"Failed to queue welcome email for {user.email}: {email_error}")
             # Note: We continue with registration even if email queuing fails
         
+        # Generate secure refresh token for new user
+        refresh_token = generate_refresh_token()
+        token_hash = hash_refresh_token(refresh_token)
+        session_id = secrets.token_urlsafe(16)
+        
+        # Store refresh token in Redis
+        async for redis in get_redis():
+            await store_refresh_token(
+                redis=redis,
+                user_id=user.id,
+                token_hash=token_hash,
+                session_id=session_id,
+                settings=settings,
+                expires_in_days=settings.refresh_token_expire_days
+            )
+        
         # Generate access token for immediate login
         access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
         access_token = create_access_token(
@@ -235,7 +370,8 @@ async def register_user(
                 "created_at": user.created_at.isoformat()
             },
             "access_token": access_token,
-            "token_type": "bearer"
+            "token_type": "bearer",
+            "refresh_token": refresh_token
         }
         
     except Exception as e:
@@ -542,4 +678,131 @@ async def resend_verification(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unable to process verification resend request. Please try again later."
+        )
+
+
+@router.post("/logout", response_model=dict)
+async def logout(
+    refresh_request: RefreshTokenRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> dict:
+    """
+    Logout user by revoking their refresh token.
+    
+    This endpoint:
+    1. Validates the refresh token belongs to current user
+    2. Revokes the refresh token from Redis
+    3. Logs the logout action
+    4. Returns success confirmation
+    """
+    logger.info(f"Logout requested for user {current_user.id}")
+    
+    try:
+        async for redis in get_redis():
+            # Validate token belongs to current user (security check)
+            token_data = await validate_refresh_token(redis, refresh_request.refresh_token)
+            if not token_data or token_data["user_id"] != current_user.id:
+                logger.warning(
+                    "logout_failed_invalid_token",
+                    user_id=current_user.id,
+                    token_valid=token_data is not None
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid refresh token"
+                )
+            
+            # Revoke the refresh token
+            revoked = await revoke_refresh_token(
+                redis=redis,
+                token=refresh_request.refresh_token,
+                user_id=current_user.id
+            )
+            
+            if not revoked:
+                logger.warning("logout_token_revocation_failed", user_id=current_user.id)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to revoke token"
+                )
+            
+            # Log successful logout
+            await audit_event(
+                db, 
+                user_id=current_user.id, 
+                action="auth.logout", 
+                resource=f"user:{current_user.id}"
+            )
+            
+            logger.info(
+                "user_logged_out",
+                user_id=current_user.id,
+                session_id=token_data["session_id"]
+            )
+            
+            return {
+                "message": "Successfully logged out"
+            }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Logout failed for user {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to process logout. Please try again."
+        )
+
+
+@router.post("/logout-all", response_model=dict)  
+async def logout_all_sessions(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> dict:
+    """
+    Logout user from all sessions by revoking all refresh tokens.
+    
+    This endpoint:
+    1. Revokes all refresh tokens for the user
+    2. Logs the logout action  
+    3. Returns count of revoked tokens
+    """
+    logger.info(f"Logout all sessions requested for user {current_user.id}")
+    
+    try:
+        async for redis in get_redis():
+            # Revoke all user's refresh tokens
+            revoked_count = await revoke_all_user_tokens(
+                redis=redis,
+                user_id=current_user.id
+            )
+            
+            # Also revoke database sessions for compatibility
+            await user_session.revoke_all_for_user(db, user_id=current_user.id)
+            
+            # Log successful logout from all sessions
+            await audit_event(
+                db,
+                user_id=current_user.id,
+                action="auth.logout_all",
+                resource=f"user:{current_user.id}"
+            )
+            
+            logger.info(
+                "user_logged_out_all_sessions",
+                user_id=current_user.id,
+                revoked_tokens=revoked_count
+            )
+            
+            return {
+                "message": "Successfully logged out from all sessions",
+                "revoked_tokens": revoked_count
+            }
+    
+    except Exception as e:
+        logger.error(f"Logout all failed for user {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to process logout from all sessions. Please try again."
         )

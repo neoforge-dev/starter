@@ -73,6 +73,31 @@ class CRUDUserSession:
         await db.commit()
         return revoked_count
 
+    async def revoke_all_for_user(
+        self,
+        db: AsyncSession,
+        *,
+        user_id: int,
+    ) -> int:
+        """Revoke all active sessions for a user.
+
+        Returns the number of sessions revoked.
+        """
+        res = await db.execute(
+            select(UserSession).where(
+                UserSession.user_id == user_id,
+                UserSession.revoked_at.is_(None)
+            )
+        )
+        sessions = list(res.scalars().all())
+        revoked_count = 0
+        now = datetime.utcnow()
+        for s in sessions:
+            s.revoked_at = now
+            revoked_count += 1
+        await db.commit()
+        return revoked_count
+
     async def list_for_user(
         self,
         db: AsyncSession,

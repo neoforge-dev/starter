@@ -15,6 +15,12 @@ from structlog import contextvars as structlog_contextvars
 from app.core.config import Settings, get_settings, Environment
 from prometheus_client import Counter
 from app.core.metrics import get_metrics
+from app.core.security_audit import security_auditor, SecurityEventType, SecuritySeverity
+import re
+import hashlib
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.session import get_db
+from contextlib import asynccontextmanager
 
 logger = structlog.get_logger()
 
@@ -194,6 +200,309 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             ]
         
         return ", ".join(policies)
+
+
+class ThreatDetectionMiddleware(BaseHTTPMiddleware):
+    """Advanced threat detection and blocking middleware."""
+    
+    def __init__(self, app: ASGIApp, settings: Settings, redis_client=None):
+        """Initialize threat detection middleware."""
+        super().__init__(app)
+        self.settings = settings
+        self.redis = redis_client
+        
+        # Suspicious patterns for detection
+        self.sql_injection_patterns = [
+            r"('|(\-\-)|(;)|(\||\|)|(\*|\*))",
+            r"((\%27)|(\'))(\%6F|o|\%4F)(\%72|r|\%52)",
+            r"((\%27)|(\'))union",
+            r"exec(\s|\+)+(s|x)p\w+",
+            r"UNION.+SELECT",
+            r"SELECT.+FROM.+WHERE",
+            r"INSERT.+INTO.+VALUES",
+            r"UPDATE.+SET.+WHERE",
+            r"DELETE.+FROM.+WHERE"
+        ]
+        
+        self.xss_patterns = [
+            r"<script[^>]*>.*?</script>",
+            r"javascript:",
+            r"on\w+\s*=",
+            r"<iframe[^>]*>.*?</iframe>",
+            r"<object[^>]*>.*?</object>",
+            r"<embed[^>]*>.*?</embed>",
+            r"<link[^>]*>.*?</link>",
+            r"<meta[^>]*refresh"
+        ]
+        
+        self.suspicious_user_agents = [
+            r"sqlmap",
+            r"nikto",
+            r"netsparker",
+            r"acunetix",
+            r"burpsuite",
+            r"w3af",
+            r"masscan",
+            r"nmap",
+            r"dirb",
+            r"gobuster",
+            r"wpscan",
+            r"hydra"
+        ]
+        
+        self.suspicious_paths = [
+            r"/wp-admin",
+            r"/wp-login",
+            r"/admin",
+            r"/phpmyadmin",
+            r"/xmlrpc",
+            r"/config",
+            r"/backup",
+            r"/test",
+            r"/debug",
+            r"/.env",
+            r"/robots.txt",
+            r"/sitemap.xml",
+            r"/.git",
+            r"/.svn",
+            r"/shell"
+        ]
+        
+        # Compile regex patterns for performance
+        self.compiled_sql_patterns = [re.compile(p, re.IGNORECASE) for p in self.sql_injection_patterns]
+        self.compiled_xss_patterns = [re.compile(p, re.IGNORECASE) for p in self.xss_patterns]
+        self.compiled_ua_patterns = [re.compile(p, re.IGNORECASE) for p in self.suspicious_user_agents]
+        self.compiled_path_patterns = [re.compile(p, re.IGNORECASE) for p in self.suspicious_paths]
+        
+    async def _get_redis(self):
+        """Get Redis connection."""
+        if not self.redis:
+            from app.core.redis import get_redis
+            self.redis = await anext(get_redis())
+        return self.redis
+    
+    def _get_client_ip(self, request: Request) -> str:
+        """Extract client IP from request."""
+        forwarded_for = request.headers.get("X-Forwarded-For")
+        if forwarded_for:
+            return forwarded_for.split(",")[0].strip()
+        
+        real_ip = request.headers.get("X-Real-IP")
+        if real_ip:
+            return real_ip
+        
+        return request.client.host if request.client else "unknown"
+    
+    def _generate_request_fingerprint(self, request: Request, client_ip: str) -> str:
+        """Generate unique fingerprint for request analysis."""
+        fingerprint_data = {
+            "ip": client_ip,
+            "user_agent": request.headers.get("user-agent", ""),
+            "accept": request.headers.get("accept", ""),
+            "accept_language": request.headers.get("accept-language", ""),
+            "accept_encoding": request.headers.get("accept-encoding", "")
+        }
+        
+        fingerprint_string = "|".join(str(v) for v in fingerprint_data.values())
+        return hashlib.sha256(fingerprint_string.encode()).hexdigest()[:16]
+    
+    async def _is_ip_blocked(self, client_ip: str) -> bool:
+        """Check if IP is temporarily blocked."""
+        try:
+            redis = await self._get_redis()
+            if not redis:
+                return False
+            
+            blocked_key = f"blocked_ip:{client_ip}"
+            is_blocked = await redis.get(blocked_key)
+            return is_blocked is not None
+        except Exception as e:
+            logger.error(f"Error checking IP block status: {e}")
+            return False
+    
+    async def _block_ip(self, client_ip: str, duration: int = 3600) -> None:
+        """Block IP temporarily."""
+        try:
+            redis = await self._get_redis()
+            if not redis:
+                return
+            
+            blocked_key = f"blocked_ip:{client_ip}"
+            await redis.setex(blocked_key, duration, "blocked")
+            
+            logger.warning(
+                "ip_blocked",
+                client_ip=client_ip,
+                duration_seconds=duration,
+                blocked_at=time.time()
+            )
+        except Exception as e:
+            logger.error(f"Error blocking IP {client_ip}: {e}")
+    
+    def _detect_sql_injection(self, request: Request) -> bool:
+        """Detect potential SQL injection attempts."""
+        # Check URL parameters
+        query_string = str(request.url.query)
+        for pattern in self.compiled_sql_patterns:
+            if pattern.search(query_string):
+                return True
+        
+        # Check URL path
+        path = str(request.url.path)
+        for pattern in self.compiled_sql_patterns:
+            if pattern.search(path):
+                return True
+        
+        return False
+    
+    def _detect_xss_attempt(self, request: Request) -> bool:
+        """Detect potential XSS attempts."""
+        query_string = str(request.url.query)
+        for pattern in self.compiled_xss_patterns:
+            if pattern.search(query_string):
+                return True
+        
+        path = str(request.url.path)
+        for pattern in self.compiled_xss_patterns:
+            if pattern.search(path):
+                return True
+        
+        return False
+    
+    def _detect_suspicious_user_agent(self, request: Request) -> bool:
+        """Detect suspicious user agents."""
+        user_agent = request.headers.get("user-agent", "")
+        for pattern in self.compiled_ua_patterns:
+            if pattern.search(user_agent):
+                return True
+        return False
+    
+    def _detect_suspicious_path(self, request: Request) -> bool:
+        """Detect access to suspicious paths."""
+        path = str(request.url.path)
+        for pattern in self.compiled_path_patterns:
+            if pattern.search(path):
+                return True
+        return False
+    
+    async def _log_security_event(self, 
+                                  event_type: SecurityEventType, 
+                                  request: Request, 
+                                  client_ip: str,
+                                  details: dict) -> None:
+        """Log security event to audit system."""
+        try:
+            # Get database session for logging
+            db_gen = get_db()
+            db = await anext(db_gen)
+            
+            await security_auditor.log_security_event(
+                db=db,
+                event_type=event_type,
+                ip_address=client_ip,
+                user_agent=request.headers.get("user-agent"),
+                resource=str(request.url.path),
+                details=details,
+                severity=SecuritySeverity.HIGH,
+                success=False
+            )
+            
+            await db.commit()
+            
+        except Exception as e:
+            logger.error(f"Failed to log security event: {e}")
+    
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """Detect and block threats."""
+        client_ip = self._get_client_ip(request)
+        
+        # Skip threat detection for health endpoints
+        if request.url.path in ["/health", "/metrics"]:
+            return await call_next(request)
+        
+        # Check if IP is already blocked
+        if await self._is_ip_blocked(client_ip):
+            logger.warning(
+                "blocked_ip_attempt",
+                client_ip=client_ip,
+                path=request.url.path,
+                method=request.method
+            )
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Access denied. IP temporarily blocked."},
+                headers={"X-Blocked-Reason": "IP temporarily blocked"}
+            )
+        
+        # Generate request fingerprint
+        fingerprint = self._generate_request_fingerprint(request, client_ip)
+        request.state.fingerprint = fingerprint
+        
+        # Threat detection checks
+        threats_detected = []
+        
+        if self._detect_sql_injection(request):
+            threats_detected.append("sql_injection")
+        
+        if self._detect_xss_attempt(request):
+            threats_detected.append("xss_attempt")
+        
+        if self._detect_suspicious_user_agent(request):
+            threats_detected.append("suspicious_user_agent")
+        
+        if self._detect_suspicious_path(request):
+            threats_detected.append("suspicious_path")
+        
+        # Handle detected threats
+        if threats_detected:
+            # Log security event
+            event_type = SecurityEventType.SQL_INJECTION_ATTEMPT if "sql_injection" in threats_detected else SecurityEventType.XSS_ATTEMPT
+            
+            details = {
+                "threats": threats_detected,
+                "user_agent": request.headers.get("user-agent", ""),
+                "query_params": dict(request.query_params),
+                "path": str(request.url.path),
+                "method": request.method,
+                "fingerprint": fingerprint
+            }
+            
+            await self._log_security_event(event_type, request, client_ip, details)
+            
+            # Block IP for repeated threats
+            try:
+                redis = await self._get_redis()
+                if redis:
+                    threat_key = f"threats:{client_ip}"
+                    threat_count = await redis.incr(threat_key)
+                    await redis.expire(threat_key, 3600)  # 1 hour window
+                    
+                    if threat_count >= 3:  # Block after 3 threats in 1 hour
+                        await self._block_ip(client_ip, 3600)  # Block for 1 hour
+            except Exception as e:
+                logger.error(f"Error tracking threats for IP {client_ip}: {e}")
+            
+            logger.warning(
+                "security_threat_detected",
+                client_ip=client_ip,
+                threats=threats_detected,
+                path=request.url.path,
+                method=request.method,
+                user_agent=request.headers.get("user-agent", "")[:100],  # Truncate for logging
+                fingerprint=fingerprint
+            )
+            
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Request blocked due to security policy."},
+                headers={
+                    "X-Blocked-Reason": "Security policy violation",
+                    "X-Threat-Types": ",".join(threats_detected)
+                }
+            )
+        
+        # Request passed all security checks
+        return await call_next(request)
 
 class RateLimitingMiddleware(BaseHTTPMiddleware):
     """Production-ready rate limiting middleware with Redis backend and JWT support."""
@@ -497,7 +806,10 @@ def setup_security_middleware(app: FastAPI) -> None:
     # 3. Add error handling middleware (must be after CORS/Security headers)
     app.add_middleware(ErrorHandlerMiddleware)
     
-    # 4. Add rate limiting middleware (conditionally, should be last)
+    # 4. Add threat detection middleware (before rate limiting)
+    app.add_middleware(ThreatDetectionMiddleware, settings=current_settings)
+    
+    # 5. Add rate limiting middleware (conditionally, should be last)
     if current_settings.enable_rate_limiting:
         app.add_middleware(RateLimitingMiddleware, settings=current_settings)
     
