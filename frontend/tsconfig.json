@@ -77,7 +77,11 @@
     "docs/**/*",
     "scripts/**/*",
     "src/playground/**/*",
-    "src/stories/**/*"
+    "src/stories/**/*",
+    "src/components/molecules/test-analytics.js",
+    "src/components/molecules/variant-renderer.js", 
+    "src/components/organisms/ab-test-manager.js",
+    "src/components/pages/ab-testing-dashboard.js"
   ],
   "ts-node": {
     "esm": true

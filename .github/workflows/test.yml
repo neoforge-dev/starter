@@ -26,6 +26,11 @@ jobs:
         working-directory: frontend
         run: bun install --frozen-lockfile
 
+      - name: TypeScript Compilation Check
+        if: matrix.shard == 1
+        working-directory: frontend
+        run: bun run type-check
+
       - name: Run Unit Tests
         working-directory: frontend
         run: bun vitest run --shard=${{ matrix.shard }}/3

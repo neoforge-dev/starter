@@ -521,7 +521,7 @@ class ApiService {
       return {
         hasNext: response.pagination.has_next,
         hasPrevious: response.pagination.has_previous,
-        total: response.pagination.total_count
+        ...(response.pagination.total_count !== undefined && { total: response.pagination.total_count })
       };
     } else {
       return {
