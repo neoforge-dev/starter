@@ -3,6 +3,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import users, items, auth, admin, webhooks, events, recommendations, personalization
 from app.api.v1.endpoints import projects, support, community, status as status_ep, analytics, content_suggestions
+from app.api.v1.endpoints import organizations, rbac
 from app.api.endpoints import health, examples, config, csp, pagination_metrics, ab_tests
 
 api_router = APIRouter()
@@ -16,6 +17,8 @@ api_router.include_router(events.router, prefix="/events", tags=["events"])
 api_router.include_router(recommendations.router, prefix="/recommendations", tags=["recommendations"])
 api_router.include_router(personalization.router, prefix="/personalization", tags=["personalization"])
 api_router.include_router(content_suggestions.router, prefix="/content-suggestions", tags=["content-suggestions"])
+api_router.include_router(organizations.router, prefix="/organizations", tags=["organizations"])
+api_router.include_router(rbac.router, prefix="/rbac", tags=["rbac"])
 api_router.include_router(health.router, prefix="/health", tags=["system"])
 api_router.include_router(config.router, tags=["system"])
 api_router.include_router(examples.router, tags=["examples"]) 

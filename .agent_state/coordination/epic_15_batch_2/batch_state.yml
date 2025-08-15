@@ -1,0 +1,24 @@
+batch_id: batch_2
+epic_id: epic_15
+estimated_time: 4-5 hours
+started_at: '2025-08-15T09:11:55.030578+00:00'
+tasks:
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: build_developer_cli_tool
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: implement_local_development_environment
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: create_testing_sandbox_system
+tests:
+- cli_tool_functionality
+- development_environment_setup
+- sandbox_isolation_validation

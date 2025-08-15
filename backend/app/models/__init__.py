@@ -27,3 +27,24 @@ from .content_suggestion import (
     SuggestionType,
     ContentSuggestionStatus,
 )
+from .tenant import (
+    Tenant,
+    Organization,
+    OrganizationMembership,
+    TenantAuditLog,
+    TenantStatus,
+    OrganizationType,
+    MembershipStatus,
+)
+from .rbac import (
+    Role,
+    Permission,
+    ResourcePermission,
+    PermissionCache,
+    RoleAuditLog,
+    PermissionScope,
+    PermissionAction,
+    RoleType,
+    role_permissions,
+    user_role_assignments,
+)

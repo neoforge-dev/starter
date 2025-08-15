@@ -1,0 +1,24 @@
+batch_id: batch_1
+epic_id: epic_15
+estimated_time: 4-5 hours
+started_at: '2025-08-15T09:11:41.497384+00:00'
+tasks:
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: create_interactive_api_documentation
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: build_javascript_python_sdks
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: implement_api_versioning_system
+tests:
+- api_documentation_completeness
+- sdk_functionality_validation
+- versioning_compatibility_testing

@@ -1,0 +1,24 @@
+batch_id: batch_2
+epic_id: epic_14
+estimated_time: 4-5 hours
+started_at: '2025-08-15T09:11:23.162157+00:00'
+tasks:
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: build_dynamic_pricing_engine
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: implement_revenue_analytics
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: create_churn_prevention_automation
+tests:
+- pricing_calculation_validation
+- revenue_reporting_accuracy
+- churn_prevention_effectiveness

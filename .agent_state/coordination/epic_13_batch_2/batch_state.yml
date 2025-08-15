@@ -1,0 +1,24 @@
+batch_id: batch_2
+epic_id: epic_13
+estimated_time: 4-5 hours
+started_at: '2025-08-15T09:10:50.124228+00:00'
+tasks:
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: build_saml_sso_integration
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: implement_active_directory_sync
+- agent_assigned: general-purpose
+  completed_at: null
+  started_at: null
+  status: pending
+  task_id: create_enterprise_user_provisioning
+tests:
+- sso_authentication_flow
+- directory_sync_validation
+- user_provisioning_testing

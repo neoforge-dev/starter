@@ -266,6 +266,16 @@ if get_settings().cors_origins:
 setup_security_middleware(app)
 setup_validation_middleware(app)
 
+# Set up tenant middleware for multi-tenant architecture
+from app.api.middleware.tenant import TenantMiddleware
+app.add_middleware(
+    TenantMiddleware,
+    default_tenant_slug="default",
+    cache_ttl=300,  # 5 minutes
+    enable_domain_resolution=True,
+    enable_header_resolution=True
+)
+
 # Add API router
 app.include_router(api_router, prefix=get_settings().api_v1_str)
 
