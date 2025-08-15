@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: neoforge
+  labels:
+    app: api
+    component: backend
+    app.kubernetes.io/name: neoforge-api
+    app.kubernetes.io/instance: neoforge-api
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+    prometheus.io/path: "/metrics"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "300"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: api
+    component: backend
+  sessionAffinity: None
+---
+# Headless service for direct pod access (if needed for debugging)
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-headless
+  namespace: neoforge
+  labels:
+    app: api
+    component: backend-headless
+    app.kubernetes.io/name: neoforge-api-headless
+    app.kubernetes.io/instance: neoforge-api-headless
+    app.kubernetes.io/component: backend-headless
+    app.kubernetes.io/part-of: neoforge
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: api
+    component: backend
+---
+# NodePort service for external access during development (optional)
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-nodeport
+  namespace: neoforge
+  labels:
+    app: api
+    component: backend-nodeport
+    app.kubernetes.io/name: neoforge-api-nodeport
+    app.kubernetes.io/instance: neoforge-api-nodeport
+    app.kubernetes.io/component: backend-nodeport
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    description: "NodePort service for external development access"
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+    nodePort: 30800  # Optional: specify port, otherwise K8s will assign
+  selector:
+    app: api
+    component: backend
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 3600

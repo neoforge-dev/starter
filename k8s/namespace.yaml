@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: neoforge
+  labels:
+    name: neoforge
+    environment: production
+    team: platform
+    cost-center: engineering
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: neoforge-staging
+  labels:
+    name: neoforge-staging
+    environment: staging
+    team: platform
+    cost-center: engineering
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: neoforge-monitoring
+  labels:
+    name: neoforge-monitoring
+    purpose: observability
+    team: platform
+    cost-center: engineering

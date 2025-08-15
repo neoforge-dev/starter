@@ -1,0 +1,48 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: neoforge-ssd
+  labels:
+    app.kubernetes.io/name: neoforge-storage
+    app.kubernetes.io/component: storage
+provisioner: kubernetes.io/gce-pd # Change based on your cloud provider
+parameters:
+  type: pd-ssd
+  replication-type: regional-pd
+  zones: us-central1-b,us-central1-c,us-central1-f # Adjust for your region
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: neoforge-standard
+  labels:
+    app.kubernetes.io/name: neoforge-storage
+    app.kubernetes.io/component: storage
+provisioner: kubernetes.io/gce-pd # Change based on your cloud provider
+parameters:
+  type: pd-standard
+  replication-type: regional-pd
+  zones: us-central1-b,us-central1-c,us-central1-f # Adjust for your region
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+---
+# Fast NVMe storage for high-performance workloads
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: neoforge-nvme
+  labels:
+    app.kubernetes.io/name: neoforge-storage
+    app.kubernetes.io/component: storage
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-balanced # High-performance SSD
+  replication-type: regional-pd
+  zones: us-central1-b,us-central1-c,us-central1-f
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer

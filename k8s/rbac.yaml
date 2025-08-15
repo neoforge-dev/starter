@@ -1,0 +1,417 @@
+# Service Account for API
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neoforge-api
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-api-sa
+    app.kubernetes.io/instance: neoforge-api-sa
+    app.kubernetes.io/component: service-account
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    description: "Service account for NeoForge API pods"
+automountServiceAccountToken: true
+---
+# Service Account for Frontend
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neoforge-frontend
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-frontend-sa
+    app.kubernetes.io/instance: neoforge-frontend-sa
+    app.kubernetes.io/component: service-account
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    description: "Service account for NeoForge frontend pods"
+automountServiceAccountToken: false  # Frontend doesn't need K8s API access
+---
+# Service Account for Celery Workers
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neoforge-worker
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-worker-sa
+    app.kubernetes.io/instance: neoforge-worker-sa
+    app.kubernetes.io/component: service-account
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    description: "Service account for NeoForge Celery worker pods"
+automountServiceAccountToken: true
+---
+# Service Account for Database
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neoforge-database
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-database-sa
+    app.kubernetes.io/instance: neoforge-database-sa
+    app.kubernetes.io/component: service-account
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    description: "Service account for PostgreSQL database pods"
+automountServiceAccountToken: false  # Database doesn't need K8s API access
+---
+# Service Account for Redis
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neoforge-redis
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-redis-sa
+    app.kubernetes.io/instance: neoforge-redis-sa
+    app.kubernetes.io/component: service-account
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    description: "Service account for Redis cache pods"
+automountServiceAccountToken: false  # Redis doesn't need K8s API access
+---
+# Role for API pods - minimal permissions for health checks and metrics
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: neoforge-api-role
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-api-role
+    app.kubernetes.io/instance: neoforge-api-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+rules:
+# Allow reading own pod information for health checks
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+  resourceNames: []
+# Allow reading ConfigMaps for dynamic configuration
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+  resourceNames: ["app-config", "feature-flags"]
+# Allow reading Secrets for credentials
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+  resourceNames: ["app-secret"]
+# Allow creating Events for logging/debugging
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+---
+# Role for Celery workers - permissions for task management
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: neoforge-worker-role
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-worker-role
+    app.kubernetes.io/instance: neoforge-worker-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+rules:
+# Allow reading own pod information
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+# Allow reading ConfigMaps
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+  resourceNames: ["app-config"]
+# Allow reading Secrets
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+  resourceNames: ["app-secret"]
+# Allow creating Events
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+# Allow reading Services (for service discovery)
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+  resourceNames: ["postgres", "redis", "api"]
+---
+# RoleBinding for API service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: neoforge-api-rolebinding
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-api-rolebinding
+    app.kubernetes.io/instance: neoforge-api-rolebinding
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+subjects:
+- kind: ServiceAccount
+  name: neoforge-api
+  namespace: neoforge
+roleRef:
+  kind: Role
+  name: neoforge-api-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# RoleBinding for Worker service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: neoforge-worker-rolebinding
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-worker-rolebinding
+    app.kubernetes.io/instance: neoforge-worker-rolebinding
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+subjects:
+- kind: ServiceAccount
+  name: neoforge-worker
+  namespace: neoforge
+roleRef:
+  kind: Role
+  name: neoforge-worker-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# ClusterRole for monitoring access across namespaces
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: neoforge-monitoring-reader
+  labels:
+    app.kubernetes.io/name: neoforge-monitoring-reader
+    app.kubernetes.io/instance: neoforge-monitoring-reader
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+rules:
+# Allow reading pods, services, endpoints for service discovery
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+# Allow reading deployments and statefulsets for scaling info
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "replicasets"]
+  verbs: ["get", "list", "watch"]
+# Allow reading nodes for cluster-level metrics
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "watch"]
+# Allow reading metrics
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["nodes", "pods"]
+  verbs: ["get", "list"]
+# Allow reading custom metrics
+- apiGroups: ["custom.metrics.k8s.io"]
+  resources: ["*"]
+  verbs: ["get", "list"]
+---
+# Service Account for monitoring (Prometheus, etc.)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neoforge-monitoring
+  namespace: neoforge-monitoring
+  labels:
+    app.kubernetes.io/name: neoforge-monitoring-sa
+    app.kubernetes.io/instance: neoforge-monitoring-sa
+    app.kubernetes.io/component: service-account
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    description: "Service account for monitoring components"
+automountServiceAccountToken: true
+---
+# ClusterRoleBinding for monitoring
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: neoforge-monitoring-binding
+  labels:
+    app.kubernetes.io/name: neoforge-monitoring-binding
+    app.kubernetes.io/instance: neoforge-monitoring-binding
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+subjects:
+- kind: ServiceAccount
+  name: neoforge-monitoring
+  namespace: neoforge-monitoring
+roleRef:
+  kind: ClusterRole
+  name: neoforge-monitoring-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+# Role for deployment automation (CI/CD)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: neoforge-deployer-role
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-deployer-role
+    app.kubernetes.io/instance: neoforge-deployer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+rules:
+# Allow full management of deployments
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "replicasets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Allow management of services
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Allow management of ConfigMaps and Secrets
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Allow management of HPA
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Allow management of PVC
+- apiGroups: [""]
+  resources: ["persistentvolumeclaims"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Allow management of Ingress
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Allow reading pods for status
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+# Allow creating Events
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+---
+# Service Account for CI/CD deployment
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neoforge-deployer
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-deployer-sa
+    app.kubernetes.io/instance: neoforge-deployer-sa
+    app.kubernetes.io/component: service-account
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    description: "Service account for CI/CD deployment automation"
+automountServiceAccountToken: true
+---
+# RoleBinding for deployer service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: neoforge-deployer-rolebinding
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-deployer-rolebinding
+    app.kubernetes.io/instance: neoforge-deployer-rolebinding
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+subjects:
+- kind: ServiceAccount
+  name: neoforge-deployer
+  namespace: neoforge
+roleRef:
+  kind: Role
+  name: neoforge-deployer-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Pod Security Policy (if PSP is enabled in your cluster)
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: neoforge-psp
+  labels:
+    app.kubernetes.io/name: neoforge-psp
+    app.kubernetes.io/instance: neoforge-psp
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  runAsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1000
+        max: 65535
+  seLinux:
+    rule: 'RunAsAny'
+  fsGroup:
+    rule: 'RunAsAny'
+  readOnlyRootFilesystem: true
+  defaultAllowPrivilegeEscalation: false
+  allowedCapabilities: []
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+---
+# ClusterRole for PSP usage
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: neoforge-psp-user
+  labels:
+    app.kubernetes.io/name: neoforge-psp-user
+    app.kubernetes.io/instance: neoforge-psp-user
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+rules:
+- apiGroups: ['policy']
+  resources: ['podsecuritypolicies']
+  verbs: ['use']
+  resourceNames:
+  - neoforge-psp
+---
+# ClusterRoleBinding for PSP
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: neoforge-psp-binding
+  labels:
+    app.kubernetes.io/name: neoforge-psp-binding
+    app.kubernetes.io/instance: neoforge-psp-binding
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+subjects:
+# All service accounts in neoforge namespace
+- kind: ServiceAccount
+  name: neoforge-api
+  namespace: neoforge
+- kind: ServiceAccount
+  name: neoforge-frontend
+  namespace: neoforge
+- kind: ServiceAccount
+  name: neoforge-worker
+  namespace: neoforge
+- kind: ServiceAccount
+  name: neoforge-database
+  namespace: neoforge
+- kind: ServiceAccount
+  name: neoforge-redis
+  namespace: neoforge
+roleRef:
+  kind: ClusterRole
+  name: neoforge-psp-user
+  apiGroup: rbac.authorization.k8s.io

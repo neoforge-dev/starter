@@ -1,0 +1,509 @@
+# Kibana Dashboards and Visualizations ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kibana-dashboards
+  namespace: neoforge-logging
+  labels:
+    app: kibana
+    component: dashboards
+    app.kubernetes.io/name: kibana-dashboards
+    app.kubernetes.io/component: dashboards
+    app.kubernetes.io/part-of: neoforge
+data:
+  operations-overview.json: |
+    {
+      "version": "8.11.1",
+      "objects": [
+        {
+          "id": "operations-overview",
+          "type": "dashboard",
+          "attributes": {
+            "title": "NeoForge Operations Overview",
+            "description": "High-level operational metrics and log analytics",
+            "panelsJSON": "[{\"version\":\"8.11.1\",\"gridData\":{\"x\":0,\"y\":0,\"w\":24,\"h\":12,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{},\"panelRefName\":\"panel_1\"},{\"version\":\"8.11.1\",\"gridData\":{\"x\":24,\"y\":0,\"w\":24,\"h\":12,\"i\":\"2\"},\"panelIndex\":\"2\",\"embeddableConfig\":{},\"panelRefName\":\"panel_2\"},{\"version\":\"8.11.1\",\"gridData\":{\"x\":0,\"y\":12,\"w\":48,\"h\":16,\"i\":\"3\"},\"panelIndex\":\"3\",\"embeddableConfig\":{},\"panelRefName\":\"panel_3\"}]",
+            "timeRestore": false,
+            "timeTo": "now",
+            "timeFrom": "now-24h",
+            "refreshInterval": {
+              "pause": false,
+              "value": 30000
+            }
+          }
+        }
+      ]
+    }
+  
+  security-monitoring.json: |
+    {
+      "version": "8.11.1",
+      "objects": [
+        {
+          "id": "security-monitoring",
+          "type": "dashboard",
+          "attributes": {
+            "title": "Security Monitoring Dashboard",
+            "description": "Security events, authentication failures, and threat detection",
+            "panelsJSON": "[{\"version\":\"8.11.1\",\"gridData\":{\"x\":0,\"y\":0,\"w\":24,\"h\":12,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{},\"panelRefName\":\"panel_1\"},{\"version\":\"8.11.1\",\"gridData\":{\"x\":24,\"y\":0,\"w\":24,\"h\":12,\"i\":\"2\"},\"panelIndex\":\"2\",\"embeddableConfig\":{},\"panelRefName\":\"panel_2\"}]",
+            "timeRestore": false,
+            "timeTo": "now",
+            "timeFrom": "now-24h",
+            "refreshInterval": {
+              "pause": false,
+              "value": 10000
+            }
+          }
+        }
+      ]
+    }
+  
+  performance-analytics.json: |
+    {
+      "version": "8.11.1",
+      "objects": [
+        {
+          "id": "performance-analytics",
+          "type": "dashboard",
+          "attributes": {
+            "title": "Performance Analytics",
+            "description": "Response times, slow queries, and performance trends",
+            "panelsJSON": "[{\"version\":\"8.11.1\",\"gridData\":{\"x\":0,\"y\":0,\"w\":48,\"h\":16,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{},\"panelRefName\":\"panel_1\"}]",
+            "timeRestore": false,
+            "timeTo": "now",
+            "timeFrom": "now-1h",
+            "refreshInterval": {
+              "pause": false,
+              "value": 15000
+            }
+          }
+        }
+      ]
+    }
+  
+  business-insights.json: |
+    {
+      "version": "8.11.1",
+      "objects": [
+        {
+          "id": "business-insights",
+          "type": "dashboard",
+          "attributes": {
+            "title": "Business Insights",
+            "description": "User actions, business metrics, and transaction analytics",
+            "panelsJSON": "[{\"version\":\"8.11.1\",\"gridData\":{\"x\":0,\"y\":0,\"w\":24,\"h\":12,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{},\"panelRefName\":\"panel_1\"}]",
+            "timeRestore": false,
+            "timeTo": "now",
+            "timeFrom": "now-7d",
+            "refreshInterval": {
+              "pause": false,
+              "value": 60000
+            }
+          }
+        }
+      ]
+    }
+  
+  error-tracking.json: |
+    {
+      "version": "8.11.1",
+      "objects": [
+        {
+          "id": "error-tracking",
+          "type": "dashboard",
+          "attributes": {
+            "title": "Error Tracking & Analysis",
+            "description": "Error rates, exception tracking, and failure analysis",
+            "panelsJSON": "[{\"version\":\"8.11.1\",\"gridData\":{\"x\":0,\"y\":0,\"w\":48,\"h\":20,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{},\"panelRefName\":\"panel_1\"}]",
+            "timeRestore": false,
+            "timeTo": "now",
+            "timeFrom": "now-4h",
+            "refreshInterval": {
+              "pause": false,
+              "value": 30000
+            }
+          }
+        }
+      ]
+    }
+---
+# Kibana Saved Searches
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kibana-saved-searches
+  namespace: neoforge-logging
+  labels:
+    app: kibana
+    component: saved-searches
+    app.kubernetes.io/name: kibana-searches
+    app.kubernetes.io/component: saved-searches
+    app.kubernetes.io/part-of: neoforge
+data:
+  security-events.json: |
+    {
+      "title": "Security Events",
+      "description": "All security-related log events",
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"bool\":{\"must\":[{\"term\":{\"log_category\":\"security\"}}]}},\"filter\":[],\"sort\":[[\"@timestamp\",{\"order\":\"desc\"}]]}"
+      },
+      "columns": ["@timestamp", "level", "event", "user_id", "ip_address", "security_severity"],
+      "sort": [["@timestamp", "desc"]]
+    }
+  
+  failed-requests.json: |
+    {
+      "title": "Failed HTTP Requests",
+      "description": "HTTP requests with 4xx and 5xx status codes",
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"bool\":{\"must\":[{\"range\":{\"status_code\":{\"gte\":400}}}]}},\"filter\":[],\"sort\":[[\"@timestamp\",{\"order\":\"desc\"}]]}"
+      },
+      "columns": ["@timestamp", "method", "path", "status_code", "response_time", "user_id"],
+      "sort": [["@timestamp", "desc"]]
+    }
+  
+  slow-queries.json: |
+    {
+      "title": "Slow Database Queries",
+      "description": "Database queries with high execution times",
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"bool\":{\"must\":[{\"range\":{\"execution_time\":{\"gte\":1000}}}]}},\"filter\":[],\"sort\":[[\"execution_time\",{\"order\":\"desc\"}]]}"
+      },
+      "columns": ["@timestamp", "query", "execution_time", "correlation_id"],
+      "sort": [["execution_time", "desc"]]
+    }
+  
+  high-response-times.json: |
+    {
+      "title": "High Response Times",
+      "description": "API requests with response times > 2 seconds",
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"bool\":{\"must\":[{\"range\":{\"response_time\":{\"gte\":2000}}}]}},\"filter\":[],\"sort\":[[\"response_time\",{\"order\":\"desc\"}]]}"
+      },
+      "columns": ["@timestamp", "method", "path", "response_time", "status_code"],
+      "sort": [["response_time", "desc"]]
+    }
+---
+# ElastAlert Configuration for Log-based Alerting
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elastalert-config
+  namespace: neoforge-logging
+  labels:
+    app: elastalert
+    component: alerting
+    app.kubernetes.io/name: elastalert-config
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: neoforge
+data:
+  config.yaml: |
+    rules_folder: /opt/elastalert/rules
+    run_every:
+      minutes: 1
+    buffer_time:
+      minutes: 5
+    es_host: elasticsearch
+    es_port: 9200
+    writeback_index: elastalert_status
+    writeback_alias: elastalert_alerts
+    alert_time_limit:
+      days: 2
+    use_ssl: False
+    verify_certs: False
+  
+  security-alerts.yaml: |
+    name: Security Events Alert
+    type: frequency
+    index: neoforge-logs-*
+    num_events: 5
+    timeframe:
+      minutes: 5
+    filter:
+    - terms:
+        log_category: ["security"]
+    - terms:
+        security_severity: ["high", "critical"]
+    
+    alert:
+    - "email"
+    - "slack"
+    
+    email:
+    - "security@neoforge.com"
+    
+    slack:
+      slack_webhook_url: "YOUR_SLACK_WEBHOOK_URL"
+      slack_channel_override: "#security-alerts"
+      slack_username_override: "ElastAlert"
+    
+    alert_text: |
+      Security Alert: {0} high-severity security events detected in the last 5 minutes.
+      
+      Query: {1}
+      Time: {2}
+    
+    alert_text_type: alert_text_only
+    include:
+    - "@timestamp"
+    - "event"
+    - "user_id"
+    - "ip_address"
+    - "security_severity"
+  
+  error-rate-alert.yaml: |
+    name: High Error Rate Alert
+    type: percentage_match
+    index: neoforge-logs-*
+    query_key: status_code
+    percentage: 10
+    num_events: 50
+    timeframe:
+      minutes: 10
+    filter:
+    - range:
+        status_code:
+          gte: 500
+          lt: 600
+    
+    alert:
+    - "email"
+    - "slack"
+    
+    email:
+    - "ops@neoforge.com"
+    
+    slack:
+      slack_webhook_url: "YOUR_SLACK_WEBHOOK_URL"
+      slack_channel_override: "#operations"
+    
+    alert_text: |
+      High Error Rate Alert: More than 10% of requests are returning 5xx errors.
+      
+      Time Range: {0}
+      Error Count: {1}
+      Total Requests: {2}
+    
+    include:
+    - "@timestamp"
+    - "path"
+    - "method"
+    - "status_code"
+    - "response_time"
+  
+  performance-degradation.yaml: |
+    name: Performance Degradation Alert
+    type: metric_aggregation
+    index: neoforge-logs-*
+    metric_agg_key: response_time
+    metric_agg_type: avg
+    max_threshold: 5000
+    timeframe:
+      minutes: 15
+    filter:
+    - exists:
+        field: response_time
+    
+    alert:
+    - "email"
+    - "pagerduty"
+    
+    email:
+    - "ops@neoforge.com"
+    
+    pagerduty:
+      pagerduty_service_key: "YOUR_PAGERDUTY_SERVICE_KEY"
+      pagerduty_client_name: "NeoForge Logging"
+    
+    alert_text: |
+      Performance Degradation: Average response time exceeded 5 seconds.
+      
+      Average Response Time: {0}ms
+      Time Range: {1}
+    
+    include:
+    - "path"
+    - "method"
+    - "response_time"
+  
+  authentication-failures.yaml: |
+    name: Multiple Authentication Failures
+    type: frequency
+    index: neoforge-logs-*
+    num_events: 10
+    timeframe:
+      minutes: 5
+    query_key: ip_address
+    filter:
+    - match:
+        event: "Authentication failed"
+    
+    alert:
+    - "email"
+    - "slack"
+    
+    email:
+    - "security@neoforge.com"
+    
+    slack:
+      slack_webhook_url: "YOUR_SLACK_WEBHOOK_URL"
+      slack_channel_override: "#security-alerts"
+    
+    alert_text: |
+      Potential Brute Force Attack: {0} authentication failures from IP {1} in 5 minutes.
+      
+      Time: {2}
+    
+    include:
+    - "@timestamp"
+    - "username"
+    - "ip_address"
+    - "failure_reason"
+---
+# ElastAlert Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elastalert
+  namespace: neoforge-logging
+  labels:
+    app: elastalert
+    component: alerting
+    app.kubernetes.io/name: elastalert
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: neoforge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elastalert
+      component: alerting
+  template:
+    metadata:
+      labels:
+        app: elastalert
+        component: alerting
+    spec:
+      serviceAccountName: neoforge-logging
+      containers:
+      - name: elastalert
+        image: jertel/elastalert2:2.11.0
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: ELASTICSEARCH_HOST
+          value: "elasticsearch"
+        - name: ELASTICSEARCH_PORT
+          value: "9200"
+        volumeMounts:
+        - name: elastalert-config
+          mountPath: /opt/elastalert/config.yaml
+          subPath: config.yaml
+        - name: elastalert-rules
+          mountPath: /opt/elastalert/rules
+        - name: elastalert-data
+          mountPath: /opt/elastalert/data
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 200m
+            memory: 512Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 1000
+      volumes:
+      - name: elastalert-config
+        configMap:
+          name: elastalert-config
+      - name: elastalert-rules
+        configMap:
+          name: elastalert-config
+      - name: elastalert-data
+        emptyDir: {}
+---
+# Log Analysis CronJob for daily reports
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: log-analysis-report
+  namespace: neoforge-logging
+  labels:
+    app: log-analysis
+    component: reporting
+    app.kubernetes.io/name: log-analysis-report
+    app.kubernetes.io/component: reporting
+    app.kubernetes.io/part-of: neoforge
+spec:
+  schedule: "0 8 * * *"  # Daily at 8 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: neoforge-logging
+          restartPolicy: OnFailure
+          containers:
+          - name: log-analyzer
+            image: curlimages/curl:8.4.0
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Generating daily log analysis report..."
+              
+              # Get error rate for last 24h
+              ERROR_RATE=$(curl -s "http://elasticsearch:9200/neoforge-logs-*/_search" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "size": 0,
+                  "query": {
+                    "bool": {
+                      "must": [
+                        {"range": {"@timestamp": {"gte": "now-24h"}}},
+                        {"range": {"status_code": {"gte": 500}}}
+                      ]
+                    }
+                  },
+                  "aggs": {
+                    "error_rate": {
+                      "avg": {"field": "status_code"}
+                    }
+                  }
+                }' | jq -r '.aggregations.error_rate.value // 0')
+              
+              # Get average response time
+              AVG_RESPONSE_TIME=$(curl -s "http://elasticsearch:9200/neoforge-logs-*/_search" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "size": 0,
+                  "query": {
+                    "bool": {
+                      "must": [
+                        {"range": {"@timestamp": {"gte": "now-24h"}}},
+                        {"exists": {"field": "response_time"}}
+                      ]
+                    }
+                  },
+                  "aggs": {
+                    "avg_response_time": {
+                      "avg": {"field": "response_time"}
+                    }
+                  }
+                }' | jq -r '.aggregations.avg_response_time.value // 0')
+              
+              echo "Daily Report - $(date)"
+              echo "Error Rate: $ERROR_RATE"
+              echo "Average Response Time: ${AVG_RESPONSE_TIME}ms"
+              echo "Report generation completed"
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi

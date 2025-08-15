@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: neoforge
+  labels:
+    app: redis
+    component: cache-config
+    app.kubernetes.io/name: redis-config
+    app.kubernetes.io/instance: neoforge-redis-config
+    app.kubernetes.io/component: cache-config
+    app.kubernetes.io/part-of: neoforge
+data:
+  redis.conf: |
+    # Redis Configuration for Production
+    # Network and Connection Settings
+    bind 0.0.0.0
+    port 6379
+    tcp-backlog 511
+    timeout 300
+    tcp-keepalive 300
+    
+    # General Settings
+    daemonize no
+    supervised no
+    pidfile /data/redis.pid
+    loglevel notice
+    logfile ""
+    syslog-enabled no
+    databases 16
+    
+    # Persistence Configuration
+    save 900 1
+    save 300 10
+    save 60 10000
+    stop-writes-on-bgsave-error yes
+    rdbcompression yes
+    rdbchecksum yes
+    dbfilename dump.rdb
+    dir /data
+    
+    # AOF (Append Only File) Configuration
+    appendonly yes
+    appendfilename "appendonly.aof"
+    appendfsync everysec
+    no-appendfsync-on-rewrite no
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    aof-load-truncated yes
+    aof-use-rdb-preamble yes
+    
+    # Memory Management
+    maxmemory 256mb
+    maxmemory-policy allkeys-lru
+    maxmemory-samples 5
+    
+    # Lazy Freeing
+    lazyfree-lazy-eviction yes
+    lazyfree-lazy-expire yes
+    lazyfree-lazy-server-del yes
+    
+    # Security
+    protected-mode yes
+    # requirepass will be set via environment if REDIS_PASSWORD is provided
+    
+    # Client Management
+    maxclients 10000
+    
+    # Slow Log
+    slowlog-log-slower-than 10000
+    slowlog-max-len 128
+    
+    # Performance Tuning
+    hash-max-ziplist-entries 512
+    hash-max-ziplist-value 64
+    list-max-ziplist-size -2
+    list-compress-depth 0
+    set-max-intset-entries 512
+    zset-max-ziplist-entries 128
+    zset-max-ziplist-value 64
+    hll-sparse-max-bytes 3000
+    
+    # Advanced Configuration
+    activerehashing yes
+    client-output-buffer-limit normal 0 0 0
+    client-output-buffer-limit replica 256mb 64mb 60
+    client-output-buffer-limit pubsub 32mb 8mb 60
+    hz 10
+    dynamic-hz yes
+    aof-rewrite-incremental-fsync yes
+    
+    # Modules
+    # loadmodule /path/to/other_module.so
+    
+    # TLS Configuration (if needed)
+    # port 0
+    # tls-port 6380
+    # tls-cert-file redis.crt
+    # tls-key-file redis.key
+    # tls-ca-cert-file ca.crt
+    
+    # Cluster Configuration (for future scaling)
+    # cluster-enabled no
+    # cluster-config-file nodes-6379.conf
+    # cluster-node-timeout 15000
+    
+    # Sentinel Configuration (for HA)
+    # sentinel announce-ip 1.2.3.4
+    # sentinel announce-port 26379
+    
+    # Monitoring and Diagnostics
+    latency-monitor-threshold 100
+    notify-keyspace-events Ex
+    
+    # Jemalloc Configuration
+    jemalloc-bg-thread yes
+    
+    # IO Threads (Redis 6.0+)
+    io-threads 2
+    io-threads-do-reads yes

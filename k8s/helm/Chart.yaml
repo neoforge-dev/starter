@@ -1,0 +1,54 @@
+apiVersion: v2
+name: neoforge
+description: A modern full-stack application built for production scale
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+keywords:
+  - fastapi
+  - lit
+  - postgresql
+  - redis
+  - celery
+  - web-application
+  - full-stack
+
+home: https://github.com/your-org/neoforge
+sources:
+  - https://github.com/your-org/neoforge
+
+maintainers:
+  - name: NeoForge Team
+    email: team@neoforge.example.com
+    url: https://neoforge.example.com
+
+annotations:
+  category: WebApplication
+  licenses: MIT
+  
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+    tags:
+      - database
+  - name: redis
+    version: "18.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+    tags:
+      - cache
+  - name: prometheus
+    version: "25.x.x"
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: monitoring.prometheus.enabled
+    tags:
+      - monitoring
+  - name: grafana
+    version: "7.x.x"
+    repository: https://grafana.github.io/helm-charts
+    condition: monitoring.grafana.enabled
+    tags:
+      - monitoring

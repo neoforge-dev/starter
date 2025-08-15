@@ -1,0 +1,44 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: neoforge-ssd
+  namespace: neoforge
+provisioner: kubernetes.io/gce-pd # Adjust for your cloud provider
+parameters:
+  type: pd-ssd # High-performance SSD for database
+  replication-type: regional-pd # Regional persistent disk for HA
+allowVolumeExpansion: true
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: neoforge
+  labels:
+    app: postgres
+    component: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: neoforge-ssd
+  resources:
+    requests:
+      storage: 50Gi # Start with 50GB, can be expanded
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backup-pvc
+  namespace: neoforge
+  labels:
+    app: postgres
+    component: backup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: neoforge-ssd
+  resources:
+    requests:
+      storage: 100Gi # Backup storage for WAL archives and dumps

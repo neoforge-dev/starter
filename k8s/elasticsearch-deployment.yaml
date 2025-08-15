@@ -1,0 +1,277 @@
+# Elasticsearch ConfigMap for configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch-config
+  namespace: neoforge-logging
+  labels:
+    app: elasticsearch
+    component: search-engine
+    app.kubernetes.io/name: elasticsearch-config
+    app.kubernetes.io/component: search-engine
+    app.kubernetes.io/part-of: neoforge
+data:
+  elasticsearch.yml: |
+    cluster.name: neoforge-logs
+    node.name: ${HOSTNAME}
+    node.data: true
+    node.master: true
+    node.ingest: true
+    
+    # Network settings
+    network.host: 0.0.0.0
+    http.port: 9200
+    transport.tcp.port: 9300
+    
+    # Discovery settings for single node setup
+    discovery.type: single-node
+    
+    # Security settings
+    xpack.security.enabled: false
+    xpack.monitoring.collection.enabled: false
+    
+    # Performance settings
+    indices.memory.index_buffer_size: 20%
+    indices.memory.min_index_buffer_size: 96mb
+    
+    # Indexing settings for log data
+    action.auto_create_index: "+*"
+    indices.fielddata.cache.size: 30%
+    
+    # Compression
+    index.codec: best_compression
+    
+    # Log retention settings
+    cluster.routing.allocation.disk.threshold_enabled: true
+    cluster.routing.allocation.disk.watermark.low: 85%
+    cluster.routing.allocation.disk.watermark.high: 90%
+    cluster.routing.allocation.disk.watermark.flood_stage: 95%
+    
+  jvm.options: |
+    -Xms2g
+    -Xmx2g
+    -XX:+UseG1GC
+    -XX:G1HeapRegionSize=32m
+    -XX:+UseG1OldGCMixedGCCount=4
+    -XX:+DisableExplicitGC
+    -Djava.io.tmpdir=${ES_TMPDIR}
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:HeapDumpPath=/var/lib/elasticsearch
+    -XX:ErrorFile=/var/lib/elasticsearch/hs_err_pid%p.log
+    -Xlog:gc*,gc+age=trace,safepoint:gc.log:time,level,tags
+    -Djava.locale.providers=COMPAT
+---
+# Elasticsearch Secret for environment variables
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elasticsearch-secret
+  namespace: neoforge-logging
+  labels:
+    app: elasticsearch
+    component: search-engine
+    app.kubernetes.io/name: elasticsearch-secret
+    app.kubernetes.io/component: search-engine
+    app.kubernetes.io/part-of: neoforge
+type: Opaque
+data:
+  # Base64 encoded values
+  # Username: elastic (ZWxhc3RpYw==)
+  # Password: changeme (Y2hhbmdlbWU=)
+  username: ZWxhc3RpYw==
+  password: Y2hhbmdlbWU=
+---
+# Elasticsearch Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  namespace: neoforge-logging
+  labels:
+    app: elasticsearch
+    component: search-engine
+    app.kubernetes.io/name: elasticsearch
+    app.kubernetes.io/component: search-engine
+    app.kubernetes.io/part-of: neoforge
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9200
+    targetPort: 9200
+    name: http
+    protocol: TCP
+  - port: 9300
+    targetPort: 9300
+    name: transport
+    protocol: TCP
+  selector:
+    app: elasticsearch
+    component: search-engine
+---
+# Elasticsearch StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  namespace: neoforge-logging
+  labels:
+    app: elasticsearch
+    component: search-engine
+    app.kubernetes.io/name: elasticsearch
+    app.kubernetes.io/component: search-engine
+    app.kubernetes.io/part-of: neoforge
+spec:
+  serviceName: elasticsearch
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+      component: search-engine
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+        component: search-engine
+    spec:
+      serviceAccountName: neoforge-logging
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+      - name: init-sysctl
+        image: busybox:1.35
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - -c
+        - |
+          sysctl -w vm.max_map_count=262144
+          echo 'vm.max_map_count=262144' >> /etc/sysctl.conf
+        securityContext:
+          privileged: true
+      - name: init-chown
+        image: busybox:1.35
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - -c
+        - |
+          chown -R 1000:1000 /usr/share/elasticsearch/data
+        volumeMounts:
+        - name: elasticsearch-data
+          mountPath: /usr/share/elasticsearch/data
+        securityContext:
+          runAsUser: 0
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9200
+          name: http
+        - containerPort: 9300
+          name: transport
+        env:
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: ES_JAVA_OPTS
+          value: "-Xms2g -Xmx2g"
+        - name: ES_TMPDIR
+          value: "/tmp"
+        volumeMounts:
+        - name: elasticsearch-config
+          mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+          subPath: elasticsearch.yml
+        - name: elasticsearch-config
+          mountPath: /usr/share/elasticsearch/config/jvm.options.d/custom.options
+          subPath: jvm.options
+        - name: elasticsearch-data
+          mountPath: /usr/share/elasticsearch/data
+        resources:
+          requests:
+            memory: "3Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /_cluster/health?local=true
+            port: 9200
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /_cluster/health?wait_for_status=yellow&timeout=5s
+            port: 9200
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 1000
+      volumes:
+      - name: elasticsearch-config
+        configMap:
+          name: elasticsearch-config
+  volumeClaimTemplates:
+  - metadata:
+      name: elasticsearch-data
+      labels:
+        app: elasticsearch
+        component: storage
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 50Gi
+      storageClassName: neoforge-ssd
+---
+# Elasticsearch Ingress for external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: elasticsearch-ingress
+  namespace: neoforge-logging
+  labels:
+    app: elasticsearch
+    component: search-engine
+    app.kubernetes.io/name: elasticsearch-ingress
+    app.kubernetes.io/component: search-engine
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: elasticsearch-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - Elasticsearch'
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - elasticsearch.neoforge.local
+    secretName: elasticsearch-tls
+  rules:
+  - host: elasticsearch.neoforge.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: elasticsearch
+            port:
+              number: 9200

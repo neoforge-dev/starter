@@ -1,0 +1,278 @@
+# Kibana ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kibana-config
+  namespace: neoforge-logging
+  labels:
+    app: kibana
+    component: visualization
+    app.kubernetes.io/name: kibana-config
+    app.kubernetes.io/component: visualization
+    app.kubernetes.io/part-of: neoforge
+data:
+  kibana.yml: |
+    server.name: kibana
+    server.host: 0.0.0.0
+    server.port: 5601
+    server.basePath: ""
+    server.publicBaseUrl: "https://kibana.neoforge.local"
+    
+    # Elasticsearch configuration
+    elasticsearch.hosts: ["http://elasticsearch:9200"]
+    elasticsearch.requestTimeout: 30000
+    elasticsearch.shardTimeout: 30000
+    
+    # Monitoring
+    monitoring.ui.container.elasticsearch.enabled: true
+    monitoring.ui.container.logstash.enabled: false
+    
+    # Security
+    xpack.security.enabled: false
+    xpack.encryptedSavedObjects.encryptionKey: "something_at_least_32_characters_long"
+    
+    # Performance
+    server.maxPayloadBytes: 1048576
+    elasticsearch.requestHeadersWhitelist: ["authorization"]
+    
+    # Logging
+    logging.level: info
+    logging.appenders:
+      console:
+        type: console
+        layout:
+          type: json
+    logging.root:
+      appenders: [console]
+      level: info
+    
+    # Index patterns and dashboards
+    kibana.defaultAppId: "discover"
+    kibana.index: ".kibana"
+    
+    # Maps
+    map.includeElasticMapsService: false
+    
+    # Advanced settings
+    discover.sampleSize: 500
+    histogram:bucketSize: 30
+---
+# Kibana Secret for security
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kibana-secret
+  namespace: neoforge-logging
+  labels:
+    app: kibana
+    component: visualization
+    app.kubernetes.io/name: kibana-secret
+    app.kubernetes.io/component: visualization
+    app.kubernetes.io/part-of: neoforge
+type: Opaque
+data:
+  # Base64 encoded encryption key (32+ characters)
+  encryption_key: c29tZXRoaW5nX2F0X2xlYXN0XzMyX2NoYXJhY3RlcnNfbG9uZ19mb3Jfa2liYW5h
+---
+# Kibana Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+  namespace: neoforge-logging
+  labels:
+    app: kibana
+    component: visualization
+    app.kubernetes.io/name: kibana
+    app.kubernetes.io/component: visualization
+    app.kubernetes.io/part-of: neoforge
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: kibana
+      component: visualization
+  template:
+    metadata:
+      labels:
+        app: kibana
+        component: visualization
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5601"
+        prometheus.io/path: "/api/status"
+    spec:
+      serviceAccountName: neoforge-logging
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+      containers:
+      - name: kibana
+        image: docker.elastic.co/kibana/kibana:8.11.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5601
+          name: http
+          protocol: TCP
+        env:
+        - name: NODE_OPTIONS
+          value: "--max-old-space-size=1800"
+        - name: ELASTICSEARCH_HOSTS
+          value: "http://elasticsearch:9200"
+        - name: SERVER_PUBLICBASEURL
+          value: "https://kibana.neoforge.local"
+        volumeMounts:
+        - name: kibana-config
+          mountPath: /usr/share/kibana/config/kibana.yml
+          subPath: kibana.yml
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /api/status
+            port: 5601
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /api/status
+            port: 5601
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 1000
+      volumes:
+      - name: kibana-config
+        configMap:
+          name: kibana-config
+---
+# Kibana Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+  namespace: neoforge-logging
+  labels:
+    app: kibana
+    component: visualization
+    app.kubernetes.io/name: kibana
+    app.kubernetes.io/component: visualization
+    app.kubernetes.io/part-of: neoforge
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5601
+    targetPort: 5601
+    name: http
+    protocol: TCP
+  selector:
+    app: kibana
+    component: visualization
+---
+# Kibana Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kibana-ingress
+  namespace: neoforge-logging
+  labels:
+    app: kibana
+    component: visualization
+    app.kubernetes.io/name: kibana-ingress
+    app.kubernetes.io/component: visualization
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: kibana-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required - Kibana'
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - kibana.neoforge.local
+    secretName: kibana-tls
+  rules:
+  - host: kibana.neoforge.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kibana
+            port:
+              number: 5601
+---
+# Kibana NetworkPolicy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kibana-network-policy
+  namespace: neoforge-logging
+  labels:
+    app: kibana
+    component: visualization
+    app.kubernetes.io/name: kibana-network-policy
+    app.kubernetes.io/component: visualization
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector:
+    matchLabels:
+      app: kibana
+      component: visualization
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: nginx-ingress
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 5601
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: elasticsearch
+    ports:
+    - protocol: TCP
+      port: 9200
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53

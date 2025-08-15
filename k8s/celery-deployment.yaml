@@ -1,0 +1,400 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  namespace: neoforge
+  labels:
+    app: celery-worker
+    component: worker
+    version: "1.0"
+    app.kubernetes.io/name: neoforge-celery-worker
+    app.kubernetes.io/instance: neoforge-celery-worker
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: neoforge
+  annotations:
+    description: "Celery background task workers"
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 50%
+  selector:
+    matchLabels:
+      app: celery-worker
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: celery-worker
+        component: worker
+        version: "1.0"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: neoforge-worker
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        fsGroup: 1000
+      
+      initContainers:
+      # Wait for Redis to be available
+      - name: wait-for-redis
+        image: redis:7.2-alpine
+        command:
+        - sh
+        - -c
+        - |
+          until redis-cli -h redis -p 6379 ping; do
+            echo "Waiting for Redis..."
+            sleep 2
+          done
+          echo "Redis is ready"
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+      
+      # Wait for database to be available
+      - name: wait-for-db
+        image: postgres:15-alpine
+        command:
+        - sh
+        - -c
+        - |
+          until pg_isready -h postgres -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready"
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+      
+      containers:
+      - name: celery-worker
+        image: neoforge/backend:latest
+        imagePullPolicy: Always
+        command:
+        - celery
+        args:
+        - -A
+        - app.core.celery:celery_app
+        - worker
+        - --loglevel=info
+        - --concurrency=2
+        - --queues=default,email,high_priority
+        - --hostname=worker@%h
+        - --max-tasks-per-child=1000
+        - --time-limit=300
+        - --soft-time-limit=240
+        ports:
+        - containerPort: 8080
+          name: metrics
+          protocol: TCP
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: CELERY_WORKER_TYPE
+          value: "general"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: DATABASE_URL
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: REDIS_URL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: SECRET_KEY
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: SMTP_PASSWORD
+        envFrom:
+        - configMapRef:
+            name: app-config
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: worker-logs
+          mountPath: /app/logs
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - celery
+            - -A
+            - app.core.celery:celery_app
+            - inspect
+            - ping
+            - -d
+            - worker@$HOSTNAME
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+        readinessProbe:
+          exec:
+            command:
+            - celery
+            - -A
+            - app.core.celery:celery_app
+            - inspect
+            - active
+            - -d
+            - worker@$HOSTNAME
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - sh
+              - -c
+              - |
+                echo "Gracefully shutting down Celery worker..."
+                celery -A app.core.celery:celery_app control shutdown
+                sleep 30
+      
+      # Celery monitoring sidecar
+      - name: celery-exporter
+        image: danihodovic/celery-exporter:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9540
+          name: celery-metrics
+        env:
+        - name: CELERY_EXPORTER_BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: REDIS_URL
+        - name: CELERY_EXPORTER_LOG_LEVEL
+          value: "INFO"
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+      
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: worker-logs
+        emptyDir: {}
+      
+      # Node affinity and pod anti-affinity
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                operator: In
+                values: ["n1-standard-2", "n1-highmem-2"]
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values: ["celery-worker"]
+              topologyKey: kubernetes.io/hostname
+      
+      terminationGracePeriodSeconds: 60
+      restartPolicy: Always
+---
+# High-priority email worker deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-email-worker
+  namespace: neoforge
+  labels:
+    app: celery-email-worker
+    component: email-worker
+    version: "1.0"
+    app.kubernetes.io/name: neoforge-celery-email-worker
+    app.kubernetes.io/instance: neoforge-celery-email-worker
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/component: email-worker
+    app.kubernetes.io/part-of: neoforge
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 0%
+  selector:
+    matchLabels:
+      app: celery-email-worker
+      component: email-worker
+  template:
+    metadata:
+      labels:
+        app: celery-email-worker
+        component: email-worker
+        version: "1.0"
+    spec:
+      serviceAccountName: neoforge-worker
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        fsGroup: 1000
+      
+      initContainers:
+      - name: wait-for-redis
+        image: redis:7.2-alpine
+        command:
+        - sh
+        - -c
+        - |
+          until redis-cli -h redis -p 6379 ping; do
+            echo "Waiting for Redis..."
+            sleep 2
+          done
+          echo "Redis is ready"
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+      
+      containers:
+      - name: celery-email-worker
+        image: neoforge/backend:latest
+        imagePullPolicy: Always
+        command:
+        - celery
+        args:
+        - -A
+        - app.core.celery:celery_app
+        - worker
+        - --loglevel=info
+        - --concurrency=1
+        - --queues=email
+        - --hostname=email-worker@%h
+        - --max-tasks-per-child=500
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: CELERY_WORKER_TYPE
+          value: "email"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: DATABASE_URL
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: REDIS_URL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: SECRET_KEY
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: SMTP_PASSWORD
+        envFrom:
+        - configMapRef:
+            name: app-config
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: email-logs
+          mountPath: /app/logs
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+        livenessProbe:
+          exec:
+            command:
+            - celery
+            - -A
+            - app.core.celery:celery_app
+            - inspect
+            - ping
+            - -d
+            - email-worker@$HOSTNAME
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+      
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: email-logs
+        emptyDir: {}
+      
+      terminationGracePeriodSeconds: 60
+      restartPolicy: Always
