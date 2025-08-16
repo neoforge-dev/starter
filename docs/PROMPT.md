@@ -1,88 +1,80 @@
-You are a senior Cursor agent taking over the NeoForge starter repo. Continue execution with focus on: shipping user value, keeping CI green, tightening security, and documenting as you go. Work in vertical slices and keep commits small and purposeful.
+# Successor Agent Prompt
 
-Immediate Objectives
-1) Get PR #37 (fix/ci-makefile-and-frontend-tests) green and merged
-2) Complete Observability & Readiness epic (dashboards/alerts polish)
-3) Frontend Type Safety + A11y slice (services → TS, axe CI fixes)
-4) Performance/Cost slice (keyset pagination option, prod-safe caching)
-5) Security & Account Lifecycle phase 2 (refresh rotation, tiered RL)
+You are taking over the NeoForge starter kit on branch `fix/ci-makefile-and-frontend-tests`. Your mission is to drive the repo to green CI and deliver the next 4 epics incrementally, favoring the smallest safe changes. Follow the plan in `docs/PLAN.md` and keep work scoped, reversible, and well-tested.
 
-Context
-- Backend: FastAPI, SQLAlchemy 2.x (async), SQLModel-like patterns, Alembic, Celery, Redis
-- Observability: Prometheus metrics; basic OpenTelemetry instrumentation; structlog with contextvars
-- Frontend: Lit components, Vite, Vitest (JSDOM), PWA bits
-- Infra/CI: docker compose; GitHub Actions: Backend CI, Test (frontend), Pre-commit Quality Gates, Dependency Review
+## Context
+- Stack: FastAPI + SQLModel + Celery + Redis; Lit 4.0 Web Components + Vite/Bun; Docker + Make; GitHub Actions CI
+- Target: Production-ready with <$15/mo cost, high test stability, strong security baselines
+- Docs hub: `docs/README.md` and roadmap in `NEOFORGE_CONSOLIDATION_ROADMAP.md`
 
-What’s already done in this branch
-- CI: Makefile tabs fix; backend Docker build unblocked by adding backend/.env.test
-- Frontend: neo-table CSS dynamic -> CSS vars/host classes; performance-validator sets element props; dynamic-config resolves absolute URL in JSDOM
-- Observability: http_5xx_responses_total counter incremented in middleware; metrics tests updated; alerts.yml hardened (runbooks, cleaner expr); Nomad probe uses /ready
+## Primary Objectives
+1) Get CI green on current PR
+2) Execute Epics 1–4 in order, merging small PRs frequently
 
-Open issues (blocking merge)
-- Dependency Review: action fails (high/critical). We should prefer upgrading deps; if timeboxed, temporarily set fail-on-severity to critical in PR, and open a follow-up issue to restore strictness after upgrades.
-- Frontend Test (matrix) failures: need to run subset locally (docker compose frontend_test or npm scripts) and fix flakey specs from JSDOM URL/dynamic import.
-- Backend CI: earlier failure was missing .env.test (fixed). If still failing, fetch logs via gh run view and address remaining errors (metrics/health).
+## Ground Rules
+- Never commit failing builds. Always run tests before commits.
+- Prefer Bun for frontend speed (`bun install`, `bun run test`).
+- Backend tests run in Docker for parity: `docker compose run --rm api_test pytest -q`.
+- Keep edits minimal, feature-flag risky changes, and write/update tests.
+- Update docs when behavior changes. Link runbooks from alerts.
 
-Tactical next steps
-1) Dependency review gate:
-   - Attempt minimal-safe dependency upgrades on frontend/backend to remove high/critical advisories.
-   - If cannot resolve within 45 minutes, change .github/workflows/dependency-review.yml to fail only on critical for this PR, and add a follow-up task to raise back to high later.
+## Quick Commands
+```bash
+# Root
+make help
+make test
 
-2) Frontend unit tests (Vitest):
-   - Repro locally; fix tests relying on JSON-encoded attributes or URL constructor issues; ensure test setup registers custom elements once.
-   - Verify dynamic-config absolute URL fallback works in Node envs w/out window.location.
+# Frontend
+cd frontend && bun install && bun run test && bun run lint
 
-3) Backend CI:
-   - Confirm docker build passes (it should after backend/.env.test). If not, fix paths/compose.
-   - Ensure metrics endpoint produces http_5xx_responses_total and latency buckets; adjust tests accordingly.
+# Backend
+docker compose run --rm api_test pytest -q
+ruff check backend/ && ruff format --check backend/
+```
 
-4) Merge PR #37 once green.
+## Immediate Tasks (Current PR)
+- Resolve Dependency Review: update offending deps; if blocked, temporarily relax to critical-only and open follow-up issue to restore stricter threshold.
+- Stabilize frontend unit subset failures: reproduce locally; ensure URL and PWA mocks; fix flaky specs.
+- Backend CI: inspect failing logs; address metrics/health flakiness.
 
-Then proceed with Epics per docs/PLAN.md
+## Epic Execution Guide
+- Epic 1 (Observability & Readiness):
+  - Ensure `http_requests_total` and `http_request_duration_seconds` for all routes; normalized labels.
+  - Add/runbook links for Prometheus alerts. Create runbooks in `docs/runbooks/`.
+  - OTLP exporter env-gated; Celery trace propagation. Tests for headers/metrics present.
 
-Epic 1 — Observability & Readiness (hardening)
-- Metrics: Confirm http_requests_total and http_request_duration_seconds are emitted for every route with stable labels.
-- Alerts: Validate ops/prometheus/alerts.yml in local Prometheus; add runbooks in docs/runbooks/.
-- Tracing: Add env-gated OTLP exporter support; propagate traceparent to Celery tasks; add basic spans.
-- Logging: Tests asserting request_id and optional trace_id included in responses and logs for key endpoints.
-- Readiness: Ensure all deploys use /ready; add K8s example if applicable.
+- Epic 2 (Type Safety & A11y):
+  - Add `frontend/tsconfig.json`; migrate `src/services/api.js` and `auth.js` to TypeScript.
+  - Stabilize test setup for custom elements and PWA mocks.
+  - Add axe CI scan for key pages and fix critical findings.
 
-Epic 2 — Frontend Type Safety + A11y
-- Add frontend/tsconfig.json (strict, ESNext, bundler moduleResolution).
-- Create frontend/src/types/api.d.ts (PaginatedResponse, Project, SupportTicket, CommunityPost, Status).
-- Convert frontend/src/services/api.js and auth.js -> .ts with typed signatures.
-- Add axe-core CI step for core pages; fix easy a11y issues (labels, roles, focus order, contrast).
-- Stabilize custom element registration in frontend/src/test/setup.mjs.
+- Epic 3 (Performance/Cost):
+  - Implement optional cursor pagination endpoints; add indices; update client.
+  - ETag/Cache-Control for public lists with 304 tests.
+  - Slim Docker images via multi-stage and non-root user.
 
-Epic 3 — Performance/Cost
-- Add optional keyset (cursor) pagination for /projects, /support/tickets, /community/posts; keep page/size fallback.
-- Add indices for sort keys; implement base64 JSON cursor with basic signature.
-- Production-only Cache-Control with consistent ETags for public list endpoints; expand tests for 304.
-- Docker slimming: ensure prod stage only has runtime deps; run as non-root; verify image size.
+- Epic 4 (Security & Account Lifecycle):
+  - Refresh token rotation with `jti` reuse detection and session family revocation.
+  - Device labels; tiered rate limits; secure cookie option; audit logs; migrations + tests.
 
-Epic 4 — Security & Account Lifecycle (Phase 2)
-- Refresh token rotation with jti; detect reuse; revoke all sessions on reuse.
-- Persist session device labels; return via SessionOut.
-- Tiered rate limits on auth endpoints (user+IP keys, burst-friendly verify).
-- Optional secure cookie storage for refresh tokens (document tradeoffs).
-- Migrations + thorough tests.
+## Quality Gate Template
+Before marking any task complete, ensure:
+```
+QUALITY GATE VALIDATION:
+✅ Tests passed: [command + result]
+✅ Build successful: [command + result]
+✅ No compilation errors
+✅ Ready to merge
+```
 
-Guardrails
-- Keep PRs small; keep CI green; add/adjust tests with each change.
-- Avoid introducing new long-lived processes in CI.
+## Reporting
+- Keep `docs/PLAN.md` updated as you land changes.
+- When adding alerts, link to runbooks.
+- Summarize important changes in PR descriptions (why > what).
 
-Key locations
-- Backend endpoints: backend/app/api/v1/endpoints/
-- Middleware: backend/app/api/middleware/
-- Metrics: backend/app/core/metrics.py; metrics endpoint backend/app/api/endpoints/metrics.py
-- Celery: backend/app/core/celery.py; backend/app/worker/
-- Frontend: frontend/src/services/*; frontend/src/types/*; frontend/tsconfig.json
-- CI: .github/workflows/*; dependency review config: .github/dependency-review-config.yml
-- Plans/Prompt: docs/PLAN.md; docs/PROMPT.md
+## Tips
+- Use small PRs that keep CI green.
+- For flaky tests, prefer deterministic mocks over sleeps.
+- Guard production-only features with env flags and strict defaults.
 
-Definition of Done
-- PR #37 merged; CI green
-- Observability: runbooks + alerts validated; metrics and headers verified; dashboard JSON shipped
-- Frontend: strict TS enabled; services typed; axe step added and passing
-- Performance: cursor option working with tests; 304 cache path tested; backend image smaller
-- Security: refresh rotation + reuse detection + audits + tiered RL shipped with tests
+Proceed now: make the current PR green, then start Epic 1 runbooks + minimal OTLP scaffolding.

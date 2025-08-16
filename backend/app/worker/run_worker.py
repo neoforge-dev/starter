@@ -35,52 +35,15 @@ def signal_handler(signum, frame):
 def main():
     """Main entry point for the Celery worker."""
     
-    # Initialize OpenTelemetry tracing for worker (if configured)
-    try:
-        if settings.otel_traces_exporter != "none":
-            from opentelemetry import trace
-            from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-            from opentelemetry.sdk.trace import TracerProvider
-            from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
-            from opentelemetry.instrumentation.celery import CeleryInstrumentor
-            
-            # Create resource for worker
-            res = Resource(attributes={SERVICE_NAME: f"{settings.otel_service_name}-worker"})
-            provider = TracerProvider(resource=res)
-            
-            # Configure exporter (same logic as main app)
-            if settings.otel_traces_exporter == "otlp" and settings.otel_exporter_otlp_endpoint:
-                try:
-                    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
-                    
-                    headers = {}
-                    if settings.otel_exporter_otlp_headers:
-                        for header_pair in settings.otel_exporter_otlp_headers.split(","):
-                            if "=" in header_pair:
-                                key, value = header_pair.strip().split("=", 1)
-                                headers[key.strip()] = value.strip()
-                    
-                    otlp_exporter = OTLPSpanExporter(
-                        endpoint=settings.otel_exporter_otlp_endpoint,
-                        headers=headers if headers else None,
-                    )
-                    processor = BatchSpanProcessor(otlp_exporter)
-                    logger.info("celery_worker_otlp_exporter_configured")
-                except ImportError:
-                    processor = BatchSpanProcessor(ConsoleSpanExporter())
-                    logger.warning("celery_worker_otlp_unavailable", fallback="console")
-            else:
-                processor = BatchSpanProcessor(ConsoleSpanExporter())
-                logger.info("celery_worker_console_exporter_configured")
-            
-            provider.add_span_processor(processor)
-            trace.set_tracer_provider(provider)
-            
-            # Instrument Celery for automatic trace propagation
-            CeleryInstrumentor().instrument()
-            logger.info("celery_worker_tracing_enabled")
-    except Exception as e:
-        logger.warning("celery_worker_tracing_setup_failed", error=str(e))
+    # Initialize OpenTelemetry tracing for worker using enhanced utilities
+    from app.core.tracing import setup_otlp_tracer_provider, setup_instrumentation
+    
+    provider = setup_otlp_tracer_provider(settings, service_name_suffix="-worker")
+    
+    if provider:
+        # Set up Celery-specific instrumentation
+        setup_instrumentation()
+        logger.info("celery_worker_tracing_enabled")
     
     logger.info(
         "celery_worker_starting",

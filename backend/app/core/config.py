@@ -83,11 +83,31 @@ class Settings(BaseSettings):
     WEBHOOK_SECRET_KEY: Optional[str] = Field(default=None, env="WEBHOOK_SECRET_KEY")
     
     # OpenTelemetry OTLP Configuration
+    # Core OTLP settings
     otel_exporter_otlp_endpoint: Optional[str] = Field(default=None, env="OTEL_EXPORTER_OTLP_ENDPOINT")
+    otel_exporter_otlp_traces_endpoint: Optional[str] = Field(default=None, env="OTEL_EXPORTER_OTLP_TRACES_ENDPOINT")
     otel_exporter_otlp_headers: Optional[str] = Field(default=None, env="OTEL_EXPORTER_OTLP_HEADERS")
+    otel_exporter_otlp_traces_headers: Optional[str] = Field(default=None, env="OTEL_EXPORTER_OTLP_TRACES_HEADERS")
     otel_exporter_otlp_protocol: str = Field(default="http/protobuf", env="OTEL_EXPORTER_OTLP_PROTOCOL")
+    otel_exporter_otlp_traces_protocol: Optional[str] = Field(default=None, env="OTEL_EXPORTER_OTLP_TRACES_PROTOCOL")
+    otel_exporter_otlp_timeout: int = Field(default=10, env="OTEL_EXPORTER_OTLP_TIMEOUT")
+    otel_exporter_otlp_traces_timeout: Optional[int] = Field(default=None, env="OTEL_EXPORTER_OTLP_TRACES_TIMEOUT")
+    otel_exporter_otlp_compression: Optional[str] = Field(default=None, env="OTEL_EXPORTER_OTLP_COMPRESSION")
+    otel_exporter_otlp_traces_compression: Optional[str] = Field(default=None, env="OTEL_EXPORTER_OTLP_TRACES_COMPRESSION")
+    
+    # Service configuration
     otel_service_name: str = Field(default="neoforge-api", env="OTEL_SERVICE_NAME")
+    otel_service_version: Optional[str] = Field(default=None, env="OTEL_SERVICE_VERSION")
+    otel_resource_attributes: Optional[str] = Field(default=None, env="OTEL_RESOURCE_ATTRIBUTES")
+    
+    # Trace configuration
     otel_traces_exporter: str = Field(default="console", env="OTEL_TRACES_EXPORTER")  # console, otlp, none
+    otel_traces_sampler: str = Field(default="always_on", env="OTEL_TRACES_SAMPLER")  # always_on, always_off, ratio
+    otel_traces_sampler_arg: Optional[str] = Field(default=None, env="OTEL_TRACES_SAMPLER_ARG")
+    
+    # SDK configuration
+    otel_sdk_disabled: bool = Field(default=False, env="OTEL_SDK_DISABLED")
+    otel_log_level: str = Field(default="info", env="OTEL_LOG_LEVEL")
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -254,6 +274,39 @@ class Settings(BaseSettings):
     @field_validator("testing", mode="before")
     def validate_testing(cls, v: Union[str, bool]) -> bool:
         """Validate testing flag."""
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            return v.lower() in ("true", "1", "t", "yes", "y")
+        return False
+
+    @field_validator("otel_traces_exporter", mode="before")
+    def validate_otel_traces_exporter(cls, v: str) -> str:
+        """Validate OTEL traces exporter."""
+        valid_exporters = ["console", "otlp", "none"]
+        if v not in valid_exporters:
+            raise ValueError(f"OTEL_TRACES_EXPORTER must be one of: {', '.join(valid_exporters)}")
+        return v
+
+    @field_validator("otel_traces_sampler", mode="before")
+    def validate_otel_traces_sampler(cls, v: str) -> str:
+        """Validate OTEL traces sampler."""
+        valid_samplers = ["always_on", "always_off", "ratio", "traceidratio"]
+        if v not in valid_samplers:
+            raise ValueError(f"OTEL_TRACES_SAMPLER must be one of: {', '.join(valid_samplers)}")
+        return v
+
+    @field_validator("otel_exporter_otlp_protocol", mode="before")
+    def validate_otel_protocol(cls, v: str) -> str:
+        """Validate OTLP protocol."""
+        valid_protocols = ["grpc", "http/protobuf", "http/json"]
+        if v not in valid_protocols:
+            raise ValueError(f"OTEL_EXPORTER_OTLP_PROTOCOL must be one of: {', '.join(valid_protocols)}")
+        return v
+
+    @field_validator("otel_sdk_disabled", mode="before")
+    def validate_otel_sdk_disabled(cls, v: Union[str, bool]) -> bool:
+        """Validate OTEL SDK disabled flag."""
         if isinstance(v, bool):
             return v
         if isinstance(v, str):

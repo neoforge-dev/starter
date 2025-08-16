@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from typing import Any, Coroutine
 from app.models.user import User
 from app.models.admin import Admin, AdminRole
+from app.models.tenant import Tenant, Organization, TenantStatus, OrganizationType
+from app.models.item import Item
 from app.core.security import get_password_hash
 
 class UserFactory(AsyncSQLModelFactory):
@@ -88,6 +90,48 @@ class ItemFactory(AsyncSQLModelFactory):
         if 'owner_id' not in kwargs and 'owner' not in kwargs:
             user = await UserFactory.create(session=session)
             kwargs['owner_id'] = user.id
+
+        return await super()._create(model_class, session, *args, **kwargs)
+
+
+class TenantFactory(AsyncSQLModelFactory):
+    """Factory for creating Tenant instances."""
+
+    class Meta:
+        model = Tenant
+
+    slug = factory.Faker('slug')
+    name = factory.Faker('company')
+    domain = factory.Faker('domain_name')
+    status = TenantStatus.ACTIVE
+    is_active = True
+    created_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+
+
+class OrganizationFactory(AsyncSQLModelFactory):
+    """Factory for creating Organization instances."""
+
+    class Meta:
+        model = Organization
+
+    slug = factory.Faker('slug')
+    name = factory.Faker('company')
+    description = factory.Faker('paragraph')
+    type = OrganizationType.TEAM
+    is_active = True
+    visibility = "private"
+    requires_approval = False
+    created_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+    updated_at = factory.LazyFunction(lambda: datetime.now(timezone.utc))
+
+    @classmethod
+    async def _create(cls, model_class: type[SQLModel], session: AsyncSession, *args: Any, **kwargs: Any) -> Coroutine[Any, Any, SQLModel]:
+        """Create an Organization instance with tenant."""
+        # Create tenant if not provided
+        if 'tenant_id' not in kwargs and 'tenant' not in kwargs:
+            tenant = await TenantFactory.create(session=session)
+            kwargs['tenant_id'] = tenant.id
 
         return await super()._create(model_class, session, *args, **kwargs)
  

@@ -39,5 +39,15 @@ isort==5.13.2
 flake8==7.0.0
 mypy==1.8.0
 
-# Logging
-structlog==24.1.0 
+# Logging & Observability
+structlog==24.1.0
+
+# OpenTelemetry tracing (optional, env-gated)
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+opentelemetry-exporter-otlp==1.22.0
+opentelemetry-instrumentation-fastapi==0.43b0
+opentelemetry-instrumentation-sqlalchemy==0.43b0
+opentelemetry-instrumentation-redis==0.43b0
+opentelemetry-instrumentation-httpx==0.43b0
+opentelemetry-instrumentation-celery==0.43b0 

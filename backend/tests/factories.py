@@ -22,6 +22,7 @@ from app.models.admin import Admin, AdminRole
 from app.models.project import Project
 from app.models.support_ticket import SupportTicket
 from app.models.community_post import CommunityPost
+from app.models.tenant import Tenant, Organization, TenantStatus, OrganizationType
 from app.models.event import Event
 from app.schemas.user import UserCreate
 from app.schemas.event import EventType, EventSource
@@ -401,4 +402,47 @@ class EventFactory(AsyncModelFactory):
             }
         }
         defaults.update(kwargs)
-        return await cls.create(session=session, **defaults) 
+        return await cls.create(session=session, **defaults)
+
+
+class TenantFactory(AsyncModelFactory):
+    """Factory for creating Tenant instances."""
+
+    class Meta:
+        model = Tenant
+
+    slug = factory.Faker('slug')
+    name = factory.Faker('company')
+    domain = factory.Faker('domain_name')
+    status = TenantStatus.ACTIVE
+    is_active = True
+
+    @classmethod
+    async def create(cls, session: AsyncSession, **kwargs) -> Tenant:
+        """Create a tenant instance."""
+        return await super().create(session=session, **kwargs)
+
+
+class OrganizationFactory(AsyncModelFactory):
+    """Factory for creating Organization instances."""
+
+    class Meta:
+        model = Organization
+
+    slug = factory.Faker('slug')
+    name = factory.Faker('company')
+    description = factory.Faker('paragraph')
+    type = OrganizationType.TEAM
+    is_active = True
+    visibility = "private"
+    requires_approval = False
+
+    @classmethod
+    async def create(cls, session: AsyncSession, **kwargs) -> Organization:
+        """Create an organization instance with tenant if needed."""
+        # Create tenant if not provided
+        if 'tenant_id' not in kwargs and 'tenant' not in kwargs:
+            tenant = await TenantFactory.create(session=session)
+            kwargs['tenant_id'] = tenant.id
+
+        return await super().create(session=session, **kwargs) 
