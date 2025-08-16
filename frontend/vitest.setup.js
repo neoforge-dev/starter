@@ -35,7 +35,42 @@ if (typeof process !== "undefined" && process.setMaxListeners) {
 
 // Mock fetch if it's not already mocked
 if (!globalThis.fetch) {
-  globalThis.fetch = async () => {
+  globalThis.fetch = async (url) => {
+    // Handle config endpoint specifically
+    if (typeof url === 'string' && url.includes('/api/v1/config')) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          environment: 'test',
+          api_base_url: '/api/v1',
+          cors_origins: ['http://localhost:3000'],
+          cors_methods: ['GET', 'POST', 'PUT', 'DELETE'],
+          cors_headers: ['Content-Type', 'Authorization'],
+          security_headers: {
+            frame_ancestors: [],
+            referrer_policy: 'strict-origin-when-cross-origin'
+          },
+          trusted_domains: {
+            scripts: [],
+            styles: [],
+            images: [],
+            connects: []
+          },
+          csp_nonce_required: false,
+          reporting_enabled: false
+        }),
+        text: async () => JSON.stringify({
+          environment: 'test',
+          api_base_url: '/api/v1'
+        }),
+        blob: async () => new Blob(),
+        arrayBuffer: async () => new ArrayBuffer(0),
+        headers: new Map(),
+      };
+    }
+    
+    // Default mock for other requests
     return {
       ok: true,
       status: 200,

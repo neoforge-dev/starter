@@ -48,10 +48,10 @@ COPY pyproject.toml requirements.txt requirements.test.txt ./
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install core dependencies first
+# Install core dependencies from pyproject.toml
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cache/pip \
-    uv pip install --no-deps -r requirements.txt
+    uv pip install -e .
 
 # Install additional production dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \

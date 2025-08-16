@@ -30,6 +30,7 @@ dependencies = [
     "opentelemetry-instrumentation-sqlalchemy>=0.47b0",
     "opentelemetry-instrumentation-redis>=0.47b0",
     "opentelemetry-instrumentation-httpx>=0.47b0",
+    "aiohttp>=3.9.3",
 ]
 requires-python = ">=3.11"
 
