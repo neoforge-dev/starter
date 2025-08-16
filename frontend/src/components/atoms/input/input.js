@@ -277,4 +277,6 @@ export class NeoInput extends LitElement {
   }
 }
 
-customElements.define("neo-input", NeoInput);
+if (!customElements.get("neo-input")) {
+  customElements.define("neo-input", NeoInput);
+}

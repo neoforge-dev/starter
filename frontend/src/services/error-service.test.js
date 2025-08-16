@@ -2,7 +2,7 @@ import { expect } from "@esm-bundle/chai";
 import { waitUntil } from "@open-wc/testing";
 import { AppError, ErrorType, errorService } from "./error-service.js";
 import { showToast } from "../components/ui/toast/index.js";
-import { apiClient } from "./api.js";
+import { apiService } from "./api.ts";
 import { describe, it, beforeEach, vi, expect as viExpect } from "vitest";
 
 // Mock dependencies
@@ -10,9 +10,9 @@ vi.mock("../components/ui/toast/index.js", () => ({
   showToast: vi.fn(),
 }));
 
-vi.mock("./api.js", () => ({
-  apiClient: {
-    post: vi.fn(),
+vi.mock("./api.ts", () => ({
+  apiService: {
+    request: vi.fn(),
   },
 }));
 
@@ -47,7 +47,7 @@ describe("ErrorService", () => {
       await errorService.handleError(error);
 
       viExpect(showToast).toHaveBeenCalledWith("Invalid input", "warning");
-      viExpect(apiClient.post).not.toHaveBeenCalled();
+      viExpect(apiService.request).not.toHaveBeenCalled();
     });
 
     it("should handle network errors", async () => {
@@ -58,7 +58,7 @@ describe("ErrorService", () => {
         "Network error. Please check your connection.",
         "error"
       );
-      viExpect(apiClient.post).not.toHaveBeenCalled();
+      viExpect(apiService.request).not.toHaveBeenCalled();
     });
 
     it("should handle auth errors", async () => {
@@ -69,7 +69,7 @@ describe("ErrorService", () => {
         "Authentication error. Please log in again.",
         "error"
       );
-      viExpect(apiClient.post).not.toHaveBeenCalled();
+      viExpect(apiService.request).not.toHaveBeenCalled();
     });
 
     it("should handle API errors", async () => {
@@ -77,13 +77,16 @@ describe("ErrorService", () => {
       await errorService.handleError(error);
 
       viExpect(showToast).toHaveBeenCalledWith("API failed", "error");
-      viExpect(apiClient.post).toHaveBeenCalledWith("/errors", {
-        type: ErrorType.API,
-        message: "API failed",
-        details: null,
-        timestamp: error.timestamp,
-        userAgent: navigator.userAgent,
-        url: window.location.href,
+      viExpect(apiService.request).toHaveBeenCalledWith("/errors", {
+        method: "POST",
+        body: JSON.stringify({
+          type: ErrorType.API,
+          message: "API failed",
+          details: null,
+          timestamp: error.timestamp,
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+        })
       });
     });
 
@@ -95,7 +98,7 @@ describe("ErrorService", () => {
         "An unexpected error occurred.",
         "error"
       );
-      viExpect(apiClient.post).toHaveBeenCalled();
+      viExpect(apiService.request).toHaveBeenCalled();
     });
   });
 
@@ -196,13 +199,16 @@ describe("ErrorService", () => {
       const error = new AppError("Unknown error");
       await errorService.handleError(error);
 
-      viExpect(apiClient.post).toHaveBeenCalledWith("/errors", {
-        type: ErrorType.UNKNOWN,
-        message: "Unknown error",
-        details: null,
-        timestamp: error.timestamp,
-        userAgent: navigator.userAgent,
-        url: window.location.href,
+      viExpect(apiService.request).toHaveBeenCalledWith("/errors", {
+        method: "POST",
+        body: JSON.stringify({
+          type: ErrorType.UNKNOWN,
+          message: "Unknown error",
+          details: null,
+          timestamp: error.timestamp,
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+        })
       });
     });
 
@@ -210,18 +216,18 @@ describe("ErrorService", () => {
       const error = new AppError("Invalid input", ErrorType.VALIDATION);
       await errorService.handleError(error);
 
-      viExpect(apiClient.post).not.toHaveBeenCalled();
+      viExpect(apiService.request).not.toHaveBeenCalled();
     });
 
     it("should handle error reporting failures", async () => {
-      apiClient.post.mockRejectedValue(new Error("Reporting failed"));
+      apiService.request.mockRejectedValue(new Error("Reporting failed"));
 
       const error = new AppError("Test error");
       await errorService.handleError(error);
 
       viExpect(showToast).toHaveBeenCalled();
       // Error reporting failure should not throw
-      viExpect(apiClient.post).toHaveBeenCalled();
+      viExpect(apiService.request).toHaveBeenCalled();
     });
   });
 });

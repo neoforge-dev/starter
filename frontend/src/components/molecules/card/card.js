@@ -161,4 +161,6 @@ export class NeoCard extends LitElement {
   }
 }
 
-customElements.define("neo-card", NeoCard);
+if (!customElements.get("neo-card")) {
+  customElements.define("neo-card", NeoCard);
+}

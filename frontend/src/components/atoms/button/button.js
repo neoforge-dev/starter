@@ -282,4 +282,6 @@ export class NeoButton extends BaseComponent {
 }
 
 // Register the component
-customElements.define("neo-button", NeoButton);
+if (!customElements.get("neo-button")) {
+  customElements.define("neo-button", NeoButton);
+}
