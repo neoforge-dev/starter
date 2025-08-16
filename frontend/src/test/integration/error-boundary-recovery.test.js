@@ -300,7 +300,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
     });
 
     it('should report appropriate errors to backend', async () => {
-      const { apiClient } = await import('../../services/api-client.js');
+      const { apiClient } = await import('../../services/api.js');
       
       // Test API error (should be reported)
       const apiError = new AppError('API endpoint failed', ErrorType.API);
@@ -557,7 +557,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
     });
 
     it('should handle error reporting failures gracefully', async () => {
-      const { apiClient } = await import('../../services/api-client.js');
+      const { apiClient } = await import('../../services/api.js');
       const { Logger } = await import('../../utils/logger.js');
       
       // Arrange - Mock API failure

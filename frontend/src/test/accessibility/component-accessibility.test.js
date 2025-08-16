@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { html, fixture, cleanup } from '@open-wc/testing';
+import { html, fixture } from '@open-wc/testing';
 import { testComponentAccessibility, generateViolationReport } from './axe-utils.js';
 
 // Import components to test
@@ -10,7 +10,8 @@ import '../../components/molecules/card/card.js';
 
 describe('Component Accessibility Tests', () => {
   afterEach(() => {
-    cleanup();
+    // Clean up DOM after each test
+    document.body.innerHTML = '';
   });
 
   describe('Button Component', () => {

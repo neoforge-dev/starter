@@ -10,7 +10,7 @@ vi.mock("../components/ui/toast/index.js", () => ({
   showToast: vi.fn(),
 }));
 
-vi.mock("./api-client.js", () => ({
+vi.mock("./api.js", () => ({
   apiClient: {
     post: vi.fn(),
   },

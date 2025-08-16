@@ -18,6 +18,7 @@ import applyPolyfill, {
   setupErrorHandling,
 } from "./src/test/setup/optimized-performance-polyfill.js";
 import { patchSemanticDomDiff } from "./src/test/setup/package-patches.js";
+import { vi } from "vitest";
 
 // Apply the polyfill once
 applyPolyfill();
@@ -271,6 +272,13 @@ if (typeof window !== "undefined") {
         window.performance[key] = polyfill[key];
       }
     }
+  }
+  
+  // Ensure window.addEventListener exists (JSDOM compatibility)
+  if (!window.addEventListener) {
+    window.addEventListener = vi.fn();
+    window.removeEventListener = vi.fn();
+    window.dispatchEvent = vi.fn();
   }
 }
 

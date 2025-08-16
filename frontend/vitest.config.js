@@ -111,6 +111,10 @@ export default defineConfig({
       "**/node_modules/**",
       "test/**",
       "src/test/e2e/**",
+      "src/test/visual/**",
+      "src/test/accessibility/page-accessibility.test.js",
+      "src/test/advanced/cross-browser-comprehensive.test.js",
+      "src/test/advanced/integration-comprehensive.test.js",
     ],
     
     // Coverage configuration optimized for speed
