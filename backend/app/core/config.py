@@ -294,4 +294,7 @@ def get_settings() -> Settings:
     except ValidationError as e:
         # Log error details during startup if validation fails
         print(f"ERROR: Settings validation failed: {e}")
-        raise 
+        raise
+
+# Export settings instance for direct import
+settings = get_settings() 
