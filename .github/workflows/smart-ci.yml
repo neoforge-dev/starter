@@ -133,7 +133,7 @@ jobs:
         run: |
           # Frontend unit tests (if frontend changed)
           if [[ "${{ needs.detect-changes.outputs.frontend-changed }}" == "true" ]]; then
-            cd frontend && npm run test:coverage
+            cd frontend && bun run test:coverage
           fi
           # Backend unit tests (if backend changed)
           if [[ "${{ needs.detect-changes.outputs.backend-changed }}" == "true" ]]; then
@@ -153,20 +153,20 @@ jobs:
         working-directory: frontend
         run: |
           npx playwright install --with-deps
-          npm run test:visual
+          bun run test:visual
 
       - name: Run Accessibility Tests
         if: matrix.test-type == 'a11y'
         working-directory: frontend
         run: |
           npx playwright install --with-deps
-          npm run test:a11y
+          bun run test:a11y
 
       - name: Run Performance Tests
         if: matrix.test-type == 'performance'
         working-directory: frontend
         run: |
-          npm run test:perf
+          bun run test:perf
           
       - name: Run Security Tests
         if: matrix.test-type == 'security'
@@ -177,7 +177,7 @@ jobs:
           safety check -r backend/requirements.txt --json --output safety-report.json || true
           
           # Frontend security scanning
-          cd frontend && npm audit --audit-level moderate || true
+          cd frontend && bun audit || true
 
       - name: Run E2E Tests
         if: matrix.test-type == 'e2e'
@@ -185,7 +185,7 @@ jobs:
           docker compose up -d
           sleep 15
           cd frontend && npx playwright install --with-deps
-          npm run test:e2e
+          bun run test:e2e
 
       # Upload artifacts based on test type
       - name: Upload Test Results

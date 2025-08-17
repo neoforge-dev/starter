@@ -25,35 +25,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build application
-        run: npm run build
+        run: bun run build
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
       - name: Start dev server in background
         run: |
-          npm run dev &
+          bun run dev &
           sleep 10
 
       - name: Wait for dev server
         run: npx wait-on http://localhost:5173 --timeout 60000
 
       - name: Run accessibility tests
-        run: npm run test:a11y
+        run: bun run test:a11y
 
       - name: Run component-level accessibility tests
-        run: npm run test:a11y:components
+        run: bun run test:a11y:components
 
       - name: Upload accessibility reports
         uses: actions/upload-artifact@v4
@@ -119,32 +117,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build application
-        run: npm run build
+        run: bun run build
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
       - name: Start dev server
         run: |
-          npm run dev &
+          bun run dev &
           sleep 10
 
       - name: Wait for dev server
         run: npx wait-on http://localhost:5173 --timeout 60000
 
       - name: Run full page audit
-        run: npm run test:a11y:audit
+        run: bun run test:a11y:audit
 
       - name: Generate accessibility summary
         run: |
