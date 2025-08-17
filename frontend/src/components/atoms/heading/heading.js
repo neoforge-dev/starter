@@ -290,7 +290,7 @@ export class NeoHeading extends BaseComponent {
     const classes = this._getClasses();
     
     // Create the heading element dynamically
-    const headingTemplate = `<${tag} class="${classes}"><slot></slot></${tag}>`;
+    // const _headingTemplate = `<${tag} class="${classes}"><slot></slot></${tag}>`;
     
     // Use unsafeHTML for dynamic tag creation
     return html`${this._createHeadingElement(tag, classes)}`;

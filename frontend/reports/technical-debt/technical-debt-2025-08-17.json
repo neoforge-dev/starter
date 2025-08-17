@@ -1,0 +1,3651 @@
+{
+  "timestamp": "2025-08-17T14:01:13.387Z",
+  "summary": {
+    "totalDebtIssues": 298,
+    "criticalIssues": 2,
+    "highPriorityIssues": 91,
+    "testCoveragePercentage": 0,
+    "bundleSizeMB": 0.27,
+    "highComplexityFiles": 212,
+    "debtScore": 100
+  },
+  "eslint": {
+    "CRITICAL": [
+      {
+        "file": "/src/components/base-page-component.js",
+        "line": 228,
+        "column": 7,
+        "rule": "no-undef",
+        "message": "'showToast' is not defined.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/accessibility/page-accessibility.test.js",
+        "line": 58,
+        "column": 5,
+        "rule": "no-dupe-keys",
+        "message": "Duplicate key 'region'.",
+        "severity": "error"
+      }
+    ],
+    "HIGH": [
+      {
+        "file": "/src/components/base-page-component.js",
+        "line": 260,
+        "column": 32,
+        "rule": "no-unused-vars",
+        "message": "'loadingMessage' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/design/design-integration.js",
+        "line": 7,
+        "column": 18,
+        "rule": "no-unused-vars",
+        "message": "'themeManager' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/design/design-integration.js",
+        "line": 125,
+        "column": 25,
+        "rule": "no-unused-vars",
+        "message": "'style' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/design/design-integration.js",
+        "line": 125,
+        "column": 32,
+        "rule": "no-unused-vars",
+        "message": "'fileData' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/design/design-integration.js",
+        "line": 137,
+        "column": 36,
+        "rule": "no-unused-vars",
+        "message": "'fileData' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/design/design-integration.js",
+        "line": 152,
+        "column": 26,
+        "rule": "no-unused-vars",
+        "message": "'style' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/design/design-integration.js",
+        "line": 152,
+        "column": 33,
+        "rule": "no-unused-vars",
+        "message": "'fileData' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/design/design-integration.js",
+        "line": 836,
+        "column": 56,
+        "rule": "no-unused-vars",
+        "message": "'name' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/badge-counter/badge-counter.js",
+        "line": 382,
+        "column": 16,
+        "rule": "no-unused-vars",
+        "message": "'e' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/cta-button-row/cta-button-row.stories.js",
+        "line": 274,
+        "column": 36,
+        "rule": null,
+        "message": "Parsing error: Expecting Unicode escape sequence \\uXXXX",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/funnel-chart.js",
+        "line": 473,
+        "column": 25,
+        "rule": "no-unused-vars",
+        "message": "'event' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/input-field/input-field.js",
+        "line": 213,
+        "column": 16,
+        "rule": "no-unused-vars",
+        "message": "'e' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/input-field/input-field.js",
+        "line": 226,
+        "column": 15,
+        "rule": "no-unused-vars",
+        "message": "'e' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/navigation-link/navigation-link.js",
+        "line": 383,
+        "column": 16,
+        "rule": "no-unused-vars",
+        "message": "'e' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/navigation-link/navigation-link.js",
+        "line": 397,
+        "column": 15,
+        "rule": "no-unused-vars",
+        "message": "'e' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/navigation-link/navigation-link.js",
+        "line": 486,
+        "column": 18,
+        "rule": "lit/binding-positions",
+        "message": "Bindings cannot be used in place of attribute names.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/navigation-link/navigation-link.stories.js",
+        "line": 152,
+        "column": 25,
+        "rule": null,
+        "message": "Parsing error: Expecting Unicode escape sequence \\uXXXX",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/search-bar/search-bar.js",
+        "line": 322,
+        "column": 15,
+        "rule": "no-unused-vars",
+        "message": "'e' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/select-dropdown/select-dropdown.stories.js",
+        "line": 215,
+        "column": 7,
+        "rule": null,
+        "message": "Parsing error: Expecting Unicode escape sequence \\uXXXX",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/test-analytics.js",
+        "line": 11,
+        "column": 1,
+        "rule": null,
+        "message": "Parsing error: Unexpected character '@'",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/variant-renderer.js",
+        "line": 11,
+        "column": 1,
+        "rule": null,
+        "message": "Parsing error: Unexpected character '@'",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/organisms/ab-test-manager.js",
+        "line": 11,
+        "column": 1,
+        "rule": null,
+        "message": "Parsing error: Unexpected character '@'",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/organisms/dashboard-layout.js",
+        "line": 58,
+        "column": 35,
+        "rule": null,
+        "message": "Parsing error: Expecting Unicode escape sequence \\uXXXX",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/organisms/file-upload.stories.js",
+        "line": 71,
+        "column": 37,
+        "rule": "lit/no-duplicate-template-bindings",
+        "message": "Duplicate bindings are not allowed.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/organisms/neo-table.js",
+        "line": 290,
+        "column": 11,
+        "rule": "no-unused-vars",
+        "message": "'changed' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/organisms/notification-list.js",
+        "line": 863,
+        "column": 112,
+        "rule": null,
+        "message": "Parsing error: Expecting Unicode escape sequence \\uXXXX",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/organisms/user-flow-diagram.js",
+        "line": 858,
+        "column": 17,
+        "rule": "no-unused-vars",
+        "message": "'event' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/pages/ab-testing-dashboard.js",
+        "line": 13,
+        "column": 1,
+        "rule": null,
+        "message": "Parsing error: Unexpected character '@'",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/pages/journey-analytics-dashboard.js",
+        "line": 751,
+        "column": 11,
+        "rule": "no-case-declarations",
+        "message": "Unexpected lexical declaration in case block.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/theme/theme-manager.js",
+        "line": 6,
+        "column": 10,
+        "rule": "no-unused-vars",
+        "message": "'designTokens' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/theme/theme-manager.js",
+        "line": 376,
+        "column": 13,
+        "rule": "no-unused-vars",
+        "message": "'cssProperty' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 421,
+        "column": 13,
+        "rule": "no-unused-vars",
+        "message": "'userTests' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/analytics.js",
+        "line": 375,
+        "column": 35,
+        "rule": "no-unused-vars",
+        "message": "'timeLimit' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/analytics.js",
+        "line": 449,
+        "column": 17,
+        "rule": "no-unused-vars",
+        "message": "'key' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 36,
+        "column": 41,
+        "rule": "no-unused-vars",
+        "message": "'options' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 236,
+        "column": 39,
+        "rule": "no-unused-vars",
+        "message": "'eventMetrics' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 249,
+        "column": 19,
+        "rule": "no-unused-vars",
+        "message": "'analyticsData' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 260,
+        "column": 37,
+        "rule": "no-unused-vars",
+        "message": "'pageMetrics' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 342,
+        "column": 27,
+        "rule": "no-unused-vars",
+        "message": "'step' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 342,
+        "column": 33,
+        "rule": "no-unused-vars",
+        "message": "'timeRange' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 354,
+        "column": 32,
+        "rule": "no-unused-vars",
+        "message": "'timeRange' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 422,
+        "column": 27,
+        "rule": "no-unused-vars",
+        "message": "'historical' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 441,
+        "column": 20,
+        "rule": "no-unused-vars",
+        "message": "'historical' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 460,
+        "column": 22,
+        "rule": "no-unused-vars",
+        "message": "'historical' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 484,
+        "column": 19,
+        "rule": "no-unused-vars",
+        "message": "'historical' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 513,
+        "column": 37,
+        "rule": "no-unused-vars",
+        "message": "'historical' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 625,
+        "column": 21,
+        "rule": "no-unused-vars",
+        "message": "'insights' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 683,
+        "column": 27,
+        "rule": "no-unused-vars",
+        "message": "'timeRange' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 817,
+        "column": 18,
+        "rule": "no-unused-vars",
+        "message": "'cohortData' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 822,
+        "column": 19,
+        "rule": "no-unused-vars",
+        "message": "'segmentData' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 866,
+        "column": 17,
+        "rule": "no-unused-vars",
+        "message": "'timeRange' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 907,
+        "column": 25,
+        "rule": "no-unused-vars",
+        "message": "'timeRange' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/accessibility/axe-utils.js",
+        "line": 1,
+        "column": 10,
+        "rule": "no-unused-vars",
+        "message": "'configureAxe' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/accessibility/axe-utils.js",
+        "line": 40,
+        "column": 43,
+        "rule": "no-unused-vars",
+        "message": "'options' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/accessibility/axe-utils.js",
+        "line": 123,
+        "column": 11,
+        "rule": "no-unused-vars",
+        "message": "'computedStyle' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/accessibility/axe-utils.js",
+        "line": 282,
+        "column": 33,
+        "rule": "no-unused-vars",
+        "message": "'color1' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/accessibility/axe-utils.js",
+        "line": 282,
+        "column": 41,
+        "rule": "no-unused-vars",
+        "message": "'color2' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/accessibility/axe-utils.js",
+        "line": 293,
+        "column": 50,
+        "rule": "no-unused-vars",
+        "message": "'filename' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/accessibility/basic.test.js",
+        "line": 3,
+        "column": 10,
+        "rule": "no-unused-vars",
+        "message": "'testComponentAccessibility' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/accessibility/basic.test.js",
+        "line": 3,
+        "column": 38,
+        "rule": "no-unused-vars",
+        "message": "'generateViolationReport' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/accessibility/component-accessibility.test.js",
+        "line": 1,
+        "column": 32,
+        "rule": "no-unused-vars",
+        "message": "'beforeEach' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/accessibility/page-accessibility.test.js",
+        "line": 34,
+        "column": 7,
+        "rule": "no-unused-vars",
+        "message": "'axeConfig' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/accessibility-comprehensive.test.js",
+        "line": 7,
+        "column": 34,
+        "rule": "no-unused-vars",
+        "message": "'beforeAll' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/accessibility-comprehensive.test.js",
+        "line": 9,
+        "column": 10,
+        "rule": "no-unused-vars",
+        "message": "'AxeBuilder' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/accessibility-comprehensive.test.js",
+        "line": 62,
+        "column": 33,
+        "rule": "no-unused-vars",
+        "message": "'color1' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/accessibility-comprehensive.test.js",
+        "line": 62,
+        "column": 41,
+        "rule": "no-unused-vars",
+        "message": "'color2' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/accessibility-comprehensive.test.js",
+        "line": 535,
+        "column": 43,
+        "rule": "lit/binding-positions",
+        "message": "Bindings cannot be used in place of tag names.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/accessibility-comprehensive.test.js",
+        "line": 535,
+        "column": 104,
+        "rule": "lit/binding-positions",
+        "message": "Bindings cannot be used in place of tag names.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/cross-browser-comprehensive.test.js",
+        "line": 47,
+        "column": 7,
+        "rule": "no-unused-vars",
+        "message": "'BROWSER_SPECIFIC_TESTS' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/cross-browser-comprehensive.test.js",
+        "line": 137,
+        "column": 50,
+        "rule": "no-unused-vars",
+        "message": "'componentName' is defined but never used. Allowed unused args must match /^_/u.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/cross-browser-comprehensive.test.js",
+        "line": 158,
+        "column": 54,
+        "rule": "no-unused-vars",
+        "message": "'polyfills' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/cross-browser-comprehensive.test.js",
+        "line": 176,
+        "column": 13,
+        "rule": "no-unused-vars",
+        "message": "'touchEvent' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/cross-browser-comprehensive.test.js",
+        "line": 669,
+        "column": 13,
+        "rule": "no-unused-vars",
+        "message": "'hasGrid' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/integration-comprehensive.test.js",
+        "line": 483,
+        "column": 38,
+        "rule": null,
+        "message": "Parsing error: Unexpected token {",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/performance-comprehensive.test.js",
+        "line": 123,
+        "column": 24,
+        "rule": "no-async-promise-executor",
+        "message": "Promise executor functions should not be async.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/performance-comprehensive.test.js",
+        "line": 128,
+        "column": 15,
+        "rule": "no-unused-vars",
+        "message": "'measurement' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/performance-comprehensive.test.js",
+        "line": 164,
+        "column": 13,
+        "rule": "no-unused-vars",
+        "message": "'measurement' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/performance-comprehensive.test.js",
+        "line": 352,
+        "column": 17,
+        "rule": "no-unused-vars",
+        "message": "'memoryAfterCreate' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/performance-comprehensive.test.js",
+        "line": 495,
+        "column": 17,
+        "rule": "no-unused-vars",
+        "message": "'measurement' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/performance-comprehensive.test.js",
+        "line": 757,
+        "column": 13,
+        "rule": "no-unused-vars",
+        "message": "'paintMeasurement' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/advanced/test-runner.js",
+        "line": 7,
+        "column": 10,
+        "rule": "no-unused-vars",
+        "message": "'exec' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/integration/application-integration.test.js",
+        "line": 10,
+        "column": 7,
+        "rule": "no-unused-vars",
+        "message": "'appIntegrator' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/integration/design-system-integration.test.js",
+        "line": 256,
+        "column": 72,
+        "rule": "no-useless-escape",
+        "message": "Unnecessary escape character: \\A.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/integration/playground-app-integration-ui.test.js",
+        "line": 250,
+        "column": 13,
+        "rule": "no-unused-vars",
+        "message": "'buildButton' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/integration/playground-live-components.test.js",
+        "line": 7,
+        "column": 10,
+        "rule": "no-unused-vars",
+        "message": "'fixture' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/integration/playground-live-components.test.js",
+        "line": 7,
+        "column": 19,
+        "rule": "no-unused-vars",
+        "message": "'html' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/integration/production-scenarios.test.js",
+        "line": 7,
+        "column": 32,
+        "rule": "no-unused-vars",
+        "message": "'beforeEach' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/visual/component-visual.test.js",
+        "line": 7,
+        "column": 16,
+        "rule": "no-unused-vars",
+        "message": "'expect' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/visual/playground-visual.test.js",
+        "line": 7,
+        "column": 16,
+        "rule": "no-unused-vars",
+        "message": "'expect' is defined but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/utils/bundle-analyzer.js",
+        "line": 128,
+        "column": 15,
+        "rule": "no-unused-vars",
+        "message": "'chunk' is assigned a value but never used.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/utils/lazy-loader.js",
+        "line": 213,
+        "column": 15,
+        "rule": "no-unused-vars",
+        "message": "'category' is assigned a value but never used.",
+        "severity": "error"
+      }
+    ],
+    "MEDIUM": [
+      {
+        "file": "/src/app.js",
+        "line": 24,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/analytics/chart-visualizations.js",
+        "line": 133,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/analytics/chart-visualizations.js",
+        "line": 164,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/icon/icon.js",
+        "line": 113,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/icon/icons.js",
+        "line": 21,
+        "column": 78,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: eof-in-tag",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/icon/icons.js",
+        "line": 28,
+        "column": 83,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: eof-in-tag",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/icon/icons.js",
+        "line": 47,
+        "column": 67,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: eof-in-tag",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/icon/icons.js",
+        "line": 49,
+        "column": 52,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: eof-in-tag",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/icon/icons.js",
+        "line": 59,
+        "column": 78,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: eof-in-tag",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/icon/icons.js",
+        "line": 61,
+        "column": 72,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: eof-in-tag",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/icon/icons.js",
+        "line": 64,
+        "column": 85,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: eof-in-tag",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/icon/icons.js",
+        "line": 70,
+        "column": 84,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: eof-in-tag",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/icon/icons.js",
+        "line": 72,
+        "column": 84,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: eof-in-tag",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/journey-tracker.js",
+        "line": 104,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/journey-tracker.js",
+        "line": 306,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/journey-tracker.js",
+        "line": 338,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/journey-tracker.js",
+        "line": 341,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/atoms/switch/switch.js",
+        "line": 318,
+        "column": 13,
+        "rule": "lit/no-value-attribute",
+        "message": "The `value` attribute only defines the initial value rather than permanently binding; you should set the `value` property instead via `.value`",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/base-component.js",
+        "line": 26,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/base-component.js",
+        "line": 37,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/base-page-component.js",
+        "line": 230,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/base-page-component.js",
+        "line": 268,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/code/code-snippet.js",
+        "line": 149,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/core/memory-monitor.js",
+        "line": 215,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/core/memory-monitor.js",
+        "line": 221,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/core/optimized-image.js",
+        "line": 246,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/design/design-integration.js",
+        "line": 63,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/design/design-integration.js",
+        "line": 252,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/design/design-integration.js",
+        "line": 292,
+        "column": 15,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/form/color-picker.js",
+        "line": 407,
+        "column": 7,
+        "rule": "prefer-const",
+        "message": "'l' is never reassigned. Use 'const' instead.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/molecules/cta-button-row/cta-button-row.js",
+        "line": 273,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/molecules/funnel-chart.js",
+        "line": 372,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/molecules/modal/modal.stories.js",
+        "line": 301,
+        "column": 64,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: unexpected-equals-sign-before-attribute-name",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/molecules/modal/modal.stories.js",
+        "line": 301,
+        "column": 65,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: unexpected-character-in-attribute-name",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/molecules/modal/modal.stories.js",
+        "line": 301,
+        "column": 66,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: unexpected-character-in-attribute-name",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/molecules/modal/modal.stories.js",
+        "line": 316,
+        "column": 70,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: unexpected-equals-sign-before-attribute-name",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/molecules/modal/modal.stories.js",
+        "line": 316,
+        "column": 71,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: unexpected-character-in-attribute-name",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/molecules/modal/modal.stories.js",
+        "line": 316,
+        "column": 72,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: unexpected-character-in-attribute-name",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/molecules/select-dropdown/select-dropdown.js",
+        "line": 539,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/molecules/user-profile-summary/user-profile-summary.js",
+        "line": 279,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/organisms/file-upload.stories.js",
+        "line": 71,
+        "column": 30,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: unexpected-solidus-in-tag",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/organisms/file-upload.stories.js",
+        "line": 71,
+        "column": 38,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: unexpected-solidus-in-tag",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/organisms/neo-form-builder.js",
+        "line": 888,
+        "column": 21,
+        "rule": "lit/no-value-attribute",
+        "message": "The `value` attribute only defines the initial value rather than permanently binding; you should set the `value` property instead via `.value`",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/organisms/neo-form-builder.js",
+        "line": 923,
+        "column": 21,
+        "rule": "lit/no-value-attribute",
+        "message": "The `value` attribute only defines the initial value rather than permanently binding; you should set the `value` property instead via `.value`",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/organisms/neo-table.js",
+        "line": 329,
+        "column": 9,
+        "rule": "prefer-const",
+        "message": "'data' is never reassigned. Use 'const' instead.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/components/organisms/user-flow-diagram.js",
+        "line": 477,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/contact-page.js",
+        "line": 135,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/contact-page.js",
+        "line": 144,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/docs-page.js",
+        "line": 89,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/home-page.js",
+        "line": 12,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/home-page.js",
+        "line": 15,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/journey-analytics-dashboard.js",
+        "line": 696,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/journey-analytics-dashboard.js",
+        "line": 717,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/journey-analytics-dashboard.js",
+        "line": 911,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/journey-analytics-dashboard.js",
+        "line": 919,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/profile-page.js",
+        "line": 166,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/profile-page.js",
+        "line": 189,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/profile-page.js",
+        "line": 194,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/profile-page.js",
+        "line": 220,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/profile-page.js",
+        "line": 223,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/settings-page.js",
+        "line": 213,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/settings-page.js",
+        "line": 230,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/settings-page.js",
+        "line": 232,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/settings-page.js",
+        "line": 244,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/settings-page.js",
+        "line": 247,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/pages/tutorials-page.js",
+        "line": 153,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/services/api.js",
+        "line": 17,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/services/api.js",
+        "line": 35,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/services/api.js",
+        "line": 59,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/services/api.js",
+        "line": 84,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/services/api.js",
+        "line": 104,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/theme/theme-manager.js",
+        "line": 292,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/theme/theme-manager.js",
+        "line": 323,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/theme/theme-manager.js",
+        "line": 338,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/theme/theme-manager.js",
+        "line": 525,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/tokens/token-system.js",
+        "line": 237,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/tokens/token-system.js",
+        "line": 253,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/utils/component-registration.js",
+        "line": 15,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/utils/component-registration.js",
+        "line": 21,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/utils/component-registration.js",
+        "line": 27,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/utils/component-registration.js",
+        "line": 29,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/utils/logger.js",
+        "line": 11,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/utils/logger.js",
+        "line": 20,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/utils/logger.js",
+        "line": 29,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/utils/logger.js",
+        "line": 39,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/components/utils/logger.js",
+        "line": 49,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/config/dynamic-config.js",
+        "line": 117,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/config/dynamic-config.js",
+        "line": 126,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/config/dynamic-config.js",
+        "line": 132,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/config/dynamic-config.js",
+        "line": 142,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/config/dynamic-config.js",
+        "line": 207,
+        "column": 3,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/middleware/security.js",
+        "line": 169,
+        "column": 21,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/about-page.js",
+        "line": 128,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/about-page.js",
+        "line": 147,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/contact-page.js",
+        "line": 179,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/contact-page.js",
+        "line": 227,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/dashboard-page.js",
+        "line": 200,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/dashboard-page.js",
+        "line": 205,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/dashboard-page.js",
+        "line": 225,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/dashboard-page.js",
+        "line": 251,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/docs-page.js",
+        "line": 243,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/docs-page.js",
+        "line": 283,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/documentation-page.js",
+        "line": 217,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/documentation-page.js",
+        "line": 243,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/documentation-page.js",
+        "line": 282,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/examples-page.js",
+        "line": 286,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/examples-page.js",
+        "line": 319,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/profile-page.js",
+        "line": 301,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/profile-page.js",
+        "line": 364,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/profile-page.js",
+        "line": 397,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/profile-page.js",
+        "line": 416,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/profile-page.js",
+        "line": 439,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/search-page.js",
+        "line": 142,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/search-page.js",
+        "line": 262,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/status-page.js",
+        "line": 32,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/status-page.js",
+        "line": 37,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/status-page.js",
+        "line": 53,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/status-page.js",
+        "line": 177,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/support-page.js",
+        "line": 130,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/pages/tutorials-page.js",
+        "line": 204,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/router.js",
+        "line": 195,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/service-worker.js",
+        "line": 149,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/service-worker.js",
+        "line": 165,
+        "column": 3,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/service-worker.js",
+        "line": 204,
+        "column": 11,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/service-worker.js",
+        "line": 207,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/service-worker.js",
+        "line": 211,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 66,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 115,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 177,
+        "column": 13,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 188,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 246,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 265,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 323,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 338,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 353,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 369,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 384,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 413,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 424,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/ab-testing.js",
+        "line": 482,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/accessibility-monitor.js",
+        "line": 58,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/accessibility-monitor.js",
+        "line": 71,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/analytics.js",
+        "line": 60,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/i18n.js",
+        "line": 23,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/journey-intelligence.js",
+        "line": 88,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/modal-service.js",
+        "line": 171,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/notifications.js",
+        "line": 9,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/notifications.js",
+        "line": 26,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/notifications.js",
+        "line": 33,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/notifications.js",
+        "line": 57,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/offline.js",
+        "line": 32,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/services/translations-loader.js",
+        "line": 21,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/styles/theme.js",
+        "line": 90,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/styles/theme.js",
+        "line": 111,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/styles/theme.js",
+        "line": 130,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/styles/theme.js",
+        "line": 160,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/styles/theme.js",
+        "line": 171,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/styles/theme.js",
+        "line": 182,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/styles/theme.js",
+        "line": 210,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/test/advanced/accessibility-comprehensive.test.js",
+        "line": 535,
+        "column": 43,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: invalid-first-character-of-tag-name",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/test/advanced/accessibility-comprehensive.test.js",
+        "line": 535,
+        "column": 104,
+        "rule": "lit/no-invalid-html",
+        "message": "Template contained invalid HTML syntax, error was: invalid-first-character-of-tag-name",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/test/advanced/cross-browser-comprehensive.test.js",
+        "line": 537,
+        "column": 15,
+        "rule": "prefer-const",
+        "message": "'component' is never reassigned. Use 'const' instead.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/integration/api-communication.test.js",
+        "line": 637,
+        "column": 11,
+        "rule": "prefer-const",
+        "message": "'progressCallbacks' is never reassigned. Use 'const' instead.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/integration/auth-flow-integration.test.js",
+        "line": 155,
+        "column": 11,
+        "rule": "prefer-const",
+        "message": "'authStateChanges' is never reassigned. Use 'const' instead.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/integration/auth-flow-integration.test.js",
+        "line": 516,
+        "column": 11,
+        "rule": "prefer-const",
+        "message": "'stateChanges' is never reassigned. Use 'const' instead.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/integration/playground-live-components.test.js",
+        "line": 29,
+        "column": 9,
+        "rule": "prefer-const",
+        "message": "'failedLoads' is never reassigned. Use 'const' instead.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/test/integration/session-management.test.js",
+        "line": 253,
+        "column": 11,
+        "rule": "prefer-const",
+        "message": "'tab2StateChanges' is never reassigned. Use 'const' instead.",
+        "severity": "error"
+      },
+      {
+        "file": "/src/utils/bundle-analyzer.js",
+        "line": 232,
+        "column": 11,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/bundle-analyzer.js",
+        "line": 331,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/bundle-analyzer.js",
+        "line": 332,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/bundle-analyzer.js",
+        "line": 333,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/bundle-analyzer.js",
+        "line": 334,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/critical-css.js",
+        "line": 102,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/critical-css.js",
+        "line": 119,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/lazy-load.js",
+        "line": 70,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/lazy-load.js",
+        "line": 75,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/lazy-loader.js",
+        "line": 41,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/lazy-loader.js",
+        "line": 86,
+        "column": 13,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/lazy-loader.js",
+        "line": 114,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/lazy-loader.js",
+        "line": 220,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/logger.js",
+        "line": 63,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/logger.js",
+        "line": 66,
+        "column": 11,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/logger.js",
+        "line": 68,
+        "column": 11,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/logger.js",
+        "line": 82,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/logger.js",
+        "line": 84,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/logger.js",
+        "line": 97,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/logger.js",
+        "line": 99,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/logger.js",
+        "line": 112,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/logger.js",
+        "line": 114,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/logger.js",
+        "line": 137,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/logger.js",
+        "line": 144,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/memory-leak-detector.js",
+        "line": 368,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 75,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 82,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 84,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 92,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 104,
+        "column": 3,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 111,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 113,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 203,
+        "column": 7,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 236,
+        "column": 5,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 259,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 266,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 268,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      },
+      {
+        "file": "/src/utils/polyfill-loader.js",
+        "line": 276,
+        "column": 9,
+        "rule": "no-console",
+        "message": "Unexpected console statement.",
+        "severity": "warning"
+      }
+    ],
+    "LOW": [],
+    "totalFiles": 466,
+    "totalIssues": 298,
+    "errorCount": 101,
+    "warningCount": 197
+  },
+  "coverage": {
+    "lines": {
+      "covered": 0,
+      "total": 0,
+      "percentage": 0
+    },
+    "functions": {
+      "covered": 0,
+      "total": 0,
+      "percentage": 0
+    },
+    "branches": {
+      "covered": 0,
+      "total": 0,
+      "percentage": 0
+    },
+    "statements": {
+      "covered": 0,
+      "total": 0,
+      "percentage": 0
+    }
+  },
+  "bundle": {
+    "totalSize": 278412,
+    "jsSize": 69936,
+    "cssSize": 8494,
+    "assetSize": 199982,
+    "files": [
+      {
+        "path": "offline.html",
+        "size": 4801,
+        "sizeFormatted": "4.69 KB"
+      },
+      {
+        "path": "stats.html",
+        "size": 172343,
+        "sizeFormatted": "168.3 KB"
+      },
+      {
+        "path": "index.html",
+        "size": 7848,
+        "sizeFormatted": "7.66 KB"
+      },
+      {
+        "path": "playground-frame.html",
+        "size": 2994,
+        "sizeFormatted": "2.92 KB"
+      },
+      {
+        "path": "docs/components.md",
+        "size": 4154,
+        "sizeFormatted": "4.06 KB"
+      },
+      {
+        "path": "docs/installation.md",
+        "size": 2556,
+        "sizeFormatted": "2.5 KB"
+      },
+      {
+        "path": "manifest.json",
+        "size": 2823,
+        "sizeFormatted": "2.76 KB"
+      },
+      {
+        "path": "assets/main.DeMuyK5h.css",
+        "size": 943,
+        "sizeFormatted": "943 B"
+      },
+      {
+        "path": "assets/vendor-lit.C_CaZkRi.js",
+        "size": 27866,
+        "sizeFormatted": "27.21 KB"
+      },
+      {
+        "path": "assets/services.Ca9yRYKG.js",
+        "size": 8786,
+        "sizeFormatted": "8.58 KB"
+      },
+      {
+        "path": "assets/utils.BB_gqiSc.js",
+        "size": 982,
+        "sizeFormatted": "982 B"
+      },
+      {
+        "path": "assets/global.TmaDu8zB.css",
+        "size": 7551,
+        "sizeFormatted": "7.37 KB"
+      },
+      {
+        "path": "assets/main.CJVy98I4.js",
+        "size": 32301,
+        "sizeFormatted": "31.54 KB"
+      },
+      {
+        "path": "assets/manifest.HP5mvz2V.json",
+        "size": 1097,
+        "sizeFormatted": "1.07 KB"
+      },
+      {
+        "path": "assets/icon-192x192.eM46iWaO.png",
+        "size": 1366,
+        "sizeFormatted": "1.33 KB"
+      },
+      {
+        "path": "assets/pages.l0sNRNKZ.js",
+        "size": 1,
+        "sizeFormatted": "1 B"
+      }
+    ]
+  },
+  "complexity": {
+    "totalFiles": 512,
+    "totalLines": 137818,
+    "avgComplexity": 269.17578125,
+    "highComplexityFiles": [
+      {
+        "file": "src/middleware/security.js",
+        "complexity": 12,
+        "lines": 305
+      },
+      {
+        "file": "src/test/advanced/test-suite-config.js",
+        "complexity": 19,
+        "lines": 379
+      },
+      {
+        "file": "src/test/advanced/integration-comprehensive.test.js",
+        "complexity": 43,
+        "lines": 1069
+      },
+      {
+        "file": "src/test/advanced/cross-browser-comprehensive.test.js",
+        "complexity": 47,
+        "lines": 871
+      },
+      {
+        "file": "src/test/advanced/accessibility-comprehensive.test.js",
+        "complexity": 45,
+        "lines": 599
+      },
+      {
+        "file": "src/test/advanced/test-runner.js",
+        "complexity": 64,
+        "lines": 735
+      },
+      {
+        "file": "src/test/advanced/performance-comprehensive.test.js",
+        "complexity": 54,
+        "lines": 773
+      },
+      {
+        "file": "src/test/global-setup.js",
+        "complexity": 11,
+        "lines": 72
+      },
+      {
+        "file": "src/test/integration/auth-flow-integration.test.js",
+        "complexity": 25,
+        "lines": 585
+      },
+      {
+        "file": "src/test/integration/session-management.test.js",
+        "complexity": 11,
+        "lines": 615
+      },
+      {
+        "file": "src/test/integration/error-boundary-recovery.test.js",
+        "complexity": 28,
+        "lines": 609
+      },
+      {
+        "file": "src/test/integration/playground-app-integration-ui.test.js",
+        "complexity": 17,
+        "lines": 581
+      },
+      {
+        "file": "src/test/integration/helpers/mock-backend.js",
+        "complexity": 32,
+        "lines": 522
+      },
+      {
+        "file": "src/test/integration/helpers/auth-test-utils.js",
+        "complexity": 39,
+        "lines": 431
+      },
+      {
+        "file": "src/test/component-registration-helper.js",
+        "complexity": 18,
+        "lines": 168
+      },
+      {
+        "file": "src/test/setup/monkey-patch-vitest-worker.js",
+        "complexity": 42,
+        "lines": 227
+      },
+      {
+        "file": "src/test/setup/worker-performance-polyfill.js",
+        "complexity": 23,
+        "lines": 96
+      },
+      {
+        "file": "src/test/setup/unified-performance-polyfill.js",
+        "complexity": 34,
+        "lines": 220
+      },
+      {
+        "file": "src/test/setup/vitest-worker-polyfill.js",
+        "complexity": 12,
+        "lines": 76
+      },
+      {
+        "file": "src/test/setup/direct-vitest-worker-patch.js",
+        "complexity": 38,
+        "lines": 221
+      },
+      {
+        "file": "src/test/setup/global-performance-polyfill.js",
+        "complexity": 34,
+        "lines": 151
+      },
+      {
+        "file": "src/test/setup/direct-patch-vitest-worker.js",
+        "complexity": 49,
+        "lines": 226
+      },
+      {
+        "file": "src/test/setup/patch-vitest-worker.js",
+        "complexity": 13,
+        "lines": 88
+      },
+      {
+        "file": "src/test/setup/optimized-performance-polyfill.js",
+        "complexity": 109,
+        "lines": 416
+      },
+      {
+        "file": "src/test/utils/dom-mock-utils.js",
+        "complexity": 37,
+        "lines": 381
+      },
+      {
+        "file": "src/test/utils/component-mock-utils.js",
+        "complexity": 26,
+        "lines": 323
+      },
+      {
+        "file": "src/test/components/form-validation.test.js",
+        "complexity": 17,
+        "lines": 281
+      },
+      {
+        "file": "src/test/components/tabs.test.js",
+        "complexity": 20,
+        "lines": 379
+      },
+      {
+        "file": "src/test/components/molecules/card.test.js",
+        "complexity": 30,
+        "lines": 326
+      },
+      {
+        "file": "src/test/components/molecules/alert.test.js",
+        "complexity": 13,
+        "lines": 286
+      },
+      {
+        "file": "src/test/components/molecules/modal.test.js",
+        "complexity": 43,
+        "lines": 449
+      },
+      {
+        "file": "src/test/components/molecules/toast.test.js",
+        "complexity": 16,
+        "lines": 234
+      },
+      {
+        "file": "src/test/components/atoms/tooltip.test.js",
+        "complexity": 16,
+        "lines": 288
+      },
+      {
+        "file": "src/test/components/atoms/progress-bar.test.js",
+        "complexity": 22,
+        "lines": 354
+      },
+      {
+        "file": "src/test/components/atoms/icon.test.js",
+        "complexity": 20,
+        "lines": 167
+      },
+      {
+        "file": "src/test/components/atoms/badge.test.js",
+        "complexity": 21,
+        "lines": 335
+      },
+      {
+        "file": "src/test/components/atoms/link.test.js",
+        "complexity": 14,
+        "lines": 305
+      },
+      {
+        "file": "src/test/components/atoms/select.test.js",
+        "complexity": 35,
+        "lines": 381
+      },
+      {
+        "file": "src/test/components/atoms/button.visual.test.js",
+        "complexity": 15,
+        "lines": 255
+      },
+      {
+        "file": "src/test/components/atoms/checkbox.test.js",
+        "complexity": 16,
+        "lines": 223
+      },
+      {
+        "file": "src/test/components/modal.test.js",
+        "complexity": 15,
+        "lines": 188
+      },
+      {
+        "file": "src/test/components/file-upload.test.js",
+        "complexity": 39,
+        "lines": 403
+      },
+      {
+        "file": "src/test/components/toast.test.js",
+        "complexity": 25,
+        "lines": 205
+      },
+      {
+        "file": "src/test/components/error-page.test.js",
+        "complexity": 18,
+        "lines": 239
+      },
+      {
+        "file": "src/test/components/badge.test.js",
+        "complexity": 21,
+        "lines": 335
+      },
+      {
+        "file": "src/test/components/error-page-minimal.test.js",
+        "complexity": 13,
+        "lines": 113
+      },
+      {
+        "file": "src/test/components/phone-input.test.js",
+        "complexity": 16,
+        "lines": 292
+      },
+      {
+        "file": "src/test/components/language-selector.test.js",
+        "complexity": 17,
+        "lines": 221
+      },
+      {
+        "file": "src/test/components/faq-accordion.test.js",
+        "complexity": 13,
+        "lines": 286
+      },
+      {
+        "file": "src/test/components/button.test.js",
+        "complexity": 19,
+        "lines": 309
+      },
+      {
+        "file": "src/test/components/data-table.test.js",
+        "complexity": 26,
+        "lines": 336
+      },
+      {
+        "file": "src/test/components/organisms/table.test.js",
+        "complexity": 52,
+        "lines": 786
+      },
+      {
+        "file": "src/test/components/error-page-simple.test.js",
+        "complexity": 28,
+        "lines": 271
+      },
+      {
+        "file": "src/test/components/form.test.js",
+        "complexity": 55,
+        "lines": 466
+      },
+      {
+        "file": "src/test/components/checkbox.test.js",
+        "complexity": 15,
+        "lines": 299
+      },
+      {
+        "file": "src/test/visual/memory-monitor.visual.test.js",
+        "complexity": 23,
+        "lines": 290
+      },
+      {
+        "file": "src/test/visual/component-regression.test.js",
+        "complexity": 17,
+        "lines": 341
+      },
+      {
+        "file": "src/test/visual/component-visual.test.js",
+        "complexity": 20,
+        "lines": 275
+      },
+      {
+        "file": "src/test/test-setup.js",
+        "complexity": 17,
+        "lines": 226
+      },
+      {
+        "file": "src/test/performance/performance.test.js",
+        "complexity": 11,
+        "lines": 234
+      },
+      {
+        "file": "src/test/test-utils.js",
+        "complexity": 27,
+        "lines": 211
+      },
+      {
+        "file": "src/test/e2e/item-management.test.js",
+        "complexity": 16,
+        "lines": 658
+      },
+      {
+        "file": "src/test/accessibility/page-accessibility.test.js",
+        "complexity": 19,
+        "lines": 288
+      },
+      {
+        "file": "src/test/accessibility/component-accessibility.test.js",
+        "complexity": 13,
+        "lines": 388
+      },
+      {
+        "file": "src/test/accessibility/axe-utils.js",
+        "complexity": 33,
+        "lines": 336
+      },
+      {
+        "file": "src/test/pages/registration-page.test.js",
+        "complexity": 12,
+        "lines": 282
+      },
+      {
+        "file": "src/test/pages/projects-page.test.js",
+        "complexity": 24,
+        "lines": 263
+      },
+      {
+        "file": "src/test/pages/registration-page-simple.test.js",
+        "complexity": 34,
+        "lines": 411
+      },
+      {
+        "file": "src/test/pages/pricing-page.test.js",
+        "complexity": 25,
+        "lines": 240
+      },
+      {
+        "file": "src/test/pages/documentation-page.test.js",
+        "complexity": 18,
+        "lines": 186
+      },
+      {
+        "file": "src/test/pages/tutorials-page.test.js",
+        "complexity": 11,
+        "lines": 401
+      },
+      {
+        "file": "src/test/pages/components-page.test.js",
+        "complexity": 19,
+        "lines": 377
+      },
+      {
+        "file": "src/test/pages/examples-page.test.js",
+        "complexity": 15,
+        "lines": 453
+      },
+      {
+        "file": "src/test/pages/about-page.test.js",
+        "complexity": 38,
+        "lines": 425
+      },
+      {
+        "file": "src/test/pages/blog-page.test.js",
+        "complexity": 16,
+        "lines": 232
+      },
+      {
+        "file": "src/test/pages/support-page.test.js",
+        "complexity": 34,
+        "lines": 526
+      },
+      {
+        "file": "src/test/helpers/mock-component.js",
+        "complexity": 18,
+        "lines": 272
+      },
+      {
+        "file": "src/test/helpers/component-test-helper.js",
+        "complexity": 17,
+        "lines": 185
+      },
+      {
+        "file": "src/test/services/error-service.test.js",
+        "complexity": 16,
+        "lines": 330
+      },
+      {
+        "file": "src/playground/tools/project-integrator.js",
+        "complexity": 34,
+        "lines": 499
+      },
+      {
+        "file": "src/playground/tools/component-generator.js",
+        "complexity": 28,
+        "lines": 409
+      },
+      {
+        "file": "src/playground/tools/health-check-templates.js",
+        "complexity": 71,
+        "lines": 1047
+      },
+      {
+        "file": "src/playground/tools/app-template-generator.js",
+        "complexity": 19,
+        "lines": 517
+      },
+      {
+        "file": "src/playground/tools/fullstack-project-generator.js",
+        "complexity": 35,
+        "lines": 856
+      },
+      {
+        "file": "src/playground/tools/one-click-deployment.js",
+        "complexity": 45,
+        "lines": 681
+      },
+      {
+        "file": "src/playground/tools/usage-examples.js",
+        "complexity": 13,
+        "lines": 834
+      },
+      {
+        "file": "src/playground/tools/deployment-workflow-integration.js",
+        "complexity": 43,
+        "lines": 530
+      },
+      {
+        "file": "src/playground/tools/production-config-manager.js",
+        "complexity": 35,
+        "lines": 782
+      },
+      {
+        "file": "src/playground/tools/platform-validators.js",
+        "complexity": 111,
+        "lines": 945
+      },
+      {
+        "file": "src/playground/tools/monitoring-integration.js",
+        "complexity": 69,
+        "lines": 1261
+      },
+      {
+        "file": "src/playground/tools/github-repo-generator.js",
+        "complexity": 39,
+        "lines": 886
+      },
+      {
+        "file": "src/playground/tools/deployment-validator.js",
+        "complexity": 64,
+        "lines": 750
+      },
+      {
+        "file": "src/playground/tools/performance-validator.js",
+        "complexity": 43,
+        "lines": 472
+      },
+      {
+        "file": "src/playground/tools/project-exporter.js",
+        "complexity": 61,
+        "lines": 828
+      },
+      {
+        "file": "src/playground/core/smart-search.js",
+        "complexity": 56,
+        "lines": 667
+      },
+      {
+        "file": "src/playground/core/performance-optimizer.js",
+        "complexity": 59,
+        "lines": 667
+      },
+      {
+        "file": "src/playground/core/component-loader.js",
+        "complexity": 87,
+        "lines": 809
+      },
+      {
+        "file": "src/playground/core/session-memory.js",
+        "complexity": 41,
+        "lines": 543
+      },
+      {
+        "file": "src/playground/core/prop-editor.js",
+        "complexity": 35,
+        "lines": 263
+      },
+      {
+        "file": "src/playground/core/keyboard-navigation.js",
+        "complexity": 47,
+        "lines": 560
+      },
+      {
+        "file": "src/playground/visual-testing-mode.js",
+        "complexity": 38,
+        "lines": 514
+      },
+      {
+        "file": "src/playground/components/deployment-validation-ui.js",
+        "complexity": 36,
+        "lines": 938
+      },
+      {
+        "file": "src/playground/components/component-generator-modal.js",
+        "complexity": 28,
+        "lines": 899
+      },
+      {
+        "file": "src/playground/components/design-system-panel.js",
+        "complexity": 42,
+        "lines": 755
+      },
+      {
+        "file": "src/playground/templates/playground-config.template.js",
+        "complexity": 26,
+        "lines": 182
+      },
+      {
+        "file": "src/playground/templates/story.template.js",
+        "complexity": 44,
+        "lines": 272
+      },
+      {
+        "file": "src/playground/templates/component.template.js",
+        "complexity": 11,
+        "lines": 135
+      },
+      {
+        "file": "src/playground/templates/test.template.js",
+        "complexity": 23,
+        "lines": 211
+      },
+      {
+        "file": "src/playground/advanced-playground.js",
+        "complexity": 186,
+        "lines": 2133
+      },
+      {
+        "file": "src/mixins/form-validation.js",
+        "complexity": 37,
+        "lines": 299
+      },
+      {
+        "file": "src/mixins/keyboard-navigation.js",
+        "complexity": 51,
+        "lines": 423
+      },
+      {
+        "file": "src/config/dynamic-config.js",
+        "complexity": 15,
+        "lines": 208
+      },
+      {
+        "file": "src/utils/logger.js",
+        "complexity": 14,
+        "lines": 149
+      },
+      {
+        "file": "src/utils/polyfill-loader.js",
+        "complexity": 30,
+        "lines": 283
+      },
+      {
+        "file": "src/utils/feature-detection.js",
+        "complexity": 15,
+        "lines": 193
+      },
+      {
+        "file": "src/utils/lazy-loader.js",
+        "complexity": 14,
+        "lines": 227
+      },
+      {
+        "file": "src/utils/critical-css.js",
+        "complexity": 28,
+        "lines": 234
+      },
+      {
+        "file": "src/utils/bundle-analyzer.js",
+        "complexity": 51,
+        "lines": 347
+      },
+      {
+        "file": "src/utils/router.js",
+        "complexity": 15,
+        "lines": 241
+      },
+      {
+        "file": "src/utils/keyboard.js",
+        "complexity": 17,
+        "lines": 181
+      },
+      {
+        "file": "src/utils/memory-leak-detector.js",
+        "complexity": 25,
+        "lines": 382
+      },
+      {
+        "file": "src/styles/theme.js",
+        "complexity": 25,
+        "lines": 224
+      },
+      {
+        "file": "src/components/design/design-integration.js",
+        "complexity": 86,
+        "lines": 903
+      },
+      {
+        "file": "src/components/molecules/navigation-link/navigation-link.js",
+        "complexity": 28,
+        "lines": 510
+      },
+      {
+        "file": "src/components/molecules/search-bar/search-bar.js",
+        "complexity": 28,
+        "lines": 521
+      },
+      {
+        "file": "src/components/molecules/date-picker.js",
+        "complexity": 22,
+        "lines": 334
+      },
+      {
+        "file": "src/components/molecules/toast/toast.js",
+        "complexity": 15,
+        "lines": 307
+      },
+      {
+        "file": "src/components/molecules/variant-renderer.js",
+        "complexity": 43,
+        "lines": 424
+      },
+      {
+        "file": "src/components/molecules/select-dropdown/select-dropdown.js",
+        "complexity": 80,
+        "lines": 1050
+      },
+      {
+        "file": "src/components/molecules/user-profile-summary/user-profile-summary.js",
+        "complexity": 31,
+        "lines": 450
+      },
+      {
+        "file": "src/components/molecules/select.js",
+        "complexity": 14,
+        "lines": 344
+      },
+      {
+        "file": "src/components/molecules/funnel-chart.js",
+        "complexity": 45,
+        "lines": 737
+      },
+      {
+        "file": "src/components/molecules/phone-input.js",
+        "complexity": 41,
+        "lines": 368
+      },
+      {
+        "file": "src/components/molecules/input-field/input-field.stories.js",
+        "complexity": 11,
+        "lines": 195
+      },
+      {
+        "file": "src/components/molecules/input-field/input-field.js",
+        "complexity": 15,
+        "lines": 349
+      },
+      {
+        "file": "src/components/molecules/cta-button-row/cta-button-row.js",
+        "complexity": 37,
+        "lines": 440
+      },
+      {
+        "file": "src/components/molecules/badge-counter/badge-counter.js",
+        "complexity": 33,
+        "lines": 461
+      },
+      {
+        "file": "src/components/molecules/modal/modal.js",
+        "complexity": 26,
+        "lines": 394
+      },
+      {
+        "file": "src/components/molecules/test-analytics.js",
+        "complexity": 42,
+        "lines": 693
+      },
+      {
+        "file": "src/components/form/rating.js",
+        "complexity": 25,
+        "lines": 294
+      },
+      {
+        "file": "src/components/form/autoform.js",
+        "complexity": 45,
+        "lines": 404
+      },
+      {
+        "file": "src/components/form/color-picker.js",
+        "complexity": 50,
+        "lines": 764
+      },
+      {
+        "file": "src/components/atoms/journey-tracker.js",
+        "complexity": 36,
+        "lines": 402
+      },
+      {
+        "file": "src/components/atoms/input/input.js",
+        "complexity": 23,
+        "lines": 283
+      },
+      {
+        "file": "src/components/atoms/heading/heading.js",
+        "complexity": 18,
+        "lines": 330
+      },
+      {
+        "file": "src/components/atoms/switch/switch.js",
+        "complexity": 18,
+        "lines": 362
+      },
+      {
+        "file": "src/components/atoms/select/select.js",
+        "complexity": 48,
+        "lines": 497
+      },
+      {
+        "file": "src/components/atoms/text-input/text-input.js",
+        "complexity": 12,
+        "lines": 303
+      },
+      {
+        "file": "src/components/atoms/badge/badge.js",
+        "complexity": 11,
+        "lines": 273
+      },
+      {
+        "file": "src/components/core/optimized-image.js",
+        "complexity": 14,
+        "lines": 263
+      },
+      {
+        "file": "src/components/core/memory-monitor.js",
+        "complexity": 12,
+        "lines": 330
+      },
+      {
+        "file": "src/components/auth/verify-email.js",
+        "complexity": 11,
+        "lines": 245
+      },
+      {
+        "file": "src/components/navigation/sidebar.js",
+        "complexity": 18,
+        "lines": 310
+      },
+      {
+        "file": "src/components/base-page-component.js",
+        "complexity": 19,
+        "lines": 367
+      },
+      {
+        "file": "src/components/docs/doc-viewer.js",
+        "complexity": 13,
+        "lines": 313
+      },
+      {
+        "file": "src/components/docs/doc-nav.js",
+        "complexity": 12,
+        "lines": 249
+      },
+      {
+        "file": "src/components/theme/theme-manager.js",
+        "complexity": 47,
+        "lines": 661
+      },
+      {
+        "file": "src/components/marketing/faq-accordion.js",
+        "complexity": 18,
+        "lines": 397
+      },
+      {
+        "file": "src/components/marketing/testimonials.js",
+        "complexity": 17,
+        "lines": 451
+      },
+      {
+        "file": "src/components/marketing/pricing-tables.js",
+        "complexity": 13,
+        "lines": 556
+      },
+      {
+        "file": "src/components/performance/performance-dashboard.js",
+        "complexity": 27,
+        "lines": 399
+      },
+      {
+        "file": "src/components/data/tree-view.js",
+        "complexity": 22,
+        "lines": 466
+      },
+      {
+        "file": "src/components/pages/profile-page.js",
+        "complexity": 14,
+        "lines": 385
+      },
+      {
+        "file": "src/components/pages/ab-testing-dashboard.js",
+        "complexity": 30,
+        "lines": 762
+      },
+      {
+        "file": "src/components/pages/auth/register-page.js",
+        "complexity": 11,
+        "lines": 163
+      },
+      {
+        "file": "src/components/pages/auth/login-page.js",
+        "complexity": 12,
+        "lines": 152
+      },
+      {
+        "file": "src/components/pages/journey-analytics-dashboard.js",
+        "complexity": 52,
+        "lines": 1262
+      },
+      {
+        "file": "src/components/error/error-page.js",
+        "complexity": 33,
+        "lines": 374
+      },
+      {
+        "file": "src/components/tokens/token-system.js",
+        "complexity": 30,
+        "lines": 407
+      },
+      {
+        "file": "src/components/interaction/drag-drop.js",
+        "complexity": 24,
+        "lines": 458
+      },
+      {
+        "file": "src/components/organisms/neo-table.js",
+        "complexity": 27,
+        "lines": 593
+      },
+      {
+        "file": "src/components/organisms/neo-data-grid.stories.js",
+        "complexity": 11,
+        "lines": 420
+      },
+      {
+        "file": "src/components/organisms/charts.js",
+        "complexity": 21,
+        "lines": 348
+      },
+      {
+        "file": "src/components/organisms/form-validation.js",
+        "complexity": 26,
+        "lines": 175
+      },
+      {
+        "file": "src/components/organisms/pagination.js",
+        "complexity": 14,
+        "lines": 189
+      },
+      {
+        "file": "src/components/organisms/notification-list.js",
+        "complexity": 52,
+        "lines": 863
+      },
+      {
+        "file": "src/components/organisms/table/table.js",
+        "complexity": 28,
+        "lines": 502
+      },
+      {
+        "file": "src/components/organisms/ab-test-manager.js",
+        "complexity": 26,
+        "lines": 815
+      },
+      {
+        "file": "src/components/organisms/dashboard-layout.js",
+        "complexity": 13,
+        "lines": 58
+      },
+      {
+        "file": "src/components/organisms/neo-form-builder.js",
+        "complexity": 105,
+        "lines": 1279
+      },
+      {
+        "file": "src/components/organisms/neo-data-grid.js",
+        "complexity": 58,
+        "lines": 846
+      },
+      {
+        "file": "src/components/organisms/user-flow-diagram.js",
+        "complexity": 73,
+        "lines": 1153
+      },
+      {
+        "file": "src/components/services/api.js",
+        "complexity": 11,
+        "lines": 109
+      },
+      {
+        "file": "src/components/analytics/chart-visualizations.js",
+        "complexity": 31,
+        "lines": 525
+      },
+      {
+        "file": "src/components/analytics/performance-chart.js",
+        "complexity": 14,
+        "lines": 198
+      },
+      {
+        "file": "src/components/analytics/playground-analytics.js",
+        "complexity": 59,
+        "lines": 1034
+      },
+      {
+        "file": "src/components/theme-toggle.js",
+        "complexity": 13,
+        "lines": 294
+      },
+      {
+        "file": "src/router.js",
+        "complexity": 14,
+        "lines": 237
+      },
+      {
+        "file": "src/service-worker.js",
+        "complexity": 31,
+        "lines": 248
+      },
+      {
+        "file": "src/pages/registration-page.js",
+        "complexity": 23,
+        "lines": 406
+      },
+      {
+        "file": "src/pages/profile-page.js",
+        "complexity": 30,
+        "lines": 706
+      },
+      {
+        "file": "src/pages/documentation-page.js",
+        "complexity": 20,
+        "lines": 410
+      },
+      {
+        "file": "src/pages/examples-page.js",
+        "complexity": 21,
+        "lines": 522
+      },
+      {
+        "file": "src/pages/tutorials-page.js",
+        "complexity": 28,
+        "lines": 448
+      },
+      {
+        "file": "src/pages/status-page.js",
+        "complexity": 16,
+        "lines": 284
+      },
+      {
+        "file": "src/pages/login-page.js",
+        "complexity": 30,
+        "lines": 509
+      },
+      {
+        "file": "src/pages/docs-page.js",
+        "complexity": 21,
+        "lines": 430
+      },
+      {
+        "file": "src/pages/dashboard-page.js",
+        "complexity": 30,
+        "lines": 436
+      },
+      {
+        "file": "src/pages/contact-page.js",
+        "complexity": 17,
+        "lines": 382
+      },
+      {
+        "file": "src/services/performance-monitor.js",
+        "complexity": 18,
+        "lines": 231
+      },
+      {
+        "file": "src/services/journey-intelligence.js",
+        "complexity": 70,
+        "lines": 954
+      },
+      {
+        "file": "src/services/docs.js",
+        "complexity": 16,
+        "lines": 192
+      },
+      {
+        "file": "src/services/image-optimizer.js",
+        "complexity": 16,
+        "lines": 196
+      },
+      {
+        "file": "src/services/auth.js",
+        "complexity": 35,
+        "lines": 312
+      },
+      {
+        "file": "src/services/modal-service.js",
+        "complexity": 24,
+        "lines": 193
+      },
+      {
+        "file": "src/services/store.js",
+        "complexity": 43,
+        "lines": 626
+      },
+      {
+        "file": "src/services/ab-testing.js",
+        "complexity": 39,
+        "lines": 493
+      },
+      {
+        "file": "src/services/analytics.js",
+        "complexity": 39,
+        "lines": 489
+      },
+      {
+        "file": "src/services/error-service.js",
+        "complexity": 26,
+        "lines": 251
+      },
+      {
+        "file": "src/services/offline-storage.js",
+        "complexity": 38,
+        "lines": 358
+      },
+      {
+        "file": "src/services/api.js",
+        "complexity": 43,
+        "lines": 335
+      },
+      {
+        "file": "src/services/pwa.js",
+        "complexity": 19,
+        "lines": 247
+      }
+    ],
+    "duplicateCode": []
+  },
+  "recommendations": [
+    {
+      "priority": "CRITICAL",
+      "category": "Code Quality",
+      "issue": "2 critical ESLint errors found",
+      "action": "Fix critical ESLint errors immediately - these may cause runtime failures",
+      "effort": "High",
+      "impact": "High",
+      "files": [
+        "/src/components/base-page-component.js",
+        "/src/test/accessibility/page-accessibility.test.js"
+      ]
+    },
+    {
+      "priority": "HIGH",
+      "category": "Code Quality",
+      "issue": "91 high-priority ESLint issues",
+      "action": "Address unused variables and imports to improve maintainability",
+      "effort": "Medium",
+      "impact": "Medium",
+      "files": [
+        "/src/components/base-page-component.js",
+        "/src/components/design/design-integration.js",
+        "/src/components/design/design-integration.js",
+        "/src/components/design/design-integration.js",
+        "/src/components/design/design-integration.js",
+        "/src/components/design/design-integration.js",
+        "/src/components/design/design-integration.js",
+        "/src/components/design/design-integration.js",
+        "/src/components/molecules/badge-counter/badge-counter.js",
+        "/src/components/molecules/cta-button-row/cta-button-row.stories.js"
+      ]
+    },
+    {
+      "priority": "HIGH",
+      "category": "Test Coverage",
+      "issue": "Test coverage is 0.0% (target: 80%+)",
+      "action": "Add unit tests for critical components and services",
+      "effort": "High",
+      "impact": "High"
+    },
+    {
+      "priority": "MEDIUM",
+      "category": "Code Complexity",
+      "issue": "212 files have high cyclomatic complexity",
+      "action": "Refactor complex functions into smaller, more maintainable units",
+      "effort": "High",
+      "impact": "Medium",
+      "files": [
+        "src/middleware/security.js",
+        "src/test/advanced/test-suite-config.js",
+        "src/test/advanced/integration-comprehensive.test.js",
+        "src/test/advanced/cross-browser-comprehensive.test.js",
+        "src/test/advanced/accessibility-comprehensive.test.js"
+      ]
+    }
+  ],
+  "metrics": {
+    "codeQualityScore": 0,
+    "testCoverageScore": 0,
+    "performanceScore": 97.34485626220703,
+    "maintainabilityScore": 0,
+    "overallHealthScore": 19
+  }
+}

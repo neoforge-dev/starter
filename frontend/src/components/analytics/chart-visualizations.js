@@ -472,7 +472,6 @@ export class ChartDataBuilder {
     
     for (let i = 0; i < 24; i++) {
       const bucketStart = hoursAgo24 + (i * 60 * 60 * 1000);
-      const bucketEnd = bucketStart + (60 * 60 * 1000);
       
       buckets.push({
         label: new Date(bucketStart).getHours() + ':00',

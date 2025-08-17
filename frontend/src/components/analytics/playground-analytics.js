@@ -966,7 +966,6 @@ export class PlaygroundAnalytics extends LitElement {
 
   render() {
     const componentCount = this.playgroundData.componentUsage?.size || 0;
-    const searchCount = this.playgroundData.searchMetrics?.length || 0;
     const shortcutCount = this.playgroundData.keyboardShortcuts?.size || 0;
 
     return html`
