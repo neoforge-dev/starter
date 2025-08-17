@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         bun-version: [latest]
-        shard: [1, 2, 3] # Split unit tests into 3 shards
+        shard: [1, 2, 3, 4, 5] # Split unit tests into 5 shards for better parallelization
 
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
 
       - name: Run Unit Tests
         working-directory: frontend
-        run: bun vitest run --shard=${{ matrix.shard }}/3
+        run: bun vitest run --shard=${{ matrix.shard }}/5
 
       - name: Upload Coverage
         if: matrix.shard == 1
@@ -233,7 +233,10 @@ jobs:
           docker buildx build \
             --target development \
             --cache-from type=local,src=/tmp/.buildx-cache \
+            --cache-from type=gha \
+            --cache-from type=registry,ref=ghcr.io/${{ github.repository }}/cache:buildcache \
             --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --cache-to type=gha,mode=max \
             --load \
             --tag neoforge-api-test:latest \
             backend/
@@ -243,10 +246,10 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:55432/neoforge
           REDIS_URL: redis://localhost:56379/1
           ENVIRONMENT: test
-          PYTEST_WORKERS: 2
+          PYTEST_WORKERS: 4
         run: |
           make setup
-          docker compose run --rm api_test pytest -n 2 --maxfail=3 -q
+          docker compose run --rm api_test pytest -n 4 --maxfail=3 --dist=worksteal -q
           docker compose run --rm api_test pytest --cov=app --cov-report=xml:coverage.xml -q --tb=short
           make smoke
       

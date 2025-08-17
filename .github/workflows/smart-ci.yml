@@ -1,0 +1,229 @@
+name: Smart CI Matrix
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend-changed: ${{ steps.changes.outputs.frontend }}
+      backend-changed: ${{ steps.changes.outputs.backend }}
+      docs-changed: ${{ steps.changes.outputs.docs }}
+      workflows-changed: ${{ steps.changes.outputs.workflows }}
+      test-matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+              - 'package.json'
+              - 'package-lock.json'
+            backend:
+              - 'backend/**'
+              - 'requirements*.txt'
+              - 'pyproject.toml'
+              - 'Makefile'
+            docs:
+              - 'docs/**'
+              - '*.md'
+            workflows:
+              - '.github/workflows/**'
+
+      - name: Generate Dynamic Test Matrix
+        id: matrix
+        run: |
+          MATRIX=()
+          
+          # Always run core tests for main branch or workflow changes
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ steps.changes.outputs.workflows }}" == "true" ]]; then
+            MATRIX+=("unit" "integration" "security" "performance")
+          else
+            # Selective testing based on changes
+            if [[ "${{ steps.changes.outputs.frontend }}" == "true" ]]; then
+              MATRIX+=("unit" "visual" "a11y")
+              # Add performance tests for significant frontend changes
+              if git diff --name-only HEAD~1 | grep -E "(components|performance)" > /dev/null; then
+                MATRIX+=("performance")
+              fi
+            fi
+            
+            if [[ "${{ steps.changes.outputs.backend }}" == "true" ]]; then
+              MATRIX+=("unit" "integration")
+              # Add security tests for API changes
+              if git diff --name-only HEAD~1 | grep -E "(api|auth|middleware)" > /dev/null; then
+                MATRIX+=("security")
+              fi
+            fi
+            
+            # Add integration tests if both frontend and backend changed
+            if [[ "${{ steps.changes.outputs.frontend }}" == "true" ]] && [[ "${{ steps.changes.outputs.backend }}" == "true" ]]; then
+              MATRIX+=("e2e")
+            fi
+          fi
+          
+          # Remove duplicates and convert to JSON
+          UNIQUE_MATRIX=($(printf "%s\n" "${MATRIX[@]}" | sort -u))
+          JSON_MATRIX=$(printf '%s\n' "${UNIQUE_MATRIX[@]}" | jq -R . | jq -s .)
+          echo "matrix=$JSON_MATRIX" >> $GITHUB_OUTPUT
+
+  smart-test-matrix:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.test-matrix != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test-type: ${{ fromJson(needs.detect-changes.outputs.test-matrix) }}
+        node-version: [20]
+        python-version: ["3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Frontend Tests
+      - name: Setup Node.js
+        if: contains(fromJson('["unit", "visual", "a11y", "performance", "e2e"]'), matrix.test-type)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        if: contains(fromJson('["unit", "visual", "a11y", "performance", "e2e"]'), matrix.test-type)
+        working-directory: frontend
+        run: npm ci
+
+      # Backend Tests
+      - name: Setup Python
+        if: contains(fromJson('["unit", "integration", "security"]'), matrix.test-type)
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: 'backend/requirements*.txt'
+
+      - name: Setup Docker and Dependencies
+        if: contains(fromJson('["unit", "integration", "security", "e2e"]'), matrix.test-type)
+        run: |
+          docker compose --version
+          make setup
+
+      # Test Execution Based on Type
+      - name: Run Unit Tests
+        if: matrix.test-type == 'unit'
+        run: |
+          # Frontend unit tests (if frontend changed)
+          if [[ "${{ needs.detect-changes.outputs.frontend-changed }}" == "true" ]]; then
+            cd frontend && npm run test:coverage
+          fi
+          # Backend unit tests (if backend changed)
+          if [[ "${{ needs.detect-changes.outputs.backend-changed }}" == "true" ]]; then
+            make test
+          fi
+
+      - name: Run Integration Tests
+        if: matrix.test-type == 'integration'
+        run: |
+          docker compose up -d db cache api
+          sleep 10
+          docker compose run --rm api_test pytest tests/integration/ -v
+          make smoke
+
+      - name: Run Visual Tests
+        if: matrix.test-type == 'visual'
+        working-directory: frontend
+        run: |
+          npx playwright install --with-deps
+          npm run test:visual
+
+      - name: Run Accessibility Tests
+        if: matrix.test-type == 'a11y'
+        working-directory: frontend
+        run: |
+          npx playwright install --with-deps
+          npm run test:a11y
+
+      - name: Run Performance Tests
+        if: matrix.test-type == 'performance'
+        working-directory: frontend
+        run: |
+          npm run test:perf
+          
+      - name: Run Security Tests
+        if: matrix.test-type == 'security'
+        run: |
+          # Security scanning with bandit for Python
+          pip install bandit[toml] safety
+          bandit -r backend/app/ -f json -o security-report.json || true
+          safety check -r backend/requirements.txt --json --output safety-report.json || true
+          
+          # Frontend security scanning
+          cd frontend && npm audit --audit-level moderate || true
+
+      - name: Run E2E Tests
+        if: matrix.test-type == 'e2e'
+        run: |
+          docker compose up -d
+          sleep 15
+          cd frontend && npx playwright install --with-deps
+          npm run test:e2e
+
+      # Upload artifacts based on test type
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.test-type }}-results-${{ matrix.node-version }}-${{ matrix.python-version }}
+          path: |
+            frontend/coverage/
+            frontend/test-results/
+            frontend/playwright-report/
+            backend/coverage.xml
+            backend/coverage_html/
+            security-report.json
+            safety-report.json
+          retention-days: 7
+
+  test-summary:
+    needs: [detect-changes, smart-test-matrix]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate Test Summary
+        run: |
+          echo "# Smart CI Test Summary" > test-summary.md
+          echo "" >> test-summary.md
+          echo "## Changes Detected:" >> test-summary.md
+          echo "- Frontend: ${{ needs.detect-changes.outputs.frontend-changed }}" >> test-summary.md
+          echo "- Backend: ${{ needs.detect-changes.outputs.backend-changed }}" >> test-summary.md
+          echo "- Docs: ${{ needs.detect-changes.outputs.docs-changed }}" >> test-summary.md
+          echo "- Workflows: ${{ needs.detect-changes.outputs.workflows-changed }}" >> test-summary.md
+          echo "" >> test-summary.md
+          echo "## Test Matrix Executed:" >> test-summary.md
+          echo '${{ needs.detect-changes.outputs.test-matrix }}' | jq -r '.[] | "- " + .' >> test-summary.md
+          echo "" >> test-summary.md
+          echo "## Results:" >> test-summary.md
+          if [[ "${{ needs.smart-test-matrix.result }}" == "success" ]]; then
+            echo "✅ All tests passed" >> test-summary.md
+          elif [[ "${{ needs.smart-test-matrix.result }}" == "failure" ]]; then
+            echo "❌ Some tests failed" >> test-summary.md
+          else
+            echo "⏭️ Tests were skipped" >> test-summary.md
+          fi
+
+      - name: Upload Test Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-summary
+          path: test-summary.md

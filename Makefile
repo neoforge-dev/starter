@@ -6,7 +6,12 @@ API_PORT ?= 8000
 setup: ## Initial setup of development environment
 	@echo "Creating development environment..."
 	cp .env.example .env || true
-	docker compose build
+	# Use buildx with caching when available
+	if command -v docker && docker buildx version >/dev/null 2>&1; then \
+		DOCKER_BUILDKIT=1 docker compose build --parallel; \
+	else \
+		docker compose build; \
+	fi
 	cd frontend && npm install
 	mkdir -p frontend/public/icons
 
@@ -64,7 +69,7 @@ test-frontend-all: ## Run all frontend tests
 test: ## Run backend tests in api_test service (with coverage artifacts)
 	@echo "Running backend tests with coverage..."
 	# Generate XML and HTML coverage reports under backend/
-	docker compose run --rm api_test pytest --maxfail=5 --cov=app --cov-report=xml:coverage.xml --cov-report=html:coverage_html
+	docker compose run --rm api_test pytest -n 4 --maxfail=5 --dist=worksteal --cov=app --cov-report=xml:coverage.xml --cov-report=html:coverage_html
 
 test-metrics: ## Run metrics tests directly without pytest
 	@echo "Running metrics tests directly..."
