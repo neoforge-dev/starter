@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test New Components</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 2rem;
+      background: #f9fafb;
+    }
+    .test-section {
+      background: white;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+    }
+    h2 {
+      margin-top: 0;
+      color: #1f2937;
+    }
+  </style>
+</head>
+<body>
+  <h1>NeoForge New Atomic Components Test</h1>
+  
+  <div class="test-section">
+    <h2>Label Component</h2>
+    <neo-label for="test-input" required>Username</neo-label>
+    <input id="test-input" type="text" placeholder="Enter username">
+    
+    <br><br>
+    <neo-label for="email-input" help-text="We'll never share your email">Email</neo-label>
+    <input id="email-input" type="email" placeholder="Enter email">
+  </div>
+
+  <div class="test-section">
+    <h2>Avatar Component</h2>
+    <neo-avatar name="John Doe" size="sm"></neo-avatar>
+    <neo-avatar name="Jane Smith" size="md" status="online" show-status></neo-avatar>
+    <neo-avatar name="Bob Johnson" size="lg" status="away" show-status></neo-avatar>
+    <neo-avatar name="Alice Brown" size="xl" status="busy" show-status></neo-avatar>
+  </div>
+
+  <div class="test-section">
+    <h2>Switch Component</h2>
+    <neo-switch label="Enable notifications"></neo-switch>
+    <br><br>
+    <neo-switch checked label="Dark mode"></neo-switch>
+    <br><br>
+    <neo-switch disabled label="Disabled switch"></neo-switch>
+    <br><br>
+    <neo-switch on-label="On" off-label="Off" label="Privacy mode"></neo-switch>
+  </div>
+
+  <div class="test-section">
+    <h2>Heading Component</h2>
+    <neo-heading level="1">Main Title (H1)</neo-heading>
+    <neo-heading level="2" color="primary">Section Title (H2)</neo-heading>
+    <neo-heading level="3" size="xl">Large H3</neo-heading>
+    <neo-heading level="4" color="muted">Muted H4</neo-heading>
+    <neo-heading level="1" visual-level="3">H1 with H3 styling</neo-heading>
+  </div>
+
+  <div class="test-section">
+    <h2>Divider Component</h2>
+    <p>Content above</p>
+    <neo-divider></neo-divider>
+    <p>Content below</p>
+    
+    <neo-divider>or</neo-divider>
+    
+    <p>Dashed divider:</p>
+    <neo-divider variant="dashed" color="primary"></neo-divider>
+    
+    <div style="display: flex; align-items: center; gap: 1rem; height: 60px;">
+      <span>Vertical:</span>
+      <neo-divider orientation="vertical"></neo-divider>
+      <span>More content</span>
+    </div>
+  </div>
+
+  <script type="module">
+    // Import all new components
+    import './src/components/atoms/label/label.js';
+    import './src/components/atoms/avatar/avatar.js';
+    import './src/components/atoms/switch/switch.js';
+    import './src/components/atoms/heading/heading.js';
+    import './src/components/atoms/divider/divider.js';
+    
+    console.log('All components loaded successfully!');
+    
+    // Test component functionality
+    document.querySelector('neo-switch').addEventListener('neo-change', (e) => {
+      console.log('Switch changed:', e.detail);
+    });
+    
+    document.querySelector('neo-label').addEventListener('neo-label-click', (e) => {
+      console.log('Label clicked:', e.detail);
+    });
+  </script>
+</body>
+</html>

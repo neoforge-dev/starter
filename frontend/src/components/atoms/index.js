@@ -7,3 +7,10 @@ export * from "./checkbox/checkbox.js";
 export * from "./radio/radio.js";
 export * from "./dropdown.js";
 export * from "./journey-tracker.js";
+
+// New atomic components
+export * from "./label/label.js";
+export * from "./avatar/avatar.js";
+export * from "./switch/switch.js";
+export * from "./heading/heading.js";
+export * from "./divider/divider.js";
