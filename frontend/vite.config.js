@@ -76,16 +76,18 @@ export default defineConfig({
   },
   build: {
     target: "es2022", // Upgraded for better Bun compatibility
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        passes: 2, // Additional compression passes for smaller bundles
+    minify: "esbuild", // Switch to esbuild for better Bun compatibility and ES module support
+    esbuildOptions: {
+      target: "es2022",
+      format: "esm",
+      supported: {
+        "import-meta": true,
+        "top-level-await": true,
       },
-      mangle: {
-        safari10: false, // Disable safari10 support for better performance
-      },
+      minifyIdentifiers: true,
+      minifySyntax: true,
+      minifyWhitespace: true,
+      treeShaking: true,
     },
     sourcemap: false,
     cssCodeSplit: true,
@@ -251,11 +253,14 @@ export default defineConfig({
   },
   plugins: [
     // criticalCssPlugin(), // Temporarily disabled due to build issues
-    visualizer({
-      filename: "dist/stats.html",
-      gzipSize: true,
-      brotliSize: true,
-      open: true,
-    }),
+    // Only use visualizer in development - brotli compression not supported in Bun runtime
+    ...(process.env.NODE_ENV !== 'production' ? [
+      visualizer({
+        filename: "dist/stats.html",
+        gzipSize: true,
+        brotliSize: false, // Disable brotli compression for Bun compatibility
+        open: true,
+      })
+    ] : []),
   ],
 });
