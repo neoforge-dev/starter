@@ -12,12 +12,12 @@ setup: ## Initial setup of development environment
 	else \
 		docker compose build; \
 	fi
-	cd frontend && npm install
+	cd frontend && bun install
 	mkdir -p frontend/public/icons
 
 frontend: ## Start frontend development server
 	@echo "Starting frontend development server..."
-	cd frontend && npm run dev
+	cd frontend && bun run dev
 
 backend: ## Start backend development server
 	@echo "Starting backend development server..."
@@ -32,32 +32,32 @@ dev: ## Start full development environment
 dev-build: ## Rebuild and start development environment
 	@echo "Rebuilding development environment..."
 	docker compose build --no-cache
-	cd frontend && npm install
+	cd frontend && bun install
 	make dev
 
 test-frontend: ## Run frontend tests
 	@echo "Running frontend tests..."
-	cd frontend && npm run test
+	cd frontend && bun run test
 
 test-frontend-watch: ## Run frontend tests in watch mode
 	@echo "Running frontend tests in watch mode..."
-	cd frontend && npm run test:watch
+	cd frontend && bun run test:watch
 
 test-frontend-coverage: ## Run frontend tests with coverage
 	@echo "Running frontend tests with coverage..."
-	cd frontend && npm run test:coverage
+	cd frontend && bun run test:coverage
 
 test-frontend-visual: ## Run frontend visual tests
 	@echo "Running frontend visual tests..."
-	cd frontend && npm run test:visual
+	cd frontend && bun run test:visual
 
 test-frontend-a11y: ## Run frontend accessibility tests
 	@echo "Running frontend accessibility tests..."
-	cd frontend && npm run test:a11y
+	cd frontend && bun run test:a11y
 
 test-frontend-perf: ## Run frontend performance tests
 	@echo "Running frontend performance tests..."
-	cd frontend && npm run test:perf
+	cd frontend && bun run test:perf
 
 test-frontend-all: ## Run all frontend tests
 	@echo "Running all frontend tests..."

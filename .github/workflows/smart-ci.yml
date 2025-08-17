@@ -73,7 +73,11 @@ jobs:
           
           # Remove duplicates and convert to JSON
           UNIQUE_MATRIX=($(printf "%s\n" "${MATRIX[@]}" | sort -u))
-          JSON_MATRIX=$(printf '%s\n' "${UNIQUE_MATRIX[@]}" | jq -R . | jq -s .)
+          if [ ${#UNIQUE_MATRIX[@]} -eq 0 ]; then
+            JSON_MATRIX="[]"
+          else
+            JSON_MATRIX=$(printf '%s\n' "${UNIQUE_MATRIX[@]}" | jq -R . | jq -s -c .)
+          fi
           echo "matrix=$JSON_MATRIX" >> $GITHUB_OUTPUT
 
   smart-test-matrix:
@@ -96,13 +100,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Bun
+        if: contains(fromJson('["unit", "visual", "a11y", "performance", "e2e"]'), matrix.test-type)
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - name: Install Frontend Dependencies
         if: contains(fromJson('["unit", "visual", "a11y", "performance", "e2e"]'), matrix.test-type)
         working-directory: frontend
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       # Backend Tests
       - name: Setup Python
