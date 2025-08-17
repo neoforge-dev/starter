@@ -55,12 +55,18 @@ class DetailedHealthCheck(HealthCheck):
     celery_details: dict
 
 async def init_db():
-    """Initialize database."""
+    """Initialize database with performance optimizations."""
     try:
         # Create tables
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         logger.info("Database initialized successfully")
+        
+        # Initialize database performance optimizations
+        from app.utils.db_optimization import initialize_database_optimization
+        optimization_results = await initialize_database_optimization()
+        logger.info("Database optimization completed", results=optimization_results)
+        
     except Exception as e:
         logger.error("Failed to initialize database", error=str(e))
         raise
@@ -91,6 +97,10 @@ async def lifespan(app: FastAPI):
     
     # Initialize metrics
     get_metrics()
+    
+    # Initialize memory monitoring
+    from app.utils.memory_optimization import initialize_memory_monitoring
+    await initialize_memory_monitoring()
 
     # Initialize OpenTelemetry tracing using enhanced utilities
     from app.core.tracing import setup_otlp_tracer_provider, setup_instrumentation
@@ -150,6 +160,10 @@ async def lifespan(app: FastAPI):
         pass
 
     await close_redis()
+    
+    # Cleanup memory monitoring
+    from app.utils.memory_optimization import cleanup_memory_monitoring
+    cleanup_memory_monitoring()
     
     logger.info("application_shutdown")
 
@@ -219,6 +233,19 @@ app.add_middleware(
     enable_domain_resolution=True,
     enable_header_resolution=True
 )
+
+# Set up HTTP caching middleware for performance optimization
+from app.api.middleware.caching import setup_caching_middleware
+setup_caching_middleware(
+    app,
+    cache_ttl=600,  # 10 minutes for production efficiency
+    max_cache_size=2000,  # Increased cache size for better hit rates
+    enable_middleware=True
+)
+
+# Set up memory optimization middleware
+from app.utils.memory_optimization import setup_memory_optimization
+setup_memory_optimization(app)
 
 # Add API router
 app.include_router(api_router, prefix=get_settings().api_v1_str)

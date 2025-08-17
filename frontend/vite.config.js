@@ -101,14 +101,33 @@ export default defineConfig({
         entryFileNames: "assets/[name].[hash].js",
         chunkFileNames: "assets/[name].[hash].js",
         assetFileNames: "assets/[name].[hash].[ext]",
-        manualChunks: {
-          chart: ["chart.js"],
-          lit: ["lit", "@lit/reactive-element", "lit-html", "lit-element"],
-          analytics: [
-            "./src/components/analytics/performance-chart.js",
-            "./src/components/analytics/error-log.js",
-            "./src/components/analytics/user-behavior.js",
-          ],
+        manualChunks(id) {
+          // Vendor chunk for external dependencies
+          if (id.includes('node_modules')) {
+            // Split large vendors into separate chunks
+            if (id.includes('lit')) return 'vendor-lit';
+            if (id.includes('chart.js')) return 'vendor-chart';
+            if (id.includes('@open-wc')) return 'vendor-testing';
+            return 'vendor';
+          }
+          
+          // Split by component type for better caching
+          if (id.includes('/atoms/')) return 'components-atoms';
+          if (id.includes('/molecules/')) return 'components-molecules';
+          if (id.includes('/organisms/')) return 'components-organisms';
+          if (id.includes('/pages/')) return 'pages';
+          if (id.includes('/services/')) return 'services';
+          if (id.includes('/utils/')) return 'utils';
+          
+          // Analytics components as separate chunk
+          if (id.includes('/analytics/')) return 'analytics';
+          
+          // Critical components that should be in main bundle
+          if (id.includes('/components/base/') || 
+              id.includes('main.js') || 
+              id.includes('app.js')) {
+            return undefined; // Include in main bundle
+          }
         },
         // Optimize chunk generation for faster builds
         generatedCode: {
@@ -119,8 +138,26 @@ export default defineConfig({
       },
       external: [/^node:.*$/],
       treeshake: {
-        preset: "recommended", // Better tree-shaking for smaller bundles
-        manualPureFunctions: ["console.log", "console.warn"],
+        preset: "recommended",
+        moduleSideEffects: (id) => {
+          // CSS files have side effects
+          if (id.endsWith('.css')) return true;
+          // Service workers have side effects
+          if (id.includes('sw.js') || id.includes('service-worker')) return true;
+          // Everything else can be tree-shaken
+          return false;
+        },
+        manualPureFunctions: [
+          "console.log", 
+          "console.warn", 
+          "console.info",
+          "console.debug",
+          "performance.mark",
+          "performance.measure"
+        ],
+        propertyReadSideEffects: false,
+        tryCatchDeoptimization: false,
+        unknownGlobalSideEffects: false,
       },
     },
     css: {

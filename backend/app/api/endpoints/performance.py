@@ -16,6 +16,8 @@ from app.core.performance import get_performance_stats
 from app.core.cache import get_cache
 from app.utils.http_cache import cache_tracker
 from app.utils.pagination_metrics import get_performance_monitor
+from app.utils.memory_optimization import get_memory_report, force_garbage_collection
+from app.utils.db_optimization import get_database_stats, performance_tracker
 from app.core.config import get_settings, Environment
 
 router = APIRouter()
@@ -350,3 +352,137 @@ def _calculate_performance_score(perf_stats: Dict[str, Any], cache_stats: Dict[s
     # Simple weighted score
     score = (hit_rate * 60) + (compression_rate * 40)
     return int(score * 100)
+
+
+@router.get("/performance/memory")
+async def get_memory_performance() -> Dict[str, Any]:
+    """Get comprehensive memory usage metrics and recommendations."""
+    try:
+        return get_memory_report()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get memory metrics: {str(e)}"
+        )
+
+
+@router.post("/performance/memory/gc")
+async def trigger_memory_gc() -> Dict[str, Any]:
+    """Manually trigger garbage collection (development/staging only)."""
+    settings = get_settings()
+    
+    # Restrict in production
+    if settings.environment == Environment.PRODUCTION:
+        raise HTTPException(
+            status_code=403,
+            detail="Manual garbage collection not allowed in production"
+        )
+    
+    try:
+        objects_collected = force_garbage_collection()
+        memory_after = get_memory_report()['current']['process_memory_mb']
+        
+        return {
+            "objects_collected": objects_collected,
+            "memory_after_gc_mb": memory_after,
+            "status": "success",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to trigger garbage collection: {str(e)}"
+        )
+
+
+@router.get("/performance/database")
+async def get_database_performance(
+    db: AsyncSession = Depends(deps.get_db)
+) -> Dict[str, Any]:
+    """Get comprehensive database performance statistics."""
+    try:
+        # Get enhanced database stats
+        from app.db.session import engine
+        db_stats = await get_database_stats(engine)
+        
+        # Get query performance tracking
+        query_performance = performance_tracker.get_performance_report()
+        
+        return {
+            "database_stats": db_stats,
+            "query_performance": query_performance,
+            "recommendations": query_performance.get("recommendations", []),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get database performance: {str(e)}"
+        )
+
+
+@router.get("/performance/comprehensive")
+async def get_comprehensive_performance(
+    db: AsyncSession = Depends(deps.get_db)
+) -> Dict[str, Any]:
+    """Get comprehensive performance report combining all metrics."""
+    try:
+        # Get all performance data
+        perf_stats = await get_performance_stats()
+        cache_stats = cache_tracker.get_stats()
+        memory_stats = get_memory_report()
+        
+        # Get database stats
+        from app.db.session import engine
+        db_stats = await get_database_stats(engine)
+        query_performance = performance_tracker.get_performance_report()
+        
+        # Calculate overall health score
+        cache_score = cache_stats.get("hit_rate", 0) * 100
+        memory_score = max(0, 100 - (memory_stats['current']['process_memory_percent'] - 50))
+        db_score = max(0, 100 - len(query_performance.get("recommendations", [])) * 10)
+        
+        overall_score = (cache_score + memory_score + db_score) / 3
+        
+        # Collect all recommendations
+        all_recommendations = []
+        all_recommendations.extend(memory_stats.get("recommendations", []))
+        all_recommendations.extend(query_performance.get("recommendations", []))
+        
+        # Determine health status
+        if overall_score >= 80:
+            health_status = "excellent"
+        elif overall_score >= 60:
+            health_status = "good"
+        elif overall_score >= 40:
+            health_status = "warning"
+        else:
+            health_status = "critical"
+        
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "overall_score": round(overall_score, 1),
+            "health_status": health_status,
+            "cache_performance": {
+                "stats": cache_stats,
+                "score": round(cache_score, 1)
+            },
+            "memory_performance": {
+                "stats": memory_stats,
+                "score": round(memory_score, 1)
+            },
+            "database_performance": {
+                "stats": db_stats,
+                "query_performance": query_performance,
+                "score": round(db_score, 1)
+            },
+            "system_performance": perf_stats,
+            "recommendations": all_recommendations,
+            "cost_optimization": _calculate_cost_optimization(perf_stats)
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate comprehensive performance report: {str(e)}"
+        )
