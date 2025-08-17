@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO) # Configure basic logging
 
 # Test database URL - use test database from docker-compose
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@db:5432/test_db"
+# Note: This is overridden by test_settings.database_url_for_env from .env.test
 
 # Get settings instance
 settings = get_settings()

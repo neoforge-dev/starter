@@ -14,7 +14,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Configure npm for optimization
-RUN npm config set ignore-engines true && \
+RUN npm config set engine-strict false && \
     npm config set audit-level moderate && \
     npm config set fund false
 

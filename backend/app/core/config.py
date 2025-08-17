@@ -110,8 +110,6 @@ class Settings(BaseSettings):
     otel_log_level: str = Field(default="info", env="OTEL_LOG_LEVEL")
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
         validate_default=True,
         case_sensitive=True,
         env_prefix="",
@@ -341,7 +339,22 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     """Return cached settings instance."""
-    # Automatically loads from .env file, environment variables, etc.
+    # For test environment, force environment variable loading
+    import os
+    if os.environ.get("ENVIRONMENT") == "test":
+        try:
+            return Settings(
+                environment="test",
+                database_url_for_env=os.environ.get("DATABASE_URL", ""),
+                redis_url=os.environ.get("REDIS_URL", "redis://cache:6379/1"),
+                debug=False,
+                testing=True
+            )
+        except ValidationError as e:
+            print(f"ERROR: Test settings validation failed: {e}")
+            raise
+    
+    # Normal environment loading
     try:
         return Settings()
     except ValidationError as e:

@@ -68,7 +68,7 @@ services:
       - ./backend:/app
     environment:
       - ENVIRONMENT=test
-      - DATABASE_URL=postgresql://postgres:postgres@db_test:5432/neoforge_test
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db_test:5432/neoforge_test
       - REDIS_URL=redis://cache:6379/1
     depends_on:
       - db_test
