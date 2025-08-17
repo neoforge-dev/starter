@@ -27,7 +27,7 @@ from app.api.v1.api import api_router
 from app.api.endpoints import metrics
 from app.core.celery import celery_app
 # Import specific middleware setup functions
-from app.api.middleware import setup_security_middleware, setup_validation_middleware
+from app.api.middleware import setup_security_middleware, setup_validation_middleware, setup_http_metrics_middleware
 from app.core.metrics import get_metrics
 from app.utils.idempotency import cleanup_idempotency_keys
 from app.schemas.user import UserResponse
@@ -202,6 +202,9 @@ if get_settings().cors_origins:
         credentials=get_settings().cors_credentials,
         environment=get_settings().environment
     )
+
+# Set up HTTP metrics middleware (should be early to capture all requests)
+setup_http_metrics_middleware(app)
 
 # Set up security and validation middleware
 setup_security_middleware(app)
