@@ -7,3 +7,12 @@ export * from "./select.js";
 export * from "./phone-input.js";
 export * from "./language-selector.js";
 export * from "./funnel-chart.js";
+
+// New atomic design molecules
+export * from "./input-field/index.js";
+export * from "./search-bar/index.js";
+export * from "./user-profile-summary/index.js";
+export * from "./badge-counter/index.js";
+export * from "./cta-button-row/index.js";
+export * from "./navigation-link/index.js";
+export * from "./select-dropdown/index.js";
