@@ -1,58 +1,41 @@
 # Build stage - optimized for production
-FROM node:20-alpine as builder
-
-# Install build dependencies
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/cache/apk/*
+FROM oven/bun:1.0-alpine as builder
 
 WORKDIR /app
 
 # Copy package files for better caching
-COPY package*.json ./
+COPY package*.json bun.lock* ./
 
-# Configure npm for optimization
-RUN npm config set engine-strict false && \
-    npm config set audit-level moderate && \
-    npm config set fund false
+# Copy scripts directory for local eslint plugin
+COPY scripts ./scripts
 
-# Install production dependencies only
-RUN npm ci --only=production --no-audit --no-fund
-
-# Install build dependencies
-RUN npm ci --no-audit --no-fund
+# Install dependencies
+RUN bun install
 
 # Copy source code
 COPY . .
 
 # Build the application with optimizations
-RUN npm run build && \
-    npm cache clean --force
+RUN bun run build
 
 # Development stage - optimized for dev workflow
-FROM node:20-alpine as development
+FROM oven/bun:1.0-alpine as development
 
 # Install runtime dependencies
 RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
     curl \
     && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package*.json bun.lock* ./
 
-# Configure npm
-RUN npm config set ignore-engines true
+# Copy scripts directory for local eslint plugin
+COPY scripts ./scripts
 
 # Install all dependencies for development
-RUN npm install --no-audit --no-fund && \
-    npm cache clean --force
+RUN bun install
 
 # Copy source code
 COPY . .
@@ -72,7 +55,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:3000 || exit 1
 
 # Start development server
-CMD ["npm", "run", "dev"]
+CMD ["bun", "run", "dev"]
 
 # Production stage - minimal nginx setup
 FROM nginx:alpine as production

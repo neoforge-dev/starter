@@ -6,7 +6,7 @@ services:
       context: ./frontend
       target: production
       cache_from:
-        - node:20-alpine
+        - oven/bun:1.0-alpine
         - nginx:alpine
     ports:
       - "80:80"

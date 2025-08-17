@@ -1,0 +1,13 @@
+node_modules
+.git
+.DS_Store
+*.log
+coverage
+.nyc_output
+dist
+build
+.vscode
+.idea
+*.tmp
+*.temp
+scripts/eslint-plugin-component-registry

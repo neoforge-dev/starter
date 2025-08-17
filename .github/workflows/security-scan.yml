@@ -136,13 +136,19 @@ jobs:
       if: matrix.language == 'javascript'
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '18.18.2'
+
+    - name: Setup Bun
+      if: matrix.language == 'javascript'
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
 
     - name: Install Node.js dependencies
       if: matrix.language == 'javascript'
       run: |
         cd frontend
-        npm ci
+        bun install --frozen-lockfile
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
@@ -160,9 +166,9 @@ jobs:
       if: matrix.language == 'javascript'
       run: |
         cd frontend
-        npm install eslint-plugin-security --save-dev
-        npx eslint src --ext .js --format json -o ../eslint-security-report.json || true
-        npx eslint src --ext .js || echo "ESLint found security issues"
+        bun add eslint-plugin-security --dev
+        bun run lint --format json > ../eslint-security-report.json || true
+        bun run lint || echo "ESLint found security issues"
 
     - name: Upload SAST artifacts
       uses: actions/upload-artifact@v4
@@ -193,7 +199,12 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '18.18.2'
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
 
     - name: Install Python dependencies
       run: |
@@ -204,7 +215,7 @@ jobs:
     - name: Install Node.js dependencies
       run: |
         cd frontend
-        npm ci
+        bun install --frozen-lockfile
 
     - name: Run Python Safety check
       run: |
@@ -215,8 +226,8 @@ jobs:
     - name: Run npm audit
       run: |
         cd frontend
-        npm audit --audit-level moderate --json > ../npm-audit-report.json || true
-        npm audit --audit-level moderate || echo "npm audit found vulnerabilities"
+        bun audit --json > ../bun-audit-report.json || true
+        bun audit || echo "bun audit found vulnerabilities"
 
     - name: Run Snyk dependency scan
       uses: snyk/actions/python@master
@@ -345,7 +356,12 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '18.18.2'
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
 
     - name: Install license scanning tools
       run: |
@@ -362,7 +378,7 @@ jobs:
     - name: Scan Node.js licenses
       run: |
         cd frontend
-        npm ci
+        bun install --frozen-lockfile
         license-checker --json --out ../node-licenses.json
         license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0'
 
