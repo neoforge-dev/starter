@@ -42,10 +42,10 @@ export default defineConfig({
   root: "./",
   base: "/",
   server: {
-    port: 3000,
+    port: process.env.CI ? 5173 : 3000,
     host: "0.0.0.0", // Allow external connections for better development
-    open: true,
-    strictPort: false,
+    open: !process.env.CI,
+    strictPort: process.env.CI,
     watch: {
       usePolling: false, // Disabled for better performance with Bun
       ignored: ["**/node_modules/**", "**/dist/**", "**/coverage/**"],

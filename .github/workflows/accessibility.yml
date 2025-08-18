@@ -39,14 +39,6 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Start dev server in background
-        run: |
-          bun run dev &
-          sleep 10
-
-      - name: Wait for dev server
-        run: npx wait-on http://localhost:5173 --timeout 60000
-
       - name: Run accessibility tests
         run: bun run test:a11y
 
@@ -130,14 +122,6 @@ jobs:
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-
-      - name: Start dev server
-        run: |
-          bun run dev &
-          sleep 10
-
-      - name: Wait for dev server
-        run: npx wait-on http://localhost:5173 --timeout 60000
 
       - name: Run full page audit
         run: bun run test:a11y:audit
