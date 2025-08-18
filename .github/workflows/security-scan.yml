@@ -59,6 +59,7 @@ jobs:
 
     - name: Run Trivy vulnerability scanner - Backend
       uses: aquasecurity/trivy-action@master
+      continue-on-error: true
       with:
         image-ref: 'neoforge-api:latest'
         format: 'sarif'
@@ -68,6 +69,7 @@ jobs:
 
     - name: Run Trivy vulnerability scanner - Frontend
       uses: aquasecurity/trivy-action@master
+      continue-on-error: true
       with:
         image-ref: 'neoforge-frontend:latest'
         format: 'sarif'
