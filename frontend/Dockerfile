@@ -1,25 +1,29 @@
 # Build stage - optimized for production
-FROM oven/bun:1.0-alpine as builder
+FROM oven/bun:1.0-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files for better caching
 COPY package*.json bun.lock* ./
 
-# Copy scripts directory for local eslint plugin
-COPY scripts ./scripts
-
-# Install dependencies
-RUN bun install
-
-# Copy source code
+# Copy source code (but excluding problematic directories via .dockerignore)  
 COPY . .
+
+# Remove the problematic local eslint plugin dependency for Docker builds
+RUN apk add --no-cache jq && \
+    jq 'del(.devDependencies["eslint-plugin-component-registry"])' package.json > package.json.tmp && \
+    mv package.json.tmp package.json && \
+    rm -f bun.lock && \
+    apk del jq
+
+# Install dependencies (dev dependencies needed for build)
+RUN bun install
 
 # Build the application with optimizations
 RUN bun run build
 
 # Development stage - optimized for dev workflow
-FROM oven/bun:1.0-alpine as development
+FROM oven/bun:1.0-alpine AS development
 
 # Install runtime dependencies
 RUN apk add --no-cache \
@@ -31,14 +35,18 @@ WORKDIR /app
 # Copy package files
 COPY package*.json bun.lock* ./
 
-# Copy scripts directory for local eslint plugin
-COPY scripts ./scripts
+# Copy source code
+COPY . .
+
+# Remove the problematic local eslint plugin dependency for Docker builds
+RUN apk add --no-cache jq && \
+    jq 'del(.devDependencies["eslint-plugin-component-registry"])' package.json > package.json.tmp && \
+    mv package.json.tmp package.json && \
+    rm -f bun.lock && \
+    apk del jq
 
 # Install all dependencies for development
 RUN bun install
-
-# Copy source code
-COPY . .
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -58,7 +66,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 CMD ["bun", "run", "dev"]
 
 # Production stage - minimal nginx setup
-FROM nginx:alpine as production
+FROM nginx:alpine AS production
 
 # Install security updates
 RUN apk upgrade --no-cache && \
