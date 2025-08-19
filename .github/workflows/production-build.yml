@@ -135,12 +135,18 @@ jobs:
           context: frontend
           target: production
           platforms: linux/amd64
-          cache-from: type=local,src=/tmp/.buildx-cache-frontend
-          cache-to: type=local,dest=/tmp/.buildx-cache-frontend-new,mode=max
+          cache-from: |
+            type=local,src=/tmp/.buildx-cache-frontend
+            type=gha
+          cache-to: |
+            type=local,dest=/tmp/.buildx-cache-frontend-new,mode=max
+            type=gha,mode=max
           outputs: type=docker,dest=/tmp/frontend-image.tar
           tags: |
             neoforge-frontend:latest
             neoforge-frontend:${{ github.sha }}
+          build-args: |
+            NODE_ENV=production
       
       - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
@@ -231,15 +237,33 @@ jobs:
       
       - name: Run production stack
         run: |
+          # Set environment variables
+          export API_PORT=8000
+          export FRONTEND_PORT=80
+          export POSTGRES_PASSWORD=test_password
+          export REDIS_PASSWORD=test_password
+          
           # Start production services
           docker compose -f docker-compose.prod.yml up -d --no-build
           
           # Wait for services to be ready
-          sleep 30
+          sleep 45
           
-          # Basic health checks
-          curl -f http://localhost:80/health || exit 1
-          curl -f http://localhost:8000/health || exit 1
+          # Check if services are running
+          docker compose -f docker-compose.prod.yml ps
+          
+          # Basic health checks with better error handling
+          curl -f http://localhost:${FRONTEND_PORT}/health || {
+            echo "Frontend health check failed"
+            docker compose -f docker-compose.prod.yml logs frontend
+            exit 1
+          }
+          
+          curl -f http://localhost:${API_PORT}/health || {
+            echo "Backend health check failed"
+            docker compose -f docker-compose.prod.yml logs api
+            exit 1
+          }
           
           echo "✅ Production stack health checks passed"
       

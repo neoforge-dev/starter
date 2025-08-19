@@ -224,8 +224,6 @@ export class BasePageComponent extends BaseComponent {
   showToast(message, type = "info") {
     if (window.showToast) {
       window.showToast(message, type);
-    } else if (typeof showToast === "function") {
-      showToast(message, type);
     } else {
       console.log(`Toast: ${type.toUpperCase()} - ${message}`);
     }
@@ -257,7 +255,7 @@ export class BasePageComponent extends BaseComponent {
   /**
    * Handle async operations with loading and error states
    */
-  async handleAsync(operation, loadingMessage = "Loading...") {
+  async handleAsync(operation, _loadingMessage = "Loading...") {
     try {
       this.setLoading(true);
       this.clearError();
