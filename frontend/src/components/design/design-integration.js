@@ -4,7 +4,7 @@
  */
 
 import { designTokens, TokenExporter } from '../tokens/token-system.js';
-import { themes, themeManager } from '../theme/theme-manager.js';
+import { themes } from '../theme/theme-manager.js';
 
 /**
  * Figma Token Synchronization
@@ -122,7 +122,7 @@ export class FigmaTokenSync {
   /**
    * Extract color value from Figma style
    */
-  extractColorFromStyle(style, fileData) {
+  extractColorFromStyle(_style, _fileData) {
     // This is a simplified implementation
     // In a real integration, you'd need to traverse the Figma file structure
     // to find the actual color values from the style nodes
@@ -134,7 +134,7 @@ export class FigmaTokenSync {
   /**
    * Extract text style from Figma
    */
-  extractTextStyleFromFigma(style, fileData) {
+  extractTextStyleFromFigma(style, _fileData) {
     // Simplified implementation - would need actual Figma API parsing
     return {
       fontSize: { value: '1rem', type: 'spacing' },
@@ -149,7 +149,7 @@ export class FigmaTokenSync {
   /**
    * Extract shadow value from Figma style
    */
-  extractShadowFromStyle(style, fileData) {
+  extractShadowFromStyle(_style, _fileData) {
     // Simplified implementation
     return '0 4px 6px rgba(0, 0, 0, 0.1)';
   }

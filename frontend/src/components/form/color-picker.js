@@ -403,8 +403,8 @@ export class ColorPicker extends LitElement {
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     let h,
-      s,
-      l = (max + min) / 2;
+      s;
+    const l = (max + min) / 2;
 
     if (max === min) {
       h = s = 0;
