@@ -43,18 +43,15 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Generate cache key
         id: cache-key
         run: |
-          echo "key=deps-${{ hashFiles('frontend/package-lock.json') }}-${{ hashFiles('frontend/package.json') }}" >> $GITHUB_OUTPUT
+          echo "key=deps-${{ hashFiles('frontend/bun.lockb') }}-${{ hashFiles('frontend/package.json') }}" >> $GITHUB_OUTPUT
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -62,14 +59,14 @@ jobs:
           path: frontend/node_modules
           key: ${{ steps.cache-key.outputs.key }}
           restore-keys: |
-            deps-${{ hashFiles('frontend/package-lock.json') }}-
+            deps-${{ hashFiles('frontend/bun.lockb') }}-
             deps-
 
       - name: Install dependencies
         working-directory: frontend
         run: |
-          npm ci --prefer-offline --no-audit
-          npm run setup
+          bun install --frozen-lockfile
+          bun run setup
 
       - name: Detect changes
         id: changes
@@ -91,12 +88,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Restore dependencies
         uses: actions/cache@v4
@@ -108,17 +103,17 @@ jobs:
       - name: Run ESLint
         working-directory: frontend
         run: |
-          npm run lint
-          npm run lint:components
+          bun run lint
+          bun run lint:components
 
       - name: Check Prettier formatting
         working-directory: frontend
         run: |
-          npx prettier --check "src/**/*.{js,json,css,md}"
+          bunx prettier --check "src/**/*.{js,json,css,md}"
 
       - name: Analyze technical debt
         working-directory: frontend
-        run: npm run debt:analyze
+        run: bun run debt:analyze
 
       - name: Upload lint results
         if: always()
@@ -138,12 +133,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Restore dependencies
         uses: actions/cache@v4
@@ -154,7 +147,7 @@ jobs:
 
       - name: Run unit tests
         working-directory: frontend
-        run: npm run test:coverage
+        run: bun run test:coverage
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
@@ -185,12 +178,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Restore dependencies
         uses: actions/cache@v4
@@ -201,7 +192,7 @@ jobs:
 
       - name: Test component group
         working-directory: frontend
-        run: npm run test:component src/test/components/${{ matrix.component-group }}/
+        run: bun run test:component src/test/components/${{ matrix.component-group }}/
 
       - name: Upload test results
         if: always()
@@ -219,12 +210,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Restore dependencies
         uses: actions/cache@v4
@@ -235,13 +224,13 @@ jobs:
 
       - name: Install Playwright browsers
         working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
-          key: playwright-browsers-${{ hashFiles('frontend/package-lock.json') }}
+          key: playwright-browsers-${{ hashFiles('frontend/bun.lockb') }}
 
       - name: Download playground build
         uses: actions/download-artifact@v4
@@ -252,8 +241,8 @@ jobs:
       - name: Start playground server
         working-directory: frontend
         run: |
-          npm run preview &
-          npx wait-on http://localhost:4173 --timeout 60000
+          bun run preview &
+          bunx wait-on http://localhost:4173 --timeout 60000
 
       - name: Restore visual baselines
         uses: actions/cache@v4
@@ -268,9 +257,9 @@ jobs:
         working-directory: frontend
         run: |
           if [ "${{ github.event.inputs.update_baselines }}" == "true" ]; then
-            npx playwright test --config=playwright.visual.config.js --update-snapshots
+            bunx playwright test --config=playwright.visual.config.js --update-snapshots
           else
-            npx playwright test --config=playwright.visual.config.js
+            bunx playwright test --config=playwright.visual.config.js
           fi
 
       - name: Save updated baselines
@@ -337,12 +326,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Restore dependencies
         uses: actions/cache@v4
@@ -353,7 +340,7 @@ jobs:
 
       - name: Install Playwright browsers
         working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       - name: Download playground build
         uses: actions/download-artifact@v4
@@ -364,12 +351,12 @@ jobs:
       - name: Start playground server
         working-directory: frontend
         run: |
-          npm run preview &
-          npx wait-on http://localhost:4173 --timeout 60000
+          bun run preview &
+          bunx wait-on http://localhost:4173 --timeout 60000
 
       - name: Run accessibility tests
         working-directory: frontend
-        run: npm run test:a11y
+        run: bun run test:a11y
 
       - name: Upload a11y test results
         if: always()
@@ -388,12 +375,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Restore dependencies
         uses: actions/cache@v4
@@ -404,7 +389,7 @@ jobs:
 
       - name: Build playground
         working-directory: frontend
-        run: npm run playground:build
+        run: bun run playground:build
 
       - name: Check bundle size
         working-directory: frontend
@@ -444,12 +429,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Restore dependencies
         uses: actions/cache@v4
@@ -466,7 +449,7 @@ jobs:
 
       - name: Run performance tests
         working-directory: frontend
-        run: npm run test:perf
+        run: bun run test:perf
 
       - name: Upload performance results
         if: always()
@@ -484,13 +467,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          bun-version: latest
 
       - name: Restore dependencies
         uses: actions/cache@v4
@@ -502,18 +482,18 @@ jobs:
       - name: Generate component documentation
         working-directory: frontend
         run: |
-          npm run analyze
-          npm run docs:custom-elements
+          bun run analyze
+          bun run docs:custom-elements
 
       - name: Build component library package
         working-directory: frontend
         run: |
           # Create publishable package structure
           mkdir -p dist/lib
-          
+
           # Copy component source files
           cp -r src/components/* dist/lib/
-          
+
           # Generate package.json for library
           cat > dist/lib/package.json << EOF
           {
@@ -543,23 +523,17 @@ jobs:
             }
           }
           EOF
-          
+
           # Generate barrel export file
           find dist/lib -name "*.js" -not -path "*/test/*" -not -name "*.test.js" -not -name "*.stories.js" | \
             sed 's|dist/lib/||' | sed 's|\.js$||' | \
             awk '{print "export * from \"./" $1 ".js\";"}' > dist/lib/index.js
 
-      - name: Upload component library
-        uses: actions/upload-artifact@v4
-        with:
-          name: component-library
-          path: dist/lib/
-
       - name: Publish to NPM
         if: github.event.inputs.publish_components == 'true' && github.ref == 'refs/heads/main'
         working-directory: frontend/dist/lib
         run: |
-          npm publish --access public
+          bunx npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
