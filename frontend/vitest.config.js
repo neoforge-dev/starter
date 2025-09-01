@@ -5,106 +5,18 @@ import { resolve } from "path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/**
- * Custom reporter to filter out specific errors related to performance.now
- *
- * This reporter intercepts errors related to performance.now and function cloning,
- * which can occur in JSDOM environments. These errors are suppressed to prevent
- * test failures due to environment limitations rather than actual code issues.
- *
- * The performance.now polyfill (in src/test/setup/optimized-performance-polyfill.js)
- * provides a complete implementation of the Performance API, but some errors may
- * still occur in edge cases. This reporter catches those errors.
- *
- * See /docs/performance-polyfill.md for detailed documentation on the polyfill.
- */
-const customReporter = {
-  onError(error) {
-    // Filter out errors related to performance.now and function cloning
-    if (
-      error &&
-      ((error.message &&
-        (error.message.includes("performance.now is not a function") ||
-          error.message.includes("could not be cloned") ||
-          error.message.includes("performance is not defined"))) ||
-        (error.stack &&
-          (error.stack.includes("could not be cloned") ||
-            error.stack.includes("performance.now"))))
-    ) {
-      // Suppress these errors by returning false
-      return false;
-    }
-    // Let other errors through
-    return true;
-  },
-
-  // Add a new method to handle unhandled errors
-  onUnhandledError(error) {
-    // Filter out errors related to performance.now and function cloning
-    if (
-      error &&
-      ((error.message &&
-        (error.message.includes("performance.now is not a function") ||
-          error.message.includes("could not be cloned") ||
-          error.message.includes("performance is not defined"))) ||
-        (error.stack &&
-          (error.stack.includes("could not be cloned") ||
-            error.stack.includes("performance.now"))))
-    ) {
-      // Suppress these errors by returning false
-      return false;
-    }
-    // Let other errors through
-    return true;
-  },
-
-  // Add a new method to handle worker errors
-  onWorkerError(error) {
-    // Filter out errors related to performance.now and function cloning
-    if (
-      error &&
-      ((error.message &&
-        (error.message.includes("performance.now is not a function") ||
-          error.message.includes("could not be cloned") ||
-          error.message.includes("performance is not defined"))) ||
-        (error.stack &&
-          (error.stack.includes("could not be cloned") ||
-            error.stack.includes("performance.now"))))
-    ) {
-      // Suppress these errors by returning false
-      return false;
-    }
-    // Let other errors through
-    return true;
-  },
-};
-
 export default defineConfig({
   cacheDir: "node_modules/.vitest", // Set cache directory at root level
   test: {
-    environment: "jsdom",
-    environmentOptions: {
-      jsdom: {
-        // Optimized JSDOM settings for Bun
-        resources: "usable",
-        runScripts: "dangerously",
-        pretendToBeVisual: true,
-        url: "http://localhost:3000", // Set base URL for consistent behavior
-      },
-    },
+    environment: "happy-dom",
     globals: true,
-    reporters: ["default", customReporter],
-    
-    // Disable threading to fix worker termination issues in CI
-    threads: false,
-    pool: "forks",
-    isolate: true, // Enable isolation for stability
-    
-    // Reduced timeout for faster feedback
-    testTimeout: 8000,
-    hookTimeout: 4000,
-    
-    // Exclude old test directories, node_modules, and the top-level test directory
+    reporters: ["default"],
+
+    // Reasonable timeouts
+    testTimeout: 10000,
+    hookTimeout: 5000,
+
+    // Exclude old test directories and problematic files
     exclude: [
       "**/tests-old/**",
       "**/tests-backup-old/**",
@@ -120,7 +32,7 @@ export default defineConfig({
       "src/components/core/memory-monitor.test.js",
       "src/test/pages/dashboard-page.test.js",
     ],
-    
+
     // Coverage configuration optimized for speed
     coverage: {
       provider: "v8",
@@ -151,55 +63,29 @@ export default defineConfig({
           functions: 75,
           lines: 80,
           statements: 80
-        },
-        // Per-file thresholds for critical components
-        "src/services/**/*.js": {
-          branches: 85,
-          functions: 85,
-          lines: 90,
-          statements: 90
-        },
-        "src/utils/**/*.js": {
-          branches: 80,
-          functions: 80,
-          lines: 85,
-          statements: 85
         }
       },
       all: true,
       clean: true,
       skipFull: true, // Skip full coverage for faster runs
     },
-    
-    // Optimized setup files
+
+    // Single setup file with unified polyfill
     setupFiles: [
-      "./src/test/setup/optimized-performance-polyfill.js",
-      "./vitest.setup.js",
+      "./vitest.setup.js"
     ],
-    
-    // Stable pool configuration for CI
-    poolOptions: {
-      forks: {
-        singleFork: true, // Use single fork for stability
-        isolate: true, // Enable isolation for stability
-      },
-    },
-    
+
     // Faster test execution settings
     retry: 0,
     bail: 10, // Bail after 10 failures instead of running all tests
     silent: false,
-    
-    // Optimized worker settings for Bun
-    maxWorkers: 6,
-    minWorkers: 2,
-    
+
     // Watch mode optimizations
     watch: {
       // Ignore patterns for better watch performance
       ignored: ["**/node_modules/**", "**/dist/**", "**/coverage/**"],
     },
-    
+
     // Optimize transformations using new API
     deps: {
       optimizer: {

@@ -29,12 +29,31 @@ class LoggerService {
   _getLogLevel() {
     const isProduction = import.meta.env.PROD;
     const defaultLevel = isProduction ? 'error' : 'info';
-    return localStorage.getItem('logLevel') || window.LOG_LEVEL || defaultLevel;
+    
+    // Safely try to access localStorage (might not exist in test environment)
+    let storedLevel = null;
+    try {
+      storedLevel = typeof localStorage !== 'undefined' ? localStorage.getItem('logLevel') : null;
+    } catch (e) {
+      // localStorage might not be available or access might be restricted
+      storedLevel = null;
+    }
+    
+    // Safely try to access window.LOG_LEVEL
+    let windowLevel = null;
+    try {
+      windowLevel = typeof window !== 'undefined' ? window.LOG_LEVEL : null;
+    } catch (e) {
+      // window might not be available
+      windowLevel = null;
+    }
+    
+    return storedLevel || windowLevel || defaultLevel;
   }
 
   /**
    * Check if the given level should be logged
-   * @param {string} level 
+   * @param {string} level
    * @returns {boolean}
    */
   _shouldLog(level) {
@@ -43,8 +62,8 @@ class LoggerService {
 
   /**
    * Format the log message with timestamp and level
-   * @param {string} level 
-   * @param {string} message 
+   * @param {string} level
+   * @param {string} message
    * @returns {string}
    */
   _formatMessage(level, message) {
@@ -54,8 +73,8 @@ class LoggerService {
 
   /**
    * Log an error message
-   * @param {string} message 
-   * @param {Error|any} [error] 
+   * @param {string} message
+   * @param {Error|any} [error]
    */
   error(message, error) {
     if (this._shouldLog('error')) {
@@ -73,8 +92,8 @@ class LoggerService {
 
   /**
    * Log a warning message
-   * @param {string} message 
-   * @param {any} [data] 
+   * @param {string} message
+   * @param {any} [data]
    */
   warn(message, data) {
     if (this._shouldLog('warn')) {
@@ -88,8 +107,8 @@ class LoggerService {
 
   /**
    * Log an info message
-   * @param {string} message 
-   * @param {any} [data] 
+   * @param {string} message
+   * @param {any} [data]
    */
   info(message, data) {
     if (this._shouldLog('info')) {
@@ -103,8 +122,8 @@ class LoggerService {
 
   /**
    * Log a debug message
-   * @param {string} message 
-   * @param {any} [data] 
+   * @param {string} message
+   * @param {any} [data]
    */
   debug(message, data) {
     if (this._shouldLog('debug')) {
@@ -118,7 +137,7 @@ class LoggerService {
 
   /**
    * Set the log level
-   * @param {'error'|'warn'|'info'|'debug'} level 
+   * @param {'error'|'warn'|'info'|'debug'} level
    */
   setLevel(level) {
     if (this.levels[level] !== undefined) {
