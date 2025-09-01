@@ -2,10 +2,13 @@ import { Logger } from "../utils/logger.js";
 
 export class AuthService {
   constructor() {
-    this.baseUrl = "/api/auth";
+    this.baseUrl = "/api/v1/auth";
     this.user = null;
     this.listeners = new Set();
     this.token = localStorage.getItem("auth_token");
+    this.refreshToken = localStorage.getItem("refresh_token");
+    this.refreshPromise = null;
+    this.isRefreshing = false;
   }
 
   addListener(callback) {
@@ -32,21 +35,36 @@ export class AuthService {
 
   async validateToken() {
     try {
-      const response = await fetch(`${this.baseUrl}/validate`, {
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-        },
-      });
+      const response = await this.makeAuthenticatedRequest(`${this.baseUrl}/validate`);
 
       if (!response.ok) {
         throw new Error("Invalid token");
       }
 
       const data = await response.json();
-      this.user = data.user;
-      this.notifyListeners();
+      if (data.valid) {
+        await this.fetchUserProfile();
+      } else {
+        throw new Error("Invalid token");
+      }
     } catch (error) {
       Logger.error("Token validation failed:", error);
+      throw error;
+    }
+  }
+
+  async fetchUserProfile() {
+    try {
+      const response = await this.makeAuthenticatedRequest(`${this.baseUrl}/me`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user profile");
+      }
+
+      this.user = await response.json();
+      this.notifyListeners();
+    } catch (error) {
+      Logger.error("Failed to fetch user profile:", error);
       throw error;
     }
   }
@@ -63,14 +81,18 @@ export class AuthService {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Login failed");
+        throw new Error(error.detail || "Login failed");
       }
 
       const data = await response.json();
-      this.token = data.token;
-      this.user = data.user;
+      this.token = data.access_token;
+      this.refreshToken = data.refresh_token;
+
+      // Fetch user profile after successful login
+      await this.fetchUserProfile();
 
       localStorage.setItem("auth_token", this.token);
+      localStorage.setItem("refresh_token", this.refreshToken);
       this.notifyListeners();
 
       Logger.info("Login successful");
@@ -83,7 +105,7 @@ export class AuthService {
 
   async signup(email, password, userData = {}) {
     try {
-      const response = await fetch(`${this.baseUrl}/signup`, {
+      const response = await fetch(`${this.baseUrl}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -97,7 +119,7 @@ export class AuthService {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Signup failed");
+        throw new Error(error.detail || "Signup failed");
       }
 
       const data = await response.json();
@@ -112,20 +134,23 @@ export class AuthService {
 
   async logout() {
     try {
-      if (this.token) {
+      if (this.token && this.refreshToken) {
         await fetch(`${this.baseUrl}/logout`, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${this.token}`,
+            "Content-Type": "application/json",
           },
+          body: JSON.stringify({ refresh_token: this.refreshToken }),
         });
       }
     } catch (error) {
       Logger.warn("Logout request failed:", error);
     } finally {
       this.token = null;
+      this.refreshToken = null;
       this.user = null;
       localStorage.removeItem("auth_token");
+      localStorage.removeItem("refresh_token");
       this.notifyListeners();
       Logger.info("Logout successful");
     }
@@ -133,10 +158,9 @@ export class AuthService {
 
   async updateProfile(profileData) {
     try {
-      const response = await fetch(`${this.baseUrl}/profile`, {
+      const response = await this.makeAuthenticatedRequest(`${this.baseUrl}/profile`, {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${this.token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(profileData),
@@ -144,7 +168,7 @@ export class AuthService {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Profile update failed");
+        throw new Error(error.detail || error.message || "Profile update failed");
       }
 
       const data = await response.json();
@@ -161,10 +185,9 @@ export class AuthService {
 
   async updatePassword(currentPassword, newPassword) {
     try {
-      const response = await fetch(`${this.baseUrl}/password`, {
+      const response = await this.makeAuthenticatedRequest(`${this.baseUrl}/password`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${this.token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -175,7 +198,7 @@ export class AuthService {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Password update failed");
+        throw new Error(error.detail || error.message || "Password update failed");
       }
 
       Logger.info("Password updated successfully");
@@ -187,7 +210,7 @@ export class AuthService {
 
   async resetPassword(email) {
     try {
-      const response = await fetch(`${this.baseUrl}/reset-password`, {
+      const response = await fetch(`${this.baseUrl}/reset-password-request`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -197,7 +220,7 @@ export class AuthService {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Password reset request failed");
+        throw new Error(error.detail || "Password reset request failed");
       }
 
       Logger.info("Password reset email sent");
@@ -209,17 +232,17 @@ export class AuthService {
 
   async confirmPasswordReset(token, newPassword) {
     try {
-      const response = await fetch(`${this.baseUrl}/reset-password/confirm`, {
+      const response = await fetch(`${this.baseUrl}/reset-password-confirm`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ token, newPassword }),
+        body: JSON.stringify({ token, new_password: newPassword }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Password reset confirmation failed");
+        throw new Error(error.detail || "Password reset confirmation failed");
       }
 
       Logger.info("Password reset successfully");
@@ -241,6 +264,104 @@ export class AuthService {
     return this.token;
   }
 
+  /**
+   * Refresh the access token using the refresh token
+   */
+  async refreshAccessToken() {
+    if (!this.refreshToken) {
+      throw new Error("No refresh token available");
+    }
+
+    // Prevent multiple concurrent refresh attempts
+    if (this.isRefreshing) {
+      return this.refreshPromise;
+    }
+
+    this.isRefreshing = true;
+    this.refreshPromise = this._performTokenRefresh();
+
+    try {
+      const result = await this.refreshPromise;
+      return result;
+    } finally {
+      this.isRefreshing = false;
+      this.refreshPromise = null;
+    }
+  }
+
+  async _performTokenRefresh() {
+    try {
+      const response = await fetch(`${this.baseUrl}/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refresh_token: this.refreshToken }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        Logger.warn("Token refresh failed:", error);
+        // If refresh fails, logout the user
+        this.logout();
+        throw new Error(error.detail || "Token refresh failed");
+      }
+
+      const data = await response.json();
+      this.token = data.access_token;
+      this.refreshToken = data.refresh_token;
+
+      // Update localStorage with new tokens
+      localStorage.setItem("auth_token", this.token);
+      localStorage.setItem("refresh_token", this.refreshToken);
+
+      Logger.info("Token refreshed successfully");
+      return data;
+    } catch (error) {
+      Logger.error("Token refresh failed:", error);
+      this.logout();
+      throw error;
+    }
+  }
+
+  /**
+   * Make an authenticated request with automatic token refresh
+   */
+  async makeAuthenticatedRequest(url, options = {}) {
+    if (!this.token) {
+      throw new Error("Not authenticated");
+    }
+
+    // Add authorization header
+    const requestOptions = {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${this.token}`,
+      },
+    };
+
+    // Make the initial request
+    let response = await fetch(url, requestOptions);
+
+    // If we get a 401 and have a refresh token, try to refresh and retry
+    if (response.status === 401 && this.refreshToken && !this.isRefreshing) {
+      try {
+        await this.refreshAccessToken();
+        
+        // Retry the request with the new token
+        requestOptions.headers.Authorization = `Bearer ${this.token}`;
+        response = await fetch(url, requestOptions);
+      } catch (refreshError) {
+        Logger.error("Auto-refresh failed:", refreshError);
+        // The logout was already handled in refreshAccessToken
+        throw refreshError;
+      }
+    }
+
+    return response;
+  }
+
   // Add new methods for email verification
   async verifyEmail(token) {
     try {
@@ -254,7 +375,7 @@ export class AuthService {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Email verification failed");
+        throw new Error(error.detail || error.message || "Email verification failed");
       }
 
       const data = await response.json();
@@ -278,7 +399,7 @@ export class AuthService {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to resend verification email");
+        throw new Error(error.detail || error.message || "Failed to resend verification email");
       }
 
       Logger.info("Verification email resent successfully");
@@ -292,10 +413,10 @@ export class AuthService {
   async checkEmailVerification(email) {
     try {
       const response = await fetch(`${this.baseUrl}/check-verification?email=${encodeURIComponent(email)}`);
-      
+
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to check verification status");
+        throw new Error(error.detail || error.message || "Failed to check verification status");
       }
 
       const data = await response.json();
