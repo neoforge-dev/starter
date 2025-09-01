@@ -1,10 +1,10 @@
 """Test user CRUD operations."""
 import pytest
+from app.crud.user import user as user_crud
+from app.models.user import User
+from app.schemas.user import UserCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.user import user as user_crud
-from app.schemas.user import UserCreate
-from app.models.user import User
 from tests.factories import UserCreateFactory
 
 
@@ -18,13 +18,13 @@ async def test_get_by_email(db: AsyncSession):
             full_name="Test User",
         ),
     )
-    
+
     # Test getting existing user
     found_user = await user_crud.get_by_email(db, email=user.email)
     assert found_user is not None
     assert found_user.id == user.id
     assert found_user.email == user.email
-    
+
     # Test getting non-existent user
     not_found = await user_crud.get_by_email(db, email="nonexistent@example.com")
     assert not_found is None
@@ -40,7 +40,7 @@ async def test_authenticate(db: AsyncSession):
         full_name="Test User",
     )
     user = await user_crud.create(db, obj_in=user_in)
-    
+
     # Authenticate successfully
     authenticated_user = await user_crud.authenticate(
         db, email="test@example.com", password="testpassword"
@@ -59,7 +59,7 @@ async def test_authenticate(db: AsyncSession):
         db, email="nonexistent@example.com", password="testpassword"
     )
     assert non_existent_user is None
-    
+
     # Authenticate inactive user
     user_inactive_in = UserCreate(
         email="inactive@example.com",
@@ -71,7 +71,7 @@ async def test_authenticate(db: AsyncSession):
     inactive_user.is_active = False
     await db.flush()
     await db.refresh(inactive_user)
-    
+
     authenticated_inactive_user = await user_crud.authenticate(
         db, email="inactive@example.com", password="testpassword"
     )
@@ -89,7 +89,7 @@ def test_is_active():
         is_active=True,
     )
     assert user_crud.is_active(active_user) is True
-    
+
     # Test inactive user
     inactive_user = User(
         email="inactive@example.com",
@@ -111,7 +111,7 @@ def test_is_superuser():
         is_superuser=True,
     )
     assert user_crud.is_superuser(superuser) is True
-    
+
     # Test regular user
     regular_user = User(
         email="user@example.com",
@@ -119,4 +119,4 @@ def test_is_superuser():
         hashed_password="hash",
         is_superuser=False,
     )
-    assert user_crud.is_superuser(regular_user) is False 
+    assert user_crud.is_superuser(regular_user) is False

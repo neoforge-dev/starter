@@ -201,4 +201,4 @@ neo-app:not(:defined) {
 
 @keyframes loading-dots {
   to { width: 20px; }
-} 
+}

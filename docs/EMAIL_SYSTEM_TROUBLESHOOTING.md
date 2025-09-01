@@ -61,9 +61,9 @@ docker logs neoforge-worker --tail=100 | grep -E "(ERROR|WARN|email)"
 
 # Check recent email tracking records
 psql -d neoforge_prod -c "
-    SELECT status, COUNT(*) 
-    FROM email_tracking 
-    WHERE created_at > NOW() - INTERVAL '1 hour' 
+    SELECT status, COUNT(*)
+    FROM email_tracking
+    WHERE created_at > NOW() - INTERVAL '1 hour'
     GROUP BY status;
 "
 
@@ -148,11 +148,11 @@ export REDIS_URL="redis://:password@redis-host:6379/0"
 ```bash
 # Check bounce statistics
 psql -d neoforge_prod -c "
-    SELECT 
+    SELECT
         status,
         COUNT(*) as count,
         ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
-    FROM email_tracking 
+    FROM email_tracking
     WHERE created_at > NOW() - INTERVAL '24 hours'
     GROUP BY status
     ORDER BY count DESC;
@@ -160,7 +160,7 @@ psql -d neoforge_prod -c "
 
 # Check bounce reasons
 psql -d neoforge_prod -c "
-    SELECT 
+    SELECT
         ee.event_metadata->>'reason' as bounce_reason,
         COUNT(*) as count
     FROM email_events ee
@@ -186,19 +186,19 @@ def validate_emails(email_list: List[str]) -> dict:
         'valid': [],
         'invalid': []
     }
-    
+
     for email in email_list:
         if re.match(pattern, email):
             results['valid'].append(email)
         else:
             results['invalid'].append(email)
-    
+
     return results
 
 # Check recent bounced emails
 psql -d neoforge_prod -c "
     SELECT recipient, COUNT(*) as bounce_count
-    FROM email_tracking 
+    FROM email_tracking
     WHERE status = 'BOUNCED'
     GROUP BY recipient
     HAVING COUNT(*) > 1
@@ -264,11 +264,11 @@ curl -X GET "https://yourdomain.com/api/v1/webhooks/test"
 
 # Check recent webhook processing
 psql -d neoforge_prod -c "
-    SELECT 
+    SELECT
         event_type,
         COUNT(*) as count,
         MAX(occurred_at) as latest_event
-    FROM email_events 
+    FROM email_events
     WHERE occurred_at > NOW() - INTERVAL '1 hour'
     GROUP BY event_type
     ORDER BY count DESC;
@@ -346,21 +346,21 @@ openssl s_client -connect yourdomain.com:443 -servername yourdomain.com
 ```bash
 # Check active connections
 psql -d neoforge_prod -c "
-    SELECT 
+    SELECT
         state,
         COUNT(*) as connection_count
-    FROM pg_stat_activity 
+    FROM pg_stat_activity
     WHERE datname = 'neoforge_prod'
     GROUP BY state;
 "
 
 # Check slow queries
 psql -d neoforge_prod -c "
-    SELECT 
+    SELECT
         query,
         mean_exec_time,
         calls
-    FROM pg_stat_statements 
+    FROM pg_stat_statements
     WHERE mean_exec_time > 100
     ORDER BY mean_exec_time DESC
     LIMIT 10;
@@ -368,11 +368,11 @@ psql -d neoforge_prod -c "
 
 # Check table sizes
 psql -d neoforge_prod -c "
-    SELECT 
+    SELECT
         schemaname,
         tablename,
         pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
-    FROM pg_tables 
+    FROM pg_tables
     WHERE schemaname = 'public'
     ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 "
@@ -383,7 +383,7 @@ psql -d neoforge_prod -c "
 **Cause: Missing or inefficient indexes**
 ```sql
 -- Check for missing indexes
-SELECT 
+SELECT
     schemaname,
     tablename,
     attname,
@@ -394,22 +394,22 @@ WHERE schemaname = 'public'
 AND n_distinct > 100;
 
 -- Add missing indexes
-CREATE INDEX CONCURRENTLY idx_email_tracking_recipient_status 
+CREATE INDEX CONCURRENTLY idx_email_tracking_recipient_status
 ON email_tracking (recipient, status);
 
-CREATE INDEX CONCURRENTLY idx_email_tracking_created_at_desc 
+CREATE INDEX CONCURRENTLY idx_email_tracking_created_at_desc
 ON email_tracking (created_at DESC);
 
-CREATE INDEX CONCURRENTLY idx_email_events_email_type_occurred 
+CREATE INDEX CONCURRENTLY idx_email_events_email_type_occurred
 ON email_events (email_id, event_type, occurred_at DESC);
 ```
 
 **Solution: Optimize queries and add indexes**
 ```sql
 -- Analyze query performance
-EXPLAIN ANALYZE 
-SELECT * FROM email_tracking 
-WHERE recipient = 'user@example.com' 
+EXPLAIN ANALYZE
+SELECT * FROM email_tracking
+WHERE recipient = 'user@example.com'
 AND status = 'DELIVERED';
 
 -- Update table statistics
@@ -452,11 +452,11 @@ curl -s http://localhost:8001/metrics | grep memory
 
 # Check database memory usage
 psql -d neoforge_prod -c "
-    SELECT 
+    SELECT
         setting,
         unit,
         context
-    FROM pg_settings 
+    FROM pg_settings
     WHERE name IN ('shared_buffers', 'work_mem', 'maintenance_work_mem');
 "
 
@@ -533,7 +533,7 @@ curl -X GET "https://api.sendgrid.com/v3/user/credits" \
 
 # Check email sending rate
 psql -d neoforge_prod -c "
-    SELECT 
+    SELECT
         date_trunc('minute', created_at) as minute,
         COUNT(*) as emails_sent
     FROM email_tracking
@@ -566,17 +566,17 @@ class EmailThrottler:
     def __init__(self, max_per_minute: int = 100):
         self.max_per_minute = max_per_minute
         self.sent_times = []
-    
+
     async def wait_if_needed(self):
         now = datetime.now()
         # Remove times older than 1 minute
         self.sent_times = [t for t in self.sent_times if now - t < timedelta(minutes=1)]
-        
+
         if len(self.sent_times) >= self.max_per_minute:
             sleep_time = 60 - (now - min(self.sent_times)).total_seconds()
             if sleep_time > 0:
                 await asyncio.sleep(sleep_time)
-        
+
         self.sent_times.append(now)
 
 # Use in email worker
@@ -672,7 +672,7 @@ docker stats --no-stream | grep neoforge
 
 # Database performance
 psql -d neoforge_prod -c "
-    SELECT 
+    SELECT
         datname,
         numbackends,
         xact_commit,
@@ -681,7 +681,7 @@ psql -d neoforge_prod -c "
         blks_hit,
         temp_files,
         temp_bytes
-    FROM pg_stat_database 
+    FROM pg_stat_database
     WHERE datname = 'neoforge_prod';
 "
 ```
@@ -752,10 +752,10 @@ pg_restore -h localhost -U neoforge_app -d neoforge_prod \
 
 # Verify data integrity
 psql -d neoforge_prod -c "
-    SELECT 
+    SELECT
         status,
-        COUNT(*) 
-    FROM email_tracking 
+        COUNT(*)
+    FROM email_tracking
     WHERE created_at > NOW() - INTERVAL '1 day'
     GROUP BY status;
 "

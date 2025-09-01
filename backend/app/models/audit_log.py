@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlmodel import SQLModel, Field
+from sqlmodel import Field, SQLModel
 
 
 class AuditLog(SQLModel, table=True):
@@ -11,7 +11,13 @@ class AuditLog(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     user_id: Optional[int] = Field(default=None, index=True)
-    action: str = Field(index=True, description="Action performed, e.g., project.create")
-    resource: Optional[str] = Field(default=None, index=True, description="Resource id, e.g., project:123")
-    event_metadata: Optional[str] = Field(default=None, description="JSON-encoded metadata about the event")
+    action: str = Field(
+        index=True, description="Action performed, e.g., project.create"
+    )
+    resource: Optional[str] = Field(
+        default=None, index=True, description="Resource id, e.g., project:123"
+    )
+    event_metadata: Optional[str] = Field(
+        default=None, description="JSON-encoded metadata about the event"
+    )
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)

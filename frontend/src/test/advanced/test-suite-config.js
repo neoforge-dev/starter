@@ -1,6 +1,6 @@
 /**
  * Advanced Testing Suite Configuration
- * 
+ *
  * Central configuration for comprehensive testing across all 33 components
  * Includes test runners, thresholds, reporting, and CI/CD integration
  */
@@ -222,7 +222,7 @@ export const TEST_SUITE_METADATA = {
   author: 'NeoForge Development Team',
   created: '2024-01-01',
   lastUpdated: new Date().toISOString(),
-  
+
   // Component coverage tracking
   componentCoverage: {
     totalComponents: 33,
@@ -296,7 +296,7 @@ export class TestConfigManager {
     };
 
     const multiplier = multipliers[componentTier] || 1.0;
-    
+
     if (typeof baseThresholds === 'object') {
       return Object.entries(baseThresholds).reduce((acc, [key, value]) => {
         acc[key] = value * multiplier;
@@ -308,12 +308,12 @@ export class TestConfigManager {
   }
 
   static getBrowserTestMatrix(componentName) {
-    const config = this.getComponentConfig('atoms', componentName) || 
-                  this.getComponentConfig('molecules', componentName) || 
+    const config = this.getComponentConfig('atoms', componentName) ||
+                  this.getComponentConfig('molecules', componentName) ||
                   this.getComponentConfig('organisms', componentName);
 
     const browsers = ['chrome', 'firefox', 'safari', 'edge'];
-    
+
     if (config.tier === 'critical') {
       return browsers; // Test on all browsers
     } else if (config.tier === 'enhanced') {
@@ -325,7 +325,7 @@ export class TestConfigManager {
 
   static generateTestSuiteReport() {
     const executionDate = new Date().toISOString();
-    
+
     return {
       metadata: TEST_SUITE_METADATA,
       configuration: ADVANCED_TEST_CONFIG,
@@ -348,12 +348,12 @@ export class TestConfigManager {
 
   static validateConfiguration() {
     const errors = [];
-    
+
     // Validate component counts
     const configuredComponents = Object.values(ADVANCED_TEST_CONFIG.components)
       .flatMap(category => Object.values(category))
       .flat();
-    
+
     if (configuredComponents.length !== TEST_SUITE_METADATA.componentCoverage.totalComponents) {
       errors.push('Component count mismatch between configuration and metadata');
     }

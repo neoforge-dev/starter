@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Optional, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from typing import Any, Optional
 
 from app.models.idempotency_key import IdempotencyKey
-from fastapi import Request, Depends
+from fastapi import Depends, Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api import deps
 
 
@@ -96,7 +96,9 @@ class IdempotencyManager:
     def _ensure_hash(self, body: Any) -> Optional[str]:
         if not self.key:
             return None
-        self._req_hash = compute_request_hash(self.request.method, self.request.url.path, body)
+        self._req_hash = compute_request_hash(
+            self.request.method, self.request.url.path, body
+        )
         return self._req_hash
 
     async def precheck(self, body: Any) -> Optional[Any]:
@@ -121,7 +123,9 @@ class IdempotencyManager:
                 return None
         return None
 
-    async def store(self, body: Any, status_code: int, user_id: Optional[int] = None) -> None:
+    async def store(
+        self, body: Any, status_code: int, user_id: Optional[int] = None
+    ) -> None:
         if not self.key:
             return
         if self._req_hash is None:
@@ -146,9 +150,12 @@ async def get_idempotency_manager(
     return IdempotencyManager(db=db, request=request)
 
 
-async def cleanup_idempotency_keys(db: AsyncSession, max_age_seconds: int = 86400) -> None:
+async def cleanup_idempotency_keys(
+    db: AsyncSession, max_age_seconds: int = 86400
+) -> None:
     """Delete idempotency entries older than max_age_seconds if no explicit expires_at set."""
     from sqlalchemy import text
+
     # Use a parameterized interval expression compatible with Postgres
     await db.execute(
         text(

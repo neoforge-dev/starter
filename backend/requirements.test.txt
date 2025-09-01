@@ -9,4 +9,4 @@ Faker==35.2.0
 coverage==7.5.0
 mlflow==2.11.3
 celery==5.3.6
-aiocache==0.12.2 
+aiocache==0.12.2

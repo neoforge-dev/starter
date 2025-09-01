@@ -5,7 +5,7 @@ import path from 'path';
 
 /**
  * Comprehensive Accessibility Testing Suite
- * 
+ *
  * This test suite covers:
  * - Critical page components accessibility
  * - Form accessibility and keyboard navigation
@@ -31,7 +31,7 @@ const criticalTests = [
   },
   {
     path: '/auth/register',
-    name: 'Registration Form', 
+    name: 'Registration Form',
     components: ['signup-form', 'password-validation', 'terms-checkbox'],
     description: 'User registration with complex form validation'
   },
@@ -61,13 +61,13 @@ const comprehensiveAxeConfig = {
     // Color and Contrast (Level AA)
     'color-contrast': { enabled: true },
     'color-contrast-enhanced': { enabled: false }, // AAA level, optional
-    
+
     // Keyboard Navigation
     'focus-order-semantics': { enabled: true },
     'tabindex': { enabled: true },
     'keyboard': { enabled: true },
     'focus-trap': { enabled: true },
-    
+
     // Semantic Structure
     'heading-order': { enabled: true },
     'landmark-one-main': { enabled: true },
@@ -76,7 +76,7 @@ const comprehensiveAxeConfig = {
     'landmark-main-is-top-level': { enabled: true },
     'landmark-no-more-than-one': { enabled: true },
     'page-has-heading-one': { enabled: true },
-    
+
     // ARIA and Labels
     'aria-allowed-attr': { enabled: true },
     'aria-allowed-role': { enabled: true },
@@ -89,41 +89,41 @@ const comprehensiveAxeConfig = {
     'aria-roles': { enabled: true },
     'aria-valid-attr-value': { enabled: true },
     'aria-valid-attr': { enabled: true },
-    
+
     // Form Accessibility
     'button-name': { enabled: true },
     'form-field-multiple-labels': { enabled: true },
     'label': { enabled: true },
     'label-title-only': { enabled: true },
-    
+
     // Links and Navigation
     'link-name': { enabled: true },
     'link-in-text-block': { enabled: true },
-    
+
     // Images and Media
     'image-alt': { enabled: true },
     'image-redundant-alt': { enabled: true },
     'object-alt': { enabled: true },
-    
+
     // Touch Targets
     'target-size': { enabled: true },
-    
+
     // Tables
     'table-fake-caption': { enabled: true },
     'td-headers-attr': { enabled: true },
     'th-has-data-cells': { enabled: true },
-    
+
     // Language
     'html-has-lang': { enabled: true },
     'html-lang-valid': { enabled: true },
     'html-xml-lang-mismatch': { enabled: true },
-    
+
     // Document Structure
     'document-title': { enabled: true },
     'duplicate-id': { enabled: true },
     'duplicate-id-active': { enabled: true },
     'duplicate-id-aria': { enabled: true },
-    
+
     // Skip problematic rules for development
     'landmark-unique': { enabled: false }, // Can be overly strict
     'region': { enabled: false } // May flag legitimate content
@@ -158,7 +158,7 @@ async function createAccessibilityReport(results, testName) {
       minor: results.violations.filter(v => v.impact === 'minor').length
     }
   };
-  
+
   return report;
 }
 
@@ -166,10 +166,10 @@ test.describe('Comprehensive Accessibility Testing', () => {
   test.beforeEach(async ({ page }) => {
     // Set consistent viewport for testing
     await page.setViewportSize({ width: 1280, height: 720 });
-    
+
     // Wait for web components and any dynamic content
     await page.waitForFunction(() => {
-      return window.customElements && 
+      return window.customElements &&
              typeof window.customElements.whenDefined === 'function' &&
              document.readyState === 'complete';
     });
@@ -180,10 +180,10 @@ test.describe('Comprehensive Accessibility Testing', () => {
     test(`${testConfig.name} - Complete WCAG 2.1 AA Audit`, async ({ page }) => {
       await page.goto(testConfig.path);
       await page.waitForLoadState('networkidle');
-      
+
       // Wait for any animations or async content loading
       await page.waitForTimeout(3000);
-      
+
       // Run comprehensive axe scan
       const accessibilityResults = await new AxeBuilder({ page })
         .configure(comprehensiveAxeConfig)
@@ -191,17 +191,17 @@ test.describe('Comprehensive Accessibility Testing', () => {
         .exclude('.storybook-root')
         .exclude('[data-testid="dev-tools"]')
         .analyze();
-      
+
       // Create detailed report
       const report = await createAccessibilityReport(accessibilityResults, `${testConfig.name} WCAG Audit`);
-      
+
       // Log detailed results for debugging
       console.log(`\n🔍 ACCESSIBILITY AUDIT: ${testConfig.name}`);
       console.log(`📄 Page: ${testConfig.path}`);
       console.log(`🎯 Components: ${testConfig.components.join(', ')}`);
       console.log(`📊 Results: ${report.violations.length} violations, ${report.passes} passes`);
       console.log(`💥 Impact Summary: ${report.violationSummary.critical} critical, ${report.violationSummary.serious} serious`);
-      
+
       if (report.violations.length > 0) {
         console.log(`\n❌ VIOLATIONS FOUND:`);
         report.violations.forEach((violation, index) => {
@@ -210,7 +210,7 @@ test.describe('Comprehensive Accessibility Testing', () => {
           console.log(`   Rule: ${violation.id}`);
           console.log(`   Elements: ${violation.nodes.length}`);
           console.log(`   Learn more: ${violation.helpUrl}`);
-          
+
           // Show first few affected elements
           violation.nodes.slice(0, 2).forEach(node => {
             console.log(`   - Target: ${node.target.join(' > ')}`);
@@ -222,22 +222,22 @@ test.describe('Comprehensive Accessibility Testing', () => {
       } else {
         console.log(`✅ No accessibility violations found!`);
       }
-      
+
       // Assert no critical or serious violations
       const criticalViolations = report.violations.filter(
         violation => violation.impact === 'critical' || violation.impact === 'serious'
       );
-      
-      expect(criticalViolations, 
+
+      expect(criticalViolations,
         `Found ${criticalViolations.length} critical/serious accessibility violations on ${testConfig.name}. Check console for details.`
       ).toHaveLength(0);
     });
-    
+
     test(`${testConfig.name} - Keyboard Navigation Compliance`, async ({ page }) => {
       await page.goto(testConfig.path);
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(2000);
-      
+
       // Test comprehensive keyboard navigation
       const focusableSelectors = [
         'button:not([disabled])',
@@ -256,24 +256,24 @@ test.describe('Comprehensive Accessibility Testing', () => {
         '[role="menuitem"]:not([aria-disabled="true"])',
         '[role="tab"]:not([aria-disabled="true"])'
       ];
-      
+
       const focusableElements = await page.locator(focusableSelectors.join(', ')).all();
-      
+
       console.log(`⌨️  Testing keyboard navigation on ${testConfig.name}: ${focusableElements.length} focusable elements`);
-      
+
       if (focusableElements.length > 0) {
         // Start tabbing from the beginning
         await page.keyboard.press('Tab');
-        
+
         let tabCount = 0;
         const maxTabs = Math.min(focusableElements.length, 15); // Limit for performance
-        
+
         for (let i = 0; i < maxTabs; i++) {
           const focusedElement = await page.locator(':focus').first();
-          
+
           // Verify element is visible and focusable
           await expect(focusedElement).toBeVisible();
-          
+
           // Check for focus indicator (basic check)
           const elementInfo = await focusedElement.evaluate(el => ({
             tagName: el.tagName,
@@ -282,48 +282,48 @@ test.describe('Comprehensive Accessibility Testing', () => {
             ariaLabel: el.getAttribute('aria-label') || 'N/A',
             id: el.id || 'N/A'
           }));
-          
+
           console.log(`   Tab ${i + 1}: ${elementInfo.tagName} (${elementInfo.role}) - ${elementInfo.id}`);
-          
+
           await page.keyboard.press('Tab');
           tabCount++;
         }
-        
+
         expect(tabCount).toBeGreaterThan(0);
       }
     });
-    
+
     test(`${testConfig.name} - Form Accessibility (if applicable)`, async ({ page }) => {
       await page.goto(testConfig.path);
       await page.waitForLoadState('networkidle');
-      
+
       // Check for forms on the page
       const forms = await page.locator('form').all();
-      
+
       if (forms.length > 0) {
         console.log(`📝 Testing form accessibility on ${testConfig.name}: ${forms.length} forms found`);
-        
+
         for (let i = 0; i < forms.length; i++) {
           const form = forms[i];
-          
+
           // Check all form inputs have labels
           const inputs = await form.locator('input, select, textarea').all();
-          
+
           for (const input of inputs) {
             const inputType = await input.getAttribute('type');
             if (inputType === 'hidden') continue;
-            
+
             const inputId = await input.getAttribute('id');
             const ariaLabel = await input.getAttribute('aria-label');
             const ariaLabelledby = await input.getAttribute('aria-labelledby');
-            
+
             // Check for label association
             const hasLabel = inputId && await page.locator(`label[for="${inputId}"]`).count() > 0;
             const hasAriaLabel = ariaLabel !== null;
             const hasAriaLabelledby = ariaLabelledby !== null;
-            
+
             const hasAccessibleLabel = hasLabel || hasAriaLabel || hasAriaLabelledby;
-            
+
             if (!hasAccessibleLabel) {
               const elementInfo = await input.evaluate(el => ({
                 tagName: el.tagName,
@@ -333,26 +333,26 @@ test.describe('Comprehensive Accessibility Testing', () => {
               }));
               console.warn(`⚠️  Input without accessible label: ${elementInfo.tagName}[type="${elementInfo.type}"] name="${elementInfo.name}"`);
             }
-            
-            expect(hasAccessibleLabel, 
+
+            expect(hasAccessibleLabel,
               `Form input must have accessible label (label[for], aria-label, or aria-labelledby)`
             ).toBeTruthy();
           }
-          
+
           // Check form has submit button
           const submitButtons = await form.locator('button[type="submit"], input[type="submit"]').all();
           expect(submitButtons.length).toBeGreaterThan(0);
         }
       }
     });
-    
+
     test(`${testConfig.name} - Touch Target Validation`, async ({ page }) => {
       await page.goto(testConfig.path);
       await page.waitForLoadState('networkidle');
-      
+
       // Mobile viewport for touch target testing
       await page.setViewportSize({ width: 375, height: 667 });
-      
+
       const interactiveSelectors = [
         'button',
         'a[href]',
@@ -366,27 +366,27 @@ test.describe('Comprehensive Accessibility Testing', () => {
         'input[type="checkbox"]',
         'input[type="radio"]'
       ];
-      
+
       const interactiveElements = await page.locator(interactiveSelectors.join(', ')).all();
       const smallTargets = [];
       const minTouchTarget = 44; // WCAG 2.1 AA minimum
-      
+
       console.log(`👆 Testing touch targets on ${testConfig.name}: ${interactiveElements.length} interactive elements`);
-      
+
       for (const element of interactiveElements) {
         if (await element.isVisible()) {
           const box = await element.boundingBox();
-          
+
           if (box) {
             const tooSmall = box.width < minTouchTarget || box.height < minTouchTarget;
-            
+
             if (tooSmall) {
               const selector = await element.evaluate(el => {
                 if (el.id) return `#${el.id}`;
                 if (el.className) return `.${el.className.split(' ')[0]}`;
                 return `${el.tagName.toLowerCase()}`;
               });
-              
+
               smallTargets.push({
                 selector,
                 size: `${Math.round(box.width)}×${Math.round(box.height)}px`,
@@ -396,7 +396,7 @@ test.describe('Comprehensive Accessibility Testing', () => {
           }
         }
       }
-      
+
       if (smallTargets.length > 0) {
         console.log(`\n⚠️  Small touch targets found on ${testConfig.name}:`);
         smallTargets.forEach(target => {
@@ -405,8 +405,8 @@ test.describe('Comprehensive Accessibility Testing', () => {
       } else {
         console.log(`✅ All touch targets meet minimum size requirements`);
       }
-      
-      expect(smallTargets, 
+
+      expect(smallTargets,
         `Found ${smallTargets.length} touch targets smaller than ${minTouchTarget}px on ${testConfig.name}. All interactive elements should be at least ${minTouchTarget}×${minTouchTarget}px for touch accessibility.`
       ).toHaveLength(0);
     });
@@ -463,7 +463,7 @@ test.describe('Comprehensive Accessibility Testing', () => {
       };
 
       comprehensiveReport.pages.push(pageReport);
-      
+
       // Update overall summary
       comprehensiveReport.overallSummary.totalViolations += pageReport.violations;
       comprehensiveReport.overallSummary.totalPasses += pageReport.passes;
@@ -493,10 +493,10 @@ test.describe('Comprehensive Accessibility Testing', () => {
       const status = pageReport.violations === 0 ? '✅' : '❌';
       console.log(`${status} ${pageReport.name} (${pageReport.path})`);
       console.log(`   Violations: ${pageReport.violations}, Passes: ${pageReport.passes}`);
-      
+
       if (pageReport.violations > 0) {
         console.log(`   Impact: ${pageReport.violationsByImpact.critical}C, ${pageReport.violationsByImpact.serious}S, ${pageReport.violationsByImpact.moderate}M, ${pageReport.violationsByImpact.minor}m`);
-        
+
         pageReport.detailedViolations.slice(0, 3).forEach(violation => {
           console.log(`   - ${violation.help} (${violation.impact})`);
         });
@@ -512,8 +512,8 @@ test.describe('Comprehensive Accessibility Testing', () => {
 
     // Enforce quality gates
     const criticalAndSeriousTotal = comprehensiveReport.overallSummary.critical + comprehensiveReport.overallSummary.serious;
-    
-    expect(criticalAndSeriousTotal, 
+
+    expect(criticalAndSeriousTotal,
       `Found ${criticalAndSeriousTotal} critical/serious accessibility violations across all tested pages. All critical and serious violations must be resolved for deployment.`
     ).toBe(0);
   });

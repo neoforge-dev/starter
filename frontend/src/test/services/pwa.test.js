@@ -123,7 +123,7 @@ describe('PWA Service', () => {
     it('should apply service worker update', async () => {
       pwaService.updateAvailable = true;
       mockRegistration.waiting = { postMessage: vi.fn() };
-      
+
       // Mock window.location.reload
       Object.defineProperty(window, 'location', {
         value: { reload: vi.fn() },

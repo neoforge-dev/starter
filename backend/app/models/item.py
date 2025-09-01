@@ -1,10 +1,9 @@
 """Item model."""
 from typing import TYPE_CHECKING
 
+from app.db.base_class import Base
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from app.db.base_class import Base
 
 if TYPE_CHECKING:
     from .user import User
@@ -29,4 +28,4 @@ class Item(Base):
         back_populates="items",
         lazy="joined",
         innerjoin=True,  # Since owner_id is not nullable
-    ) 
+    )

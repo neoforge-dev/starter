@@ -367,7 +367,7 @@ describe('Form Validation Integration Tests', () => {
       // Simulate input by calling handleInput directly
       const usernameInput = autoform.shadowRoot.querySelector('input[name="username"]');
       usernameInput.value = 'newuser';
-      
+
       // Create mock input event and call handleInput directly
       const mockInputEvent = {
         target: usernameInput
@@ -456,14 +456,14 @@ describe('Form Validation Integration Tests', () => {
 
       // Set invalid email
       autoform.value = { email: 'invalid-email' };
-      
+
       // Trigger validation by calling handleSubmit directly
       const mockEvent = new Event('submit');
       mockEvent.preventDefault = vi.fn();
       autoform.handleSubmit(mockEvent);
 
       await autoform.updateComplete;
-      
+
       // Wait for errors to be applied to the internal state
       await new Promise(resolve => setTimeout(resolve, 10));
       await autoform.updateComplete;

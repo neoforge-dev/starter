@@ -2,10 +2,10 @@
 
 /**
  * Component Library Builder
- * 
+ *
  * This script builds a publishable npm package from the NeoForge Web Components.
  * It creates optimized bundles, generates documentation, and prepares distribution.
- * 
+ *
  * Features:
  * - Automated component discovery and bundling
  * - Documentation generation from JSDoc comments
@@ -41,45 +41,45 @@ class ComponentLibraryBuilder {
 
   async build() {
     console.log('🚀 Building NeoForge Component Library...');
-    
+
     try {
       // Clean and prepare directories
       await this.cleanAndPrepare();
-      
+
       // Discover components
       await this.discoverComponents();
-      
+
       // Generate version
       this.metadata.version = this.generateVersion();
-      
+
       // Build component bundles
       await this.buildComponentBundles();
-      
+
       // Generate package.json
       await this.generatePackageJson();
-      
+
       // Generate exports and barrel files
       await this.generateExports();
-      
+
       // Generate documentation
       await this.generateDocumentation();
-      
+
       // Generate TypeScript declarations
       await this.generateTypeDeclarations();
-      
+
       // Create distribution packages
       await this.createDistributionPackages();
-      
+
       // Generate metadata file
       await this.generateMetadata();
-      
+
       console.log(`✅ Component library built successfully!`);
       console.log(`📦 Version: ${this.metadata.version}`);
       console.log(`📁 Output: ${libDir}`);
       console.log(`🧩 Components: ${this.components.size}`);
-      
+
       return this.metadata;
-      
+
     } catch (error) {
       console.error('❌ Build failed:', error.message);
       throw error;
@@ -90,36 +90,36 @@ class ComponentLibraryBuilder {
     // Clean dist directory
     await fs.rm(distDir, { recursive: true, force: true });
     await fs.mkdir(libDir, { recursive: true });
-    
+
     // Create necessary subdirectories
     const subdirs = ['bundles', 'docs', 'types', 'examples'];
     for (const subdir of subdirs) {
       await fs.mkdir(path.join(libDir, subdir), { recursive: true });
     }
-    
+
     console.log('🧹 Cleaned and prepared build directories');
   }
 
   async discoverComponents() {
     console.log('🔍 Discovering components...');
-    
+
     const categories = ['atoms', 'molecules', 'organisms', 'pages'];
-    
+
     for (const category of categories) {
       const categoryDir = path.join(componentsDir, category);
-      
+
       try {
         const files = await fs.readdir(categoryDir);
-        
+
         for (const file of files) {
           if (file.endsWith('.js') && !file.endsWith('.test.js') && !file.endsWith('.stories.js')) {
             const componentPath = path.join(categoryDir, file);
             const componentName = path.basename(file, '.js');
-            
+
             // Read component source to extract metadata
             const source = await fs.readFile(componentPath, 'utf-8');
             const metadata = this.extractComponentMetadata(source, componentName, category);
-            
+
             this.components.set(componentName, {
               name: componentName,
               category,
@@ -133,7 +133,7 @@ class ComponentLibraryBuilder {
         console.warn(`⚠️ Could not read category directory: ${category}`);
       }
     }
-    
+
     console.log(`📦 Discovered ${this.components.size} components`);
   }
 
@@ -146,35 +146,35 @@ class ComponentLibraryBuilder {
       dependencies: [],
       exports: []
     };
-    
+
     // Extract JSDoc description
     const descMatch = source.match(/\/\*\*\s*\n\s*\*\s*([^@\n]+)/);
     if (descMatch) {
       metadata.description = descMatch[1].trim();
     }
-    
+
     // Extract custom element registration
     const customElementMatch = source.match(/@customElement\(['"`]([^'"`]+)['"`]\)/);
     if (customElementMatch) {
       metadata.tagName = customElementMatch[1];
     }
-    
+
     // Extract properties
     const propertyMatches = source.matchAll(/@property\s*\(\s*\{([^}]+)\}\s*\)\s*([a-zA-Z_$][a-zA-Z0-9_$]*)/g);
     for (const match of propertyMatches) {
       const options = match[1];
       const propName = match[2];
-      
+
       const typeMatch = options.match(/type:\s*([^,\s}]+)/);
       const attributeMatch = options.match(/attribute:\s*['"`]([^'"`]+)['"`]/);
-      
+
       metadata.properties.push({
         name: propName,
         type: typeMatch ? typeMatch[1] : 'any',
         attribute: attributeMatch ? attributeMatch[1] : propName.toLowerCase()
       });
     }
-    
+
     // Extract events
     const eventMatches = source.matchAll(/this\.dispatchEvent\(new\s+CustomEvent\(['"`]([^'"`]+)['"`]/g);
     for (const match of eventMatches) {
@@ -182,23 +182,23 @@ class ComponentLibraryBuilder {
         metadata.events.push(match[1]);
       }
     }
-    
+
     // Extract exports
     const exportMatches = source.matchAll(/export\s+(?:class|function|const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g);
     for (const match of exportMatches) {
       metadata.exports.push(match[1]);
     }
-    
+
     return metadata;
   }
 
   async buildComponentBundles() {
     console.log('📦 Building component bundles...');
-    
+
     // Build individual component bundles
     const individualBuilds = Array.from(this.components.entries()).map(async ([name, component]) => {
       const bundlePath = path.join(libDir, 'bundles', `${name}.js`);
-      
+
       await build({
         root: projectRoot,
         build: {
@@ -224,7 +224,7 @@ class ComponentLibraryBuilder {
           'process.env.NODE_ENV': '"production"'
         }
       });
-      
+
       // Record bundle info
       const stats = await fs.stat(bundlePath);
       this.metadata.bundles[name] = {
@@ -233,26 +233,26 @@ class ComponentLibraryBuilder {
         gzippedSize: await this.getGzippedSize(bundlePath)
       };
     });
-    
+
     await Promise.all(individualBuilds);
-    
+
     // Build category bundles
     const categories = ['atoms', 'molecules', 'organisms', 'pages'];
-    
+
     for (const category of categories) {
       const categoryComponents = Array.from(this.components.values())
         .filter(comp => comp.category === category);
-      
+
       if (categoryComponents.length === 0) continue;
-      
+
       // Create category entry point
       const categoryEntry = path.join(libDir, `${category}.js`);
-      const exports = categoryComponents.map(comp => 
+      const exports = categoryComponents.map(comp =>
         `export * from './bundles/${comp.name}.js';`
       ).join('\n');
-      
+
       await fs.writeFile(categoryEntry, exports);
-      
+
       // Build category bundle
       await build({
         root: projectRoot,
@@ -271,7 +271,7 @@ class ComponentLibraryBuilder {
           target: 'es2020'
         }
       });
-      
+
       // Record category bundle info
       const bundlePath = path.join(libDir, 'bundles', `${category}.js`);
       const stats = await fs.stat(bundlePath);
@@ -282,7 +282,7 @@ class ComponentLibraryBuilder {
         components: categoryComponents.map(c => c.name)
       };
     }
-    
+
     console.log(`📦 Built ${Object.keys(this.metadata.bundles).length} bundles`);
   }
 
@@ -367,12 +367,12 @@ class ComponentLibraryBuilder {
         }
       }
     };
-    
+
     await fs.writeFile(
       path.join(libDir, 'package.json'),
       JSON.stringify(packageJson, null, 2)
     );
-    
+
     console.log('📄 Generated package.json');
   }
 
@@ -381,10 +381,10 @@ class ComponentLibraryBuilder {
     const allExports = Array.from(this.components.values())
       .map(comp => `export * from './bundles/${comp.name}.js';`)
       .join('\n');
-    
+
     const indexContent = `/**
  * NeoForge Web Components Library
- * 
+ *
  * Production-ready Web Components built with Lit
  * Generated on: ${this.metadata.buildTime}
  * Version: ${this.metadata.version}
@@ -397,66 +397,66 @@ ${allExports}
 export { LitElement, html, css } from 'lit';
 export { customElement, property, state, query } from 'lit/decorators.js';
 `;
-    
+
     await fs.writeFile(path.join(libDir, 'index.js'), indexContent);
-    
+
     // Generate category-specific exports
     const categories = ['atoms', 'molecules', 'organisms', 'pages'];
-    
+
     for (const category of categories) {
       const categoryComponents = Array.from(this.components.values())
         .filter(comp => comp.category === category);
-      
+
       const categoryExports = categoryComponents
         .map(comp => `export * from './bundles/${comp.name}.js';`)
         .join('\n');
-      
+
       const categoryContent = `/**
  * ${category.charAt(0).toUpperCase() + category.slice(1)} Components
- * 
+ *
  * ${categoryComponents.length} components in this category
  */
 
 ${categoryExports}
 `;
-      
+
       await fs.writeFile(path.join(libDir, `${category}.js`), categoryContent);
     }
-    
+
     console.log('📁 Generated export files');
   }
 
   async generateDocumentation() {
     console.log('📚 Generating documentation...');
-    
+
     // Generate README.md
     const readmeContent = this.generateReadme();
     await fs.writeFile(path.join(libDir, 'README.md'), readmeContent);
-    
+
     // Generate CHANGELOG.md
     const changelogContent = this.generateChangelog();
     await fs.writeFile(path.join(libDir, 'CHANGELOG.md'), changelogContent);
-    
+
     // Generate component documentation
     for (const [name, component] of this.components) {
       const componentDoc = this.generateComponentDocumentation(component);
       const docPath = path.join(libDir, 'docs', `${name}.md`);
-      
+
       await fs.writeFile(docPath, componentDoc);
-      
+
       this.metadata.documentation[name] = `docs/${name}.md`;
     }
-    
+
     // Generate API documentation index
     const apiIndex = this.generateApiIndex();
     await fs.writeFile(path.join(libDir, 'docs', 'api.md'), apiIndex);
-    
+
     console.log(`📚 Generated documentation for ${this.components.size} components`);
   }
 
   async generateTypeDeclarations() {
     console.log('🔤 Generating TypeScript declarations...');
-    
+
     // Generate main index.d.ts
     const mainTypes = `/**
  * NeoForge Web Components Library Type Declarations
@@ -470,28 +470,28 @@ ${Array.from(this.components.values())
   .map(comp => `export * from './${comp.category}/${comp.name}.js';`)
   .join('\n')}
 `;
-    
+
     await fs.writeFile(path.join(libDir, 'types', 'index.d.ts'), mainTypes);
-    
+
     // Generate individual component type declarations
     for (const [name, component] of this.components) {
       const componentTypes = this.generateComponentTypes(component);
       const typesPath = path.join(libDir, 'types', component.category, `${name}.d.ts`);
-      
+
       await fs.mkdir(path.dirname(typesPath), { recursive: true });
       await fs.writeFile(typesPath, componentTypes);
     }
-    
+
     console.log('🔤 Generated TypeScript declarations');
   }
 
   async createDistributionPackages() {
     console.log('📦 Creating distribution packages...');
-    
+
     // Create CDN-ready bundle
     const cdnBundle = path.join(libDir, 'cdn', 'neoforge-components.min.js');
     await fs.mkdir(path.dirname(cdnBundle), { recursive: true });
-    
+
     // Build UMD bundle for CDN
     await build({
       root: projectRoot,
@@ -515,11 +515,11 @@ ${Array.from(this.components.values())
         target: 'es2017' // Broader browser support for CDN
       }
     });
-    
+
     // Create examples directory with sample usage
     const examplesDir = path.join(libDir, 'examples');
     await this.generateExamples(examplesDir);
-    
+
     console.log('📦 Created distribution packages');
   }
 
@@ -535,20 +535,20 @@ ${Array.from(this.components.values())
 </head>
 <body>
     <h1>NeoForge Components Demo</h1>
-    
+
     <!-- Atoms -->
     <section>
         <h2>Atoms</h2>
         <neo-button variant="primary">Primary Button</neo-button>
         <neo-badge variant="success">Success</neo-badge>
     </section>
-    
+
     <!-- Add more component examples -->
 </body>
 </html>`;
-    
+
     await fs.writeFile(path.join(examplesDir, 'basic.html'), htmlExample);
-    
+
     // React example
     const reactExample = `import React from 'react';
 import '@neoforge/web-components';
@@ -569,9 +569,9 @@ function handleClick() {
 }
 
 export default App;`;
-    
+
     await fs.writeFile(path.join(examplesDir, 'react-example.jsx'), reactExample);
-    
+
     // Vue example
     const vueExample = `<template>
   <div>
@@ -594,7 +594,7 @@ export default {
   }
 };
 </script>`;
-    
+
     await fs.writeFile(path.join(examplesDir, 'vue-example.vue'), vueExample);
   }
 
@@ -604,14 +604,14 @@ export default {
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    
+
     let gitHash = '';
     try {
       gitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
     } catch (error) {
       gitHash = 'dev';
     }
-    
+
     return `${year}.${month}.${day}-${gitHash}`;
   }
 
@@ -642,7 +642,7 @@ This library includes ${this.components.size} components across 4 categories:
 ${Array.from(['atoms', 'molecules', 'organisms', 'pages']).map(category => {
   const categoryComponents = Array.from(this.components.values())
     .filter(comp => comp.category === category);
-  
+
   return `### ${category.charAt(0).toUpperCase() + category.slice(1)} (${categoryComponents.length})
 
 ${categoryComponents.map(comp => `- **${comp.name}**: ${comp.description || 'No description available'}`).join('\n')}`;
@@ -712,7 +712,7 @@ ${component.events.length > 0 ? component.events.map(event => `- \`${event}\``).
 
   generateApiIndex() {
     const categories = ['atoms', 'molecules', 'organisms', 'pages'];
-    
+
     return `# API Reference
 
 Complete API documentation for all NeoForge Web Components.
@@ -722,7 +722,7 @@ Complete API documentation for all NeoForge Web Components.
 ${categories.map(category => {
   const categoryComponents = Array.from(this.components.values())
     .filter(comp => comp.category === category);
-  
+
   return `### ${category.charAt(0).toUpperCase() + category.slice(1)}
 
 ${categoryComponents.map(comp => `- [${comp.name}](${comp.name}.md)`).join('\n')}`;
@@ -732,7 +732,7 @@ ${categoryComponents.map(comp => `- [${comp.name}](${comp.name}.md)`).join('\n')
 
 | Component | Tag Name | Description |
 |-----------|----------|-------------|
-${Array.from(this.components.values()).map(comp => 
+${Array.from(this.components.values()).map(comp =>
   `| ${comp.name} | \`${comp.tagName || comp.name.toLowerCase()}\` | ${comp.description || 'No description'} |`
 ).join('\n')}
 `;
@@ -747,7 +747,7 @@ import { LitElement } from 'lit';
 
 export declare class ${component.exports[0] || component.name} extends LitElement {
 ${component.properties.map(prop => `  ${prop.name}: ${this.mapTypeScriptType(prop.type)};`).join('\n')}
-  
+
   connectedCallback(): void;
   disconnectedCallback(): void;
   render(): import('lit').TemplateResult;
@@ -769,7 +769,7 @@ declare global {
       'Array': 'any[]',
       'Object': 'Record<string, any>'
     };
-    
+
     return typeMap[litType] || 'any';
   }
 
@@ -794,16 +794,16 @@ declare global {
 // CLI Interface
 async function main() {
   const builder = new ComponentLibraryBuilder();
-  
+
   try {
     await builder.build();
-    
+
     console.log('\n📊 Build Summary:');
     console.log(`Version: ${builder.metadata.version}`);
     console.log(`Components: ${builder.components.size}`);
     console.log(`Bundles: ${Object.keys(builder.metadata.bundles).length}`);
     console.log(`Total Bundle Size: ${Object.values(builder.metadata.bundles).reduce((total, bundle) => total + bundle.size, 0)} bytes`);
-    
+
   } catch (error) {
     console.error('❌ Build failed:', error);
     process.exit(1);

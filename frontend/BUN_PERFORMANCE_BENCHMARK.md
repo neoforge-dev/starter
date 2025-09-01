@@ -55,7 +55,7 @@ This document reports the performance improvements achieved by implementing Bun 
 "dev": "vite"
 
 # After (Bun)
-"build": "bun vite build"  
+"build": "bun vite build"
 "test": "bun vitest"
 "dev": "bun vite"
 ```

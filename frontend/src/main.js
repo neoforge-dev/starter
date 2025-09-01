@@ -1,4 +1,6 @@
 import { pwaService } from "./services/pwa.js";
+import { tenantService } from "./services/tenant.js";
+import { rbacService } from "./services/rbac.js";
 import "./router.js";
 import "./components/header.js";
 import "./components/footer.js";
@@ -41,6 +43,12 @@ const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
   : "light";
 const initialTheme = savedTheme === "system" ? systemTheme : savedTheme;
 document.documentElement.setAttribute("data-theme", initialTheme);
+
+// Initialize tenant service
+tenantService.initialize();
+
+// Initialize RBAC service
+rbacService.initialize();
 
 // Initialize PWA service
 pwaService.initialize();

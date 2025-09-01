@@ -68,4 +68,4 @@ When updating these utilities:
 
 1. Test in multiple environments (Node.js, JSDOM, browsers)
 2. Update both ESM and CommonJS versions when applicable
-3. Update the documentation with any significant changes 
+3. Update the documentation with any significant changes

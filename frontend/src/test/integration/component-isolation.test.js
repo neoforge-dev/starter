@@ -1,6 +1,6 @@
 /**
  * Component Isolation Test
- * 
+ *
  * First Principle: A component is testable if it can load independently
  * Test: Every component should import without throwing module resolution errors
  */

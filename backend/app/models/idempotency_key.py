@@ -1,9 +1,10 @@
 """Idempotency key model for deduplicating non-GET requests."""
 from datetime import datetime
 from typing import Optional
+
+from app.db.base_class import Base
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
-from app.db.base_class import Base
 
 
 class IdempotencyKey(Base):

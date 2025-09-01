@@ -28,7 +28,7 @@ export async function waitForAnimations(page) {
       ...document.getAnimations().map((animation) => animation.finished),
     ]);
   });
-  
+
   // Additional wait for component updates
   await page.waitForTimeout(200);
 }
@@ -56,7 +56,7 @@ export async function hideDynamicElements(page) {
       .pulse-animation {
         visibility: hidden !important;
       }
-      
+
       /* Disable CSS animations for consistent screenshots */
       *, *:before, *:after {
         animation-duration: 0.01ms !important;
@@ -82,7 +82,7 @@ export async function waitForWebComponents(page, tagNames) {
 
   // Wait for components to fully render
   await page.waitForTimeout(300);
-  
+
   // Ensure all components have completed their update cycle
   await page.evaluate((components) => {
     const elements = components.map(tag => document.querySelector(tag)).filter(Boolean);
@@ -129,7 +129,7 @@ export async function loadPlaygroundComponent(page, category, name, tagName) {
 export async function preparePageForVisualTest(page) {
   await hideDynamicElements(page);
   await waitForAnimations(page);
-  
+
   // Ensure fonts are loaded
   await page.evaluate(() => {
     return document.fonts.ready;

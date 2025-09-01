@@ -130,7 +130,7 @@ export class VariantRenderer extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    
+
     if (this.loadingStrategy === 'visible') {
       this._setupIntersectionObserver();
     } else if (this.loadingStrategy === 'immediate') {
@@ -149,11 +149,11 @@ export class VariantRenderer extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    
+
     if (this.intersectionObserver) {
       this.intersectionObserver.disconnect();
     }
-    
+
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);
     }
@@ -169,7 +169,7 @@ export class VariantRenderer extends LitElement {
 
   updated(changedProperties) {
     super.updated(changedProperties);
-    
+
     if (changedProperties.has('testKey') && this.testKey) {
       if (this.loadingStrategy === 'immediate') {
         this._loadVariant();
@@ -194,24 +194,24 @@ export class VariantRenderer extends LitElement {
 
     try {
       const assignment = await abTestingService.getTestAssignment(this.testKey);
-      
+
       if (this.abortController.signal.aborted) {
         return;
       }
 
       clearTimeout(this.timeoutId);
-      
+
       if (assignment) {
         this.assignmentData = assignment;
         this.currentVariant = assignment.variant_key;
-        
+
         // Track exposure
         this._trackExposure(assignment);
       } else {
         // Fall back to default variant
         this.currentVariant = this.defaultVariant;
       }
-      
+
     } catch (error) {
       if (!this.abortController.signal.aborted) {
         this._handleError(error);
@@ -259,7 +259,7 @@ export class VariantRenderer extends LitElement {
     console.error(`Variant renderer error for test ${this.testKey}:`, error);
     this.error = error.message || 'Failed to load test variant';
     this.currentVariant = this.defaultVariant;
-    
+
     // Dispatch custom error event
     this.dispatchEvent(new CustomEvent('variant-error', {
       detail: { testKey: this.testKey, error },

@@ -172,4 +172,4 @@ export class BlogPage extends LitElement {
   }
 }
 
-customElements.define("blog-page", BlogPage); 
+customElements.define("blog-page", BlogPage);

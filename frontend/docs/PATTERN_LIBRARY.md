@@ -29,10 +29,10 @@
 
 // Form with Validation
 <neo-form validation-mode="onChange">
-  <neo-input 
-    label="Email" 
-    type="email" 
-    pattern="[^@]+@[^@]+\.[^@]+" 
+  <neo-input
+    label="Email"
+    type="email"
+    pattern="[^@]+@[^@]+\.[^@]+"
     error-message="Please enter a valid email">
   </neo-input>
 </neo-form>
@@ -76,7 +76,7 @@
 
 ```javascript
 // Data Table
-<neo-data-table 
+<neo-data-table
   .data=\${data}
   .columns=\${columns}
   sortable
@@ -84,7 +84,7 @@
 </neo-data-table>
 
 // Charts
-<neo-chart 
+<neo-chart
   type="line"
   .data=\${chartData}
   .options=\${chartOptions}>
@@ -220,7 +220,7 @@ static styles = css\`
 ```javascript
 render() {
   return html\`
-    <div role="dialog" 
+    <div role="dialog"
          aria-labelledby="dialog-title"
          aria-describedby="dialog-content">
       <h2 id="dialog-title">Dialog Title</h2>
@@ -246,7 +246,7 @@ handleKeyDown(e) {
 
 render() {
   return html\`
-    <div tabindex="0" 
+    <div tabindex="0"
          @keydown=\${this.handleKeyDown}
          role="button">
       Clickable Element
@@ -275,10 +275,10 @@ describe('MyComponent', () => {
   it('handles events correctly', async () => {
     const el = await fixture(html\`<my-component></my-component>\`);
     const button = el.shadowRoot.querySelector('button');
-    
+
     let eventFired = false;
     el.addEventListener('custom-event', () => eventFired = true);
-    
+
     button.click();
     expect(eventFired).to.be.true;
   });
@@ -352,4 +352,4 @@ render() {
 7. Document component APIs
 8. Optimize for performance
 9. Follow the Single Responsibility Principle
-10. Use semantic HTML 
+10. Use semantic HTML

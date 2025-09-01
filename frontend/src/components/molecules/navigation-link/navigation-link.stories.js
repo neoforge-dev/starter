@@ -56,16 +56,16 @@ const Template = (args) => {
       }
     }
   });
-  
+
   // Add event listeners for demonstration
   navLink.addEventListener('neo-navigation-click', (e) => {
     console.log('Navigation click:', e.detail);
   });
-  
+
   navLink.addEventListener('neo-navigation-focus', (e) => {
     console.log('Navigation focus:', e.detail);
   });
-  
+
   return navLink;
 };
 
@@ -145,7 +145,7 @@ Secondary.args = {
 export const AllSizes = () => {
   const container = document.createElement('div');
   container.style.cssText = 'display: flex; flex-direction: column; gap: 1rem; align-items: flex-start;';
-  
+
   const sizes = ['sm', 'md', 'lg'];
   sizes.forEach(size => {
     const navLink = document.createElement('neo-navigation-link');

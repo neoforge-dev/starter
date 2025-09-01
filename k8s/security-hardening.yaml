@@ -1,0 +1,514 @@
+# NeoForge Production Security Hardening
+# Enterprise-grade security configurations
+
+---
+# Network Security Policies
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: strict-network-policy
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: strict-network-policy
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: network-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: neoforge
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: neoforge-monitoring
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: http
+  - from:
+    - podSelector:
+        matchLabels:
+          app: api
+    - podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - protocol: TCP
+      port: http
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+
+---
+# Pod Security Standards
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: neoforge-restricted-psp
+  labels:
+    app.kubernetes.io/name: neoforge-restricted-psp
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: pod-security
+    app.kubernetes.io/part-of: neoforge
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+  - ALL
+  defaultAllowPrivilegeEscalation: false
+  allowedCapabilities: []
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  runAsGroup:
+    rule: MustRunAs
+    ranges:
+    - min: 1000
+      max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+    - min: 1000
+      max: 65535
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+    - min: 1000
+      max: 65535
+  volumes:
+  - configMap
+  - emptyDir
+  - persistentVolumeClaim
+  - secret
+  - projected
+  - downwardAPI
+  readOnlyRootFilesystem: true
+  defaultAllowPrivilegeEscalation: false
+
+---
+# Security Context Constraints
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-context-config
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: security-context-config
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: security-context
+    app.kubernetes.io/part-of: neoforge
+data:
+  security-context.json: |
+    {
+      "allowPrivilegeEscalation": false,
+      "capabilities": {
+        "drop": ["ALL"]
+      },
+      "runAsNonRoot": true,
+      "runAsUser": 1000,
+      "runAsGroup": 1000,
+      "fsGroup": 1000,
+      "readOnlyRootFilesystem": true,
+      "seccompProfile": {
+        "type": "RuntimeDefault"
+      }
+    }
+
+---
+# Resource Quotas and Limits
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: neoforge-resource-quota
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-resource-quota
+    app.kubernetes.io/instance: neoforge-resources
+    app.kubernetes.io/component: resource-management
+    app.kubernetes.io/part-of: neoforge
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    persistentvolumeclaims: "10"
+    pods: "50"
+    services: "20"
+    secrets: "20"
+    configmaps: "20"
+
+---
+# Limit Ranges
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: neoforge-limit-range
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-limit-range
+    app.kubernetes.io/instance: neoforge-resources
+    app.kubernetes.io/component: resource-management
+    app.kubernetes.io/part-of: neoforge
+spec:
+  limits:
+  - default:
+      memory: 512Mi
+      cpu: 500m
+    defaultRequest:
+      memory: 256Mi
+      cpu: 100m
+    type: Container
+  - max:
+      memory: 2Gi
+      cpu: 2
+    min:
+      memory: 64Mi
+      cpu: 50m
+    type: Container
+
+---
+# Service Account with Minimal Permissions
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neoforge-service-account
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-service-account
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+automountServiceAccountToken: false
+
+---
+# Role with Minimal Permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: neoforge-minimal-role
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-minimal-role
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["get", "list", "watch"]
+
+---
+# RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: neoforge-role-binding
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: neoforge-role-binding
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: neoforge
+subjects:
+- kind: ServiceAccount
+  name: neoforge-service-account
+  namespace: neoforge
+roleRef:
+  kind: Role
+  name: neoforge-minimal-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# Falco Security Monitoring
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: falco-config
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: falco-config
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: runtime-security
+    app.kubernetes.io/part-of: neoforge
+data:
+  falco.yaml: |
+    rules_file:
+      - /etc/falco/falco_rules.yaml
+      - /etc/falco/falco_rules.local.yaml
+      - /etc/falco/k8s_audit_rules.yaml
+    time_format_iso_8601: true
+    priority: warning
+    json_output: true
+    json_include_output_property: true
+    json_include_tags_property: true
+    syslog_output:
+      enabled: false
+    file_output:
+      enabled: false
+    stdout_output:
+      enabled: true
+    webhook_output:
+      enabled: true
+      url: http://falco-webhook:8080/webhook
+    grpc_output:
+      enabled: false
+    grpc:
+      enabled: false
+    http_output:
+      enabled: false
+    program_output:
+      enabled: false
+      keep_alive: false
+      program: mail -s "Falco Alert" admin@neoforge.dev
+
+---
+# Falco Rules for Kubernetes
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: falco-rules
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: falco-rules
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: runtime-security
+    app.kubernetes.io/part-of: neoforge
+data:
+  k8s_audit_rules.yaml: |
+    - rule: K8s Suspicious API Operation
+      desc: Detect suspicious API operations in Kubernetes
+      condition: >
+        kevt and
+        (ka.req.method = PUT or ka.req.method = POST or ka.req.method = PATCH) and
+        (ka.req.resource.resource = secrets or ka.req.resource.resource = configmaps) and
+        not ka.user.name contains "system:"
+      output: >
+        Suspicious API operation detected (user=%ka.user.name method=%ka.req.method resource=%ka.req.resource.resource)
+      priority: WARNING
+      tags: [k8s, api]
+
+    - rule: K8s Pod Created with Privileged Mode
+      desc: Detect pods created with privileged mode enabled
+      condition: >
+        kevt and kcreate and pod and
+        k8s.ns.name = neoforge and
+        pod.privileged = true
+      output: >
+        Pod created with privileged mode (pod=%k8s.pod.name namespace=%k8s.ns.name user=%ka.user.name)
+      priority: CRITICAL
+      tags: [k8s, pod, privileged]
+
+    - rule: K8s Service Account Token Mounted
+      desc: Detect when service account tokens are mounted
+      condition: >
+        kevt and kcreate and pod and
+        k8s.ns.name = neoforge and
+        pod.automountServiceAccountToken = true
+      output: >
+        Service account token mounted (pod=%k8s.pod.name namespace=%k8s.ns.name)
+      priority: WARNING
+      tags: [k8s, pod, service-account]
+
+    - rule: K8s Exec into Pod
+      desc: Detect exec operations into pods
+      condition: >
+        kevt and k8s and
+        k8s.ns.name = neoforge and
+        kevt.category = exec
+      output: >
+        Exec into pod (pod=%k8s.pod.name namespace=%k8s.ns.name user=%ka.user.name)
+      priority: INFO
+      tags: [k8s, exec]
+
+    - rule: K8s Port Forward
+      desc: Detect port forward operations
+      condition: >
+        kevt and k8s and
+        k8s.ns.name = neoforge and
+        kevt.category = port-forward
+      output: >
+        Port forward detected (namespace=%k8s.ns.name user=%ka.user.name)
+      priority: INFO
+      tags: [k8s, port-forward]
+
+---
+# Certificate Management with cert-manager
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  labels:
+    app.kubernetes.io/name: letsencrypt-prod
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: certificate-management
+    app.kubernetes.io/part-of: neoforge
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: admin@neoforge.dev
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+
+---
+# Certificate for API
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: api-neoforge-dev-tls
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: api-neoforge-dev-tls
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: certificate-management
+    app.kubernetes.io/part-of: neoforge
+spec:
+  secretName: api-neoforge-dev-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - api.neoforge.dev
+  - api.staging.neoforge.dev
+
+---
+# Certificate for Frontend
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: frontend-neoforge-dev-tls
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: frontend-neoforge-dev-tls
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: certificate-management
+    app.kubernetes.io/part-of: neoforge
+spec:
+  secretName: frontend-neoforge-dev-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - app.neoforge.dev
+  - app.staging.neoforge.dev
+
+---
+# Security Headers Middleware ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-headers-config
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: security-headers-config
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: security-headers
+    app.kubernetes.io/part-of: neoforge
+data:
+  nginx.conf: |
+    server {
+      listen 80;
+      server_name _;
+
+      # Security headers
+      add_header X-Frame-Options "DENY" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://api.neoforge.dev;" always;
+      add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+
+      # Rate limiting
+      limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+      limit_req_zone $binary_remote_addr zone=auth:10m rate=5r/m;
+
+      location /api/ {
+        limit_req zone=api burst=20 nodelay;
+        proxy_pass http://api-service;
+      }
+
+      location /auth/ {
+        limit_req zone=auth burst=10 nodelay;
+        proxy_pass http://api-service;
+      }
+    }
+
+---
+# Audit Logging ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: audit-log-config
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: audit-log-config
+    app.kubernetes.io/instance: neoforge-security
+    app.kubernetes.io/component: audit-logging
+    app.kubernetes.io/part-of: neoforge
+data:
+  audit-policy.yaml: |
+    apiVersion: audit.k8s.io/v1
+    kind: Policy
+    rules:
+    - level: Metadata
+      namespaces: ["neoforge"]
+      verbs: ["create", "update", "patch", "delete"]
+      resources:
+      - group: ""
+        resources: ["secrets", "configmaps", "pods", "services"]
+      - group: "apps"
+        resources: ["deployments", "replicasets"]
+    - level: RequestResponse
+      namespaces: ["neoforge"]
+      verbs: ["create", "update", "patch", "delete"]
+      resources:
+      - group: ""
+        resources: ["secrets"]
+    - level: None
+      verbs: ["get", "list", "watch"]
+      resources:
+      - group: ""
+        resources: ["events"]

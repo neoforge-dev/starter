@@ -78,8 +78,8 @@ export class AuthService {
 
   async login(email: string, password: string, remember_me?: boolean): Promise<User> {
     try {
-      const loginData: LoginRequest = { 
-        email, 
+      const loginData: LoginRequest = {
+        email,
         password,
         ...(remember_me !== undefined && { remember_me })
       };
@@ -343,7 +343,7 @@ export class AuthService {
   async checkEmailVerification(email: string): Promise<boolean> {
     try {
       const response = await fetch(`${this.baseUrl}/check-verification?email=${encodeURIComponent(email)}`);
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: "Failed to check verification status" }));
         throw new Error(error.message || "Failed to check verification status");

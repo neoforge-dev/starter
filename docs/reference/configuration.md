@@ -13,7 +13,7 @@
 DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost/neoforge"
 TEST_DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost/neoforge_test"
 
-# Redis Configuration  
+# Redis Configuration
 REDIS_URL: str = "redis://localhost:6379"
 
 # Security Configuration
@@ -82,7 +82,7 @@ export default defineConfig({
       }
     }
   },
-  
+
   // Build configuration
   build: {
     outDir: 'dist',
@@ -97,7 +97,7 @@ export default defineConfig({
       }
     }
   },
-  
+
   // PWA Configuration
   plugins: [
     VitePWA({
@@ -157,12 +157,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      
+
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-      
+
   api:
     build: .
     environment:
@@ -205,7 +205,7 @@ REDIS_URL=redis://redis:6379
 SECRET_KEY=your-super-secret-production-key-32-chars-min
 ENVIRONMENT=production
 
-# Frontend Production  
+# Frontend Production
 NODE_ENV=production
 VITE_API_URL=https://api.yourdomain.com
 
@@ -233,7 +233,7 @@ RATE_LIMIT_PERIOD=60
 testpaths = tests
 python_files = test_*.py
 python_functions = test_*
-addopts = 
+addopts =
     --strict-markers
     --disable-warnings
     --tb=short
@@ -287,7 +287,7 @@ export default defineConfig({
 # Security middleware configuration
 SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY", 
+    "X-Frame-Options": "DENY",
     "X-XSS-Protection": "1; mode=block",
     "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
     "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'",
@@ -297,7 +297,7 @@ SECURITY_HEADERS = {
 # Rate limiting configuration
 RATE_LIMITS = {
     "/api/auth/login": "5 per minute",
-    "/api/auth/register": "3 per minute", 
+    "/api/auth/register": "3 per minute",
     "/api": "100 per minute",
     "default": "1000 per hour"
 }

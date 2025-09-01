@@ -308,30 +308,30 @@ export class AbTestingDashboard extends LitElement {
       .dashboard-container {
         padding: 24px 16px;
       }
-      
+
       .dashboard-nav {
         flex-wrap: wrap;
         gap: 8px;
       }
-      
+
       .nav-btn {
         flex: 1;
         min-width: 120px;
         padding: 10px 16px;
       }
-      
+
       .performance-overview {
         grid-template-columns: 1fr;
       }
-      
+
       .actions-grid {
         grid-template-columns: 1fr;
       }
-      
+
       .content-area {
         padding: 20px;
       }
-      
+
       .modal-content {
         margin: 10px;
         max-height: calc(100vh - 20px);
@@ -357,7 +357,7 @@ export class AbTestingDashboard extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._loadPerformanceMetrics();
-    
+
     // Initialize A/B testing service
     abTestingService.initialize().then(() => {
       console.log('A/B testing service initialized');
@@ -366,14 +366,14 @@ export class AbTestingDashboard extends LitElement {
 
   async _loadPerformanceMetrics() {
     this.isLoading = true;
-    
+
     try {
       // Get performance metrics from A/B testing service
       this.performanceMetrics = await abTestingService.getPerformanceMetrics();
-      
+
       // Also get additional metrics from the API
       const apiMetrics = await abTestingService.listTests({ limit: 100 });
-      
+
       // Combine metrics
       this.performanceMetrics = {
         ...this.performanceMetrics,
@@ -381,7 +381,7 @@ export class AbTestingDashboard extends LitElement {
         activeTests: apiMetrics.tests?.filter(t => t.status === 'active').length || 0,
         completedTests: apiMetrics.tests?.filter(t => t.status === 'completed').length || 0
       };
-      
+
     } catch (error) {
       console.error('Failed to load performance metrics:', error);
     } finally {
@@ -405,7 +405,7 @@ export class AbTestingDashboard extends LitElement {
 
   _createExampleTest(type) {
     let testData;
-    
+
     switch (type) {
       case 'button':
         testData = {
@@ -433,7 +433,7 @@ export class AbTestingDashboard extends LitElement {
           ]
         };
         break;
-        
+
       case 'headline':
         testData = {
           test_key: `headline_${Date.now()}`,
@@ -460,7 +460,7 @@ export class AbTestingDashboard extends LitElement {
           ]
         };
         break;
-        
+
       case 'pricing':
         testData = {
           test_key: `pricing_${Date.now()}`,
@@ -487,16 +487,16 @@ export class AbTestingDashboard extends LitElement {
           ]
         };
         break;
-        
+
       default:
         return;
     }
-    
+
     this.dispatchEvent(new CustomEvent('create-example-test', {
       detail: { testData },
       bubbles: true
     }));
-    
+
     this._switchView('manager');
   }
 
@@ -523,7 +523,7 @@ export class AbTestingDashboard extends LitElement {
             ${this.performanceMetrics.activeTests || 0} active
           </div>
         </div>
-        
+
         <div class="overview-card">
           <div class="card-icon icon-users">👥</div>
           <div class="card-value">${this.performanceMetrics.totalAssignments || 0}</div>
@@ -532,7 +532,7 @@ export class AbTestingDashboard extends LitElement {
             ↗ ${((this.performanceMetrics.cacheHitRate || 0) * 100).toFixed(1)}% cache hit rate
           </div>
         </div>
-        
+
         <div class="overview-card">
           <div class="card-icon icon-conversions">📈</div>
           <div class="card-value">${this.performanceMetrics.completedTests || 0}</div>
@@ -541,7 +541,7 @@ export class AbTestingDashboard extends LitElement {
             ${this.performanceMetrics.activeTestsCount || 0} currently running
           </div>
         </div>
-        
+
         <div class="overview-card">
           <div class="card-icon icon-performance">⚡</div>
           <div class="card-value">${(this.performanceMetrics.averageAssignmentTime || 0).toFixed(0)}ms</div>
@@ -565,14 +565,14 @@ export class AbTestingDashboard extends LitElement {
               Set up a new A/B test with custom variants and traffic allocation
             </div>
           </div>
-          
+
           <div class="action-card" @click=${() => this._switchView('examples')}>
             <div class="action-title">Try Examples</div>
             <div class="action-description">
               Get started quickly with pre-built test templates for common scenarios
             </div>
           </div>
-          
+
           <div class="action-card" @click=${() => this._switchView('integration')}>
             <div class="action-title">Integration Guide</div>
             <div class="action-description">
@@ -589,7 +589,7 @@ export class AbTestingDashboard extends LitElement {
       <div class="example-tests">
         <h3>Example A/B Tests</h3>
         <p>Try these common A/B testing scenarios to get started:</p>
-        
+
         <div class="example-card">
           <div class="example-title">Button Color Optimization</div>
           <div class="example-description">
@@ -600,7 +600,7 @@ export class AbTestingDashboard extends LitElement {
             Create Button Test
           </button>
         </div>
-        
+
         <div class="example-card">
           <div class="example-title">Landing Page Headlines</div>
           <div class="example-description">
@@ -611,7 +611,7 @@ export class AbTestingDashboard extends LitElement {
             Create Headline Test
           </button>
         </div>
-        
+
         <div class="example-card">
           <div class="example-title">Pricing Strategy</div>
           <div class="example-description">
@@ -630,7 +630,7 @@ export class AbTestingDashboard extends LitElement {
     return html`
       <div class="integration-guide">
         <h3>A/B Testing Integration Guide</h3>
-        
+
         <h4>1. Basic Variant Rendering</h4>
         <pre><code>&lt;variant-renderer
   test-key="my_test_key"
@@ -678,18 +678,18 @@ abTestingService.subscribe((eventType, data) => {
           ${this._renderPerformanceOverview()}
           ${this._renderQuickActions()}
         `;
-        
+
       case 'manager':
         return html`
           <ab-test-manager @view-analytics=${(e) => this._showAnalytics(e.detail.test)}></ab-test-manager>
         `;
-        
+
       case 'examples':
         return this._renderExamples();
-        
+
       case 'integration':
         return this._renderIntegrationGuide();
-        
+
       default:
         return this._renderPerformanceOverview();
     }
@@ -706,25 +706,25 @@ abTestingService.subscribe((eventType, data) => {
         </div>
 
         <nav class="dashboard-nav">
-          <button 
+          <button
             class="nav-btn ${this.currentView === 'overview' ? 'active' : ''}"
             @click=${() => this._switchView('overview')}
           >
             Overview
           </button>
-          <button 
+          <button
             class="nav-btn ${this.currentView === 'manager' ? 'active' : ''}"
             @click=${() => this._switchView('manager')}
           >
             Test Manager
           </button>
-          <button 
+          <button
             class="nav-btn ${this.currentView === 'examples' ? 'active' : ''}"
             @click=${() => this._switchView('examples')}
           >
             Examples
           </button>
-          <button 
+          <button
             class="nav-btn ${this.currentView === 'integration' ? 'active' : ''}"
             @click=${() => this._switchView('integration')}
           >
@@ -744,7 +744,7 @@ abTestingService.subscribe((eventType, data) => {
               <h3 class="modal-title">Test Analytics</h3>
               <button class="close-btn" @click=${this._closeAnalyticsModal}>×</button>
             </div>
-            <test-analytics 
+            <test-analytics
               test-id=${this.selectedTest.id}
               auto-refresh
             ></test-analytics>

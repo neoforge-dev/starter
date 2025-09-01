@@ -98,7 +98,7 @@ async function globalTeardown() {
 <body>
   <h1>Browser Compatibility Report</h1>
   <p>Generated: ${compatReport.timestamp}</p>
-  
+
   <h2>Browser Information</h2>
   <table>
     <tr>

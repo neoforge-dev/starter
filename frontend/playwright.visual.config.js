@@ -23,18 +23,18 @@ export default defineConfig({
   },
   // Retry failed tests in CI
   retries: process.env.CI ? 2 : 1,
-  
+
   // Optimize for performance - run visual tests in parallel but limit workers
   workers: process.env.CI ? 2 : 4,
-  
+
   reporter: [
     ["html", { outputFolder: "test-results/visual-report" }],
     ["list"],
     ["json", { outputFile: "test-results/visual-results.json" }]
   ],
-  
+
   outputDir: "test-results/visual-artifacts",
-  
+
   projects: [
     {
       name: 'chromium-desktop',

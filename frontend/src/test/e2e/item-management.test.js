@@ -11,7 +11,7 @@ class ItemManagementAPI {
   async createItem(itemData) {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     const newItem = {
       id: this.nextId++,
       ...itemData,
@@ -19,57 +19,57 @@ class ItemManagementAPI {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
-    
+
     this.items.push(newItem);
     return { data: newItem, status: 201 };
   }
 
   async getItems(params = {}) {
     await new Promise(resolve => setTimeout(resolve, 50));
-    
+
     const { skip = 0, limit = 100 } = params;
     const paginatedItems = this.items.slice(skip, skip + limit);
-    
+
     return { data: paginatedItems, status: 200 };
   }
 
   async getItem(itemId) {
     await new Promise(resolve => setTimeout(resolve, 50));
-    
+
     const item = this.items.find(item => item.id === itemId);
     if (!item) {
       throw new Error('Item not found');
     }
-    
+
     return { data: item, status: 200 };
   }
 
   async updateItem(itemId, updateData) {
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     const itemIndex = this.items.findIndex(item => item.id === itemId);
     if (itemIndex === -1) {
       throw new Error('Item not found');
     }
-    
+
     const updatedItem = {
       ...this.items[itemIndex],
       ...updateData,
       updated_at: new Date().toISOString()
     };
-    
+
     this.items[itemIndex] = updatedItem;
     return { data: updatedItem, status: 200 };
   }
 
   async deleteItem(itemId) {
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     const itemIndex = this.items.findIndex(item => item.id === itemId);
     if (itemIndex === -1) {
       throw new Error('Item not found');
     }
-    
+
     this.items.splice(itemIndex, 1);
     return { status: 204 };
   }
@@ -117,7 +117,7 @@ class ItemManagerComponent {
   async loadItems() {
     this.loading = true;
     this.error = null;
-    
+
     try {
       const response = await this.api.getItems();
       this.items = response.data;
@@ -133,7 +133,7 @@ class ItemManagerComponent {
   async createItem(itemData) {
     this.loading = true;
     this.error = null;
-    
+
     try {
       const response = await this.api.createItem(itemData);
       this.items.push(response.data);
@@ -151,7 +151,7 @@ class ItemManagerComponent {
   async updateItem(itemId, updateData) {
     this.loading = true;
     this.error = null;
-    
+
     try {
       const response = await this.api.updateItem(itemId, updateData);
       const itemIndex = this.items.findIndex(item => item.id === itemId);
@@ -172,7 +172,7 @@ class ItemManagerComponent {
   async deleteItem(itemId) {
     this.loading = true;
     this.error = null;
-    
+
     try {
       await this.api.deleteItem(itemId);
       this.items = this.items.filter(item => item.id !== itemId);
@@ -604,7 +604,7 @@ describe('Item Management E2E Tests', () => {
     it('should handle operations within acceptable time limits', async () => {
       // Arrange
       const startTime = Date.now();
-      
+
       const itemData = {
         title: 'Performance Test Item',
         description: 'Testing operation performance'
@@ -646,11 +646,11 @@ describe('Item Management E2E Tests', () => {
       // Assert - State should be consistent
       expect(itemManager.items.length).toBe(initialItemCount); // Same count (1 added, 1 deleted)
       expect(api.items.length).toBe(initialApiItemCount); // Same count in API
-      
+
       // Verify the new item exists with updated title
       const updatedNewItem = itemManager.items.find(item => item.id === newItem.id);
       expect(updatedNewItem.title).toBe('Updated Consistency Test');
-      
+
       // Verify the deleted item is gone
       expect(itemManager.items.find(item => item.id === 1)).toBeUndefined();
     });

@@ -11,7 +11,7 @@ import "../molecules/badge-counter/badge-counter.js";
 /**
  * Enhanced dashboard layout component with responsive design and modern navigation
  * @element neo-dashboard-layout
- * 
+ *
  * @prop {Object} user - Current user data
  * @prop {Array} navigationItems - Main navigation items
  * @prop {Array} quickActions - Quick action buttons
@@ -28,7 +28,7 @@ import "../molecules/badge-counter/badge-counter.js";
  * @prop {Array} userMenuItems - User dropdown menu items
  * @prop {boolean} darkMode - Dark mode toggle state
  * @prop {Object} settings - Layout settings
- * 
+ *
  * @fires neo-dashboard-navigate - When navigation occurs
  * @fires neo-dashboard-search - When search is performed
  * @fires neo-dashboard-notification-click - When notifications are clicked

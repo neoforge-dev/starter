@@ -1,6 +1,6 @@
 /**
  * Comprehensive Accessibility Testing Suite
- * 
+ *
  * Complete WCAG AA/AAA compliance validation for all 33 playground components
  * Covers screen readers, keyboard navigation, color contrast, focus management
  */
@@ -11,16 +11,16 @@ import { AxeBuilder } from "@axe-core/playwright";
 // Component registry for all 33 components
 const COMPONENT_REGISTRY = {
   atoms: [
-    'button', 'text-input', 'icon', 'badge', 'checkbox', 'link', 
+    'button', 'text-input', 'icon', 'badge', 'checkbox', 'link',
     'spinner', 'progress-bar', 'radio', 'select', 'tooltip', 'dropdown', 'input'
   ],
   molecules: [
-    'alert', 'card', 'modal', 'toast', 'tabs', 'breadcrumbs', 
+    'alert', 'card', 'modal', 'toast', 'tabs', 'breadcrumbs',
     'phone-input', 'date-picker', 'language-selector'
   ],
   organisms: [
-    'neo-table', 'neo-data-grid', 'neo-form-builder', 'data-table', 
-    'form', 'pagination', 'charts', 'file-upload', 'rich-text-editor', 
+    'neo-table', 'neo-data-grid', 'neo-form-builder', 'data-table',
+    'form', 'pagination', 'charts', 'file-upload', 'rich-text-editor',
     'form-validation', 'table'
   ]
 };
@@ -49,7 +49,7 @@ class AccessibilityTestUtils {
     const computedStyle = window.getComputedStyle(element);
     const bgColor = computedStyle.backgroundColor;
     const textColor = computedStyle.color;
-    
+
     // Convert colors to RGB and calculate contrast ratio
     const contrast = this.calculateContrastRatio(textColor, bgColor);
     return {
@@ -68,11 +68,11 @@ class AccessibilityTestUtils {
   static async checkFocusVisibility(element) {
     const initialStyle = window.getComputedStyle(element);
     element.focus();
-    
+
     return new Promise(resolve => {
       setTimeout(() => {
         const focusedStyle = window.getComputedStyle(element);
-        const hasFocusRing = focusedStyle.outline !== 'none' || 
+        const hasFocusRing = focusedStyle.outline !== 'none' ||
                            focusedStyle.boxShadow !== initialStyle.boxShadow;
         resolve(hasFocusRing);
       }, A11Y_THRESHOLDS.FOCUS_TIMING.VISIBLE_DELAY);
@@ -84,7 +84,7 @@ class AccessibilityTestUtils {
     const isInteractive = ['button', 'input', 'select', 'textarea', 'a'].includes(
       element.tagName.toLowerCase()
     );
-    
+
     return {
       isKeyboardAccessible: tabIndex !== '-1' && (isInteractive || tabIndex === '0'),
       tabIndex: tabIndex || (isInteractive ? '0' : null)
@@ -94,16 +94,16 @@ class AccessibilityTestUtils {
   static checkTouchTargetSize(element) {
     const rect = element.getBoundingClientRect();
     const computedStyle = window.getComputedStyle(element);
-    
+
     // In JSDOM, getBoundingClientRect may return 0 dimensions
     // Check both computed styles and getBoundingClientRect
     const width = rect.width || parseFloat(computedStyle.width) || parseFloat(computedStyle.minWidth) || 44;
     const height = rect.height || parseFloat(computedStyle.height) || parseFloat(computedStyle.minHeight) || 44;
-    
+
     return {
       width,
       height,
-      meetsMinimum: width >= A11Y_THRESHOLDS.TOUCH_TARGET.MINIMUM_SIZE && 
+      meetsMinimum: width >= A11Y_THRESHOLDS.TOUCH_TARGET.MINIMUM_SIZE &&
                    height >= A11Y_THRESHOLDS.TOUCH_TARGET.MINIMUM_SIZE
     };
   }
@@ -128,12 +128,12 @@ class AccessibilityTestUtils {
 
 // Comprehensive accessibility tests for all components
 describe("Comprehensive Accessibility Testing Suite", () => {
-  
+
   // Test each atom component for accessibility compliance
   describe("Atom Components Accessibility", () => {
     COMPONENT_REGISTRY.atoms.forEach(componentName => {
       describe(`${componentName} accessibility`, () => {
-        
+
         test(`${componentName} - WCAG AA color contrast compliance`, async () => {
           let element;
           try {
@@ -142,7 +142,7 @@ describe("Comprehensive Accessibility Testing Suite", () => {
             // If component doesn't exist yet, create basic test element
             element = await fixture(html`<div role="button" class="neo-${componentName}">Test Content</div>`);
           }
-          
+
           const contrastResult = await AccessibilityTestUtils.checkColorContrast(element);
           expect(contrastResult.passesAA).toBe(true);
           expect(contrastResult.contrast).toBeGreaterThanOrEqual(A11Y_THRESHOLDS.COLOR_CONTRAST.NORMAL_AA);
@@ -155,7 +155,7 @@ describe("Comprehensive Accessibility Testing Suite", () => {
           } catch (error) {
             element = await fixture(html`<div role="button" tabindex="0" class="neo-${componentName}">Test Content</div>`);
           }
-          
+
           const keyboardResult = AccessibilityTestUtils.checkKeyboardNavigation(element);
           expect(keyboardResult.isKeyboardAccessible).toBe(true);
         });
@@ -167,7 +167,7 @@ describe("Comprehensive Accessibility Testing Suite", () => {
           } catch (error) {
             element = await fixture(html`<div role="button" tabindex="0" class="neo-${componentName}" style="outline: 2px solid blue;">Test Content</div>`);
           }
-          
+
           const hasFocusRing = await AccessibilityTestUtils.checkFocusVisibility(element);
           expect(hasFocusRing).toBe(true);
         });
@@ -179,10 +179,10 @@ describe("Comprehensive Accessibility Testing Suite", () => {
           } catch (error) {
             element = await fixture(html`<div role="button" class="neo-${componentName}" style="width: 44px; height: 44px; min-width: 44px; min-height: 44px; display: inline-block; box-sizing: border-box;">Test</div>`);
           }
-          
+
           // Ensure element is properly rendered in test environment
           await element.updateComplete || Promise.resolve();
-          
+
           const sizeResult = AccessibilityTestUtils.checkTouchTargetSize(element);
           expect(sizeResult.meetsMinimum, `Element size: ${sizeResult.width}x${sizeResult.height}, required: 44x44`).toBe(true);
         });
@@ -194,7 +194,7 @@ describe("Comprehensive Accessibility Testing Suite", () => {
           } catch (error) {
             element = await fixture(html`<div role="button" aria-label="Test ${componentName}" class="neo-${componentName}">Content</div>`);
           }
-          
+
           const labelResult = AccessibilityTestUtils.checkAriaLabels(element);
           expect(labelResult.hasLabel).toBe(true);
         });
@@ -206,11 +206,11 @@ describe("Comprehensive Accessibility Testing Suite", () => {
           } catch (error) {
             element = await fixture(html`<div role="button" aria-label="Test ${componentName}" class="neo-${componentName}">Content</div>`);
           }
-          
+
           // Check for proper semantic structure
           const role = element.getAttribute('role') || element.tagName.toLowerCase();
           expect(['button', 'input', 'link', 'div']).toContain(role);
-          
+
           // Check for accessible name
           const accessibleName = element.getAttribute('aria-label') || element.textContent?.trim();
           expect(accessibleName).toBeTruthy();
@@ -223,7 +223,7 @@ describe("Comprehensive Accessibility Testing Suite", () => {
   describe("Molecule Components Accessibility", () => {
     COMPONENT_REGISTRY.molecules.forEach(componentName => {
       describe(`${componentName} accessibility`, () => {
-        
+
         test(`${componentName} - complex interaction accessibility`, async () => {
           let element;
           try {
@@ -235,10 +235,10 @@ describe("Comprehensive Accessibility Testing Suite", () => {
               <div role="button" tabindex="0">Interactive Content</div>
             </div>`);
           }
-          
+
           const interactiveElements = element.querySelectorAll('[tabindex], button, input, select, textarea, a[href]');
           expect(interactiveElements.length).toBeGreaterThanOrEqual(1);
-          
+
           // Test keyboard navigation between elements
           interactiveElements.forEach(el => {
             const keyboardResult = AccessibilityTestUtils.checkKeyboardNavigation(el);
@@ -249,25 +249,25 @@ describe("Comprehensive Accessibility Testing Suite", () => {
         test(`${componentName} - ARIA roles and properties`, async () => {
           let element;
           try {
-            element = await fixture(html`<neo-${componentName} 
-              role="group" 
-              aria-expanded="false" 
+            element = await fixture(html`<neo-${componentName}
+              role="group"
+              aria-expanded="false"
               aria-describedby="desc-${componentName}">
               <div id="desc-${componentName}">Description for ${componentName}</div>
             </neo-${componentName}>`);
           } catch (error) {
-            element = await fixture(html`<div 
-              role="group" 
-              aria-expanded="false" 
+            element = await fixture(html`<div
+              role="group"
+              aria-expanded="false"
               aria-describedby="desc-${componentName}"
               class="neo-${componentName}">
               <div id="desc-${componentName}">Description for ${componentName}</div>
             </div>`);
           }
-          
+
           const role = element.getAttribute('role');
           expect(role).toBeTruthy();
-          
+
           const ariaExpanded = element.getAttribute('aria-expanded');
           if (ariaExpanded !== null) {
             expect(['true', 'false']).toContain(ariaExpanded);
@@ -278,24 +278,24 @@ describe("Comprehensive Accessibility Testing Suite", () => {
           if (['phone-input', 'date-picker', 'language-selector'].includes(componentName)) {
             let element;
             try {
-              element = await fixture(html`<neo-${componentName} 
-                aria-label="Test ${componentName}" 
+              element = await fixture(html`<neo-${componentName}
+                aria-label="Test ${componentName}"
                 aria-required="false"
                 aria-invalid="false">
               </neo-${componentName}>`);
             } catch (error) {
-              element = await fixture(html`<input 
+              element = await fixture(html`<input
                 type="text"
-                aria-label="Test ${componentName}" 
+                aria-label="Test ${componentName}"
                 aria-required="false"
                 aria-invalid="false"
                 class="neo-${componentName}">
               `);
             }
-            
+
             const ariaRequired = element.getAttribute('aria-required');
             const ariaInvalid = element.getAttribute('aria-invalid');
-            
+
             expect(['true', 'false']).toContain(ariaRequired);
             expect(['true', 'false']).toContain(ariaInvalid);
           } else {
@@ -311,12 +311,12 @@ describe("Comprehensive Accessibility Testing Suite", () => {
   describe("Organism Components Accessibility", () => {
     COMPONENT_REGISTRY.organisms.forEach(componentName => {
       describe(`${componentName} accessibility`, () => {
-        
+
         test(`${componentName} - complex structure accessibility`, async () => {
           let element;
           try {
-            element = await fixture(html`<neo-${componentName} 
-              role="main" 
+            element = await fixture(html`<neo-${componentName}
+              role="main"
               aria-label="Test ${componentName}">
               <div role="navigation" aria-label="Navigation">
                 <button>Action 1</button>
@@ -327,8 +327,8 @@ describe("Comprehensive Accessibility Testing Suite", () => {
               </div>
             </neo-${componentName}>`);
           } catch (error) {
-            element = await fixture(html`<div 
-              role="main" 
+            element = await fixture(html`<div
+              role="main"
               aria-label="Test ${componentName}"
               class="neo-${componentName}">
               <div role="navigation" aria-label="Navigation">
@@ -340,14 +340,14 @@ describe("Comprehensive Accessibility Testing Suite", () => {
               </div>
             </div>`);
           }
-          
+
           // Check for proper landmark roles
           const landmarks = element.querySelectorAll('[role="main"], [role="navigation"], [role="region"], [role="complementary"]');
           expect(landmarks.length).toBeGreaterThanOrEqual(1);
-          
+
           // Ensure all landmarks have accessible names
           landmarks.forEach(landmark => {
-            const hasAccessibleName = landmark.getAttribute('aria-label') || 
+            const hasAccessibleName = landmark.getAttribute('aria-label') ||
                                     landmark.getAttribute('aria-labelledby') ||
                                     landmark.getAttribute('title');
             expect(hasAccessibleName).toBeTruthy();
@@ -384,13 +384,13 @@ describe("Comprehensive Accessibility Testing Suite", () => {
                 </tbody>
               </table>`);
             }
-            
+
             const headers = element.querySelectorAll('[role="columnheader"], th');
             const cells = element.querySelectorAll('[role="cell"], td');
-            
+
             expect(headers.length).toBeGreaterThanOrEqual(1);
             expect(cells.length).toBeGreaterThanOrEqual(1);
-            
+
             // Check table has accessible name
             const tableLabel = element.getAttribute('aria-label') || element.getAttribute('aria-labelledby');
             expect(tableLabel).toBeTruthy();
@@ -420,17 +420,17 @@ describe("Comprehensive Accessibility Testing Suite", () => {
                 </div>
               </form>`);
             }
-            
+
             const inputs = element.querySelectorAll('input, select, textarea');
             inputs.forEach(input => {
-              const label = element.querySelector(`label[for="${input.id}"]`) || 
+              const label = element.querySelector(`label[for="${input.id}"]`) ||
                           input.getAttribute('aria-label');
               expect(label).toBeTruthy();
-              
+
               const ariaInvalid = input.getAttribute('aria-invalid');
               expect(['true', 'false']).toContain(ariaInvalid);
             });
-            
+
             const errorMessages = element.querySelectorAll('[role="alert"]');
             errorMessages.forEach(error => {
               expect(error.getAttribute('aria-live')).toBeTruthy();
@@ -446,7 +446,7 @@ describe("Comprehensive Accessibility Testing Suite", () => {
 
   // Cross-component accessibility tests
   describe("Cross-Component Accessibility Integration", () => {
-    
+
     test("component focus management in complex scenarios", async () => {
       const container = await fixture(html`
         <div>
@@ -457,10 +457,10 @@ describe("Comprehensive Accessibility Testing Suite", () => {
           </neo-select>
         </div>
       `);
-      
+
       const focusableElements = container.querySelectorAll('[tabindex]:not([tabindex="-1"]), button, input, select, textarea, a[href]');
       expect(focusableElements.length).toBeGreaterThanOrEqual(3);
-      
+
       // Test sequential focus navigation
       let currentIndex = 0;
       focusableElements.forEach((element, index) => {
@@ -478,14 +478,14 @@ describe("Comprehensive Accessibility Testing Suite", () => {
           <neo-alert role="status" aria-live="polite"></neo-alert>
         </div>
       `);
-      
+
       const liveRegions = container.querySelectorAll('[aria-live]');
       expect(liveRegions.length).toBeGreaterThanOrEqual(1);
-      
+
       liveRegions.forEach(region => {
         const ariaLive = region.getAttribute('aria-live');
         expect(['polite', 'assertive', 'off']).toContain(ariaLive);
-        
+
         const role = region.getAttribute('role');
         expect(['alert', 'status', 'log']).toContain(role);
       });
@@ -500,18 +500,18 @@ describe("Comprehensive Accessibility Testing Suite", () => {
           </neo-modal>
         </div>
       `);
-      
+
       // Test that focus is properly trapped within modal
       const modal = container.querySelector('[role="dialog"]');
       const focusableInModal = modal.querySelectorAll('[tabindex]:not([tabindex="-1"]), button, input, select, textarea, a[href]');
-      
+
       expect(focusableInModal.length).toBeGreaterThanOrEqual(1);
       expect(modal.getAttribute('aria-modal')).toBe('true');
     });
 
     test("color contrast consistency across all component variants", async () => {
       const variants = ['primary', 'secondary', 'success', 'warning', 'error'];
-      
+
       for (const variant of variants) {
         const button = await fixture(html`<neo-button class="${variant}" style="background-color: #007bff; color: white;">Test</neo-button>`);
         const contrastResult = await AccessibilityTestUtils.checkColorContrast(button);
@@ -522,13 +522,13 @@ describe("Comprehensive Accessibility Testing Suite", () => {
 
   // Screen reader specific tests
   describe("Screen Reader Compatibility", () => {
-    
+
     test("all interactive components have accessible names", async () => {
       const components = [
-        'neo-button', 'neo-text-input', 'neo-checkbox', 'neo-radio', 
+        'neo-button', 'neo-text-input', 'neo-checkbox', 'neo-radio',
         'neo-select', 'neo-modal', 'neo-tabs'
       ];
-      
+
       for (const componentName of components) {
         let element;
         try {
@@ -536,9 +536,9 @@ describe("Comprehensive Accessibility Testing Suite", () => {
         } catch (error) {
           element = await fixture(html`<div role="button" aria-label="Test ${componentName}" class="${componentName}">Content</div>`);
         }
-        
-        const accessibleName = element.getAttribute('aria-label') || 
-                             element.getAttribute('aria-labelledby') || 
+
+        const accessibleName = element.getAttribute('aria-label') ||
+                             element.getAttribute('aria-labelledby') ||
                              element.textContent?.trim();
         expect(accessibleName).toBeTruthy();
       }
@@ -546,7 +546,7 @@ describe("Comprehensive Accessibility Testing Suite", () => {
 
     test("form elements have proper label associations", async () => {
       const formElements = ['text-input', 'checkbox', 'radio', 'select'];
-      
+
       for (const elementName of formElements) {
         const container = await fixture(html`
           <div>
@@ -554,10 +554,10 @@ describe("Comprehensive Accessibility Testing Suite", () => {
             <neo-${elementName} id="test-${elementName}"></neo-${elementName}>
           </div>
         `);
-        
+
         const label = container.querySelector('label');
         const input = container.querySelector(`[id="test-${elementName}"]`);
-        
+
         expect(label).toBeTruthy();
         expect(input).toBeTruthy();
         expect(label.getAttribute('for')).toBe(input.id);
@@ -567,13 +567,13 @@ describe("Comprehensive Accessibility Testing Suite", () => {
 
   // Performance impact of accessibility features
   describe("Accessibility Performance Impact", () => {
-    
+
     test("ARIA attributes don't significantly impact render performance", async () => {
       const startTime = performance.now();
-      
+
       const component = await fixture(html`
-        <neo-table 
-          role="table" 
+        <neo-table
+          role="table"
           aria-label="Performance test table"
           aria-describedby="table-description"
           aria-rowcount="100"
@@ -588,10 +588,10 @@ describe("Comprehensive Accessibility Testing Suite", () => {
           `)}
         </neo-table>
       `);
-      
+
       await component.updateComplete;
       const renderTime = performance.now() - startTime;
-      
+
       // Ensure accessibility attributes don't add significant overhead
       expect(renderTime).toBeLessThan(100); // 100ms threshold
     });

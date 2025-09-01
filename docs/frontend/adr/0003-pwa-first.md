@@ -66,4 +66,4 @@ Implementation approach:
 - Service worker scope is limited to /
 - Cache strategy varies by resource type
 - Push notifications are opt-in
-- Background sync requires careful error handling 
+- Background sync requires careful error handling

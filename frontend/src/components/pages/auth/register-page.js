@@ -1,4 +1,4 @@
-import { 
+import {
   LitElement,
   html,
  } from 'lit';

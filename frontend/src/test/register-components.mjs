@@ -28,14 +28,14 @@ async function registerComponent(name, component) {
     let ComponentClass;
 
     if (typeof component === "function") {
-      if (component.constructor && component.constructor.name === "AsyncFunction" || 
+      if (component.constructor && component.constructor.name === "AsyncFunction" ||
           component.toString().includes('import(')) {
         // If component is a dynamic import, wait for it to load
         try {
           const module = await component();
           // Try different ways to get the component class
-          ComponentClass = 
-            module.default || 
+          ComponentClass =
+            module.default ||
             module[name.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join("")] ||
             module[name.charAt(0).toUpperCase() + name.slice(1)];
         } catch (error) {
@@ -75,4 +75,4 @@ export {
   registerComponent,
   registerAllComponents,
   components
-}; 
+};

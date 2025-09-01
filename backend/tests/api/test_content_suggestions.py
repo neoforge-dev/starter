@@ -4,17 +4,22 @@ from datetime import datetime, timedelta
 from typing import Any, Dict
 
 import pytest
+from app.models.content_suggestion import (
+    ContentCategory,
+    ContentSuggestionStatus,
+    ContentType,
+    SuggestionType,
+)
+from app.schemas.content_suggestion import (
+    ContentItemCreate,
+    ContentSuggestionCreate,
+    ContentSuggestionFeedbackCreate,
+)
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
 from app.core.config import get_settings
-from app.models.content_suggestion import (
-    ContentType, ContentCategory, SuggestionType, ContentSuggestionStatus
-)
-from app.schemas.content_suggestion import (
-    ContentItemCreate, ContentSuggestionCreate, ContentSuggestionFeedbackCreate
-)
 from tests.factories import UserFactory
 
 
@@ -38,7 +43,7 @@ class TestContentSuggestionsAPI:
             author="Jane Smith",
             source="TechBlog",
         )
-        
+
         content_item = await crud.content_suggestion.content_item.create(
             db, obj_in=content_data
         )
@@ -58,7 +63,7 @@ class TestContentSuggestionsAPI:
         """Create a sample content suggestion for testing."""
         # Create user first
         user = await UserFactory.create_async(db)
-        
+
         # Create content item
         content_data = ContentItemCreate(
             title="Machine Learning Basics",
@@ -69,7 +74,7 @@ class TestContentSuggestionsAPI:
         content_item = await crud.content_suggestion.content_item.create(
             db, obj_in=content_data
         )
-        
+
         # Create suggestion
         suggestion_data = ContentSuggestionCreate(
             user_id=user.id,
@@ -87,7 +92,7 @@ class TestContentSuggestionsAPI:
         suggestion = await crud.content_suggestion.content_suggestion.create_suggestion(
             db, obj_in=suggestion_data
         )
-        
+
         return {
             "id": suggestion.id,
             "suggestion_id": suggestion.suggestion_id,
@@ -112,22 +117,22 @@ class TestContentSuggestionsAPI:
     ):
         """Test successful retrieval of personalized suggestions."""
         user_id = sample_content_suggestion["user_id"]
-        
+
         response = client.get(
             f"{api_v1_str}/content-suggestions/{user_id}",
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "suggestions" in data
         assert "total_count" in data
         assert "user_id" in data
         assert "metadata" in data
         assert data["user_id"] == user_id
         assert len(data["suggestions"]) >= 1
-        
+
         # Check suggestion structure
         suggestion = data["suggestions"][0]
         assert "suggestion_id" in suggestion
@@ -144,7 +149,7 @@ class TestContentSuggestionsAPI:
     ):
         """Test getting suggestions with filters."""
         user_id = sample_content_suggestion["user_id"]
-        
+
         response = client.get(
             f"{api_v1_str}/content-suggestions/{user_id}",
             params={
@@ -156,10 +161,10 @@ class TestContentSuggestionsAPI:
             },
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert data["total_count"] >= 0
         if data["suggestions"]:
             suggestion = data["suggestions"][0]
@@ -174,12 +179,12 @@ class TestContentSuggestionsAPI:
     ):
         """Test that users cannot access other users' suggestions."""
         other_user_id = sample_content_suggestion["user_id"] + 999
-        
+
         response = client.get(
             f"{api_v1_str}/content-suggestions/{other_user_id}",
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 403
 
     async def test_generate_content_suggestions_admin_only(
@@ -196,7 +201,7 @@ class TestContentSuggestionsAPI:
             },
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 403
 
     async def test_generate_content_suggestions_success(
@@ -215,10 +220,10 @@ class TestContentSuggestionsAPI:
             },
             headers=superuser_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "generated_count" in data
         assert "user_count" in data
         assert "processing_time_seconds" in data
@@ -242,10 +247,10 @@ class TestContentSuggestionsAPI:
             },
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "trending_content" in data
         assert "time_window_hours" in data
         assert "metadata" in data
@@ -267,7 +272,7 @@ class TestContentSuggestionsAPI:
             },
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 404
 
     async def test_optimize_content_success(
@@ -287,17 +292,17 @@ class TestContentSuggestionsAPI:
             },
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "content_id" in data
         assert "optimization_suggestions" in data
         assert "improvement_score" in data
         assert "implementation_complexity" in data
         assert "estimated_impact" in data
         assert "ai_analysis" in data
-        
+
         assert data["content_id"] == sample_content_item["content_id"]
         assert 0.0 <= data["improvement_score"] <= 1.0
 
@@ -314,7 +319,7 @@ class TestContentSuggestionsAPI:
                 "action_taken": "clicked",
             },
         )
-        
+
         assert response.status_code == 401
 
     async def test_submit_feedback_not_found(
@@ -333,7 +338,7 @@ class TestContentSuggestionsAPI:
             },
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 404
 
     async def test_submit_feedback_success(
@@ -355,17 +360,17 @@ class TestContentSuggestionsAPI:
             },
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "id" in data
         assert "suggestion_id" in data
         assert "user_id" in data
         assert "rating" in data
         assert "feedback_type" in data
         assert "action_taken" in data
-        
+
         assert data["suggestion_id"] == sample_content_suggestion["suggestion_id"]
         assert data["rating"] == 4
         assert data["action_taken"] == "clicked"
@@ -382,16 +387,16 @@ class TestContentSuggestionsAPI:
             params={"time_window_hours": 72},
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "categories" in data
         assert "top_performing_categories" in data
         assert "category_trends" in data
         assert "user_preferences" in data
         assert "recommendations" in data
-        
+
         assert isinstance(data["categories"], list)
         assert isinstance(data["top_performing_categories"], list)
         assert isinstance(data["recommendations"], list)
@@ -406,7 +411,7 @@ class TestContentSuggestionsAPI:
             f"{api_v1_str}/content-suggestions/analytics",
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 403
 
     async def test_get_analytics_success(
@@ -425,10 +430,10 @@ class TestContentSuggestionsAPI:
             },
             headers=superuser_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "total_suggestions" in data
         assert "active_suggestions" in data
         assert "total_impressions" in data
@@ -438,7 +443,7 @@ class TestContentSuggestionsAPI:
         assert "top_performing_types" in data
         assert "engagement_metrics" in data
         assert "ai_model_performance" in data
-        
+
         assert data["total_suggestions"] >= 0
         assert 0.0 <= data["avg_ctr"] <= 1.0
         assert 0.0 <= data["conversion_rate"] <= 1.0
@@ -454,7 +459,7 @@ class TestContentSuggestionsAPI:
             json={"suggestions": [], "notify_users": False},
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 403
 
     async def test_update_suggestion_engagement_not_found(
@@ -468,7 +473,7 @@ class TestContentSuggestionsAPI:
             params={"action": "shown"},
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 404
 
     async def test_update_suggestion_engagement_invalid_action(
@@ -483,7 +488,7 @@ class TestContentSuggestionsAPI:
             params={"action": "invalid_action"},
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 400
 
     async def test_update_suggestion_engagement_success(
@@ -498,14 +503,14 @@ class TestContentSuggestionsAPI:
             params={"action": "shown"},
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "suggestion_id" in data
         assert "impression_count" in data
         assert "status" in data
-        
+
         assert data["suggestion_id"] == sample_content_suggestion["suggestion_id"]
         assert data["impression_count"] >= 1
 
@@ -525,7 +530,7 @@ class TestContentSuggestionsAPI:
             },
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 403
 
     async def test_create_content_item_success(
@@ -547,16 +552,16 @@ class TestContentSuggestionsAPI:
             },
             headers=superuser_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "content_id" in data
         assert "title" in data
         assert "content_type" in data
         assert "category" in data
         assert "created_at" in data
-        
+
         assert data["title"] == "Advanced Python Programming"
         assert data["content_type"] == "course"
         assert data["category"] == "educational"
@@ -571,7 +576,7 @@ class TestContentSuggestionsAPI:
             f"{api_v1_str}/content-suggestions/content/non-existent-id",
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 404
 
     async def test_get_content_item_success(
@@ -585,15 +590,15 @@ class TestContentSuggestionsAPI:
             f"{api_v1_str}/content-suggestions/content/{sample_content_item['content_id']}",
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "content_id" in data
         assert "title" in data
         assert "content_type" in data
         assert "category" in data
-        
+
         assert data["content_id"] == sample_content_item["content_id"]
         assert data["title"] == sample_content_item["title"]
 
@@ -609,7 +614,7 @@ class TestContentSuggestionsAPI:
             params={"analysis_types": ["quality", "topics"]},
             headers=normal_user_token_headers,
         )
-        
+
         assert response.status_code == 403
 
     async def test_analyze_content_item_success(
@@ -624,16 +629,16 @@ class TestContentSuggestionsAPI:
             params={"analysis_types": ["quality", "sentiment", "topics"]},
             headers=superuser_token_headers,
         )
-        
+
         assert response.status_code == 200
         data = response.json()
-        
+
         assert "job_id" in data
         assert "content_id" in data
         assert "job_type" in data
         assert "status" in data
         assert "created_at" in data
-        
+
         assert data["content_id"] == sample_content_item["content_id"]
         assert data["status"] == "pending"
         assert "quality,sentiment,topics" in data["job_type"]

@@ -4,13 +4,12 @@ from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Dict, Optional
 
 import structlog
-from sqlalchemy import event
+from app.db.session import engine
+from sqlalchemy import event, text
 from sqlalchemy.engine import Engine
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
-from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import Session
 
-from app.db.session import engine
 from app.core.metrics import get_metrics
 
 logger = structlog.get_logger()
@@ -18,13 +17,14 @@ logger = structlog.get_logger()
 # Initialize metrics
 metrics = get_metrics()
 
+
 def extract_table_name(query: str) -> str:
     """Extract main table name from SQL query."""
     # Simple heuristic - can be improved based on actual query patterns
     query = query.lower()
     if "from" not in query:
         return "unknown"
-    
+
     # Get the part after FROM
     from_part = query.split("from")[1].strip()
     # Get the first word (table name)
@@ -33,6 +33,7 @@ def extract_table_name(query: str) -> str:
     if "." in table:
         table = table.split(".")[-1]
     return table
+
 
 def get_query_type(query: str) -> str:
     """Determine query type from SQL statement."""
@@ -48,16 +49,21 @@ def get_query_type(query: str) -> str:
     else:
         return "other"
 
+
 def record_query_metrics(query: str, duration: float) -> None:
     """Record query metrics."""
-    logger.debug(f"[Metrics] Recording metrics for query: {query[:100]}... Duration: {duration:.4f}s")
+    logger.debug(
+        f"[Metrics] Recording metrics for query: {query[:100]}... Duration: {duration:.4f}s"
+    )
     query_type = get_query_type(query)
     table = extract_table_name(query)
-    
+
     # Update metrics
     metrics["db_query_count"].labels(query_type=query_type, table=table).inc()
-    metrics["db_query_duration_seconds"].labels(query_type=query_type, table=table).observe(duration)
-    
+    metrics["db_query_duration_seconds"].labels(
+        query_type=query_type, table=table
+    ).observe(duration)
+
     # Log slow queries (>100ms)
     if duration > 0.1:
         metrics["db_slow_queries"].labels(query_type=query_type, table=table).inc()
@@ -65,39 +71,41 @@ def record_query_metrics(query: str, duration: float) -> None:
             f"Slow query detected: {duration:.4f}s - {query_type} on {table}"
         )
 
-def before_cursor_execute(
-    conn, cursor, statement, parameters, context, executemany
-):
+
+def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
     """Event listener for query execution start."""
     context._query_start_time = time.time()
-    
-def after_cursor_execute(
-    conn, cursor, statement, parameters, context, executemany
-):
+
+
+def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
     """Event listener for query execution end."""
     start_time = context._query_start_time
     total_time = time.time() - start_time
     record_query_metrics(statement, total_time)
 
-# --- ORM Event Listeners --- 
+
+# --- ORM Event Listeners ---
+
 
 def before_flush(session, flush_context, instances):
     """Record start time before ORM flush."""
     # Use session.info dictionary to store temporary data
-    session.info.setdefault('_query_start_time', time.time())
+    session.info.setdefault("_query_start_time", time.time())
+
 
 def after_flush(session, flush_context):
     """Record metrics after ORM flush."""
-    start_time = session.info.pop('_query_start_time', None)
+    start_time = session.info.pop("_query_start_time", None)
     if start_time:
         duration = time.time() - start_time
         # Simplistic approach: log one 'flush' event for metrics
         # This captures the time spent in the flush operation itself.
         # Individual statements within the flush might still be captured by cursor events.
         logger.debug(f"[Metrics] Recording ORM flush duration: {duration:.4f}s")
-        record_query_metrics("ORM Flush", duration) # Use a generic label
+        record_query_metrics("ORM Flush", duration)  # Use a generic label
 
-# --- Register Listeners --- 
+
+# --- Register Listeners ---
 
 # Register event listeners for both sync and async engines
 if isinstance(engine, AsyncEngine):
@@ -114,16 +122,17 @@ else:
 event.listen(Session, "before_flush", before_flush)
 event.listen(Session, "after_flush", after_flush)
 
+
 @asynccontextmanager
 async def monitor_query() -> AsyncGenerator[Dict[str, Any], None]:
     """
     Context manager for monitoring individual queries.
-    
+
     Example:
         async with monitor_query() as stats:
             result = await db.execute(query)
             # stats contains query execution information
-    
+
     Returns:
         Dictionary with query statistics:
         - duration: Total time spent in context (float, in seconds)
@@ -140,7 +149,7 @@ async def monitor_query() -> AsyncGenerator[Dict[str, Any], None]:
         "slow_queries": 0,
         "errors": 0,
     }
-    
+
     try:
         yield stats
     except Exception as e:
@@ -148,10 +157,13 @@ async def monitor_query() -> AsyncGenerator[Dict[str, Any], None]:
         raise
     finally:
         duration = time.time() - start_time
-        stats.update({
-            "duration": duration,  # Keep as float
-            "is_slow": duration > 0.1,
-        })
+        stats.update(
+            {
+                "duration": duration,  # Keep as float
+                "is_slow": duration > 0.1,
+            }
+        )
+
 
 class QueryMonitor:
     """Query monitoring wrapper for database sessions."""
@@ -190,41 +202,41 @@ class QueryMonitor:
     ) -> Any:
         """
         Execute query with monitoring.
-        
+
         Args:
             statement: SQL statement to execute
             params: Optional query parameters
-            
+
         Returns:
             Query result
-            
+
         Raises:
             Exception: Any database-related exception that occurs during execution
         """
         start_time = time.time()
         query_str = str(statement)
         query_type = get_query_type(query_str)
-        
+
         try:
             # Set current query
             self.current_query = query_str
-            
+
             # Convert string queries to text() objects
             if isinstance(statement, str):
                 statement = text(statement)
-            
+
             result = await self.session.execute(statement, params)
             duration = time.time() - start_time
-            
+
             # Update instance stats
             self._query_stats["total_queries"] += 1
             self._query_stats["total_duration"] += duration
-            
+
             # Record metrics
             record_query_metrics(query_str, duration)
-            
+
             return result
-            
+
         except Exception as e:
             self._query_stats["errors"] += 1
             metrics["db_query_errors"].labels(
@@ -251,4 +263,4 @@ class QueryMonitor:
         return {
             **self._query_stats,
             "total_duration": self._query_stats["total_duration"],  # Keep as float
-        } 
+        }

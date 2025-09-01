@@ -90,7 +90,7 @@ bun install
 # Start development server
 bun run dev
 
-# Build for production  
+# Build for production
 bun run build
 
 # Run tests
@@ -296,7 +296,7 @@ static styles = css`
   :host {
     display: block;
   }
-  
+
   .my-class {
     color: var(--primary-color);
   }

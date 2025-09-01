@@ -21,24 +21,24 @@ ignore:
 remediation:
   # Pin vulnerable packages to secure versions
   pin: true
-  
+
   # Upgrade vulnerable packages
   upgrade: true
-  
+
   # Apply patches where available
   patch: true
 
-# Policy settings  
+# Policy settings
 policy:
   # Fail on these severities
   failOn:
     - critical
     - high
     - medium
-  
+
   # Ignore development dependencies for certain checks
   ignoreDevDeps: false
-  
+
   # Ignore unfixable vulnerabilities
   ignoreUnfixable: false
 
@@ -46,12 +46,12 @@ policy:
 monitor:
   # Monitor project for new vulnerabilities
   enabled: true
-  
+
   # Notification settings
   notifications:
     email: true
     webhook: false
-    
+
 # Organization settings (if using Snyk Enterprise)
 org: neoforge-security
 

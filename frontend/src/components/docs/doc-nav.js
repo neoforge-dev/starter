@@ -142,7 +142,7 @@ export class DocNav extends LitElement {
     try {
       this.isLoading = true;
       this.navigation = await docsService.getNavigation();
-      
+
       // Expand the section containing the current path
       this.expandCurrentSection();
     } catch (error) {
@@ -166,8 +166,8 @@ export class DocNav extends LitElement {
   }
 
   findItemByPath(items, path) {
-    return items.some(item => 
-      item.path === path || 
+    return items.some(item =>
+      item.path === path ||
       (item.items && this.findItemByPath(item.items, path))
     );
   }
@@ -192,7 +192,7 @@ export class DocNav extends LitElement {
     if (item.items) {
       return html`
         <div class="nav-group">
-          <div 
+          <div
             class="nav-group-header ${this.expandedSections[item.title] ? 'expanded' : ''}"
             @click=${() => this.toggleSection(item.title)}
           >
@@ -208,7 +208,7 @@ export class DocNav extends LitElement {
 
     return html`
       <div class="nav-item">
-        <a 
+        <a
           href="/docs/${item.path}"
           class="nav-link ${this.currentPath === item.path ? 'active' : ''}"
           @click=${(e) => {
@@ -238,7 +238,7 @@ export class DocNav extends LitElement {
 
     return html`
       <doc-search @result-selected=${this.handleSearchResult}></doc-search>
-      
+
       <div class="nav-container">
         ${this.navigation.map(section => this.renderNavItem(section))}
       </div>
@@ -246,4 +246,4 @@ export class DocNav extends LitElement {
   }
 }
 
-customElements.define('doc-nav', DocNav); 
+customElements.define('doc-nav', DocNav);

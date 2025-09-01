@@ -7,7 +7,7 @@ import "../../atoms/input/input.js";
 /**
  * Complete form field with label, input, validation, and help text
  * @element neo-input-field
- * 
+ *
  * @prop {string} label - Field label text
  * @prop {string} type - Input type (text, email, password, etc.)
  * @prop {string} value - Input value
@@ -22,7 +22,7 @@ import "../../atoms/input/input.js";
  * @prop {number} minLength - Minimum input length
  * @prop {string} pattern - Validation pattern
  * @prop {string} size - Field size (sm, md, lg)
- * 
+ *
  * @fires neo-input - When input value changes
  * @fires neo-focus - When input gains focus
  * @fires neo-blur - When input loses focus
@@ -166,7 +166,7 @@ export class NeoInputField extends BaseComponent {
 
   updated(changedProperties) {
     super.updated(changedProperties);
-    
+
     // Update host attributes for styling
     if (changedProperties.has('error')) {
       if (this.error) {
@@ -190,14 +190,14 @@ export class NeoInputField extends BaseComponent {
    */
   _handleInput(e) {
     this.value = e.detail.value;
-    
+
     // Clear error on user input
     if (this.error) {
       this.error = '';
     }
 
     this.dispatchEvent(new CustomEvent('neo-input', {
-      detail: { 
+      detail: {
         value: this.value,
         name: this.name,
         validity: this._getInputElement()?.validity
@@ -212,7 +212,7 @@ export class NeoInputField extends BaseComponent {
    */
   _handleFocus(e) {
     this.setAttribute('focused', '');
-    
+
     this.dispatchEvent(new CustomEvent('neo-focus', {
       detail: { name: this.name },
       bubbles: true,
@@ -225,12 +225,12 @@ export class NeoInputField extends BaseComponent {
    */
   _handleBlur(e) {
     this.removeAttribute('focused');
-    
+
     // Validate on blur if we have validation rules
     this._validateInput();
-    
+
     this.dispatchEvent(new CustomEvent('neo-blur', {
-      detail: { 
+      detail: {
         name: this.name,
         value: this.value,
         validity: this._getInputElement()?.validity
@@ -290,14 +290,14 @@ export class NeoInputField extends BaseComponent {
     return html`
       <div class="field-container">
         ${this.label ? html`
-          <neo-label 
+          <neo-label
             for="${this._inputId}"
             ?required="${this.required}"
             size="${this.size}">
             ${this.label}
           </neo-label>
         ` : ''}
-        
+
         <div class="input-container">
           <neo-input
             id="${this._inputId}"
@@ -321,8 +321,8 @@ export class NeoInputField extends BaseComponent {
         </div>
 
         ${hasError ? html`
-          <div 
-            class="error-text" 
+          <div
+            class="error-text"
             id="${this._inputId}-error"
             role="alert"
             aria-live="polite">
@@ -332,7 +332,7 @@ export class NeoInputField extends BaseComponent {
             ${this.error}
           </div>
         ` : showHelpText ? html`
-          <div 
+          <div
             class="help-text"
             id="${this._inputId}-help">
             ${this.helpText}

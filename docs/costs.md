@@ -95,7 +95,7 @@ engine = create_engine(
    ```bash
    # Monitor resource usage
    make monitor-resources
-   
+
    # Identify bottlenecks
    make analyze-performance
    ```

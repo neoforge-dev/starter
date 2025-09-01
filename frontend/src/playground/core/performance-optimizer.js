@@ -1,6 +1,6 @@
 /**
  * Performance Optimizer for Playground
- * 
+ *
  * Provides lightning-fast performance through:
  * - Lazy loading of component definitions
  * - Component caching and preloading
@@ -24,7 +24,7 @@ export class PerformanceOptimizer {
       cacheHits: 0,
       cacheMisses: 0
     };
-    
+
     this.initializeOptimizer();
   }
 
@@ -47,7 +47,7 @@ export class PerformanceOptimizer {
     this.componentDefinitions = new Map();
     this.componentConfigs = new Map();
     this.renderedComponents = new Map();
-    
+
     // Set cache limits to prevent memory issues
     this.maxCacheSize = 50; // Maximum cached components
     this.maxRenderCache = 20; // Maximum rendered component instances
@@ -111,11 +111,11 @@ export class PerformanceOptimizer {
           const componentData = this.preloadQueue.shift();
           this.preloadComponent(componentData.category, componentData.name);
         }
-        
+
         // Schedule next idle callback
         requestIdleCallback(preloadDuringIdle);
       };
-      
+
       requestIdleCallback(preloadDuringIdle);
     }
   }
@@ -126,7 +126,7 @@ export class PerformanceOptimizer {
   setupRenderOptimization() {
     // Use requestAnimationFrame for smooth rendering
     this.frameScheduled = false;
-    
+
     // Batch DOM updates
     this.pendingUpdates = [];
   }
@@ -138,7 +138,7 @@ export class PerformanceOptimizer {
     // Monitor component switching performance
     this.originalLoadComponent = this.app.loadComponent;
     this.app.loadComponent = this.optimizedLoadComponent.bind(this);
-    
+
     // Monitor search performance
     if (this.app.filterComponents) {
       this.originalFilterComponents = this.app.filterComponents;
@@ -152,39 +152,39 @@ export class PerformanceOptimizer {
   async optimizedLoadComponent(category, name) {
     const startTime = performance.now();
     const cacheKey = `${category}-${name}`;
-    
+
     try {
       // Check cache first
       let componentConfig = this.componentCache.get(cacheKey);
-      
+
       if (componentConfig) {
         this.metrics.cacheHits++;
         console.log(`Cache hit for ${name} (${(performance.now() - startTime).toFixed(2)}ms)`);
       } else {
         this.metrics.cacheMisses++;
-        
+
         // Load component and cache result
         componentConfig = await this.loadAndCacheComponent(category, name);
         console.log(`Cache miss for ${name} - loaded and cached (${(performance.now() - startTime).toFixed(2)}ms)`);
       }
-      
+
       // Optimized rendering
       await this.optimizedRenderComponent(componentConfig);
-      
+
       // Schedule preloading of adjacent components
       this.scheduleAdjacentPreload(category, name);
-      
+
       const endTime = performance.now();
       const switchTime = endTime - startTime;
       this.metrics.componentSwitchTimes.push(switchTime);
-      
+
       // Ensure we meet the <100ms target
       if (switchTime > 100) {
         console.warn(`Component switch took ${switchTime.toFixed(2)}ms (target: <100ms)`);
       }
-      
+
       return componentConfig;
-      
+
     } catch (error) {
       console.error('Optimized component loading failed:', error);
       // Fallback to original method
@@ -197,19 +197,19 @@ export class PerformanceOptimizer {
    */
   async loadAndCacheComponent(category, name) {
     const cacheKey = `${category}-${name}`;
-    
+
     // Load component configuration
     const componentConfig = await this.app.componentLoader.loadPlayground(category, name);
-    
+
     // Cache the configuration
     this.componentCache.set(cacheKey, componentConfig);
-    
+
     // Manage cache size
     if (this.componentCache.size > this.maxCacheSize) {
       const firstKey = this.componentCache.keys().next().value;
       this.componentCache.delete(firstKey);
     }
-    
+
     return componentConfig;
   }
 
@@ -218,25 +218,25 @@ export class PerformanceOptimizer {
    */
   async optimizedRenderComponent(componentConfig) {
     const renderStartTime = performance.now();
-    
+
     // Use virtual rendering for better performance
     const renderData = this.prepareRenderData(componentConfig);
-    
+
     // Batch DOM updates
     this.batchDOMUpdate(() => {
       // Update title and description
       this.updateComponentInfo(renderData.title, renderData.description);
-      
+
       // Render examples efficiently
       this.renderComponentExamples(renderData);
-      
+
       // Setup property editor
       this.setupOptimizedPropertyEditor(renderData);
     });
-    
+
     const renderTime = performance.now() - renderStartTime;
     this.metrics.renderTimes.push(renderTime);
-    
+
     console.log(`Component rendered in ${renderTime.toFixed(2)}ms`);
   }
 
@@ -272,7 +272,7 @@ export class PerformanceOptimizer {
   updateComponentInfo(title, description) {
     const titleElement = document.getElementById('current-component-title');
     const descElement = document.getElementById('current-component-description');
-    
+
     if (titleElement && titleElement.textContent !== title) {
       titleElement.textContent = title;
     }
@@ -290,7 +290,7 @@ export class PerformanceOptimizer {
 
     // Use document fragment for efficient DOM manipulation
     const fragment = document.createDocumentFragment();
-    
+
     // Create component header
     const headerDiv = document.createElement('div');
     headerDiv.className = 'component-header';
@@ -299,21 +299,21 @@ export class PerformanceOptimizer {
       <p>${renderData.description}</p>
     `;
     fragment.appendChild(headerDiv);
-    
+
     // Render examples efficiently
     renderData.examples.forEach((exampleGroup, groupIndex) => {
       const groupDiv = this.createExampleGroup(exampleGroup, groupIndex);
       fragment.appendChild(groupDiv);
     });
-    
+
     // Add interactive playground
     const playgroundDiv = this.createInteractivePlayground();
     fragment.appendChild(playgroundDiv);
-    
+
     // Replace content in one operation
     showcaseContainer.innerHTML = '';
     showcaseContainer.appendChild(fragment);
-    
+
     // Insert live components efficiently
     this.insertLiveComponentsOptimized(renderData);
   }
@@ -324,20 +324,20 @@ export class PerformanceOptimizer {
   createExampleGroup(exampleGroup, groupIndex) {
     const groupDiv = document.createElement('div');
     groupDiv.className = 'example-group';
-    
+
     const variantsHtml = (exampleGroup.variants || []).map((variant, index) => `
       <div class="example-variant">
         <div class="variant-preview" id="variant-${groupIndex}-${index}"></div>
         <div class="variant-label">${variant.label}</div>
       </div>
     `).join('');
-    
+
     groupDiv.innerHTML = `
       <h4>${exampleGroup.name}</h4>
       <p class="example-description">${exampleGroup.description || ''}</p>
       <div class="example-variants">${variantsHtml}</div>
     `;
-    
+
     return groupDiv;
   }
 
@@ -385,14 +385,14 @@ export class PerformanceOptimizer {
         }
       });
     });
-    
+
     // Insert interactive component
     const interactiveContainer = document.getElementById('interactive-preview');
     if (interactiveContainer) {
       const interactive = this.createOptimizedComponent(renderData.component, this.app.currentProps || {});
       interactive.id = 'live-interactive-component';
       interactiveContainer.appendChild(interactive);
-      
+
       // Store reference for property updates
       this.app.liveInteractiveComponent = interactive;
     }
@@ -405,14 +405,14 @@ export class PerformanceOptimizer {
     // Check if we have a cached component
     const cacheKey = `${componentName}-${JSON.stringify(props)}`;
     const cached = this.renderedComponents.get(cacheKey);
-    
+
     if (cached) {
       return cached.cloneNode(true);
     }
-    
+
     // Create new component
     const element = document.createElement(componentName);
-    
+
     // Set properties efficiently
     Object.entries(props || {}).forEach(([key, value]) => {
       if (key === 'label' || key === 'text') {
@@ -421,12 +421,12 @@ export class PerformanceOptimizer {
         element[key] = value;
       }
     });
-    
+
     // Cache the component if cache isn't full
     if (this.renderedComponents.size < this.maxRenderCache) {
       this.renderedComponents.set(cacheKey, element.cloneNode(true));
     }
-    
+
     return element;
   }
 
@@ -447,18 +447,18 @@ export class PerformanceOptimizer {
    */
   optimizedFilterComponents(searchTerm) {
     const startTime = performance.now();
-    
+
     // Use original filter method but with performance tracking
     const result = this.originalFilterComponents.call(this.app, searchTerm);
-    
+
     const filterTime = performance.now() - startTime;
     this.metrics.searchTimes.push(filterTime);
-    
+
     // Ensure we meet the <50ms target
     if (filterTime > 50) {
       console.warn(`Search took ${filterTime.toFixed(2)}ms (target: <50ms)`);
     }
-    
+
     return result;
   }
 
@@ -467,7 +467,7 @@ export class PerformanceOptimizer {
    */
   async lazyLoadComponent(category, name) {
     const cacheKey = `${category}-${name}`;
-    
+
     if (!this.loadedComponents.has(cacheKey)) {
       try {
         await this.loadAndCacheComponent(category, name);
@@ -484,7 +484,7 @@ export class PerformanceOptimizer {
    */
   async preloadComponent(category, name) {
     const cacheKey = `${category}-${name}`;
-    
+
     if (!this.componentCache.has(cacheKey)) {
       try {
         await this.loadAndCacheComponent(category, name);
@@ -513,10 +513,10 @@ export class PerformanceOptimizer {
    */
   scheduleAdjacentPreloadByName(category, name) {
     const componentItems = Array.from(document.querySelectorAll('.component-item'));
-    const currentIndex = componentItems.findIndex(item => 
+    const currentIndex = componentItems.findIndex(item =>
       item.dataset.category === category && item.dataset.component === name
     );
-    
+
     if (currentIndex >= 0) {
       // Preload previous and next components
       [-1, 1].forEach(offset => {
@@ -535,7 +535,7 @@ export class PerformanceOptimizer {
   scheduleAdjacentPreloadByElement(item) {
     const category = item.dataset.category;
     const name = item.dataset.component;
-    
+
     if (category && name) {
       this.addToPreloadQueue(category, name);
     }
@@ -546,8 +546,8 @@ export class PerformanceOptimizer {
    */
   addToPreloadQueue(category, name) {
     const cacheKey = `${category}-${name}`;
-    
-    if (!this.componentCache.has(cacheKey) && 
+
+    if (!this.componentCache.has(cacheKey) &&
         !this.preloadQueue.some(item => item.category === category && item.name === name)) {
       this.preloadQueue.push({ category, name });
     }
@@ -560,35 +560,35 @@ export class PerformanceOptimizer {
     const componentSwitchTimes = this.metrics.componentSwitchTimes;
     const searchTimes = this.metrics.searchTimes;
     const renderTimes = this.metrics.renderTimes;
-    
+
     return {
       componentSwitching: {
         count: componentSwitchTimes.length,
-        average: componentSwitchTimes.length > 0 ? 
+        average: componentSwitchTimes.length > 0 ?
           componentSwitchTimes.reduce((sum, time) => sum + time, 0) / componentSwitchTimes.length : 0,
         fastest: componentSwitchTimes.length > 0 ? Math.min(...componentSwitchTimes) : 0,
         slowest: componentSwitchTimes.length > 0 ? Math.max(...componentSwitchTimes) : 0,
         under100ms: componentSwitchTimes.filter(time => time < 100).length,
-        percentage: componentSwitchTimes.length > 0 ? 
+        percentage: componentSwitchTimes.length > 0 ?
           (componentSwitchTimes.filter(time => time < 100).length / componentSwitchTimes.length) * 100 : 0
       },
       search: {
         count: searchTimes.length,
-        average: searchTimes.length > 0 ? 
+        average: searchTimes.length > 0 ?
           searchTimes.reduce((sum, time) => sum + time, 0) / searchTimes.length : 0,
         under50ms: searchTimes.filter(time => time < 50).length,
-        percentage: searchTimes.length > 0 ? 
+        percentage: searchTimes.length > 0 ?
           (searchTimes.filter(time => time < 50).length / searchTimes.length) * 100 : 0
       },
       rendering: {
         count: renderTimes.length,
-        average: renderTimes.length > 0 ? 
+        average: renderTimes.length > 0 ?
           renderTimes.reduce((sum, time) => sum + time, 0) / renderTimes.length : 0
       },
       caching: {
         hits: this.metrics.cacheHits,
         misses: this.metrics.cacheMisses,
-        hitRate: this.metrics.cacheHits + this.metrics.cacheMisses > 0 ? 
+        hitRate: this.metrics.cacheHits + this.metrics.cacheMisses > 0 ?
           (this.metrics.cacheHits / (this.metrics.cacheHits + this.metrics.cacheMisses)) * 100 : 0,
         cacheSize: this.componentCache.size,
         preloadQueueSize: this.preloadQueue.length
@@ -620,7 +620,7 @@ export class PerformanceOptimizer {
       this.componentCache.clear();
       toKeep.forEach(([key, value]) => this.componentCache.set(key, value));
     }
-    
+
     // Clear rendered component cache
     if (this.renderedComponents.size > this.maxRenderCache * 0.8) {
       const entries = Array.from(this.renderedComponents.entries());
@@ -628,10 +628,10 @@ export class PerformanceOptimizer {
       this.renderedComponents.clear();
       toKeep.forEach(([key, value]) => this.renderedComponents.set(key, value));
     }
-    
+
     // Clear old preload queue
     this.preloadQueue = this.preloadQueue.slice(-10);
-    
+
     console.log('Memory optimization completed');
   }
 
@@ -656,7 +656,7 @@ export class PerformanceOptimizer {
     const cacheSize = this.componentCache.size * 2; // ~2KB per cached component
     const renderSize = this.renderedComponents.size * 1; // ~1KB per rendered component
     const totalSize = cacheSize + renderSize;
-    
+
     return {
       cache: cacheSize,
       rendered: renderSize,

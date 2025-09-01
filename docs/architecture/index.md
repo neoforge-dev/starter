@@ -15,7 +15,7 @@
 - **[Database Architecture](../database/)** - PostgreSQL, Redis, data modeling
 - **[API Design](../api/)** - REST API architecture and patterns
 
-### Frontend Architecture  
+### Frontend Architecture
 - **[Frontend Design](../frontend/)** - Lit components, PWA architecture
 - **[Component System](../frontend/adr/)** - Architecture Decision Records for frontend
 - **[Performance Architecture](../../frontend/docs/PERFORMANCE_POLYFILL.md)** - Performance design patterns

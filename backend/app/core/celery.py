@@ -1,7 +1,10 @@
 """Celery configuration module."""
-from celery import Celery
-from app.core.config import Settings, get_settings
 from datetime import timedelta
+
+from celery import Celery
+
+from app.core.config import Settings, get_settings
+
 
 def create_celery_app(settings: Settings) -> Celery:
     """Create and configure the Celery application instance."""
@@ -31,18 +34,21 @@ def create_celery_app(settings: Settings) -> Celery:
         task_default_retry_delay=60,  # 1 minute
         task_max_retries=3,
         # Worker configuration
-        worker_log_format='[%(asctime)s: %(levelname)s/%(processName)s] %(message)s',
-        worker_task_log_format='[%(asctime)s: %(levelname)s/%(processName)s][%(task_name)s(%(task_id)s)] %(message)s',
+        worker_log_format="[%(asctime)s: %(levelname)s/%(processName)s] %(message)s",
+        worker_task_log_format="[%(asctime)s: %(levelname)s/%(processName)s][%(task_name)s(%(task_id)s)] %(message)s",
         task_routes={
-            'app.worker.email_worker.send_welcome_email_task': {'queue': 'email'},
-            'app.worker.email_worker.send_verification_email_task': {'queue': 'email'},
-            'app.worker.email_worker.send_password_reset_email_task': {'queue': 'email'},
+            "app.worker.email_worker.send_welcome_email_task": {"queue": "email"},
+            "app.worker.email_worker.send_verification_email_task": {"queue": "email"},
+            "app.worker.email_worker.send_password_reset_email_task": {
+                "queue": "email"
+            },
         },
-        task_default_queue='default',
-        task_default_exchange='default',
-        task_default_routing_key='default',
+        task_default_queue="default",
+        task_default_exchange="default",
+        task_default_routing_key="default",
     )
     return celery
+
 
 # Create global Celery app instance
 settings = get_settings()

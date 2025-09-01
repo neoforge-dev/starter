@@ -58,4 +58,4 @@ We do use a minimal build step for production to:
 2. Implemented simple production build process
 3. Added browser support documentation
 4. Created deployment checklist
-5. Added performance monitoring 
+5. Added performance monitoring

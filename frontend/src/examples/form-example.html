@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Form Example - NeoForge Component Library</title>
-  
+
   <!-- Global styles -->
   <link rel="stylesheet" href="../styles/global.css">
-  
+
   <!-- Component imports -->
   <script type="module" src="../components/organisms/form.js"></script>
   <script type="module" src="../components/molecules/input-field/input-field.js"></script>
@@ -16,7 +16,7 @@
   <script type="module" src="../components/atoms/checkbox/checkbox.js"></script>
   <script type="module" src="../components/atoms/switch/switch.js"></script>
   <script type="module" src="../components/atoms/divider/divider.js"></script>
-  
+
   <style>
     body {
       margin: 0;
@@ -24,34 +24,34 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f9fafb;
     }
-    
+
     .container {
       max-width: 800px;
       margin: 0 auto;
     }
-    
+
     .header {
       text-align: center;
       margin-bottom: 2rem;
     }
-    
+
     .header h1 {
       font-size: 2rem;
       font-weight: 700;
       color: #1f2937;
       margin: 0 0 0.5rem 0;
     }
-    
+
     .header p {
       color: #6b7280;
       margin: 0;
     }
-    
+
     .examples-grid {
       display: grid;
       gap: 2rem;
     }
-    
+
     .example-card {
       background: white;
       border: 1px solid #e5e7eb;
@@ -59,69 +59,69 @@
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
-    
+
     .example-header {
       padding: 1.5rem;
       border-bottom: 1px solid #e5e7eb;
       background: #f9fafb;
     }
-    
+
     .example-title {
       font-size: 1.25rem;
       font-weight: 600;
       color: #1f2937;
       margin: 0 0 0.5rem 0;
     }
-    
+
     .example-description {
       color: #6b7280;
       margin: 0;
       font-size: 0.875rem;
     }
-    
+
     .example-content {
       padding: 1.5rem;
     }
-    
+
     .demo-form {
       max-width: 600px;
     }
-    
+
     .form-section {
       margin-bottom: 2rem;
     }
-    
+
     .form-section:last-child {
       margin-bottom: 0;
     }
-    
+
     .section-title {
       font-size: 1.125rem;
       font-weight: 600;
       color: #1f2937;
       margin: 0 0 1rem 0;
     }
-    
+
     .field-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
     }
-    
+
     .field-full {
       grid-column: 1 / -1;
     }
-    
+
     @media (max-width: 640px) {
       body {
         padding: 1rem;
       }
-      
+
       .field-grid {
         grid-template-columns: 1fr;
       }
     }
-    
+
     .result-display {
       margin-top: 1.5rem;
       padding: 1rem;
@@ -129,13 +129,13 @@
       border-radius: 8px;
       border: 1px solid #d1d5db;
     }
-    
+
     .result-title {
       font-weight: 600;
       margin: 0 0 0.5rem 0;
       color: #374151;
     }
-    
+
     .result-content {
       font-family: 'Monaco', 'Menlo', monospace;
       font-size: 0.875rem;
@@ -151,7 +151,7 @@
       <h1>Form Components Example</h1>
       <p>Comprehensive examples of the NeoForge form component system</p>
     </div>
-    
+
     <div class="examples-grid">
       <!-- Basic Form Example -->
       <div class="example-card">
@@ -167,14 +167,14 @@
             auto-save
             auto-save-delay="3000">
           </neo-form>
-          
+
           <div class="result-display" id="registrationResult">
             <div class="result-title">Form Data:</div>
             <pre class="result-content">Fill out the form to see the data here...</pre>
           </div>
         </div>
       </div>
-      
+
       <!-- Advanced Form Example -->
       <div class="example-card">
         <div class="example-header">
@@ -186,14 +186,14 @@
             id="settingsForm"
             show-progress>
           </neo-form>
-          
+
           <div class="result-display" id="settingsResult">
             <div class="result-title">Settings Data:</div>
             <pre class="result-content">Configure settings to see the data here...</pre>
           </div>
         </div>
       </div>
-      
+
       <!-- Individual Components Demo -->
       <div class="example-card">
         <div class="example-header">
@@ -210,7 +210,7 @@
                   placeholder="Enter text..."
                   help="This is a standard text input">
                 </neo-input-field>
-                
+
                 <neo-input-field
                   label="Email Input"
                   type="email"
@@ -218,7 +218,7 @@
                   required
                   help="Must be a valid email address">
                 </neo-input-field>
-                
+
                 <neo-input-field
                   label="Password Input"
                   type="password"
@@ -226,7 +226,7 @@
                   required
                   help="Minimum 8 characters">
                 </neo-input-field>
-                
+
                 <neo-input-field
                   label="Number Input"
                   type="number"
@@ -235,9 +235,9 @@
                 </neo-input-field>
               </div>
             </div>
-            
+
             <neo-divider></neo-divider>
-            
+
             <div class="form-section">
               <h3 class="section-title">Select Dropdowns</h3>
               <div class="field-grid">
@@ -248,7 +248,7 @@
                     id="basicSelect">
                   </neo-select-dropdown>
                 </div>
-                
+
                 <div>
                   <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Searchable Multi-Select</label>
                   <neo-select-dropdown
@@ -261,32 +261,32 @@
                 </div>
               </div>
             </div>
-            
+
             <neo-divider></neo-divider>
-            
+
             <div class="form-section">
               <h3 class="section-title">Toggles & Switches</h3>
               <div style="display: flex; flex-direction: column; gap: 1rem;">
                 <neo-checkbox>
                   Enable email notifications
                 </neo-checkbox>
-                
+
                 <neo-checkbox>
                   I agree to the terms and conditions
                 </neo-checkbox>
-                
+
                 <neo-switch>
                   Dark mode
                 </neo-switch>
-                
+
                 <neo-switch>
                   Auto-save documents
                 </neo-switch>
               </div>
             </div>
-            
+
             <neo-divider></neo-divider>
-            
+
             <div class="form-section">
               <neo-cta-button-row
                 alignment="right"
@@ -428,12 +428,12 @@
         ]
       }
     ];
-    
+
     registrationForm.defaultValues = {
       newsletter: true,
       notifications: false
     };
-    
+
     // Settings Form Configuration
     const settingsForm = document.getElementById('settingsForm');
     settingsForm.sections = [
@@ -496,7 +496,7 @@
         ]
       }
     ];
-    
+
     // Individual components setup
     const basicSelect = document.getElementById('basicSelect');
     basicSelect.options = [
@@ -505,7 +505,7 @@
       { value: 'option3', label: 'Option 3' },
       { value: 'option4', label: 'Option 4' }
     ];
-    
+
     const multiSelect = document.getElementById('multiSelect');
     multiSelect.options = [
       { value: 'javascript', label: 'JavaScript', icon: '🟨' },
@@ -517,7 +517,7 @@
       { value: 'go', label: 'Go', icon: '🐹' },
       { value: 'rust', label: 'Rust', icon: '🦀' }
     ];
-    
+
     const demoActions = document.getElementById('demoActions');
     demoActions.actions = [
       {
@@ -532,40 +532,40 @@
         primary: true
       }
     ];
-    
+
     // Event handlers
     registrationForm.addEventListener('neo-form-change', (e) => {
       const result = document.getElementById('registrationResult');
       const content = result.querySelector('.result-content');
       content.textContent = JSON.stringify(e.detail.values, null, 2);
     });
-    
+
     registrationForm.addEventListener('neo-form-submit', (e) => {
       console.log('Registration form submitted:', e.detail.values);
       alert('Registration form submitted! Check console for details.');
     });
-    
+
     registrationForm.addEventListener('neo-form-auto-save', (e) => {
       console.log('Auto-saved registration data:', e.detail.values);
       const result = document.getElementById('registrationResult');
       const content = result.querySelector('.result-content');
       content.textContent += '\n\n// Auto-saved at ' + new Date().toLocaleTimeString();
     });
-    
+
     settingsForm.addEventListener('neo-form-change', (e) => {
       const result = document.getElementById('settingsResult');
       const content = result.querySelector('.result-content');
       content.textContent = JSON.stringify(e.detail.values, null, 2);
     });
-    
+
     settingsForm.addEventListener('neo-form-submit', (e) => {
       console.log('Settings form submitted:', e.detail.values);
       alert('Settings saved! Check console for details.');
     });
-    
+
     demoActions.addEventListener('neo-action-click', (e) => {
       const { action } = e.detail;
-      
+
       if (action.id === 'reset') {
         document.querySelectorAll('neo-input-field, neo-select-dropdown, neo-checkbox, neo-switch').forEach(el => {
           if (el.value !== undefined) el.value = '';
@@ -580,27 +580,27 @@
             demoValues[el.label] = el.value;
           }
         });
-        
+
         document.querySelectorAll('neo-select-dropdown').forEach(el => {
           if (el.id && el.value) {
             demoValues[el.id] = el.value;
           }
         });
-        
+
         console.log('Demo form values:', demoValues);
         alert('Demo values saved! Check console for details.');
       }
     });
-    
+
     // Real-time validation demo
     const passwordField = registrationForm.querySelector('neo-input-field[name="password"]');
     const confirmPasswordField = registrationForm.querySelector('neo-input-field[name="confirmPassword"]');
-    
+
     if (passwordField && confirmPasswordField) {
       confirmPasswordField.addEventListener('neo-input-change', (e) => {
         const password = registrationForm.values?.password;
         const confirmPassword = e.detail.value;
-        
+
         if (confirmPassword && password && confirmPassword !== password) {
           confirmPasswordField.error = 'Passwords do not match';
         } else {

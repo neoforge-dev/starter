@@ -1,9 +1,9 @@
 /**
  * Global Performance API polyfill (CommonJS version)
- * 
+ *
  * This file provides a comprehensive polyfill for the Performance API
  * that works in all environments, including Node.js, JSDOM, and worker threads.
- * 
+ *
  * It uses a more aggressive approach to ensure the polyfill is available
  * everywhere it's needed, including in dynamically loaded modules.
  */
@@ -56,7 +56,7 @@ function applyPolyfill() {
         return seconds * 1000 + nanoseconds / 1000000;
       }
     };
-    
+
     // Apply the Node.js-specific implementation
     if (typeof global !== 'undefined') {
       if (!global.performance) {
@@ -84,10 +84,10 @@ applyPolyfill();
 // Monkey patch require to ensure the polyfill is available in dynamically loaded modules
 if (typeof require === 'function' && typeof module !== 'undefined') {
   const originalRequire = require;
-  
+
   function patchedRequire(id) {
     const result = originalRequire(id);
-    
+
     // If the module is related to testing or workers, ensure it has the performance polyfill
     if (id.includes('vitest') || id.includes('worker') || id.includes('tinypool')) {
       // Apply the polyfill to the module's context
@@ -98,21 +98,21 @@ if (typeof require === 'function' && typeof module !== 'undefined') {
           Object.assign(result.performance, createPerformancePolyfill());
         }
       }
-      
+
       // Also reapply globally to ensure it's available
       applyPolyfill();
     }
-    
+
     return result;
   }
-  
+
   // Copy all properties from the original require
   for (const key in originalRequire) {
     if (Object.prototype.hasOwnProperty.call(originalRequire, key)) {
       patchedRequire[key] = originalRequire[key];
     }
   }
-  
+
   // Replace the original require with our patched version
   module.constructor.prototype.require = patchedRequire;
 }
@@ -128,4 +128,4 @@ if (typeof process !== 'undefined' && process.on) {
 }
 
 // Export the polyfill for explicit use
-module.exports = applyPolyfill; 
+module.exports = applyPolyfill;

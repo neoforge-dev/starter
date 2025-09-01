@@ -407,7 +407,7 @@ export class PlaygroundAnalytics extends LitElement {
 
   handleExport(format = 'json') {
     const exportData = analytics.exportData(format, this.timeRange);
-    
+
     if (format === 'json') {
       this.downloadFile(exportData, `playground-analytics-${Date.now()}.json`, 'application/json');
     } else if (format === 'csv') {
@@ -430,11 +430,11 @@ export class PlaygroundAnalytics extends LitElement {
 
   renderOverviewTab() {
     const { componentUsage, searchMetrics, performanceMetrics, sessionDuration } = this.playgroundData;
-    
+
     const totalComponents = componentUsage ? componentUsage.size : 0;
     const totalSearches = searchMetrics ? searchMetrics.length : 0;
-    const avgSwitchTime = performanceMetrics?.componentSwitching?.length > 0 
-      ? performanceMetrics.componentSwitching.reduce((acc, metric) => acc + metric.duration, 0) / performanceMetrics.componentSwitching.length 
+    const avgSwitchTime = performanceMetrics?.componentSwitching?.length > 0
+      ? performanceMetrics.componentSwitching.reduce((acc, metric) => acc + metric.duration, 0) / performanceMetrics.componentSwitching.length
       : 0;
 
     return html`
@@ -483,7 +483,7 @@ export class PlaygroundAnalytics extends LitElement {
 
   renderMostUsedComponents() {
     const { componentUsage } = this.playgroundData;
-    
+
     if (!componentUsage || componentUsage.size === 0) {
       return html`<div class="no-data">No component usage data available yet.</div>`;
     }
@@ -534,8 +534,8 @@ export class PlaygroundAnalytics extends LitElement {
   renderPerformanceTab() {
     const { performanceMetrics } = this.playgroundData;
 
-    const avgSwitchTime = performanceMetrics?.componentSwitching?.length > 0 
-      ? performanceMetrics.componentSwitching.reduce((acc, metric) => acc + metric.duration, 0) / performanceMetrics.componentSwitching.length 
+    const avgSwitchTime = performanceMetrics?.componentSwitching?.length > 0
+      ? performanceMetrics.componentSwitching.reduce((acc, metric) => acc + metric.duration, 0) / performanceMetrics.componentSwitching.length
       : 0;
 
     const avgSearchTime = performanceMetrics?.searchResponse?.length > 0
@@ -576,7 +576,7 @@ export class PlaygroundAnalytics extends LitElement {
       </div>
 
       <div class="chart-container">
-        <chart-visualizations 
+        <chart-visualizations
           .chartType=${"line"}
           .data=${ChartDataBuilder.buildPerformanceTimelineChart(performanceMetrics || {})}
           .options=${{
@@ -658,7 +658,7 @@ export class PlaygroundAnalytics extends LitElement {
 
   renderKeyboardShortcuts() {
     const { keyboardShortcuts } = this.playgroundData;
-    
+
     if (!keyboardShortcuts || keyboardShortcuts.size === 0) {
       return html``;
     }
@@ -696,7 +696,7 @@ export class PlaygroundAnalytics extends LitElement {
 
   renderSearchPatterns() {
     const { searchMetrics } = this.playgroundData;
-    
+
     if (!searchMetrics || searchMetrics.length === 0) {
       return html``;
     }
@@ -741,7 +741,7 @@ export class PlaygroundAnalytics extends LitElement {
 
   renderComponentUsageChart() {
     const { componentUsage } = this.playgroundData;
-    
+
     if (!componentUsage || componentUsage.size === 0) {
       return html``;
     }
@@ -753,7 +753,7 @@ export class PlaygroundAnalytics extends LitElement {
         </div>
         <div class="section-content">
           <div class="chart-container">
-            <chart-visualizations 
+            <chart-visualizations
               .chartType=${"doughnut"}
               .data=${ChartDataBuilder.buildComponentUsageChart(componentUsage)}
               .options=${{
@@ -782,7 +782,7 @@ export class PlaygroundAnalytics extends LitElement {
         </div>
         <div class="section-content">
           <div class="chart-container">
-            <chart-visualizations 
+            <chart-visualizations
               .chartType=${"line"}
               .data=${ChartDataBuilder.buildSessionActivityChart(this.playgroundData)}
               .options=${{
@@ -825,7 +825,7 @@ export class PlaygroundAnalytics extends LitElement {
 
   renderSearchPatternsChart() {
     const { searchMetrics } = this.playgroundData;
-    
+
     if (!searchMetrics || searchMetrics.length === 0) {
       return html``;
     }
@@ -837,7 +837,7 @@ export class PlaygroundAnalytics extends LitElement {
         </div>
         <div class="section-content">
           <div class="chart-container">
-            <chart-visualizations 
+            <chart-visualizations
               .chartType=${"bar"}
               .data=${ChartDataBuilder.buildSearchPatternsChart(searchMetrics)}
               .options=${{
@@ -872,7 +872,7 @@ export class PlaygroundAnalytics extends LitElement {
 
   renderKeyboardShortcutsChart() {
     const { keyboardShortcuts } = this.playgroundData;
-    
+
     if (!keyboardShortcuts || keyboardShortcuts.size === 0) {
       return html``;
     }
@@ -884,7 +884,7 @@ export class PlaygroundAnalytics extends LitElement {
         </div>
         <div class="section-content">
           <div class="chart-container">
-            <chart-visualizations 
+            <chart-visualizations
               .chartType=${"horizontalBar"}
               .data=${ChartDataBuilder.buildKeyboardShortcutsChart(keyboardShortcuts)}
               .options=${{
@@ -913,7 +913,7 @@ export class PlaygroundAnalytics extends LitElement {
 
   renderPropertyInteractionsChart() {
     const { propertyInteractions } = this.playgroundData;
-    
+
     if (!propertyInteractions || propertyInteractions.size === 0) {
       return html``;
     }
@@ -925,7 +925,7 @@ export class PlaygroundAnalytics extends LitElement {
         </div>
         <div class="section-content">
           <div class="chart-container">
-            <chart-visualizations 
+            <chart-visualizations
               .chartType=${"bar"}
               .data=${ChartDataBuilder.buildPropertyInteractionsChart(propertyInteractions)}
               .options=${{
@@ -973,7 +973,7 @@ export class PlaygroundAnalytics extends LitElement {
         <h2 class="header-title">🎯 Playground Analytics</h2>
         <div class="header-actions">
           <span class="auto-refresh">Auto-refresh: ${this.refreshInterval / 1000}s</span>
-          
+
           <select
             class="time-range-selector"
             .value=${this.timeRange}
@@ -988,11 +988,11 @@ export class PlaygroundAnalytics extends LitElement {
           <button class="export-button" @click=${() => this.handleExport('json')}>
             📁 Export JSON
           </button>
-          
+
           <button class="export-button" @click=${() => this.handleExport('csv')}>
             📊 Export CSV
           </button>
-          
+
           <button class="refresh-button" @click=${this.handleRefresh}>
             🔄 Refresh
           </button>

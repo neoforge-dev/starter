@@ -1,6 +1,6 @@
 /**
  * Component Generator - Main file generation engine
- * 
+ *
  * Handles the creation of new Web Components with automatic playground integration
  */
 
@@ -23,7 +23,7 @@ export class ComponentGenerator {
   async generateComponent(config) {
     try {
       const startTime = performance.now();
-      
+
       // Validate configuration
       const validationResult = this.validateConfig(config);
       if (!validationResult.valid) {
@@ -32,21 +32,21 @@ export class ComponentGenerator {
 
       // Normalize configuration
       const normalizedConfig = this.normalizeConfig(config);
-      
+
       // Generate all files
       const files = this.generateAllFiles(normalizedConfig);
-      
+
       // Create file structure
       const fileStructure = this.createFileStructure(normalizedConfig, files);
-      
+
       // Update component loader
       const loaderUpdate = this.generateComponentLoaderUpdate(normalizedConfig);
-      
+
       // Generate import statements for index files
       const indexUpdates = this.generateIndexUpdates(normalizedConfig);
 
       const endTime = performance.now();
-      
+
       return {
         success: true,
         config: normalizedConfig,
@@ -75,15 +75,15 @@ export class ComponentGenerator {
    */
   validateConfig(config) {
     const errors = [];
-    
+
     if (!config.name || typeof config.name !== 'string') {
       errors.push('Component name is required and must be a string');
     }
-    
+
     if (!config.category || !['atoms', 'molecules', 'organisms'].includes(config.category)) {
       errors.push('Category must be one of: atoms, molecules, organisms');
     }
-    
+
     if (!config.description || typeof config.description !== 'string') {
       errors.push('Component description is required');
     }
@@ -124,10 +124,10 @@ export class ComponentGenerator {
     const name = this.normalizeComponentName(config.name);
     const componentName = `neo-${name}`;
     const className = this.toPascalCase(`Neo${name}`);
-    
+
     // Add default properties based on category
     const defaultProperties = this.getDefaultProperties(config.category, config.properties || []);
-    
+
     return {
       ...config,
       name,
@@ -203,7 +203,7 @@ export class ComponentGenerator {
     // Merge with user properties (user properties take precedence)
     const userPropNames = userProperties.map(p => p.name);
     const filteredDefaults = defaultProps.filter(p => !userPropNames.includes(p.name));
-    
+
     return [...filteredDefaults, ...userProperties];
   }
 
@@ -230,7 +230,7 @@ export class ComponentGenerator {
   createFileStructure(config, files) {
     const basePath = `src/components/${config.category}`;
     const componentDir = `${basePath}/${config.name}`;
-    
+
     return {
       [`${componentDir}/${config.name}.js`]: files.component,
       [`${componentDir}/${config.name}.test.js`]: files.test,
@@ -276,7 +276,7 @@ export class ComponentGenerator {
    */
   generateIndexUpdates(config) {
     const exportStatement = `export { ${config.className} } from './${config.name}/${config.name}.js';`;
-    
+
     return {
       [`src/components/${config.category}/index.js`]: {
         export: exportStatement,

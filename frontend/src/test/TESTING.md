@@ -136,10 +136,10 @@ it("renders correctly", async () => {
 it("handles button click", async () => {
   const button = await TestUtils.queryComponent(element, "button");
   button.click();
-  
+
   // Wait for component to update
   await TestUtils.waitForComponent(element);
-  
+
   // Assert expected changes
   const result = await TestUtils.queryComponent(element, ".result");
   expect(result.textContent).to.include("Button Clicked");
@@ -152,14 +152,14 @@ it("handles button click", async () => {
 it("handles form submission", async () => {
   const form = await TestUtils.queryComponent(element, "form");
   const input = form.querySelector("input[name='email']");
-  
+
   // Set input value
   input.value = "test@example.com";
   input.dispatchEvent(new Event("input"));
-  
+
   // Submit form
   form.dispatchEvent(new Event("submit"));
-  
+
   // Listen for custom event
   const { detail } = await TestUtils.oneEvent(element, "form-submit");
   expect(detail.email).to.equal("test@example.com");
@@ -172,22 +172,22 @@ it("handles form submission", async () => {
 it("handles async operations", async () => {
   // Mock API response
   window.api.getData = vi.fn().mockResolvedValue({ data: "test" });
-  
+
   // Trigger async operation
   const button = await TestUtils.queryComponent(element, ".load-button");
   button.click();
-  
+
   // Wait for component to update
   await TestUtils.waitForComponent(element);
-  
+
   // Assert loading state
   const loading = await TestUtils.queryComponent(element, ".loading");
   expect(loading).to.exist;
-  
+
   // Wait for operation to complete
   await new Promise(resolve => setTimeout(resolve, 0));
   await TestUtils.waitForComponent(element);
-  
+
   // Assert result
   const result = await TestUtils.queryComponent(element, ".result");
   expect(result.textContent).to.include("test");
@@ -245,59 +245,59 @@ import "../../components/login-form.js";
 
 describe("Login Form", () => {
   let element;
-  
+
   beforeEach(async () => {
     // Mock auth service
     window.auth = {
       login: vi.fn().mockResolvedValue({ success: true }),
     };
-    
+
     element = await TestUtils.fixture(html`<login-form></login-form>`);
     await TestUtils.waitForAll(element);
   });
-  
+
   it("renders login form with email and password fields", async () => {
     const form = await TestUtils.queryComponent(element, "form");
     const emailInput = form.querySelector("input[type='email']");
     const passwordInput = form.querySelector("input[type='password']");
     const submitButton = form.querySelector("button[type='submit']");
-    
+
     expect(form).to.exist;
     expect(emailInput).to.exist;
     expect(passwordInput).to.exist;
     expect(submitButton).to.exist;
     expect(submitButton.textContent).to.include("Log In");
   });
-  
+
   it("validates form inputs", async () => {
     const form = await TestUtils.queryComponent(element, "form");
     const submitButton = form.querySelector("button[type='submit']");
-    
+
     // Submit empty form
     submitButton.click();
     await TestUtils.waitForComponent(element);
-    
+
     // Check for validation errors
     const errors = await TestUtils.queryAllComponents(element, ".error-message");
     expect(errors.length).to.be.greaterThan(0);
   });
-  
+
   it("submits form with valid data", async () => {
     const form = await TestUtils.queryComponent(element, "form");
     const emailInput = form.querySelector("input[type='email']");
     const passwordInput = form.querySelector("input[type='password']");
     const submitButton = form.querySelector("button[type='submit']");
-    
+
     // Fill form
     emailInput.value = "test@example.com";
     passwordInput.value = "password123";
-    
+
     emailInput.dispatchEvent(new Event("input"));
     passwordInput.dispatchEvent(new Event("input"));
-    
+
     // Submit form
     submitButton.click();
-    
+
     // Check auth service was called
     expect(window.auth.login).to.have.been.calledWith({
       email: "test@example.com",
@@ -307,4 +307,4 @@ describe("Login Form", () => {
 });
 ```
 
-By following this guide, you'll be able to write effective tests for NeoForge frontend components. If you have any questions or need further assistance, please reach out to the team. 
+By following this guide, you'll be able to write effective tests for NeoForge frontend components. If you have any questions or need further assistance, please reach out to the team.

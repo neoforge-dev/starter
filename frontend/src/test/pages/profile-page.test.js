@@ -26,7 +26,7 @@ describe("Profile Page", () => {
     // Create the profile-page element
     element = document.createElement('profile-page');
     container.appendChild(element);
-    
+
     // Wait for component to be fully rendered
     await element.updateComplete;
   });
@@ -45,7 +45,7 @@ describe("Profile Page", () => {
   it("should have profile page structure", async () => {
     const shadowRoot = element.shadowRoot;
     const heading = shadowRoot.querySelector("h1, h2, h3");
-    
+
     // The profile page should have some heading or main content
     expect(heading || shadowRoot.children.length > 0).toBeTruthy();
   });

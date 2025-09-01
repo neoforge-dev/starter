@@ -1,14 +1,13 @@
 import asyncio
 from logging.config import fileConfig
 
+from alembic import context
+from app.db.base import Base
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from alembic import context
-
 from app.core.config import get_settings
-from app.db.base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -23,10 +22,14 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 target_metadata = Base.metadata
 
+
 def get_url():
     """Get database URL from settings."""
     current_settings = get_settings()
-    return str(current_settings.database_url_for_env).replace("postgresql+asyncpg", "postgresql")
+    return str(current_settings.database_url_for_env).replace(
+        "postgresql+asyncpg", "postgresql"
+    )
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
@@ -41,12 +44,14 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 def do_run_migrations(connection: Connection) -> None:
     """Run actual migrations."""
     context.configure(connection=connection, target_metadata=target_metadata)
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 async def run_async_migrations() -> None:
     """Run migrations in async mode."""
@@ -63,6 +68,7 @@ async def run_async_migrations() -> None:
 
     await connectable.dispose()
 
+
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    asyncio.run(run_async_migrations()) 
+    asyncio.run(run_async_migrations())

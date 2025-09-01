@@ -85,14 +85,14 @@ class ApiService {
 
     const { retryCount = 0, params, ...requestOptions } = options;
     const method = requestOptions.method || 'GET';
-    
+
     // Build URL with query parameters if provided
     let url = `${this.baseUrl}${endpoint}`;
     if (params) {
       const queryString = new URLSearchParams(params).toString();
       url = `${url}${queryString ? `?${queryString}` : ""}`;
     }
-    
+
     try {
       const token = authService.getToken();
       const headers: Record<string, string> = {
@@ -104,8 +104,8 @@ class ApiService {
 
       // Add idempotency key for non-GET requests to make offline replays safe
       if (method !== 'GET' && !headers['Idempotency-Key']) {
-        const key = (typeof crypto !== 'undefined' && crypto.randomUUID) 
-          ? crypto.randomUUID() 
+        const key = (typeof crypto !== 'undefined' && crypto.randomUUID)
+          ? crypto.randomUUID()
           : `${Date.now()}-${Math.random()}`;
         headers['Idempotency-Key'] = key;
       }
@@ -133,8 +133,8 @@ class ApiService {
       }
 
       // Handle server errors with retry for certain methods
-      if (response.status >= 500 && 
-          this.retryConfig.retryMethods.includes(method) && 
+      if (response.status >= 500 &&
+          this.retryConfig.retryMethods.includes(method) &&
           retryCount < this.retryConfig.maxRetries) {
         Logger.warn(`Server error ${response.status}, retrying (${retryCount + 1}/${this.retryConfig.maxRetries})`);
         await this._delay(this.retryConfig.retryDelay * Math.pow(2, retryCount));
@@ -152,7 +152,7 @@ class ApiService {
       // Handle network errors
       if (error instanceof TypeError || (error as Error).message.includes('fetch')) {
         Logger.warn(`Network error for ${method} ${endpoint}:`, (error as Error).message);
-        
+
         // Try to get cached data for GET requests
         if (method === 'GET') {
           try {
@@ -165,7 +165,7 @@ class ApiService {
             Logger.debug('No cached data available', cacheError);
           }
         }
-        
+
         // Queue non-GET requests for later
         if (method !== 'GET' && !navigator.onLine) {
           Logger.info(`Queueing offline action: ${method} ${endpoint}`);
@@ -200,9 +200,9 @@ class ApiService {
     const cleanParams = Object.fromEntries(
       Object.entries(params).filter(([_, value]) => value !== undefined && value !== null)
     );
-    
+
     const queryString = new URLSearchParams(cleanParams as Record<string, string>).toString();
-    
+
     // Return type is determined by the backend based on parameter presence
     // If cursor params are used, backend returns CursorPaginatedResponse
     // If offset params are used, backend returns PaginatedResponse
@@ -258,9 +258,9 @@ class ApiService {
     const cleanParams = Object.fromEntries(
       Object.entries(params).filter(([_, value]) => value !== undefined && value !== null)
     );
-    
+
     const queryString = new URLSearchParams(cleanParams as Record<string, string>).toString();
-    
+
     // Return type is determined by the backend based on parameter presence
     return this.request<PaginatedResponse<SupportTicket> | CursorPaginatedResponse<SupportTicket>>(`/support/tickets?${queryString}`);
   }
@@ -271,9 +271,9 @@ class ApiService {
     const cleanParams = Object.fromEntries(
       Object.entries(params).filter(([_, value]) => value !== undefined && value !== null)
     );
-    
+
     const queryString = new URLSearchParams(cleanParams as Record<string, string>).toString();
-    
+
     // Return type is determined by the backend based on parameter presence
     return this.request<PaginatedResponse<CommunityPost> | CursorPaginatedResponse<CommunityPost>>(`/community/posts?${queryString}`);
   }
@@ -338,15 +338,15 @@ class ApiService {
 
   // Request with caching for GET requests
   async requestWithCache<T = any>(
-    endpoint: string, 
-    options: RequestConfig = {}, 
+    endpoint: string,
+    options: RequestConfig = {},
     ttl: number = 300000
   ): Promise<T> { // 5 minutes default
     const method = options.method || 'GET';
-    
+
     if (method === 'GET') {
       const cacheKey = `api:${endpoint}`;
-      
+
       try {
         const cached = await pwaService.getOfflineData(cacheKey);
         if (cached) {
@@ -359,7 +359,7 @@ class ApiService {
     }
 
     const data = await this.request<T>(endpoint, options);
-    
+
     // Cache successful GET responses
     if (method === 'GET' && data) {
       try {
@@ -375,27 +375,27 @@ class ApiService {
 
   // Bulk operations with progress tracking
   async bulkRequest<T = any>(
-    requests: BulkRequest[], 
+    requests: BulkRequest[],
     onProgress?: (progress: BulkProgressUpdate) => void
   ): Promise<BulkRequestResult<T>[]> {
     const results: BulkRequestResult<T>[] = [];
     const total = requests.length;
-    
+
     for (let i = 0; i < requests.length; i++) {
       const request = requests[i];
       if (!request) continue;
-      
+
       try {
         const result = await this.request<T>(request.endpoint, request.options || {});
         results.push({ success: true, data: result, index: i });
       } catch (error) {
-        results.push({ 
-          success: false, 
-          error: (error as Error).message, 
-          index: i 
+        results.push({
+          success: false,
+          error: (error as Error).message,
+          index: i
         });
       }
-      
+
       if (onProgress) {
         onProgress({
           completed: i + 1,
@@ -404,19 +404,19 @@ class ApiService {
         });
       }
     }
-    
+
     return results;
   }
 
   // Request timeout handling
   async requestWithTimeout<T = any>(
-    endpoint: string, 
-    options: RequestConfig = {}, 
+    endpoint: string,
+    options: RequestConfig = {},
     timeout: number = 30000
   ): Promise<T> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
+
     try {
       const result = await this.request<T>(endpoint, {
         ...options,
@@ -429,7 +429,7 @@ class ApiService {
   }
 
   // Cursor pagination utility methods
-  
+
   /**
    * Create cursor pagination parameters for first page
    */
@@ -495,8 +495,8 @@ class ApiService {
    * Check if response uses cursor pagination
    */
   isCursorPaginated<T>(response: PaginatedResponse<T> | CursorPaginatedResponse<T>): response is CursorPaginatedResponse<T> {
-    return 'pagination' in response && 
-           'next_cursor' in response.pagination && 
+    return 'pagination' in response &&
+           'next_cursor' in response.pagination &&
            'has_next' in response.pagination;
   }
 

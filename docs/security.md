@@ -145,7 +145,7 @@ Troubleshooting:
 **Path-based Attacks**
 ```python
 SUSPICIOUS_PATHS = [
-    "/.env", "/config", "/admin", "/wp-admin", 
+    "/.env", "/config", "/admin", "/wp-admin",
     "/.git", "/backup", "/db", "/database"
 ]
 ```
@@ -172,7 +172,7 @@ XSS_PATTERNS = [
 **Malicious User-Agent Blocking**
 ```python
 BLOCKED_USER_AGENTS = [
-    "sqlmap", "nikto", "nmap", "masscan", 
+    "sqlmap", "nikto", "nmap", "masscan",
     "gobuster", "dirb", "dirbuster", "wfuzz"
 ]
 ```
@@ -322,7 +322,7 @@ import redis.asyncio as aioredis
 class RedisRateLimiter:
     def __init__(self, redis_url: str):
         self.redis = aioredis.from_url(redis_url)
-    
+
     async def is_rate_limited(self, key: str, limit: int, window: int) -> bool:
         current = await self.redis.get(key)
         if current is None:

@@ -1,10 +1,13 @@
-import pytest
-from app.core.config import Settings, Environment
-from pydantic import ValidationError, SecretStr
 import os
+
+import pytest
+from pydantic import SecretStr, ValidationError
+
+from app.core.config import Environment, Settings
 
 # Define a valid secret key for tests
 VALID_SECRET_KEY = SecretStr("a" * 32)
+
 
 class TestConfigValidation:
     # Helper method to isolate environment changes
@@ -31,7 +34,7 @@ class TestConfigValidation:
             secret_key=VALID_SECRET_KEY,  # Use defined constant
             debug="false",  # Test string conversion
             environment="development",
-            cors_origins=["http://localhost:3000"]
+            cors_origins=["http://localhost:3000"],
         )
         assert settings.debug is False
         assert settings.environment == "development"
@@ -52,10 +55,7 @@ class TestConfigValidation:
 
     def test_empty_cors_origins_in_testing(self):
         """Test empty CORS origins when testing=True."""
-        settings = Settings(
-            testing=True,
-            cors_origins=["http://should.be.cleared"]
-        )
+        settings = Settings(testing=True, cors_origins=["http://should.be.cleared"])
         assert settings.cors_origins == []
 
     def test_smtp_password_required_with_user(self):
@@ -65,19 +65,22 @@ class TestConfigValidation:
         assert "must both be set" in str(excinfo.value)
 
     def test_default_values(self):
-        settings = Settings() # Relies on SECRET_KEY from env_override fixture
+        settings = Settings()  # Relies on SECRET_KEY from env_override fixture
         assert settings.app_name == "NeoForge"
         assert settings.environment == "development"
         assert settings.debug is False
         # Check default CORS is applied when not testing/test env
         assert settings.cors_origins == ["http://localhost:3000"]
 
-    @pytest.mark.parametrize("env_value,expected", [
-        ("development", "development"),
-        ("PRODUCTION", "production"),
-        ("Staging", "staging"),
-        ("test", "test"),
-    ])
+    @pytest.mark.parametrize(
+        "env_value,expected",
+        [
+            ("development", "development"),
+            ("PRODUCTION", "production"),
+            ("Staging", "staging"),
+            ("test", "test"),
+        ],
+    )
     def test_environment_validation_valid(self, env_value, expected):
         settings = Settings(environment=env_value)
         assert settings.environment == expected
@@ -90,7 +93,10 @@ class TestConfigValidation:
     def test_secret_key_validation(self):
         # Valid case
         settings = Settings(secret_key=VALID_SECRET_KEY)
-        assert settings.secret_key.get_secret_value() == VALID_SECRET_KEY.get_secret_value()
+        assert (
+            settings.secret_key.get_secret_value()
+            == VALID_SECRET_KEY.get_secret_value()
+        )
 
         # Invalid case (already tested in test_invalid_secret_key)
         # with pytest.raises(ValidationError) as excinfo:
@@ -119,12 +125,15 @@ class TestConfigValidation:
         assert settings.debug is False
         assert settings.cors_origins == []
 
-    @pytest.mark.parametrize("input_val,expected", [
-        ("true", True),
-        ("false", False),
-        (True, True),
-        (False, False),
-    ])
+    @pytest.mark.parametrize(
+        "input_val,expected",
+        [
+            ("true", True),
+            ("false", False),
+            (True, True),
+            (False, False),
+        ],
+    )
     def test_debug_validation(self, input_val, expected):
         settings = Settings(debug=input_val)
         assert settings.debug == expected
@@ -141,16 +150,21 @@ class TestConfigValidation:
         #     Settings(smtp_user="user", smtp_password=None)
 
     def test_environment_variable_priority(self, monkeypatch):
-        """ Tests that init args have priority over env vars for BaseSettings """
+        """Tests that init args have priority over env vars for BaseSettings"""
         monkeypatch.setenv("SECRET_KEY", "env_var_value_should_be_ignored")
         settings = Settings(secret_key=VALID_SECRET_KEY)
-        assert settings.secret_key.get_secret_value() == VALID_SECRET_KEY.get_secret_value()
+        assert (
+            settings.secret_key.get_secret_value()
+            == VALID_SECRET_KEY.get_secret_value()
+        )
 
     def test_test_environment_auto_correction(self):
-        """ Tests that setting environment='test' overrides debug and cors """
-        settings = Settings(environment="test", debug=True, cors_origins=["http://should.be.cleared"])
+        """Tests that setting environment='test' overrides debug and cors"""
+        settings = Settings(
+            environment="test", debug=True, cors_origins=["http://should.be.cleared"]
+        )
         assert settings.environment == "test"
-        assert settings.testing is True # Should be set by model validator
+        assert settings.testing is True  # Should be set by model validator
         assert settings.debug is False
         assert settings.cors_origins == []
 
@@ -158,19 +172,26 @@ class TestConfigValidation:
         """Test the CORS validator empties list when environment is 'test'."""
         # Clear cache just in case, though direct instantiation shouldn't use it
         # clear_get_settings_cache()
-        
+
         # Instantiate with environment='test' and explicitly provide cors_origins
         # Assuming Environment.TEST evaluates to "test"
         settings_env_test = Settings(
-            secret_key=VALID_SECRET_KEY, 
-            environment="test", # Use string literal for clarity
-            cors_origins=["http://should_be_removed.com"]
+            secret_key=VALID_SECRET_KEY,
+            environment="test",  # Use string literal for clarity
+            cors_origins=["http://should_be_removed.com"],
         )
-        
+
         # The model_validator should override the passed cors_origins
-        assert settings_env_test.cors_origins == [], "CORS origins should be empty in 'test' environment"
-        assert settings_env_test.testing is True, "Testing flag should be True in 'test' environment"
-        assert settings_env_test.debug is False, "Debug flag should be False in 'test' environment"
+        assert (
+            settings_env_test.cors_origins == []
+        ), "CORS origins should be empty in 'test' environment"
+        assert (
+            settings_env_test.testing is True
+        ), "Testing flag should be True in 'test' environment"
+        assert (
+            settings_env_test.debug is False
+        ), "Debug flag should be False in 'test' environment"
+
 
 # This test is now correctly placed at the module level
 def test_settings_cors_validator_in_test_mode():
@@ -178,19 +199,26 @@ def test_settings_cors_validator_in_test_mode():
     # # Explicitly clear cache before direct instantiation to avoid interference # REMOVED
     # from app.core.config import get_settings # REMOVED
     # get_settings.cache_clear() # REMOVED
-    
+
     # Instantiate with testing=True
-    settings_testing = Settings(secret_key=VALID_SECRET_KEY, testing=True, cors_origins=["http://should_be_removed.com"])
+    settings_testing = Settings(
+        secret_key=VALID_SECRET_KEY,
+        testing=True,
+        cors_origins=["http://should_be_removed.com"],
+    )
     # Verify after full validation
-    assert settings_testing.cors_origins == [], "CORS origins should be empty when testing=True"
+    assert (
+        settings_testing.cors_origins == []
+    ), "CORS origins should be empty when testing=True"
 
     # # Clear cache again before the next direct instantiation # REMOVED
     # get_settings.cache_clear() # REMOVED
-    
+
     # # Instantiate with environment=test # REMOVED SECTION
     # settings_env_test = Settings(secret_key=VALID_SECRET_KEY, environment=Environment.TEST, cors_origins=["http://should_be_removed.com"])
     # # Verify after full validation
     # assert settings_env_test.cors_origins == [], "CORS origins should be empty when environment=TEST"
 
+
 # Removed redundant test_field_validation_order, test_valid_settings, test_debug_coercion, test_smtp_validation
-# as their logic is covered by other tests or fixture setup. 
+# as their logic is covered by other tests or fixture setup.

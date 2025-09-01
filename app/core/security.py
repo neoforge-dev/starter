@@ -1,16 +1,19 @@
-from app.core.config import Settings
-from app.crud import user as user_crud
-from app.schemas import TokenPayload
-from app.models import User
-from app.api.deps import get_db
-import structlog
 from datetime import timedelta
-from fastapi import HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordRequestForm
-from jose import jwt, JWTError
 from typing import Any
 
+import structlog
+from app.api.deps import get_db
+from app.crud import user as user_crud
+from app.models import User
+from app.schemas import TokenPayload
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+
+from app.core.config import Settings
+
 logger = structlog.get_logger(__name__)
+
 
 async def get_current_user(
     settings: Settings,
@@ -26,17 +29,16 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     inactive_exception = HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Inactive user"
+        status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
     )
 
     try:
         logger.debug("Decoding JWT token...")
         secret_value = settings.secret_key.get_secret_value()
-        logger.debug(f"[VERIFY_TOKEN] Using Secret Key: {secret_value[:5]}...{secret_value[-5:]}")
-        payload = jwt.decode(
-            token, secret_value, algorithms=[settings.algorithm]
+        logger.debug(
+            f"[VERIFY_TOKEN] Using Secret Key: {secret_value[:5]}...{secret_value[-5:]}"
         )
+        payload = jwt.decode(token, secret_value, algorithms=[settings.algorithm])
         logger.debug(f"Token payload decoded: {payload}")
         user_id: str | None = payload.get("sub")
         if user_id is None:
@@ -66,11 +68,16 @@ async def get_current_user(
     logger.debug(f"Current user retrieved successfully: {user.email}")
     return user
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     pass
+
 
 def get_password_hash(password: str) -> str:
     pass
 
-def create_access_token(subject: str | Any, settings: Settings, expires_delta: timedelta | None = None) -> str:
-    pass 
+
+def create_access_token(
+    subject: str | Any, settings: Settings, expires_delta: timedelta | None = None
+) -> str:
+    pass

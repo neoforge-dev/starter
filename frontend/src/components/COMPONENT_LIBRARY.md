@@ -8,7 +8,7 @@ A comprehensive component library built with **Lit 3.3.1** following **Atomic De
 
 **Atomic Design**: Components are organized in a hierarchical structure:
 - **Atoms** → Basic building blocks (buttons, inputs, icons)
-- **Molecules** → Simple combinations of atoms (input fields, search bars)  
+- **Molecules** → Simple combinations of atoms (input fields, search bars)
 - **Organisms** → Complex combinations (headers, sidebars, tables)
 
 ## 🏗️ Architecture
@@ -53,7 +53,7 @@ A comprehensive component library built with **Lit 3.3.1** following **Atomic De
   <!-- Import components -->
   <script type="module" src="./components/atoms/button/button.js"></script>
   <script type="module" src="./components/molecules/input-field/input-field.js"></script>
-  
+
   <!-- Use components -->
   <neo-button variant="primary">Click me</neo-button>
   <neo-input-field label="Email" type="email" required></neo-input-field>
@@ -125,21 +125,21 @@ dashboard.navigationItems = [
 
 ```html
 <!-- Molecule examples -->
-<neo-input-field 
-  label="Email" 
-  type="email" 
-  required 
+<neo-input-field
+  label="Email"
+  type="email"
+  required
   help="We'll never share your email"
   error="Please enter a valid email">
 </neo-input-field>
 
-<neo-search-bar 
-  placeholder="Search..." 
-  shortcuts="⌘K" 
+<neo-search-bar
+  placeholder="Search..."
+  shortcuts="⌘K"
   show-suggestions>
 </neo-search-bar>
 
-<neo-cta-button-row 
+<neo-cta-button-row
   alignment="right"
   .actions="${[
     { id: 'cancel', text: 'Cancel', variant: 'outline' },
@@ -166,16 +166,16 @@ dashboard.navigationItems = [
   show-search
   show-notifications
   notification-count="5">
-  
+
   <h1 slot="page-title">Dashboard Overview</h1>
-  
+
   <neo-notification-list
     .notifications="${notifications}"
     group-by-date
     show-actions
     real-time>
   </neo-notification-list>
-  
+
 </neo-dashboard-layout>
 ```
 
@@ -235,7 +235,7 @@ document.addEventListener('neo-form-submit', (e) => {
   "fields": [
     {
       "name": "email",
-      "label": "Email Address", 
+      "label": "Email Address",
       "type": "email",
       "required": true,
       "placeholder": "Enter your email"
@@ -243,7 +243,7 @@ document.addEventListener('neo-form-submit', (e) => {
     {
       "name": "password",
       "label": "Password",
-      "type": "password", 
+      "type": "password",
       "required": true,
       "placeholder": "Enter your password"
     },
@@ -364,11 +364,11 @@ describe('NeoButton', () => {
   it('handles click events', async () => {
     const el = await fixture('<neo-button>Click me</neo-button>');
     let clicked = false;
-    
+
     el.addEventListener('neo-button-click', () => {
       clicked = true;
     });
-    
+
     el.click();
     expect(clicked).to.be.true;
   });
@@ -407,9 +407,9 @@ src/components/
 </div>
 
 // New pattern
-<neo-input-field 
-  label="Email" 
-  type="email" 
+<neo-input-field
+  label="Email"
+  type="email"
   error="Invalid email">
 </neo-input-field>
 ```

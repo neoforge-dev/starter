@@ -36,28 +36,28 @@ jobs:
           - component: frontend
             test-mode: ${{ github.event.inputs.test_mode || 'ci' }}
             timeout: 8
-    
+
     name: ${{ matrix.component }} tests (${{ matrix.test-mode }})
     timeout-minutes: ${{ matrix.timeout }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 1  # Shallow clone for speed
-      
+
       - name: Setup Node.js
         if: matrix.component == 'frontend'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      
+
       - name: Setup Bun
         if: matrix.component == 'frontend'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      
+
       - name: Setup Python
         if: matrix.component == 'backend'
         uses: actions/setup-python@v4
@@ -65,7 +65,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
           cache-dependency-path: backend/requirements.txt
-      
+
       # Backend Tests
       - name: Install backend dependencies
         if: matrix.component == 'backend'
@@ -74,7 +74,7 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements/dev.txt
         timeout-minutes: 3
-      
+
       - name: Run backend tests
         if: matrix.component == 'backend'
         run: |
@@ -88,15 +88,15 @@ jobs:
             *) ./scripts/test-fast.sh quick ;;
           esac
         timeout-minutes: 8
-      
-      # Frontend Tests  
+
+      # Frontend Tests
       - name: Install frontend dependencies
         if: matrix.component == 'frontend'
         run: |
           cd frontend
           bun install --frozen-lockfile
         timeout-minutes: 3
-      
+
       - name: Run frontend tests
         if: matrix.component == 'frontend'
         run: |
@@ -110,7 +110,7 @@ jobs:
             *) node scripts/test-fast.js quick ;;
           esac
         timeout-minutes: 6
-      
+
       # Upload test results
       - name: Upload test results
         if: always()
@@ -127,7 +127,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.inputs.test_mode == 'full' || github.ref == 'refs/heads/main'
     timeout-minutes: 15
-    
+
     services:
       postgres:
         image: postgres:15-alpine
@@ -142,7 +142,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7-alpine
         options: >-
@@ -152,25 +152,25 @@ jobs:
           --health-retries 5
         ports:
           - 6379:6379
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
           cache-dependency-path: backend/requirements.txt
-      
+
       - name: Install backend dependencies
         run: |
           cd backend
           pip install -r requirements.txt
           pip install -r requirements/dev.txt
         timeout-minutes: 3
-      
+
       - name: Run integration tests
         run: |
           cd backend
@@ -186,40 +186,40 @@ jobs:
     needs: [test-matrix, integration-tests]
     runs-on: ubuntu-latest
     if: always()
-    
+
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
-      
+
       - name: Generate test summary
         run: |
           echo "# Test Execution Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Results Overview" >> $GITHUB_STEP_SUMMARY
-          
+
           # Count passed/failed jobs
           BACKEND_STATUS="${{ needs.test-matrix.result }}"
           FRONTEND_STATUS="${{ needs.test-matrix.result }}"
           INTEGRATION_STATUS="${{ needs.integration-tests.result }}"
-          
+
           if [[ "$BACKEND_STATUS" == "success" ]]; then
             echo "✅ Backend tests: **PASSED**" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Backend tests: **FAILED**" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [[ "$FRONTEND_STATUS" == "success" ]]; then
             echo "✅ Frontend tests: **PASSED**" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Frontend tests: **FAILED**" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [[ "$INTEGRATION_STATUS" == "success" || "$INTEGRATION_STATUS" == "skipped" ]]; then
             echo "✅ Integration tests: **PASSED/SKIPPED**" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Integration tests: **FAILED**" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## Performance Metrics" >> $GITHUB_STEP_SUMMARY
           echo "- Total execution time: ${{ github.event.workflow_run.conclusion == 'success' && 'Under target' || 'Needs optimization' }}" >> $GITHUB_STEP_SUMMARY
@@ -230,15 +230,15 @@ jobs:
     needs: [test-matrix]
     runs-on: ubuntu-latest
     if: always() && needs.test-matrix.result == 'success'
-    
+
     steps:
       - name: Performance analysis
         run: |
           echo "Analyzing test execution performance..."
           # Add logic to check if tests completed within target time
           # This could integrate with monitoring tools or collect metrics
-          
+
           echo "## Performance Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Backend tests completed in <5 minutes" >> $GITHUB_STEP_SUMMARY  
+          echo "- ✅ Backend tests completed in <5 minutes" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Frontend tests completed in <3 minutes" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Total CI time under 10 minutes" >> $GITHUB_STEP_SUMMARY

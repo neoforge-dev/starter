@@ -1,6 +1,6 @@
 /**
  * Playground Application Integration UI Tests
- * 
+ *
  * TDD tests defining expected behavior for Application Integration tools
  * integrated into the playground interface. Tests the critical user journey
  * from component exploration → production app generation.
@@ -34,14 +34,14 @@ describe('Playground Application Integration UI', () => {
           </header>
           <div id="component-preview"></div>
         </main>
-        
+
         <!-- Application Integration Panel -->
         <section class="app-integration-panel" id="app-integration-panel" style="display: none;">
           <div class="panel-header">
             <h2>🚀 Build Production App</h2>
             <button class="close-panel-btn" id="close-app-panel">✕</button>
           </div>
-          
+
           <div class="workflow-container">
             <!-- Workflow Progress -->
             <div class="workflow-progress">
@@ -114,7 +114,7 @@ describe('Playground Application Integration UI', () => {
                     <input type="text" id="app-name" name="appName" placeholder="My Awesome App" required>
                     <div class="config-error" style="display: none;"></div>
                   </div>
-                  
+
                   <div class="form-group">
                     <label>Features</label>
                     <div class="checkbox-group">
@@ -133,7 +133,7 @@ describe('Playground Application Integration UI', () => {
                     </div>
                   </div>
                 </form>
-                
+
                 <div id="config-preview" class="config-preview">
                   <h4>Configuration Preview</h4>
                   <pre id="config-preview-content">{}</pre>
@@ -143,7 +143,7 @@ describe('Playground Application Integration UI', () => {
               <!-- Step 4: Generation & Deployment -->
               <div class="workflow-step-content" data-step="4">
                 <h3>Generate & Deploy Your App</h3>
-                
+
                 <div class="generation-section">
                   <button id="generate-app-button" class="btn btn-primary" disabled>
                     Generate Application
@@ -223,10 +223,10 @@ describe('Playground Application Integration UI', () => {
     // Import and initialize playground
     const { PlaygroundApp } = await import('../../playground/advanced-playground.js');
     playground = new PlaygroundApp();
-    
+
     // Set global reference for tests that expect it
     window.playgroundApp = playground;
-    
+
     // Wait for initialization to complete
     await new Promise(resolve => setTimeout(resolve, 100));
   });
@@ -240,7 +240,7 @@ describe('Playground Application Integration UI', () => {
   describe('Application Integration Panel Access', () => {
     it('should have Build App button in toolbar', () => {
       const buildButton = document.querySelector('#build-app-button');
-      
+
       expect(buildButton).toBeDefined();
       expect(buildButton.textContent).toContain('Build App');
       expect(buildButton.title).toContain('Generate production application');
@@ -248,7 +248,7 @@ describe('Playground Application Integration UI', () => {
 
     it('should open Application Integration panel when Build App clicked', async () => {
       const buildButton = document.querySelector('#build-app-button');
-      
+
       // Directly call the method to test functionality
       playground.openAppIntegrationPanel();
 
@@ -257,7 +257,7 @@ describe('Playground Application Integration UI', () => {
 
       const integrationPanel = document.querySelector('#app-integration-panel');
       expect(integrationPanel).toBeDefined();
-      
+
       // Check if panel is visible (the key indicator)
       expect(integrationPanel.style.display).toBe('block');
       expect(integrationPanel.classList.contains('panel-open')).toBe(true);
@@ -283,7 +283,7 @@ describe('Playground Application Integration UI', () => {
     it('should allow selecting components for app generation', async () => {
       // Open app integration panel directly
       playground.openAppIntegrationPanel();
-      
+
       // Wait for initialization to complete
       await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -320,7 +320,7 @@ describe('Playground Application Integration UI', () => {
       if (checkboxes.length >= 2) {
         checkboxes[0].checked = true;
         checkboxes[1].checked = true;
-        
+
         // Trigger validation
         const validateButton = document.querySelector('#validate-selection');
         if (validateButton) {
@@ -430,7 +430,7 @@ describe('Playground Application Integration UI', () => {
       playground.appBuilderState.selectedComponents = ['neo-button', 'neo-card'];
       playground.appBuilderState.selectedTemplate = 'minimal-app';
       playground.appBuilderState.appConfiguration.appName = 'Test Generated App';
-      
+
       // Update the navigation to reflect the state
       playground.updateWorkflowNavigation();
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -448,7 +448,7 @@ describe('Playground Application Integration UI', () => {
       // Complete minimal config
       const appNameInput = document.querySelector('#app-name');
       const templateOption = document.querySelector('[data-template="minimal-app"]');
-      
+
       if (appNameInput && templateOption) {
         appNameInput.value = 'Progress Test App';
         templateOption.click();
@@ -485,7 +485,7 @@ describe('Playground Application Integration UI', () => {
       // Should instantiate AppTemplateGenerator
       const playground = window.playgroundApp;
       expect(playground.appTemplateGenerator).toBeDefined();
-      
+
       const templates = playground.appTemplateGenerator.getAvailableTemplates();
       expect(templates.length).toBeGreaterThanOrEqual(4);
     });
@@ -522,7 +522,7 @@ describe('Playground Application Integration UI', () => {
     it('should guide user through complete workflow', async () => {
       // Step 1: Open app builder
       document.querySelector('#build-app-button').click();
-      
+
       let currentStep = document.querySelector('.workflow-step.active');
       expect(currentStep.textContent).toContain('Select Components');
 

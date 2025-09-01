@@ -1,4 +1,5 @@
 import { authService } from "./services/auth.ts";
+import { tenantService } from "./services/tenant.js";
 import { lazyLoad } from "./utils/lazy-load.js";
 
 // Route definitions with metadata
@@ -112,16 +113,38 @@ const routes = [
       }),
     public: false,
   },
-  {
-    path: "/settings",
-    component: "settings-page",
-    import: () =>
-      lazyLoad("./pages/settings-page.js", "settings-page", {
-        fallback: () =>
-          '<div class="loading-fallback">Loading settings...</div>',
-      }),
-    public: false,
-  },
+   {
+     path: "/settings",
+     component: "settings-page",
+     import: () =>
+       lazyLoad("./pages/settings-page.js", "settings-page", {
+         fallback: () =>
+           '<div class="loading-fallback">Loading settings...</div>',
+       }),
+     public: false,
+   },
+   {
+     path: "/tenant",
+     component: "tenant-management",
+     import: () =>
+       lazyLoad("./components/tenant/tenant-management.js", "tenant-management", {
+         fallback: () =>
+           '<div class="loading-fallback">Loading tenant management...</div>',
+       }),
+     public: false,
+     tenantAware: true,
+   },
+   {
+     path: "/tenant/settings",
+     component: "tenant-management",
+     import: () =>
+       lazyLoad("./components/tenant/tenant-management.js", "tenant-management", {
+         fallback: () =>
+           '<div class="loading-fallback">Loading tenant settings...</div>',
+       }),
+     public: false,
+     tenantAware: true,
+   },
 ];
 
 class Router {
@@ -167,6 +190,12 @@ class Router {
       return;
     }
 
+    // Tenant-specific routing checks
+    if (this._shouldApplyTenantRouting(route)) {
+      await this._handleTenantRouting(route, path);
+      return;
+    }
+
     try {
       // Clear existing content
       this._mainContent.innerHTML = "";
@@ -177,13 +206,21 @@ class Router {
 
       // Create and mount new component inside error boundary
       const element = document.createElement(route.component);
+
+      // Apply tenant context to component if available
+      const currentTenant = tenantService.getTenant();
+      if (currentTenant && currentTenant.id !== 'default') {
+        element.setAttribute('data-tenant', currentTenant.slug);
+        element.setAttribute('data-tenant-id', currentTenant.id);
+      }
+
       errorBoundary.appendChild(element);
 
       // Load component
       await route.import();
 
       // Update title and meta
-      document.title = `${this._getTitle(path)} - NeoForge`;
+      document.title = `${this._getTitle(path)} - ${this._getTenantTitleSuffix()}`;
       this._updateMeta(route);
 
       // Scroll to top
@@ -195,6 +232,79 @@ class Router {
       console.error("Error loading page:", error);
       // Error will be handled by error boundary
     }
+  }
+
+  _shouldApplyTenantRouting(route) {
+    // Apply tenant routing for tenant-specific pages
+    return route.tenantAware || route.path?.includes('/tenant');
+  }
+
+  async _handleTenantRouting(route, path) {
+    const currentTenant = tenantService.getTenant();
+
+    // Redirect to tenant-specific dashboard if on default tenant
+    if (currentTenant.id === 'default' && route.path === '/dashboard') {
+      // Could redirect to tenant selection or default tenant dashboard
+      return;
+    }
+
+    // Handle tenant-specific routes
+    if (route.tenantRoute) {
+      const tenantPath = route.tenantRoute(currentTenant);
+      if (tenantPath !== path) {
+        this.navigate(tenantPath);
+        return;
+      }
+    }
+
+    // Continue with normal routing
+    await this._loadRoute(route, path);
+  }
+
+  async _loadRoute(route, path) {
+    try {
+      // Clear existing content
+      this._mainContent.innerHTML = "";
+
+      // Create error boundary
+      const errorBoundary = document.createElement("error-boundary");
+      this._mainContent.appendChild(errorBoundary);
+
+      // Create and mount new component inside error boundary
+      const element = document.createElement(route.component);
+
+      // Apply tenant context
+      const currentTenant = tenantService.getTenant();
+      if (currentTenant && currentTenant.id !== 'default') {
+        element.setAttribute('data-tenant', currentTenant.slug);
+        element.setAttribute('data-tenant-id', currentTenant.id);
+      }
+
+      errorBoundary.appendChild(element);
+
+      // Load component
+      await route.import();
+
+      // Update title and meta
+      document.title = `${this._getTitle(path)} - ${this._getTenantTitleSuffix()}`;
+      this._updateMeta(route);
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+
+      // Analytics
+      this._trackPageView(path);
+    } catch (error) {
+      console.error("Error loading route:", error);
+    }
+  }
+
+  _getTenantTitleSuffix() {
+    const tenant = tenantService.getTenant();
+    if (tenant && tenant.id !== 'default') {
+      return `${tenant.name} - NeoForge`;
+    }
+    return 'NeoForge';
   }
 
   navigate(path) {

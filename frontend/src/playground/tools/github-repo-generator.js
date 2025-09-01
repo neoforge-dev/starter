@@ -1,6 +1,6 @@
 /**
  * GitHub Repository Generator
- * 
+ *
  * Automates GitHub repository creation with initial commit and CI/CD workflows.
  * Provides the missing link between playground → deployed application.
  */
@@ -16,20 +16,20 @@ export class GitHubRepoGenerator {
    */
   async createRepository(repoConfig) {
     this.validateRepoConfig(repoConfig);
-    
+
     try {
       // Step 1: Create repository
       const repo = await this.createGitHubRepo(repoConfig);
-      
+
       // Step 2: Initialize with files
       const initialCommit = await this.createInitialCommit(repo, repoConfig);
-      
+
       // Step 3: Setup workflows
       const workflows = await this.setupWorkflows(repo, repoConfig);
-      
+
       // Step 4: Configure repository settings
       const settings = await this.configureRepoSettings(repo, repoConfig);
-      
+
       return {
         success: true,
         repository: {
@@ -59,7 +59,7 @@ export class GitHubRepoGenerator {
   validateRepoConfig(config) {
     const required = ['name', 'description', 'isPrivate', 'accessToken', 'generatedApp'];
     const missing = required.filter(field => !config[field] && config[field] !== false);
-    
+
     if (missing.length > 0) {
       throw new Error(`Missing required fields: ${missing.join(', ')}`);
     }
@@ -113,19 +113,19 @@ export class GitHubRepoGenerator {
    */
   async createInitialCommit(repo, config) {
     const files = await this.prepareFilesForCommit(config.generatedApp, config);
-    
+
     // Create blobs for all files
     const blobs = await this.createBlobs(repo, config.accessToken, files);
-    
+
     // Create tree
     const tree = await this.createTree(repo, config.accessToken, blobs);
-    
+
     // Create commit
     const commit = await this.createCommit(repo, config.accessToken, tree, config);
-    
+
     // Update main branch reference
     await this.updateBranchRef(repo, config.accessToken, commit.sha);
-    
+
     return {
       sha: commit.sha,
       message: commit.message,
@@ -139,7 +139,7 @@ export class GitHubRepoGenerator {
    */
   async prepareFilesForCommit(generatedApp, config) {
     const files = [];
-    
+
     // Add generated application files
     generatedApp.files.forEach(file => {
       files.push({
@@ -148,42 +148,42 @@ export class GitHubRepoGenerator {
         type: file.type
       });
     });
-    
+
     // Add package.json
     files.push({
       path: 'package.json',
       content: this.generatePackageJson(generatedApp, config),
       type: 'config'
     });
-    
+
     // Add README.md
     files.push({
       path: 'README.md',
       content: this.generateReadme(generatedApp, config),
       type: 'documentation'
     });
-    
+
     // Add .gitignore
     files.push({
       path: '.gitignore',
       content: this.generateGitignore(),
       type: 'config'
     });
-    
+
     // Add Vite config
     files.push({
       path: 'vite.config.js',
       content: this.generateViteConfig(generatedApp),
       type: 'config'
     });
-    
+
     // Add environment files
     files.push({
       path: '.env.example',
       content: this.generateEnvExample(),
       type: 'config'
     });
-    
+
     return files;
   }
 
@@ -195,18 +195,18 @@ export class GitHubRepoGenerator {
       'lit': '^3.0.0',
       '@lit/context': '^1.0.0'
     };
-    
+
     const devDependencies = {
       'vite': '^5.0.0',
       '@vitejs/plugin-legacy': '^5.0.0',
       'terser': '^5.0.0'
     };
-    
+
     // Add specific dependencies based on features
     if (generatedApp.buildConfig.features.includes('auth')) {
       dependencies['@auth0/auth0-spa-js'] = '^2.0.0';
     }
-    
+
     if (generatedApp.buildConfig.features.includes('routing')) {
       dependencies['@vaadin/router'] = '^1.7.0';
     }
@@ -238,13 +238,13 @@ export class GitHubRepoGenerator {
   generateReadme(generatedApp, config) {
     const setupTime = this.estimateSetupTime(generatedApp);
     const deploymentPlatforms = ['Vercel', 'Netlify', 'GitHub Pages'];
-    
+
     return `# ${config.name}
 
 ${config.description}
 
-**Generated from [NeoForge Playground](https://neoforge.dev/playground)**  
-**Template:** ${generatedApp.template}  
+**Generated from [NeoForge Playground](https://neoforge.dev/playground)**
+**Template:** ${generatedApp.template}
 **Setup Time:** ~${setupTime} minutes
 
 ## 🚀 Quick Start
@@ -271,8 +271,8 @@ ${generatedApp.buildConfig.features.includes('auth') ? '- **Authentication:** Re
 
 ## 🧩 Components Used
 
-${generatedApp.files.filter(f => f.type === 'components')[0] ? 
-  config.components?.map(comp => `- \`${comp}\``).join('\n') || '- See src/components/index.js for full list' 
+${generatedApp.files.filter(f => f.type === 'components')[0] ?
+  config.components?.map(comp => `- \`${comp}\``).join('\n') || '- See src/components/index.js for full list'
   : '- Components imported from NeoForge library'
 }
 
@@ -344,7 +344,7 @@ MIT License - see LICENSE file for details
 
 ---
 
-**Built with ❤️ using [NeoForge](https://neoforge.dev)**  
+**Built with ❤️ using [NeoForge](https://neoforge.dev)**
 *From playground to production in minutes, not hours.*
 `;
   }
@@ -410,7 +410,7 @@ coverage/
   generateViteConfig(generatedApp) {
     const features = generatedApp.buildConfig.features || [];
     const hasLegacySupport = features.includes('responsive');
-    
+
     return `import { defineConfig } from 'vite';
 ${hasLegacySupport ? "import legacy from '@vitejs/plugin-legacy';" : ''}
 
@@ -472,7 +472,7 @@ VITE_DEBUG=false
    */
   async setupWorkflows(repo, config) {
     const workflows = [];
-    
+
     // Create .github/workflows directory
     const workflowFiles = [
       {
@@ -484,12 +484,12 @@ VITE_DEBUG=false
         content: this.generateCIWorkflow()
       }
     ];
-    
+
     for (const workflow of workflowFiles) {
       const result = await this.createWorkflowFile(repo, config.accessToken, workflow);
       workflows.push(result);
     }
-    
+
     return workflows;
   }
 
@@ -601,7 +601,7 @@ jobs:
    */
   async createBlobs(repo, accessToken, files) {
     const blobs = [];
-    
+
     for (const file of files) {
       const response = await fetch(`${this.githubApiBase}/repos/${repo.full_name}/git/blobs`, {
         method: 'POST',
@@ -615,11 +615,11 @@ jobs:
           encoding: 'base64'
         })
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to create blob for ${file.path}`);
       }
-      
+
       const blob = await response.json();
       blobs.push({
         path: file.path,
@@ -628,7 +628,7 @@ jobs:
         type: 'blob'
       });
     }
-    
+
     return blobs;
   }
 
@@ -644,11 +644,11 @@ jobs:
         tree: blobs
       })
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to create tree');
     }
-    
+
     return await response.json();
   }
 
@@ -670,11 +670,11 @@ jobs:
         }
       })
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to create commit');
     }
-    
+
     return await response.json();
   }
 
@@ -691,11 +691,11 @@ jobs:
         sha: commitSha
       })
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to update main branch reference');
     }
-    
+
     return await response.json();
   }
 
@@ -712,11 +712,11 @@ jobs:
         content: btoa(unescape(encodeURIComponent(workflow.content)))
       })
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to create workflow: ${workflow.path}`);
     }
-    
+
     return {
       path: workflow.path,
       created: true
@@ -731,7 +731,7 @@ jobs:
     if (config.enablePages) {
       await this.enableGitHubPages(repo, config.accessToken);
     }
-    
+
     // Add topics/tags
     await this.addRepositoryTopics(repo, config.accessToken, [
       'neoforge',
@@ -740,7 +740,7 @@ jobs:
       config.template,
       'playground-generated'
     ]);
-    
+
     return {
       pagesEnabled: config.enablePages,
       topicsAdded: true
@@ -762,7 +762,7 @@ jobs:
         }
       })
     });
-    
+
     return response.ok;
   }
 
@@ -778,7 +778,7 @@ jobs:
         names: topics
       })
     });
-    
+
     return response.ok;
   }
 
@@ -842,13 +842,13 @@ jobs:
     };
 
     const errorMessage = error.message || error.toString();
-    
+
     for (const [key, steps] of Object.entries(troubleshooting)) {
       if (errorMessage.includes(key)) {
         return steps;
       }
     }
-    
+
     return troubleshooting.default;
   }
 
@@ -857,19 +857,19 @@ jobs:
    */
   estimateSetupTime(generatedApp) {
     let baseTime = 5; // Base 5 minutes
-    
+
     const features = generatedApp.buildConfig.features || [];
     const fileCount = generatedApp.files.length;
-    
+
     // Add time based on features
     if (features.includes('routing')) baseTime += 2;
     if (features.includes('auth')) baseTime += 5;
     if (features.includes('responsive')) baseTime += 1;
-    
+
     // Add time based on file complexity
     if (fileCount > 10) baseTime += 2;
     if (fileCount > 20) baseTime += 3;
-    
+
     return Math.min(baseTime, 15); // Cap at 15 minutes
   }
 

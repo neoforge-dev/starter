@@ -21,7 +21,7 @@ graph TB
             DB[(PostgreSQL)]
             CACHE[(Redis Cache)]
         end
-        
+
         subgraph "Monitoring"
             PROM[Prometheus]
             NODE[Node Exporter]
@@ -34,7 +34,7 @@ graph TB
     NGINX --> API
     API --> DB
     API --> CACHE
-    
+
     PROM --> NODE
     NODE --> FE
     NODE --> API
@@ -183,4 +183,4 @@ graph TB
     FW --> AUTH
     AUTH --> CORS
     CORS --> CSP
-``` 
+```

@@ -34,7 +34,7 @@ class AbTestingService {
     this.userId = null;
     this.conversionCallbacks = new Map(); // Test-specific conversion callbacks
     this.observers = new Set(); // Event observers
-    
+
     // Performance monitoring
     this.performanceMetrics = {
       assignmentResponseTimes: [],
@@ -43,7 +43,7 @@ class AbTestingService {
       totalAssignments: 0,
       cacheHits: 0
     };
-    
+
     this._initializeEventTracking();
   }
 
@@ -52,14 +52,14 @@ class AbTestingService {
    */
   async initialize(userId = null) {
     this.userId = userId;
-    
+
     try {
       // Fetch active tests and user assignments
       await Promise.all([
         this._loadActiveTests(),
         this._loadUserAssignments()
       ]);
-      
+
       this._notifyObservers('initialized', { userId, sessionId: this.sessionId });
       return true;
     } catch (error) {
@@ -74,7 +74,7 @@ class AbTestingService {
    */
   async getTestAssignment(testKey) {
     const startTime = performance.now();
-    
+
     try {
       // Check cache first
       const cached = this.assignments.get(testKey);
@@ -94,23 +94,23 @@ class AbTestingService {
       };
 
       const assignment = await apiService.post('/ab-tests/assign', assignmentRequest);
-      
+
       if (assignment) {
         // Cache the assignment
         this.assignments.set(testKey, assignment);
         this.performanceMetrics.totalAssignments++;
         this._updateCacheHitRate();
-        
+
         // Track assignment event
         this._trackAssignmentEvent(assignment);
-        
+
         // Notify observers
         this._notifyObservers('assignment', { testKey, assignment });
       }
-      
+
       this._trackPerformance('assignment', performance.now() - startTime);
       return assignment;
-      
+
     } catch (error) {
       console.error(`Failed to get assignment for test ${testKey}:`, error);
       this._notifyObservers('error', { type: 'assignment', testKey, error });
@@ -144,7 +144,7 @@ class AbTestingService {
    */
   async trackConversion(testKey, metricName, value = null, properties = {}) {
     const startTime = performance.now();
-    
+
     try {
       const conversionRequest = {
         test_key: testKey,
@@ -156,7 +156,7 @@ class AbTestingService {
       };
 
       await apiService.post('/ab-tests/convert', conversionRequest);
-      
+
       // Track conversion in analytics
       analytics.trackUserInteraction({
         type: 'ab_test_conversion',
@@ -166,7 +166,7 @@ class AbTestingService {
         properties,
         timestamp: Date.now()
       });
-      
+
       // Execute conversion callbacks
       const callbacks = this.conversionCallbacks.get(testKey);
       if (callbacks) {
@@ -178,12 +178,12 @@ class AbTestingService {
           }
         });
       }
-      
+
       this._trackPerformance('conversion', performance.now() - startTime);
       this._notifyObservers('conversion', { testKey, metricName, value, properties });
-      
+
       return true;
-      
+
     } catch (error) {
       console.error(`Failed to track conversion for test ${testKey}:`, error);
       this._notifyObservers('error', { type: 'conversion', testKey, metricName, error });
@@ -200,7 +200,7 @@ class AbTestingService {
       this.conversionCallbacks.set(testKey, new Set());
     }
     this.conversionCallbacks.get(testKey).add(callback);
-    
+
     // Return unsubscribe function
     return () => {
       const callbacks = this.conversionCallbacks.get(testKey);
@@ -225,9 +225,9 @@ class AbTestingService {
       if (this.sessionId) {
         params.append('session_id', this.sessionId);
       }
-      
+
       const userTests = await apiService.get(`/ab-tests/user-tests?${params}`);
-      
+
       // Cache assignments
       userTests.forEach(test => {
         this.assignments.set(test.test_key, {
@@ -239,9 +239,9 @@ class AbTestingService {
           is_control: test.is_control
         });
       });
-      
+
       return userTests;
-      
+
     } catch (error) {
       console.error('Failed to get user tests:', error);
       this._notifyObservers('error', { type: 'user_tests', error });
@@ -257,10 +257,10 @@ class AbTestingService {
       const params = new URLSearchParams();
       if (startDate) params.append('start_date', startDate.toISOString());
       if (endDate) params.append('end_date', endDate.toISOString());
-      
+
       const analytics = await apiService.get(`/ab-tests/${testId}/analytics?${params}`);
       return analytics;
-      
+
     } catch (error) {
       console.error(`Failed to get analytics for test ${testId}:`, error);
       this._notifyObservers('error', { type: 'analytics', testId, error });
@@ -275,7 +275,7 @@ class AbTestingService {
     const avgAssignmentTime = this.performanceMetrics.assignmentResponseTimes.length > 0
       ? this.performanceMetrics.assignmentResponseTimes.reduce((a, b) => a + b, 0) / this.performanceMetrics.assignmentResponseTimes.length
       : 0;
-      
+
     const avgConversionTime = this.performanceMetrics.conversionTrackingTimes.length > 0
       ? this.performanceMetrics.conversionTrackingTimes.reduce((a, b) => a + b, 0) / this.performanceMetrics.conversionTrackingTimes.length
       : 0;
@@ -416,7 +416,7 @@ class AbTestingService {
 
   async _loadUserAssignments() {
     if (!this.userId && !this.sessionId) return;
-    
+
     try {
       const userTests = await this.getUserTests();
       // Assignments are cached in getUserTests method

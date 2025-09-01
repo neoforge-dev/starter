@@ -1,6 +1,6 @@
 /**
  * Mock Backend Server for Integration Testing
- * 
+ *
  * This module provides realistic backend responses that match the actual FastAPI backend
  * authentication endpoints. It simulates real HTTP communication patterns including:
  * - JWT token structure and validation
@@ -15,12 +15,12 @@ const createMockJWT = (payload, expiresIn = 3600) => {
   const header = { alg: "HS256", typ: "JWT" };
   const exp = Math.floor(Date.now() / 1000) + expiresIn;
   const tokenPayload = { ...payload, exp, iat: Math.floor(Date.now() / 1000) };
-  
+
   // Simple base64 encoding for mock token (not secure, just for testing)
   const headerB64 = btoa(JSON.stringify(header));
   const payloadB64 = btoa(JSON.stringify(tokenPayload));
   const signature = "mock_signature_" + Math.random().toString(36).substr(2, 9);
-  
+
   return `${headerB64}.${payloadB64}.${signature}`;
 };
 
@@ -75,11 +75,11 @@ export class MockBackendServer {
   /**
    * Configure mock server behavior for testing different scenarios
    */
-  configure({ 
-    networkDelay = 100, 
-    shouldFailNetwork = false, 
-    rateLimitEnabled = true, 
-    rateLimitThreshold = 5 
+  configure({
+    networkDelay = 100,
+    shouldFailNetwork = false,
+    rateLimitEnabled = true,
+    rateLimitThreshold = 5
   }) {
     this.networkDelay = networkDelay;
     this.shouldFailNetwork = shouldFailNetwork;
@@ -106,27 +106,27 @@ export class MockBackendServer {
     const key = `${endpoint}:${identifier}`;
     const now = Date.now();
     const minute = Math.floor(now / 60000);
-    
+
     if (!rateLimitTracking.has(key)) {
       rateLimitTracking.set(key, new Map());
     }
-    
+
     const endpointLimits = rateLimitTracking.get(key);
     const currentMinuteRequests = endpointLimits.get(minute) || 0;
-    
+
     if (currentMinuteRequests >= this.rateLimitThreshold) {
       return true; // Rate limited
     }
-    
+
     endpointLimits.set(minute, currentMinuteRequests + 1);
-    
+
     // Clean up old entries
     for (const [min] of endpointLimits.entries()) {
       if (min < minute - 1) {
         endpointLimits.delete(min);
       }
     }
-    
+
     return false;
   }
 
@@ -141,7 +141,7 @@ export class MockBackendServer {
       return {
         ok: false,
         status: 429,
-        json: async () => ({ 
+        json: async () => ({
           message: "Too many login attempts. Please try again later.",
           detail: "Too many login attempts. Please try again later.",
           retry_after: 60
@@ -151,7 +151,7 @@ export class MockBackendServer {
     }
 
     const user = mockUsers.get(email);
-    
+
     if (!user) {
       return {
         ok: false,
@@ -266,7 +266,7 @@ export class MockBackendServer {
       }
 
       const payload = JSON.parse(atob(parts[1]));
-      
+
       // Check expiration
       if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
         return {
@@ -277,7 +277,7 @@ export class MockBackendServer {
       }
 
       const user = Array.from(mockUsers.values()).find(u => u.id === payload.sub);
-      
+
       if (!user) {
         return {
           ok: false,
@@ -308,7 +308,7 @@ export class MockBackendServer {
       return {
         ok: false,
         status: 429,
-        json: async () => ({ 
+        json: async () => ({
           message: "Too many password reset requests. Please try again later.",
           detail: "Too many password reset requests. Please try again later.",
           retry_after: 300
@@ -319,10 +319,10 @@ export class MockBackendServer {
 
     // Always return success to prevent email enumeration (matches backend behavior)
     // Use a predictable token for testing, but random for non-test scenarios
-    const resetToken = email === 'test@example.com' ? 'mock_reset_token_12345' : 
-                      (Math.random().toString(36).substring(2, 15) + 
+    const resetToken = email === 'test@example.com' ? 'mock_reset_token_12345' :
+                      (Math.random().toString(36).substring(2, 15) +
                        Math.random().toString(36).substring(2, 15));
-    
+
     // Store reset token if user exists
     const user = mockUsers.get(email);
     if (user) {
@@ -346,7 +346,7 @@ export class MockBackendServer {
     await this._delay();
 
     const resetData = mockResetTokens.get(token);
-    
+
     if (!resetData) {
       return {
         ok: false,
@@ -392,7 +392,7 @@ export class MockBackendServer {
       }
 
       const payload = JSON.parse(atob(parts[1]));
-      
+
       // Check expiration
       if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
         return {
@@ -403,7 +403,7 @@ export class MockBackendServer {
       }
 
       const user = Array.from(mockUsers.values()).find(u => u.id === payload.sub);
-      
+
       if (!user) {
         return {
           ok: false,
@@ -447,7 +447,7 @@ export class MockBackendServer {
       return {
         ok: false,
         status: 429,
-        json: async () => ({ 
+        json: async () => ({
           message: "Too many verification requests. Please try again later.",
           detail: "Too many verification requests. Please try again later.",
           retry_after: 300
@@ -474,7 +474,7 @@ export class MockBackendServer {
     return {
       ok: false,
       status: 500,
-      json: async () => ({ 
+      json: async () => ({
         detail: "Internal server error",
         endpoint: endpoint
       })

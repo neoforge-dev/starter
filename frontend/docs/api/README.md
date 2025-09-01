@@ -34,4 +34,4 @@
 - [Component Architecture](./standards/component-architecture.md)
 - [Testing Standards](./standards/testing-standards.md)
 - [Performance Guidelines](./standards/performance-guidelines.md)
-- [Accessibility Guidelines](./standards/accessibility-guidelines.md) 
+- [Accessibility Guidelines](./standards/accessibility-guidelines.md)

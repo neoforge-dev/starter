@@ -8,9 +8,9 @@ Create Date: 2025-02-16 15:38:14.130381
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 import sqlmodel
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
@@ -99,7 +99,10 @@ def upgrade() -> None:
         sa.Column("created_at", postgresql.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("updated_at", postgresql.TIMESTAMP(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
-            ["owner_id"], ["users.id"], name="fk_items_owner_id_users", ondelete="CASCADE"
+            ["owner_id"],
+            ["users.id"],
+            name="fk_items_owner_id_users",
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name="pk_items"),
     )
@@ -134,14 +137,20 @@ def upgrade() -> None:
         sa.Column("clicked_at", postgresql.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("failed_at", postgresql.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("error_message", sa.VARCHAR(), nullable=True),
-        sa.Column("tracking_metadata", postgresql.JSON(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "tracking_metadata", postgresql.JSON(astext_type=sa.Text()), nullable=True
+        ),
         sa.Column("created_at", postgresql.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("updated_at", postgresql.TIMESTAMP(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id", name="pk_email_tracking"),
     )
-    op.create_index("ix_email_tracking_recipient", "email_tracking", ["recipient"], unique=False)
+    op.create_index(
+        "ix_email_tracking_recipient", "email_tracking", ["recipient"], unique=False
+    )
     op.create_index("ix_email_tracking_id", "email_tracking", ["id"], unique=False)
-    op.create_index("ix_email_tracking_email_id", "email_tracking", ["email_id"], unique=True)
+    op.create_index(
+        "ix_email_tracking_email_id", "email_tracking", ["email_id"], unique=True
+    )
 
     op.create_table(
         "email_events",
@@ -166,7 +175,9 @@ def upgrade() -> None:
         sa.Column("user_agent", sa.VARCHAR(), nullable=True),
         sa.Column("ip_address", sa.VARCHAR(), nullable=True),
         sa.Column("location", sa.VARCHAR(), nullable=True),
-        sa.Column("event_metadata", postgresql.JSON(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "event_metadata", postgresql.JSON(astext_type=sa.Text()), nullable=True
+        ),
         sa.Column("created_at", postgresql.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("updated_at", postgresql.TIMESTAMP(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(

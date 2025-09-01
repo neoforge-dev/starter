@@ -30,9 +30,9 @@ const columns = [
   { field: 'name', header: 'Name', width: '150px' },
   { field: 'email', header: 'Email', width: '200px' },
   { field: 'role', header: 'Role', width: '100px' },
-  { 
-    field: 'status', 
-    header: 'Status', 
+  {
+    field: 'status',
+    header: 'Status',
     width: '100px',
     render: (value) => {
       const color = value === 'Active' ? '#10b981' : '#ef4444';
@@ -213,20 +213,20 @@ export const InteractiveExample = {
   },
   play: async ({ canvasElement }) => {
     const table = canvasElement.querySelector('neo-table');
-    
+
     // Add event listeners to demonstrate functionality
     table.addEventListener('sort-change', (e) => {
       console.log('Sort changed:', e.detail);
     });
-    
+
     table.addEventListener('filter-change', (e) => {
       console.log('Filter changed:', e.detail);
     });
-    
+
     table.addEventListener('selection-change', (e) => {
       console.log('Selection changed:', e.detail);
     });
-    
+
     table.addEventListener('export-complete', (e) => {
       console.log('Export completed:', e.detail);
     });

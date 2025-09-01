@@ -1,5 +1,5 @@
 // Import from lit directly for test environment
-import { 
+import {
   html,
   css,
  } from 'lit';

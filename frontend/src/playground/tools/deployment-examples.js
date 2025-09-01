@@ -1,6 +1,6 @@
 /**
  * Deployment Examples
- * 
+ *
  * Provides production deployment configurations and guides.
  * Critical for the playground → production journey.
  */
@@ -30,7 +30,7 @@ export class DeploymentExamples {
       },
       {
         platform: 'netlify',
-        type: 'static', 
+        type: 'static',
         description: 'Deploy to Netlify with drag-and-drop or Git',
         difficulty: 'easy',
         configFiles: this.getNetlifyConfig(),
@@ -48,7 +48,7 @@ export class DeploymentExamples {
         difficulty: 'medium',
         configFiles: this.getGitHubPagesConfig(),
         buildCommands: {
-          install: 'npm ci', 
+          install: 'npm ci',
           build: 'npm run build',
           output: 'dist'
         },
@@ -192,23 +192,23 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
-        
+
     - name: Install dependencies
       run: npm ci
-      
+
     - name: Build
       run: npm run build
-      
+
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       if: github.ref == 'refs/heads/main'
@@ -294,21 +294,21 @@ CMD ["nginx", "-g", "daemon off;"]`,
 http {
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
-    
+
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
-    
+
     server {
         listen 80;
         server_name localhost;
         root /usr/share/nginx/html;
         index index.html;
-        
+
         # Handle client-side routing
         location / {
             try_files $uri $uri/ /index.html;
         }
-        
+
         # Cache static assets
         location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
             expires 1y;

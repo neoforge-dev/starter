@@ -352,7 +352,7 @@ export class SignupForm extends LitElement {
         input {
           border-width: 2px;
         }
-        
+
         button {
           border: 2px solid transparent;
         }
@@ -397,22 +397,22 @@ export class SignupForm extends LitElement {
     if (password.length < 8) {
       return { isValid: false, error: "Password must be at least 8 characters" };
     }
-    
+
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
+
     const strength = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar]
       .filter(Boolean).length;
-    
+
     if (strength < 2) {
-      return { 
-        isValid: false, 
-        error: "Password must include uppercase, lowercase, numbers, and special characters" 
+      return {
+        isValid: false,
+        error: "Password must include uppercase, lowercase, numbers, and special characters"
       };
     }
-    
+
     return { isValid: true };
   }
 
@@ -428,16 +428,16 @@ export class SignupForm extends LitElement {
 
   private _calculatePasswordStrength(password: string): 'weak' | 'medium' | 'strong' | '' {
     if (!password) return '';
-    
+
     const hasMinLength = password.length >= 8;
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
+
     const criteriaCount = [hasMinLength, hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar]
       .filter(Boolean).length;
-    
+
     if (criteriaCount >= 4) return 'strong';
     if (criteriaCount >= 2) return 'medium';
     return 'weak';
@@ -462,15 +462,15 @@ export class SignupForm extends LitElement {
     this.password = target.value;
     this._passwordStrength = this._calculatePasswordStrength(this.password);
     this._validation.password = this._validatePassword(this.password);
-    
+
     // Re-validate confirm password if it has been entered
     if (this.confirmPassword) {
       this._validation.confirmPassword = this._validateConfirmPassword(
-        this.password, 
+        this.password,
         this.confirmPassword
       );
     }
-    
+
     this.requestUpdate();
   }
 
@@ -478,7 +478,7 @@ export class SignupForm extends LitElement {
     const target = e.target as HTMLInputElement;
     this.confirmPassword = target.value;
     this._validation.confirmPassword = this._validateConfirmPassword(
-      this.password, 
+      this.password,
       this.confirmPassword
     );
     this.requestUpdate();
@@ -522,7 +522,7 @@ export class SignupForm extends LitElement {
 
     try {
       this._isLoading = true;
-      
+
       const response: ApiResponse = await authService.signup(this.email, this.password, {
         name: this.name
       });
@@ -531,9 +531,9 @@ export class SignupForm extends LitElement {
 
       this.dispatchEvent(
         new CustomEvent("signup-success", {
-          detail: { 
-            email: this.email, 
-            message: response.message 
+          detail: {
+            email: this.email,
+            message: response.message
           },
           bubbles: true,
           composed: true,
@@ -543,7 +543,7 @@ export class SignupForm extends LitElement {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Signup failed";
       this._error = message;
-      
+
       this.dispatchEvent(
         new CustomEvent("signup-error", {
           detail: { message },
@@ -568,14 +568,14 @@ export class SignupForm extends LitElement {
           <span class="icon" aria-hidden="true">📧</span>
           <h2 class="title">Check Your Email</h2>
           <div class="message">
-            We've sent a verification link to 
+            We've sent a verification link to
             <span class="email-highlight">${this.email}</span>.<br>
             Please check your inbox and click the link to complete your registration.
           </div>
           <div class="message">
             Didn't receive the email? You can request a new verification link on the verification page.
           </div>
-          <button 
+          <button
             type="button"
             class="verification-button"
             @click=${this._navigateToVerification}
@@ -598,7 +598,7 @@ export class SignupForm extends LitElement {
             @input=${this._handleNameInput}
             placeholder="Enter your full name"
             ?disabled=${this._isLoading}
-            class=${!this._validation.name.isValid && this.name ? 'invalid' : 
+            class=${!this._validation.name.isValid && this.name ? 'invalid' :
                    this._validation.name.isValid && this.name ? 'valid' : ''}
             required
             autocomplete="name"
@@ -622,7 +622,7 @@ export class SignupForm extends LitElement {
             @input=${this._handleEmailInput}
             placeholder="Enter your email"
             ?disabled=${this._isLoading}
-            class=${!this._validation.email.isValid && this.email ? 'invalid' : 
+            class=${!this._validation.email.isValid && this.email ? 'invalid' :
                    this._validation.email.isValid && this.email ? 'valid' : ''}
             required
             autocomplete="email"
@@ -647,7 +647,7 @@ export class SignupForm extends LitElement {
               @input=${this._handlePasswordInput}
               placeholder="Create a password"
               ?disabled=${this._isLoading}
-              class="password-input ${!this._validation.password.isValid && this.password ? 'invalid' : 
+              class="password-input ${!this._validation.password.isValid && this.password ? 'invalid' :
                      this._validation.password.isValid && this.password ? 'valid' : ''}"
               required
               minlength="8"
@@ -694,7 +694,7 @@ export class SignupForm extends LitElement {
               @input=${this._handleConfirmPasswordInput}
               placeholder="Confirm your password"
               ?disabled=${this._isLoading}
-              class="password-input ${!this._validation.confirmPassword.isValid && this.confirmPassword ? 'invalid' : 
+              class="password-input ${!this._validation.confirmPassword.isValid && this.confirmPassword ? 'invalid' :
                      this._validation.confirmPassword.isValid && this.confirmPassword ? 'valid' : ''}"
               required
               autocomplete="new-password"
@@ -717,12 +717,12 @@ export class SignupForm extends LitElement {
             : ''}
         </div>
 
-        ${this._error 
+        ${this._error
           ? html`<div class="error-message" data-testid="error" role="alert">${this._error}</div>`
           : ''}
 
         <button type="submit" data-testid="register-button" ?disabled=${this._isLoading}>
-          ${this._isLoading 
+          ${this._isLoading
             ? html`<span class="loading-spinner" aria-hidden="true"></span>Creating Account...`
             : 'Create Account'}
         </button>

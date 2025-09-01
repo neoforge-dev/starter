@@ -104,7 +104,7 @@ class DynamicConfigService {
       }
 
       const config = await response.json();
-      
+
       // Validate required fields
       if (!config.environment || !config.api_base_url) {
         throw new Error('Invalid configuration response: missing required fields');
@@ -130,11 +130,11 @@ class DynamicConfigService {
       if (this.retryCount < this.maxRetries) {
         this.retryCount++;
         console.log(`Retrying configuration fetch (${this.retryCount}/${this.maxRetries})...`);
-        
+
         // Exponential backoff
         const delay = Math.pow(2, this.retryCount) * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
-        
+
         return this.fetchConfig();
       }
 

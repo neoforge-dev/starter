@@ -186,12 +186,12 @@ def calculate_subscription_price(
 ) -> float:
     """
     Calculate subscription price with discounts.
-    
+
     Args:
         base_price: Monthly base price
         user_tier: User's subscription tier
         months: Number of months
-    
+
     Returns:
         Final price after discounts
     """
@@ -260,7 +260,7 @@ def standard_response(
 @customElement('user-card')
 export class UserCard extends LitElement {
     @property({ type: Object }) user!: User;
-    
+
     // Encapsulated styles
     static styles = css`
         :host {
@@ -268,7 +268,7 @@ export class UserCard extends LitElement {
             padding: 1rem;
         }
     `;
-    
+
     // Clean render method
     render() {
         return html`
@@ -307,10 +307,10 @@ export const userStore = createStore({
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(index=True, unique=True)
-    
+
     # Relationships
     orders: List["Order"] = Relationship(back_populates="user")
-    
+
     # Audit fields
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default=None)
@@ -324,7 +324,7 @@ async def get_user_summary(user_id: int):
     query = select(User).options(
         selectinload(User.orders)
     ).where(User.id == user_id)
-    
+
     return await db.execute(query)
 ```
 
@@ -343,7 +343,7 @@ async def test_user_creation_with_valid_data_succeeds():
 class TestUserAuthentication:
     async def test_login_with_valid_credentials(self):
         pass
-    
+
     async def test_login_with_invalid_password(self):
         pass
 ```
@@ -355,7 +355,7 @@ class TestUserAuthentication:
 class UserFactory(SQLModelFactory):
     class Meta:
         model = User
-    
+
     email = Faker('email')
     name = Faker('name')
 ```
@@ -387,7 +387,7 @@ async def get_current_user(
 class UserCreate(SQLModel):
     email: EmailStr
     password: str = Field(min_length=8)
-    
+
     @validator('password')
     def validate_password(cls, v):
         if not any(c.isupper() for c in v):
@@ -424,7 +424,7 @@ class User(SQLModel, table=True):
     __table_args__ = (
         Index('idx_user_email_status', 'email', 'status'),
     )
-    
+
     email: str
     status: str
 ```

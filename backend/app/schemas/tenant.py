@@ -1,18 +1,18 @@
 """Pydantic schemas for tenant and organization models."""
 from datetime import datetime
-from typing import Optional, List, Dict, Any
-from uuid import UUID
 from enum import Enum
+from typing import Any, Dict, List, Optional
+from uuid import UUID
 
+from app.models.tenant import MembershipStatus, OrganizationType, TenantStatus
 from pydantic import BaseModel, EmailStr, Field, field_validator
-
-from app.models.tenant import TenantStatus, OrganizationType, MembershipStatus
-
 
 # Tenant Schemas
 
+
 class TenantBase(BaseModel):
     """Base tenant schema."""
+
     name: str = Field(..., min_length=1, max_length=200)
     slug: str = Field(..., min_length=1, max_length=100, pattern="^[a-z0-9-]+$")
     domain: Optional[str] = Field(None, max_length=255)
@@ -24,21 +24,23 @@ class TenantBase(BaseModel):
 
 class TenantCreate(TenantBase):
     """Schema for creating tenant."""
+
     settings: Optional[Dict[str, Any]] = None
     limits: Optional[Dict[str, Any]] = None
-    
-    @field_validator('slug')
+
+    @field_validator("slug")
     def validate_slug(cls, v):
         """Validate tenant slug format."""
         if not v or len(v) < 3:
-            raise ValueError('Slug must be at least 3 characters long')
-        if v.startswith('-') or v.endswith('-'):
-            raise ValueError('Slug cannot start or end with hyphen')
+            raise ValueError("Slug must be at least 3 characters long")
+        if v.startswith("-") or v.endswith("-"):
+            raise ValueError("Slug cannot start or end with hyphen")
         return v.lower()
 
 
 class TenantUpdate(BaseModel):
     """Schema for updating tenant."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     domain: Optional[str] = Field(None, max_length=255)
     subscription_tier: Optional[str] = Field(None, max_length=50)
@@ -52,6 +54,7 @@ class TenantUpdate(BaseModel):
 
 class TenantResponse(TenantBase):
     """Schema for tenant response."""
+
     id: int
     uuid: UUID
     status: TenantStatus
@@ -65,15 +68,17 @@ class TenantResponse(TenantBase):
     allowed_ip_ranges: Optional[List[str]] = None
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
 
 # Organization Schemas
 
+
 class OrganizationBase(BaseModel):
     """Base organization schema."""
+
     slug: str = Field(..., min_length=1, max_length=100, pattern="^[a-z0-9-]+$")
     name: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=1000)
@@ -85,21 +90,25 @@ class OrganizationBase(BaseModel):
 
 class OrganizationCreate(OrganizationBase):
     """Schema for creating organization."""
+
     settings: Optional[Dict[str, Any]] = None
-    
-    @field_validator('slug')
+
+    @field_validator("slug")
     def validate_slug(cls, v):
         """Validate organization slug format."""
         if not v or len(v) < 2:
-            raise ValueError('Slug must be at least 2 characters long')
-        if v.startswith('-') or v.endswith('-'):
-            raise ValueError('Slug cannot start or end with hyphen')
+            raise ValueError("Slug must be at least 2 characters long")
+        if v.startswith("-") or v.endswith("-"):
+            raise ValueError("Slug cannot start or end with hyphen")
         return v.lower()
 
 
 class OrganizationUpdate(BaseModel):
     """Schema for updating organization."""
-    slug: Optional[str] = Field(None, min_length=1, max_length=100, pattern="^[a-z0-9-]+$")
+
+    slug: Optional[str] = Field(
+        None, min_length=1, max_length=100, pattern="^[a-z0-9-]+$"
+    )
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=1000)
     type: Optional[OrganizationType] = None
@@ -108,21 +117,22 @@ class OrganizationUpdate(BaseModel):
     is_active: Optional[bool] = None
     visibility: Optional[str] = Field(None, pattern="^(private|internal|public)$")
     requires_approval: Optional[bool] = None
-    
-    @field_validator('slug')
+
+    @field_validator("slug")
     def validate_slug(cls, v):
         """Validate organization slug format."""
         if v is not None:
             if len(v) < 2:
-                raise ValueError('Slug must be at least 2 characters long')
-            if v.startswith('-') or v.endswith('-'):
-                raise ValueError('Slug cannot start or end with hyphen')
+                raise ValueError("Slug must be at least 2 characters long")
+            if v.startswith("-") or v.endswith("-"):
+                raise ValueError("Slug cannot start or end with hyphen")
             return v.lower()
         return v
 
 
 class OrganizationResponse(OrganizationBase):
     """Schema for organization response."""
+
     id: int
     uuid: UUID
     tenant_id: int
@@ -130,18 +140,19 @@ class OrganizationResponse(OrganizationBase):
     is_active: bool
     created_at: datetime
     updated_at: datetime
-    
+
     # Optional nested data
-    parent: Optional['OrganizationResponse'] = None
-    children: Optional[List['OrganizationResponse']] = None
+    parent: Optional["OrganizationResponse"] = None
+    children: Optional[List["OrganizationResponse"]] = None
     member_count: Optional[int] = None
-    
+
     class Config:
         from_attributes = True
 
 
 class OrganizationHierarchyResponse(BaseModel):
     """Schema for organization hierarchy response."""
+
     organization: OrganizationResponse
     ancestors: List[OrganizationResponse]
     descendants: List[OrganizationResponse]
@@ -150,14 +161,17 @@ class OrganizationHierarchyResponse(BaseModel):
 
 # Organization Membership Schemas
 
+
 class OrganizationMembershipBase(BaseModel):
     """Base organization membership schema."""
+
     status: MembershipStatus = MembershipStatus.PENDING
     notes: Optional[str] = Field(None, max_length=1000)
 
 
 class OrganizationMembershipCreate(OrganizationMembershipBase):
     """Schema for creating organization membership."""
+
     user_id: int
     role_id: Optional[int] = None
     permissions_override: Optional[Dict[str, Any]] = None
@@ -165,6 +179,7 @@ class OrganizationMembershipCreate(OrganizationMembershipBase):
 
 class OrganizationMembershipUpdate(BaseModel):
     """Schema for updating organization membership."""
+
     status: Optional[MembershipStatus] = None
     role_id: Optional[int] = None
     permissions_override: Optional[Dict[str, Any]] = None
@@ -173,6 +188,7 @@ class OrganizationMembershipUpdate(BaseModel):
 
 class OrganizationMembershipResponse(OrganizationMembershipBase):
     """Schema for organization membership response."""
+
     id: int
     user_id: int
     organization_id: int
@@ -184,19 +200,20 @@ class OrganizationMembershipResponse(OrganizationMembershipBase):
     permissions_override: Optional[Dict[str, Any]] = None
     created_at: datetime
     updated_at: datetime
-    
+
     # Optional nested data
-    user: Optional['UserResponse'] = None
+    user: Optional["UserResponse"] = None
     organization: Optional[OrganizationResponse] = None
-    role: Optional['RoleResponse'] = None
-    invited_by: Optional['UserResponse'] = None
-    
+    role: Optional["RoleResponse"] = None
+    invited_by: Optional["UserResponse"] = None
+
     class Config:
         from_attributes = True
 
 
 class OrganizationInviteCreate(BaseModel):
     """Schema for inviting user to organization."""
+
     email: EmailStr
     role: Optional[str] = "member"
     auto_approve: bool = False
@@ -206,6 +223,7 @@ class OrganizationInviteCreate(BaseModel):
 
 class OrganizationInviteResponse(BaseModel):
     """Schema for organization invite response."""
+
     id: int
     email: str
     organization_id: int
@@ -220,8 +238,10 @@ class OrganizationInviteResponse(BaseModel):
 
 # RBAC Schemas
 
+
 class PermissionBase(BaseModel):
     """Base permission schema."""
+
     name: str = Field(..., min_length=1, max_length=100)
     display_name: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=1000)
@@ -232,6 +252,7 @@ class PermissionBase(BaseModel):
 
 class PermissionCreate(PermissionBase):
     """Schema for creating permission."""
+
     requires_permissions: Optional[List[str]] = None
     conflicts_with: Optional[List[str]] = None
     conditions: Optional[Dict[str, Any]] = None
@@ -239,6 +260,7 @@ class PermissionCreate(PermissionBase):
 
 class PermissionUpdate(BaseModel):
     """Schema for updating permission."""
+
     display_name: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=1000)
     is_active: Optional[bool] = None
@@ -249,6 +271,7 @@ class PermissionUpdate(BaseModel):
 
 class PermissionResponse(PermissionBase):
     """Schema for permission response."""
+
     id: int
     is_system: bool
     is_active: bool
@@ -257,13 +280,14 @@ class PermissionResponse(PermissionBase):
     conditions: Optional[Dict[str, Any]] = None
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 
 
 class RoleBase(BaseModel):
     """Base role schema."""
+
     name: str = Field(..., min_length=1, max_length=100)
     display_name: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=1000)
@@ -273,6 +297,7 @@ class RoleBase(BaseModel):
 
 class RoleCreate(RoleBase):
     """Schema for creating role."""
+
     tenant_id: Optional[int] = None
     organization_id: Optional[int] = None
     parent_role_id: Optional[int] = None
@@ -282,6 +307,7 @@ class RoleCreate(RoleBase):
 
 class RoleUpdate(BaseModel):
     """Schema for updating role."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     display_name: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=1000)
@@ -294,6 +320,7 @@ class RoleUpdate(BaseModel):
 
 class RoleResponse(RoleBase):
     """Schema for role response."""
+
     id: int
     tenant_id: Optional[int] = None
     organization_id: Optional[int] = None
@@ -303,18 +330,19 @@ class RoleResponse(RoleBase):
     settings: Optional[Dict[str, Any]] = None
     created_at: datetime
     updated_at: datetime
-    
+
     # Optional nested data
     permissions: Optional[List[PermissionResponse]] = None
-    parent_role: Optional['RoleResponse'] = None
-    child_roles: Optional[List['RoleResponse']] = None
-    
+    parent_role: Optional["RoleResponse"] = None
+    child_roles: Optional[List["RoleResponse"]] = None
+
     class Config:
         from_attributes = True
 
 
 class RoleAssignmentCreate(BaseModel):
     """Schema for creating role assignment."""
+
     user_id: int
     role_id: int
     tenant_id: Optional[int] = None
@@ -323,24 +351,26 @@ class RoleAssignmentCreate(BaseModel):
 
 class RoleAssignmentResponse(BaseModel):
     """Schema for role assignment response."""
+
     user_id: int
     role_id: int
     tenant_id: Optional[int] = None
     organization_id: Optional[int] = None
     assigned_at: datetime
     assigned_by_id: Optional[int] = None
-    
+
     # Optional nested data
-    user: Optional['UserResponse'] = None
+    user: Optional["UserResponse"] = None
     role: Optional[RoleResponse] = None
-    assigned_by: Optional['UserResponse'] = None
-    
+    assigned_by: Optional["UserResponse"] = None
+
     class Config:
         from_attributes = True
 
 
 class ResourcePermissionCreate(BaseModel):
     """Schema for creating resource permission."""
+
     user_id: int
     permission_name: str
     resource_type: str
@@ -353,6 +383,7 @@ class ResourcePermissionCreate(BaseModel):
 
 class ResourcePermissionResponse(BaseModel):
     """Schema for resource permission response."""
+
     id: int
     user_id: int
     permission_id: int
@@ -366,20 +397,22 @@ class ResourcePermissionResponse(BaseModel):
     notes: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-    
+
     # Optional nested data
-    user: Optional['UserResponse'] = None
+    user: Optional["UserResponse"] = None
     permission: Optional[PermissionResponse] = None
-    granted_by: Optional['UserResponse'] = None
-    
+    granted_by: Optional["UserResponse"] = None
+
     class Config:
         from_attributes = True
 
 
 # Audit Schemas
 
+
 class TenantAuditLogResponse(BaseModel):
     """Schema for tenant audit log response."""
+
     id: int
     tenant_id: int
     actor_id: Optional[int] = None
@@ -390,10 +423,10 @@ class TenantAuditLogResponse(BaseModel):
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
     created_at: datetime
-    
+
     # Optional nested data
-    actor: Optional['UserResponse'] = None
-    
+    actor: Optional["UserResponse"] = None
+
     class Config:
         from_attributes = True
 
@@ -401,12 +434,13 @@ class TenantAuditLogResponse(BaseModel):
 # User Schema (minimal definition, would be in user schemas)
 class UserResponse(BaseModel):
     """Minimal user response schema."""
+
     id: int
     email: str
     full_name: str
     is_active: bool
     is_verified: bool
-    
+
     class Config:
         from_attributes = True
 

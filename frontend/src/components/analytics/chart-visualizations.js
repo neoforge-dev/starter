@@ -112,7 +112,7 @@ export class ChartVisualizations extends LitElement {
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js';
       script.crossOrigin = 'anonymous';
-      
+
       await new Promise((resolve, reject) => {
         script.onload = () => {
           this.chartLibraryLoaded = true;
@@ -127,7 +127,7 @@ export class ChartVisualizations extends LitElement {
         };
         document.head.appendChild(script);
       });
-      
+
       this.requestUpdate();
     } catch (error) {
       console.error('Error loading Chart.js:', error);
@@ -210,7 +210,7 @@ export class ChartVisualizations extends LitElement {
       case 'bar':
         return {
           x: commonScaleConfig,
-          y: { 
+          y: {
             ...commonScaleConfig,
             beginAtZero: true
           }
@@ -228,7 +228,7 @@ export class ChartVisualizations extends LitElement {
       default:
         return {
           x: commonScaleConfig,
-          y: { 
+          y: {
             ...commonScaleConfig,
             beginAtZero: true
           }
@@ -296,7 +296,7 @@ export class ChartVisualizations extends LitElement {
  * Chart Data Builder - Utility functions for creating Chart.js compatible data
  */
 export class ChartDataBuilder {
-  
+
   /**
    * Build component usage chart data
    */
@@ -346,7 +346,7 @@ export class ChartDataBuilder {
    */
   static buildPerformanceTimelineChart(performanceMetrics) {
     const { componentSwitching, searchResponse } = performanceMetrics;
-    
+
     const switchingData = componentSwitching.map(metric => ({
       x: new Date(metric.timestamp),
       y: metric.duration
@@ -384,7 +384,7 @@ export class ChartDataBuilder {
    */
   static buildSearchPatternsChart(searchMetrics) {
     const queryFrequency = new Map();
-    
+
     searchMetrics.forEach(search => {
       const count = queryFrequency.get(search.query) || 0;
       queryFrequency.set(search.query, count + 1);
@@ -464,15 +464,15 @@ export class ChartDataBuilder {
    */
   static buildSessionActivityChart(playgroundData) {
     const { componentUsage, searchMetrics } = playgroundData;
-    
+
     // Create time buckets (hourly)
     const now = Date.now();
     const hoursAgo24 = now - (24 * 60 * 60 * 1000);
     const buckets = [];
-    
+
     for (let i = 0; i < 24; i++) {
       const bucketStart = hoursAgo24 + (i * 60 * 60 * 1000);
-      
+
       buckets.push({
         label: new Date(bucketStart).getHours() + ':00',
         componentUsage: 0,

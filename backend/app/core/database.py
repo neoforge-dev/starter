@@ -1,10 +1,12 @@
 """Database connection pool and query execution."""
+import hashlib
 import os
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Optional, Any
-from asyncpg import create_pool
+from typing import Any, AsyncGenerator, Optional
+
 from aiocache import Cache
-import hashlib
+from asyncpg import create_pool
+
 
 async def init_db():
     return await create_pool(
@@ -12,10 +14,12 @@ async def init_db():
         min_size=5,
         max_size=20,
         max_queries=50000,
-        max_inactive_connection_lifetime=300
+        max_inactive_connection_lifetime=300,
     )
 
+
 cache = Cache(Cache.REDIS, endpoint="redis://localhost")
+
 
 async def cached_query(pool, query: str, ttl: int = 300):
     key = hashlib.sha256(query.encode()).hexdigest()
@@ -23,4 +27,4 @@ async def cached_query(pool, query: str, ttl: int = 300):
     if not result:
         result = await pool.fetch(query)
         await cache.set(key, result, ttl=ttl)
-    return result 
+    return result

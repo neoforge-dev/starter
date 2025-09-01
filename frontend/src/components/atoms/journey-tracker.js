@@ -25,7 +25,7 @@ export class JourneyTracker extends LitElement {
       :host {
         display: none; /* Invisible component for tracking */
       }
-      
+
       .debug-indicator {
         position: fixed;
         top: 10px;
@@ -38,7 +38,7 @@ export class JourneyTracker extends LitElement {
         border: 1px solid rgba(0, 123, 255, 0.2);
         z-index: 10000;
       }
-      
+
       .debug-indicator.active {
         background: rgba(40, 167, 69, 0.1);
         color: #28a745;
@@ -56,7 +56,7 @@ export class JourneyTracker extends LitElement {
     this.isTracking = false;
     this.flushInterval = 5000; // 5 seconds
     this.debug = false;
-    
+
     // Journey tracking data
     this.currentPage = null;
     this.pageStartTime = null;
@@ -64,11 +64,11 @@ export class JourneyTracker extends LitElement {
     this.interactionCount = 0;
     this.scrollDepth = 0;
     this.maxScrollDepth = 0;
-    
+
     // Timing thresholds
     this.QUICK_EXIT_THRESHOLD = 3000; // 3 seconds
     this.BOUNCE_THRESHOLD = 10000; // 10 seconds
-    
+
     // Bound methods for event listeners
     this.handlePageVisibilityChange = this.handlePageVisibilityChange.bind(this);
     this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
@@ -94,12 +94,12 @@ export class JourneyTracker extends LitElement {
 
   startTracking() {
     if (this.isTracking) return;
-    
+
     this.isTracking = true;
     this.setupEventListeners();
     this.startFlushTimer();
     this.trackJourneyStart();
-    
+
     if (this.debug) {
       console.log(`[JourneyTracker] Started tracking with session: ${this.sessionId}`);
     }
@@ -107,7 +107,7 @@ export class JourneyTracker extends LitElement {
 
   stopTracking() {
     if (!this.isTracking) return;
-    
+
     this.isTracking = false;
     this.removeEventListeners();
     this.clearFlushTimer();
@@ -119,15 +119,15 @@ export class JourneyTracker extends LitElement {
     // Page visibility and unload
     document.addEventListener('visibilitychange', this.handlePageVisibilityChange);
     window.addEventListener('beforeunload', this.handleBeforeUnload);
-    
+
     // Scroll tracking
     window.addEventListener('scroll', this.handleScroll, { passive: true });
-    
+
     // Interaction tracking
     ['click', 'keydown', 'touchstart', 'mousemove'].forEach(eventType => {
       document.addEventListener(eventType, this.handleInteraction, { passive: true });
     });
-    
+
     // Route changes (for SPAs)
     window.addEventListener('popstate', () => {
       this.trackPageTransition(window.location.pathname);
@@ -138,7 +138,7 @@ export class JourneyTracker extends LitElement {
     document.removeEventListener('visibilitychange', this.handlePageVisibilityChange);
     window.removeEventListener('beforeunload', this.handleBeforeUnload);
     window.removeEventListener('scroll', this.handleScroll);
-    
+
     ['click', 'keydown', 'touchstart', 'mousemove'].forEach(eventType => {
       document.removeEventListener(eventType, this.handleInteraction);
     });
@@ -180,10 +180,10 @@ export class JourneyTracker extends LitElement {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
     const currentScrollDepth = documentHeight > 0 ? Math.round((scrollTop / documentHeight) * 100) : 0;
-    
+
     if (currentScrollDepth > this.maxScrollDepth) {
       this.maxScrollDepth = currentScrollDepth;
-      
+
       // Track milestone scroll depths
       if (currentScrollDepth >= 25 && this.scrollDepth < 25) {
         this.trackEvent('scroll_depth', { depth: 25 });
@@ -195,13 +195,13 @@ export class JourneyTracker extends LitElement {
         this.trackEvent('scroll_depth', { depth: 90 });
       }
     }
-    
+
     this.scrollDepth = currentScrollDepth;
   }
 
   handleInteraction(event) {
     this.interactionCount++;
-    
+
     // Track specific interaction types
     if (event.type === 'click') {
       const target = event.target;
@@ -212,7 +212,7 @@ export class JourneyTracker extends LitElement {
         text: target.textContent?.substring(0, 50),
         href: target.href,
       };
-      
+
       this.trackEvent('click_interaction', {
         element,
         timestamp: Date.now(),
@@ -233,7 +233,7 @@ export class JourneyTracker extends LitElement {
       referrer: document.referrer,
       startUrl: window.location.href,
     });
-    
+
     // Track initial page
     this.trackPageTransition(window.location.pathname);
   }
@@ -242,7 +242,7 @@ export class JourneyTracker extends LitElement {
     const journeyDuration = Date.now() - this.journeyStartTime;
     const isQuickExit = journeyDuration < this.QUICK_EXIT_THRESHOLD;
     const isBounce = journeyDuration < this.BOUNCE_THRESHOLD && this.interactionCount <= 1;
-    
+
     this.trackEvent('journey_end', {
       sessionId: this.sessionId,
       totalDuration: journeyDuration,
@@ -256,7 +256,7 @@ export class JourneyTracker extends LitElement {
 
   trackPageTransition(newPath) {
     const now = Date.now();
-    
+
     // Track exit from previous page
     if (this.currentPage && this.pageStartTime) {
       const timeOnPage = now - this.pageStartTime;
@@ -267,14 +267,14 @@ export class JourneyTracker extends LitElement {
         interactionCount: this.interactionCount,
       });
     }
-    
+
     // Track entry to new page
     this.currentPage = newPath;
     this.pageStartTime = now;
     this.interactionCount = 0;
     this.scrollDepth = 0;
     this.maxScrollDepth = 0;
-    
+
     this.trackEvent('page_enter', {
       page: newPath,
       timestamp: now,
@@ -299,20 +299,20 @@ export class JourneyTracker extends LitElement {
         journey_time: Date.now() - this.journeyStartTime,
       },
     };
-    
+
     this.eventQueue.push(event);
-    
+
     if (this.debug) {
       console.log(`[JourneyTracker] Event: ${eventType}`, event);
     }
-    
+
     // Dispatch custom event for real-time listening
     this.dispatchEvent(new CustomEvent('journey-event', {
       detail: event,
       bubbles: true,
       composed: true,
     }));
-    
+
     // Flush immediately for critical events
     if (['journey_start', 'journey_end', 'page_exit'].includes(eventType)) {
       this.flushEventQueue();
@@ -321,10 +321,10 @@ export class JourneyTracker extends LitElement {
 
   async flushEventQueue() {
     if (this.eventQueue.length === 0) return;
-    
+
     const eventsToFlush = [...this.eventQueue];
     this.eventQueue = [];
-    
+
     try {
       if (eventsToFlush.length === 1) {
         await api.post('/api/v1/events/track', eventsToFlush[0]);
@@ -333,7 +333,7 @@ export class JourneyTracker extends LitElement {
           events: eventsToFlush,
         });
       }
-      
+
       if (this.debug) {
         console.log(`[JourneyTracker] Flushed ${eventsToFlush.length} events`);
       }
@@ -388,7 +388,7 @@ export class JourneyTracker extends LitElement {
 
   render() {
     if (!this.debug) return html``;
-    
+
     return html`
       <div class="debug-indicator ${this.isTracking ? 'active' : ''}">
         Journey Tracker ${this.isTracking ? 'ON' : 'OFF'}<br>

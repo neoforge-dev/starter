@@ -129,8 +129,8 @@ mockButton._shadowRoot.querySelector = (selector) => {
   if (selector === '.button') {
     return createMockElement({
       tagName: 'button',
-      attributes: { 
-        'aria-disabled': mockButton._properties.disabled.toString() 
+      attributes: {
+        'aria-disabled': mockButton._properties.disabled.toString()
       },
       clickHandler: () => mockButton.handleClick()
     });
@@ -142,10 +142,10 @@ mockButton._shadowRoot.querySelector = (selector) => {
 test('button should dispatch click event when not disabled', () => {
   const clickHandler = vi.fn();
   mockButton.addEventListener('click', clickHandler);
-  
+
   const buttonElement = mockButton.shadowRoot.querySelector('.button');
   buttonElement.click();
-  
+
   expect(clickHandler).toHaveBeenCalled();
 });
 ```
@@ -168,7 +168,7 @@ test('button should dispatch click event when not disabled', () => {
 test('should update button variant', () => {
   const button = new MockButton();
   button.variant = 'secondary';
-  
+
   const buttonElement = button.shadowRoot.querySelector('.button');
   expect(buttonElement.classList.contains('secondary')).toBe(true);
 });
@@ -181,10 +181,10 @@ test('should dispatch click event', () => {
   const button = new MockButton();
   const clickHandler = vi.fn();
   button.addEventListener('click', clickHandler);
-  
+
   const buttonElement = button.shadowRoot.querySelector('.button');
   buttonElement.click();
-  
+
   expect(clickHandler).toHaveBeenCalled();
 });
 ```
@@ -195,7 +195,7 @@ test('should dispatch click event', () => {
 test('should show loading indicator when loading', () => {
   const button = new MockButton();
   button.loading = true;
-  
+
   const loadingIndicator = button.shadowRoot.querySelector('.loading-indicator');
   expect(loadingIndicator).toBeTruthy();
 });
@@ -207,4 +207,4 @@ Our mock component testing approach provides a reliable and efficient way to tes
 
 The approach has proven successful across all component types, from simple atoms to complex organisms and pages, resulting in 390 passing tests across 32 test files.
 
-For new components, we recommend using the mock component helper library to create consistent and maintainable tests. 
+For new components, we recommend using the mock component helper library to create consistent and maintainable tests.

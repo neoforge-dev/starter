@@ -39,23 +39,23 @@ await registerTestComponents(components);
 The `improved-setup.js` file provides an improved setup for testing web components:
 
 ```javascript
-import { 
-  setupTestEnvironment, 
+import {
+  setupTestEnvironment,
   cleanupTestEnvironment,
   TestUtils
 } from './improved-setup.js';
 
 describe('MyComponent', () => {
   let helpers;
-  
+
   beforeEach(async () => {
     helpers = await setupTestEnvironment();
   });
-  
+
   afterEach(() => {
     cleanupTestEnvironment();
   });
-  
+
   it('renders correctly', async () => {
     // Test code here
   });
@@ -115,15 +115,15 @@ Always set up and clean up your test environment properly:
 ```javascript
 describe('MyComponent', () => {
   let helpers;
-  
+
   beforeEach(async () => {
     helpers = await setupTestEnvironment();
   });
-  
+
   afterEach(() => {
     cleanupTestEnvironment();
   });
-  
+
   // Tests here
 });
 ```
@@ -139,9 +139,9 @@ it('renders correctly', async () => {
     prop1: 'value1',
     prop2: 'value2'
   });
-  
+
   // Test the component
-  
+
   // Clean up
   helpers.cleanupComponentFixture(component);
 });
@@ -154,12 +154,12 @@ Always wait for components to be ready before testing them:
 ```javascript
 it('renders correctly', async () => {
   const component = await helpers.createComponentFixture('my-component');
-  
+
   // Wait for the component to be ready
   await component.updateComplete;
-  
+
   // Test the component
-  
+
   helpers.cleanupComponentFixture(component);
 });
 ```
@@ -171,11 +171,11 @@ Use the `TestUtils` object to test shadow DOM elements:
 ```javascript
 it('renders correctly', async () => {
   const component = await helpers.createComponentFixture('my-component');
-  
+
   // Query a shadow DOM element
   const element = TestUtils.queryComponent(component, '.my-element');
   expect(element).toBeDefined();
-  
+
   helpers.cleanupComponentFixture(component);
 });
 ```
@@ -189,16 +189,16 @@ it('reflects attribute changes', async () => {
   const component = await helpers.createComponentFixture('my-component', {
     prop1: 'value1'
   });
-  
+
   // Change a property
   component.prop1 = 'value2';
-  
+
   // Wait for the component to update
   await component.updateComplete;
-  
+
   // Verify the property was updated
   expect(component.prop1).toBe('value2');
-  
+
   helpers.cleanupComponentFixture(component);
 });
 ```
@@ -209,61 +209,61 @@ Here's an example of a complete test for a button component:
 
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
-  setupTestEnvironment, 
+import {
+  setupTestEnvironment,
   cleanupTestEnvironment,
   TestUtils
 } from './improved-setup.js';
 
 describe('NeoButton', () => {
   let helpers;
-  
+
   beforeEach(async () => {
     helpers = await setupTestEnvironment();
   });
-  
+
   afterEach(() => {
     cleanupTestEnvironment();
   });
-  
+
   it('renders with default properties', async () => {
     // Create a button fixture
     const button = await helpers.createComponentFixture('neo-button', {
       label: 'Click me'
     });
-    
+
     // Verify the button properties
     expect(button.label).toBe('Click me');
     expect(button.variant).toBe('primary'); // Default variant
-    
+
     // Verify the button's shadow DOM
     const buttonElement = TestUtils.queryComponent(button, 'button');
     expect(buttonElement.textContent.trim()).toBe('Click me');
     expect(buttonElement.classList.contains('primary')).toBe(true);
-    
+
     // Clean up
     helpers.cleanupComponentFixture(button);
   });
-  
+
   it('handles click events', async () => {
     // Create a button fixture
     const button = await helpers.createComponentFixture('neo-button', {
       label: 'Click me'
     });
-    
+
     // Set up a click handler
     let clicked = false;
     button.addEventListener('click', () => {
       clicked = true;
     });
-    
+
     // Click the button
     const buttonElement = TestUtils.queryComponent(button, 'button');
     buttonElement.click();
-    
+
     // Verify the click handler was called
     expect(clicked).toBe(true);
-    
+
     // Clean up
     helpers.cleanupComponentFixture(button);
   });
@@ -277,8 +277,8 @@ To migrate an existing test to use the improved testing approach:
 1. Import the improved setup:
 
 ```javascript
-import { 
-  setupTestEnvironment, 
+import {
+  setupTestEnvironment,
   cleanupTestEnvironment,
   TestUtils
 } from './improved-setup.js';
@@ -289,15 +289,15 @@ import {
 ```javascript
 describe('MyComponent', () => {
   let helpers;
-  
+
   beforeEach(async () => {
     helpers = await setupTestEnvironment();
   });
-  
+
   afterEach(() => {
     cleanupTestEnvironment();
   });
-  
+
   // Tests here
 });
 ```
@@ -331,4 +331,4 @@ helpers.cleanupComponentFixture(element);
 
 ## Conclusion
 
-By following these best practices and using the improved testing utilities, you can write more reliable tests for web components. The utilities handle common issues with custom element registration, shadow DOM testing, and component lifecycle, making it easier to focus on testing the component's behavior. 
+By following these best practices and using the improved testing utilities, you can write more reliable tests for web components. The utilities handle common issues with custom element registration, shadow DOM testing, and component lifecycle, making it easier to focus on testing the component's behavior.

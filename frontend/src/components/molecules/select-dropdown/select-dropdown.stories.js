@@ -88,16 +88,16 @@ const Template = (args) => {
       }
     }
   });
-  
+
   // Add event listeners for demonstration
   select.addEventListener('neo-select-change', (e) => {
     console.log('Selection changed:', e.detail);
   });
-  
+
   select.addEventListener('neo-select-search', (e) => {
     console.log('Search term:', e.detail.searchTerm);
   });
-  
+
   return select;
 };
 
@@ -193,22 +193,22 @@ Loading.args = {
 export const AllSizes = () => {
   const container = document.createElement('div');
   container.style.cssText = 'display: flex; flex-direction: column; gap: 1.5rem; max-width: 400px;';
-  
+
   const sizes = ['sm', 'md', 'lg'];
   sizes.forEach(size => {
     const wrapper = document.createElement('div');
     wrapper.style.cssText = 'display: flex; flex-direction: column; gap: 0.5rem;';
-    
+
     const label = document.createElement('label');
     label.textContent = `${size.toUpperCase()} Size Select`;
     label.style.cssText = 'font-weight: 500; color: #374151;';
-    
+
     const select = document.createElement('neo-select-dropdown');
     select.options = basicOptions;
     select.size = size;
     select.placeholder = `${size.toUpperCase()} select...`;
     select.clearable = true;
-    
+
     wrapper.appendChild(label);
     wrapper.appendChild(select);
     container.appendChild(wrapper);

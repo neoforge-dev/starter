@@ -37,11 +37,11 @@ const CDN_TO_NPM_MAPPINGS = [
 // Function to recursively find all .js files
 function findJsFiles(dir, fileList = []) {
   const files = fs.readdirSync(dir);
-  
+
   files.forEach(file => {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
-    
+
     if (stat.isDirectory()) {
       // Skip node_modules, dist, coverage, and other build directories
       if (!['node_modules', 'dist', 'build', 'coverage', '.git'].includes(file)) {
@@ -51,7 +51,7 @@ function findJsFiles(dir, fileList = []) {
       fileList.push(filePath);
     }
   });
-  
+
   return fileList;
 }
 
@@ -61,7 +61,7 @@ function convertFile(filePath) {
     let content = fs.readFileSync(filePath, 'utf8');
     let modified = false;
     let conversions = [];
-    
+
     CDN_TO_NPM_MAPPINGS.forEach(mapping => {
       const matches = content.match(mapping.pattern);
       if (matches) {
@@ -75,7 +75,7 @@ function convertFile(filePath) {
         modified = true;
       }
     });
-    
+
     if (modified) {
       fs.writeFileSync(filePath, content);
       console.log(`✅ Converted ${filePath}`);
@@ -84,7 +84,7 @@ function convertFile(filePath) {
         console.log(`   → ${conv.to.trim()}`);
       });
     }
-    
+
     return modified;
   } catch (error) {
     console.error(`❌ Error processing ${filePath}:`, error.message);
@@ -96,23 +96,23 @@ function convertFile(filePath) {
 async function main() {
   const srcDir = path.join(__dirname, '..', 'src');
   const jsFiles = findJsFiles(srcDir);
-  
+
   console.log(`🔍 Found ${jsFiles.length} JavaScript files to check`);
-  
+
   let convertedCount = 0;
-  
+
   jsFiles.forEach(filePath => {
     const wasConverted = convertFile(filePath);
     if (wasConverted) {
       convertedCount++;
     }
   });
-  
+
   console.log(`\n📊 Conversion Summary:`);
   console.log(`   Total files checked: ${jsFiles.length}`);
   console.log(`   Files converted: ${convertedCount}`);
   console.log(`   Files unchanged: ${jsFiles.length - convertedCount}`);
-  
+
   if (convertedCount > 0) {
     console.log(`\n🎉 Successfully converted ${convertedCount} files from CDN to npm imports!`);
     console.log(`\n📝 Next steps:`);

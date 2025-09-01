@@ -136,4 +136,4 @@ This registry should be updated whenever:
 3. A component's API changes significantly
 4. Component organization guidelines change
 
-The registry is maintained by the frontend team and reviewed during code reviews. 
+The registry is maintained by the frontend team and reviewed during code reviews.

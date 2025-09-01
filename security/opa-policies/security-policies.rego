@@ -19,11 +19,11 @@ default allow_networkpolicy := false
 allow_pod if {
     input.request.kind.kind == "Pod"
     input.request.operation == "CREATE"
-    
+
     # All security checks must pass
     no_privileged_containers
     no_host_network
-    no_host_pid  
+    no_host_pid
     no_host_ipc
     required_security_context
     no_dangerous_capabilities
@@ -38,7 +38,7 @@ allow_pod if {
 no_privileged_containers if {
     containers := input.request.object.spec.containers
     not any_privileged_container(containers)
-    
+
     initContainers := object.get(input.request.object.spec, "initContainers", [])
     not any_privileged_container(initContainers)
 }
@@ -66,7 +66,7 @@ no_host_ipc if {
 # Pod must have security context defined
 required_security_context if {
     input.request.object.spec.securityContext
-    
+
     # Verify container security contexts
     containers := input.request.object.spec.containers
     every container in containers {
@@ -78,7 +78,7 @@ required_security_context if {
 no_dangerous_capabilities if {
     containers := input.request.object.spec.containers
     not any_dangerous_capability(containers)
-    
+
     initContainers := object.get(input.request.object.spec, "initContainers", [])
     not any_dangerous_capability(initContainers)
 }
@@ -86,7 +86,7 @@ no_dangerous_capabilities if {
 # Define dangerous capabilities that should not be allowed
 dangerous_caps := {
     "SYS_ADMIN",
-    "SYS_MODULE", 
+    "SYS_MODULE",
     "SYS_TIME",
     "NET_ADMIN",
     "SYS_BOOT",
@@ -112,7 +112,7 @@ allowed_volumes if {
 # Define allowed volume types
 allowed_volume_types := {
     "configMap",
-    "secret", 
+    "secret",
     "emptyDir",
     "persistentVolumeClaim",
     "projected",
@@ -130,7 +130,7 @@ resource_limits_defined if {
     every container in containers {
         container.resources.limits.memory
         container.resources.limits.cpu
-        container.resources.requests.memory  
+        container.resources.requests.memory
         container.resources.requests.cpu
     }
 }
@@ -138,7 +138,7 @@ resource_limits_defined if {
 # Pod must run as non-root user
 non_root_user if {
     input.request.object.spec.securityContext.runAsNonRoot == true
-    
+
     containers := input.request.object.spec.containers
     every container in containers {
         container.securityContext.runAsNonRoot == true
@@ -159,7 +159,7 @@ no_privilege_escalation if {
     every container in containers {
         container.securityContext.allowPrivilegeEscalation == false
     }
-    
+
     initContainers := object.get(input.request.object.spec, "initContainers", [])
     every container in initContainers {
         container.securityContext.allowPrivilegeEscalation == false
@@ -173,7 +173,7 @@ no_privilege_escalation if {
 allow_service if {
     input.request.kind.kind == "Service"
     input.request.operation in {"CREATE", "UPDATE"}
-    
+
     # Service security checks
     no_nodeport_services
     proper_service_annotations
@@ -187,22 +187,22 @@ no_nodeport_services if {
 # Service must have proper annotations
 proper_service_annotations if {
     annotations := object.get(input.request.object.metadata, "annotations", {})
-    
+
     # Must have owner annotation
     annotations["app.neoforge.io/owner"]
-    
+
     # Must have security classification
     annotations["security.neoforge.io/classification"] in {"public", "internal", "restricted"}
 }
 
 # ==============================================================================
-# INGRESS SECURITY POLICIES  
+# INGRESS SECURITY POLICIES
 # ==============================================================================
 
 allow_ingress if {
     input.request.kind.kind == "Ingress"
     input.request.operation in {"CREATE", "UPDATE"}
-    
+
     # Ingress security checks
     tls_required
     no_insecure_backends
@@ -241,7 +241,7 @@ rate_limiting_enabled if {
 allow_networkpolicy if {
     input.request.kind.kind == "NetworkPolicy"
     input.request.operation in {"CREATE", "UPDATE"}
-    
+
     # Network policy security checks
     default_deny_ingress
     explicit_egress_rules
@@ -251,7 +251,7 @@ allow_networkpolicy if {
 default_deny_ingress if {
     # If no ingress rules are specified, it defaults to deny all
     ingress := object.get(input.request.object.spec, "ingress", [])
-    
+
     # If ingress rules exist, they should be explicit
     count(ingress) == 0
 } else if {
@@ -266,7 +266,7 @@ default_deny_ingress if {
 explicit_egress_rules if {
     egress := object.get(input.request.object.spec, "egress", [])
     count(egress) > 0
-    
+
     every rule in egress {
         # Each egress rule should have explicit to selectors or ports
         any([rule.to, rule.ports])
@@ -285,7 +285,7 @@ secure_container_images if {
         not image_uses_latest_tag(container.image)
         image_from_allowed_registry(container.image)
     }
-    
+
     initContainers := object.get(input.request.object.spec, "initContainers", [])
     every container in initContainers {
         image_has_digest(container.image)
@@ -314,7 +314,7 @@ image_from_allowed_registry(image) if {
         "registry.k8s.io/",
         "quay.io/"
     }
-    
+
     some registry in allowed_registries
     startswith(image, registry)
 }
@@ -326,7 +326,7 @@ image_from_allowed_registry(image) if {
 # Validate RBAC permissions are not overly permissive
 rbac_not_overpermissive if {
     input.request.kind.kind in {"Role", "ClusterRole"}
-    
+
     rules := input.request.object.rules
     every rule in rules {
         not overpermissive_rule(rule)
@@ -370,7 +370,7 @@ violations := [violation |
     msg := "Pod does not meet security requirements"
 ] ++ [violation |
     violation := sprintf("Service security violation: %v", [msg])
-    not allow_service  
+    not allow_service
     msg := "Service does not meet security requirements"
 ] ++ [violation |
     violation := sprintf("Ingress security violation: %v", [msg])

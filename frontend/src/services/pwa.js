@@ -18,7 +18,7 @@ class PWAService {
   async initialize() {
     // Initialize offline storage
     await offlineStorage.initialize();
-    
+
     // Register service worker
     if ("serviceWorker" in navigator) {
       try {

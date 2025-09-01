@@ -1,6 +1,6 @@
 /**
  * Playground Configuration Template Generator
- * 
+ *
  * Generates playground configuration for component testing and documentation
  */
 
@@ -41,9 +41,9 @@ export function generatePlaygroundConfigTemplate(config) {
     }
   ];
 
-  const additionalExamples = category === 'atoms' 
+  const additionalExamples = category === 'atoms'
     ? generateAtomExamples(properties)
-    : category === 'molecules' 
+    : category === 'molecules'
     ? generateMoleculeExamples(properties)
     : generateOrganismExamples(properties);
 
@@ -62,9 +62,9 @@ export default {
       name: '${example.name}',
       description: '${example.description}',
       variants: [
-        ${example.variants.map(variant => `{ 
-          props: ${JSON.stringify(variant.props, null, 10)}, 
-          label: '${variant.label}' 
+        ${example.variants.map(variant => `{
+          props: ${JSON.stringify(variant.props, null, 10)},
+          label: '${variant.label}'
         }`).join(',\n        ')}
       ]
     }`).join(',\n    ')}
@@ -166,15 +166,15 @@ function generateOrganismExamples(properties) {
       name: 'Complex Example',
       description: 'Component with complex data',
       variants: [
-        { 
-          props: { 
+        {
+          props: {
             data: JSON.stringify([
               { id: 1, name: 'Item 1', value: 'Value 1' },
               { id: 2, name: 'Item 2', value: 'Value 2' },
               { id: 3, name: 'Item 3', value: 'Value 3' }
             ])
-          }, 
-          label: 'With Data' 
+          },
+          label: 'With Data'
         }
       ]
     }

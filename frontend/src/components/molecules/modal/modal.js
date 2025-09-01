@@ -1,4 +1,4 @@
-import { 
+import {
   LitElement,
   html,
   css,
@@ -269,7 +269,7 @@ export class NeoModal extends LitElement {
   _trapFocus() {
     // Store the currently focused element
     this._previousActiveElement = document.activeElement;
-    
+
     // Focus the first focusable element in the modal
     this.updateComplete.then(() => {
       const focusableElements = this._getFocusableElements();
@@ -334,7 +334,7 @@ export class NeoModal extends LitElement {
     if (!modalContent) return [];
 
     return Array.from(modalContent.querySelectorAll(selectors)).filter(el => {
-      return el.offsetParent !== null && 
+      return el.offsetParent !== null &&
              getComputedStyle(el).visibility !== 'hidden';
     });
   }

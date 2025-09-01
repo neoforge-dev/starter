@@ -1,6 +1,6 @@
 /**
  * Critical Components Working Test
- * 
+ *
  * Verify our critical components can actually load successfully
  */
 import { describe, it, expect } from 'vitest';

@@ -27,23 +27,23 @@ export function initBundleMonitoring() {
   const navigationStart = performance.timing.navigationStart;
   const loadEventEnd = performance.timing.loadEventEnd;
   const initialLoadTime = loadEventEnd - navigationStart;
-  
+
   performanceTracker.loadTimes.set('initial', initialLoadTime);
-  
+
   // Monitor dynamic imports
   const originalImport = window.import || eval('import');
   if (originalImport) {
     window.import = async function(...args) {
       const startTime = performance.now();
       const modulePath = args[0];
-      
+
       try {
         const result = await originalImport.apply(this, args);
         const loadTime = performance.now() - startTime;
-        
+
         performanceTracker.loadTimes.set(modulePath, loadTime);
         recordChunkLoad(modulePath, loadTime);
-        
+
         return result;
       } catch (error) {
         const loadTime = performance.now() - startTime;
@@ -56,7 +56,7 @@ export function initBundleMonitoring() {
       }
     };
   }
-  
+
   // Monitor navigation API if available
   if ('navigation' in window) {
     window.navigation.addEventListener('navigate', (event) => {
@@ -78,13 +78,13 @@ export function initBundleMonitoring() {
 function recordChunkLoad(modulePath, loadTime) {
   const chunkName = extractChunkName(modulePath);
   const existing = performanceTracker.chunkLoads.get(chunkName) || [];
-  
+
   existing.push({
     loadTime,
     timestamp: Date.now(),
     path: modulePath
   });
-  
+
   performanceTracker.chunkLoads.set(chunkName, existing);
 }
 
@@ -93,7 +93,7 @@ function recordChunkLoad(modulePath, loadTime) {
  */
 function extractChunkName(modulePath) {
   if (modulePath.includes('/atoms/')) return 'components-atoms';
-  if (modulePath.includes('/molecules/')) return 'components-molecules';  
+  if (modulePath.includes('/molecules/')) return 'components-molecules';
   if (modulePath.includes('/organisms/')) return 'components-organisms';
   if (modulePath.includes('/pages/')) return 'pages';
   if (modulePath.includes('/services/')) return 'services';
@@ -114,27 +114,27 @@ export function analyzeBundlePerformance() {
     score: 0,
     errors: performanceTracker.errors
   };
-  
+
   // Calculate performance score
   let score = 100;
-  
+
   // Penalize slow initial load
   const initialLoad = performanceTracker.loadTimes.get('initial') || 0;
   if (initialLoad > 3000) score -= 30;
   else if (initialLoad > 2000) score -= 20;
   else if (initialLoad > 1000) score -= 10;
-  
+
   // Penalize slow chunk loads
   for (const [chunk, loads] of performanceTracker.chunkLoads) {
     const avgLoadTime = loads.reduce((sum, load) => sum + load.loadTime, 0) / loads.length;
     if (avgLoadTime > 500) score -= 10;
     else if (avgLoadTime > 200) score -= 5;
   }
-  
+
   // Generate recommendations
   analysis.recommendations = generateOptimizationRecommendations(analysis);
   analysis.score = Math.max(0, score);
-  
+
   return analysis;
 }
 
@@ -143,7 +143,7 @@ export function analyzeBundlePerformance() {
  */
 function getChunkStatistics() {
   const stats = {};
-  
+
   for (const [chunkName, loads] of performanceTracker.chunkLoads) {
     const loadTimes = loads.map(load => load.loadTime);
     stats[chunkName] = {
@@ -154,7 +154,7 @@ function getChunkStatistics() {
       lastLoad: loads[loads.length - 1]?.timestamp || 0
     };
   }
-  
+
   return stats;
 }
 
@@ -163,7 +163,7 @@ function getChunkStatistics() {
  */
 function generateOptimizationRecommendations(analysis) {
   const recommendations = [];
-  
+
   // Initial load time recommendations
   const initialLoad = analysis.loadTimes.initial || 0;
   if (initialLoad > 2000) {
@@ -174,7 +174,7 @@ function generateOptimizationRecommendations(analysis) {
       action: 'Split large bundles and defer non-critical resources'
     });
   }
-  
+
   // Chunk-specific recommendations
   for (const [chunk, stats] of Object.entries(analysis.chunkStats)) {
     if (stats.averageLoadTime > 300) {
@@ -185,7 +185,7 @@ function generateOptimizationRecommendations(analysis) {
         action: 'Consider breaking down large chunks or preloading'
       });
     }
-    
+
     if (stats.totalLoads > 10) {
       recommendations.push({
         type: 'info',
@@ -195,7 +195,7 @@ function generateOptimizationRecommendations(analysis) {
       });
     }
   }
-  
+
   // Error-based recommendations
   if (analysis.errors.length > 0) {
     recommendations.push({
@@ -205,7 +205,7 @@ function generateOptimizationRecommendations(analysis) {
       action: 'Fix module resolution and dependency issues'
     });
   }
-  
+
   return recommendations;
 }
 
@@ -214,7 +214,7 @@ function generateOptimizationRecommendations(analysis) {
  */
 export function monitorResourceSizes() {
   if (!window.PerformanceObserver) return;
-  
+
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
       if (entry.initiatorType === 'script' || entry.initiatorType === 'css') {
@@ -226,7 +226,7 @@ export function monitorResourceSizes() {
           loadTime: entry.duration,
           timestamp: entry.startTime
         });
-        
+
         // Warn about large resources
         if (size > BUNDLE_THRESHOLDS.WARNING) {
           console.warn(`Large resource detected: ${entry.name} (${formatBytes(size)})`);
@@ -234,7 +234,7 @@ export function monitorResourceSizes() {
       }
     }
   });
-  
+
   observer.observe({ entryTypes: ['resource'] });
   return observer;
 }
@@ -244,13 +244,13 @@ export function monitorResourceSizes() {
  */
 function formatBytes(bytes, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  
+
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
@@ -265,30 +265,30 @@ export function getBundleSizeReport() {
     largestResources: [],
     compressionRatio: 0
   };
-  
+
   for (const [url, data] of performanceTracker.bundleSizes) {
     report.totalSize += data.uncompressed || data.size;
     report.compressedSize += data.compressed || data.size;
-    
+
     report.resources.push({
       url: url.split('/').pop(),
       size: formatBytes(data.size),
       compressed: formatBytes(data.compressed || data.size),
       loadTime: Math.round(data.loadTime),
-      compressionRatio: data.compressed ? 
+      compressionRatio: data.compressed ?
         ((1 - data.compressed / data.uncompressed) * 100).toFixed(1) + '%' : 'N/A'
     });
   }
-  
+
   // Sort by size and get largest resources
-  report.resources.sort((a, b) => 
+  report.resources.sort((a, b) =>
     (parseInt(a.size.split(' ')[0]) || 0) - (parseInt(b.size.split(' ')[0]) || 0)
   );
   report.largestResources = report.resources.slice(-5).reverse();
-  
-  report.compressionRatio = report.compressedSize > 0 ? 
+
+  report.compressionRatio = report.compressedSize > 0 ?
     ((1 - report.compressedSize / report.totalSize) * 100).toFixed(1) + '%' : 'N/A';
-    
+
   return report;
 }
 
@@ -323,7 +323,7 @@ export function resetPerformanceTracking() {
 if (import.meta.env.DEV) {
   initBundleMonitoring();
   monitorResourceSizes();
-  
+
   // Log performance report every 30 seconds in development
   setInterval(() => {
     const analysis = analyzeBundlePerformance();

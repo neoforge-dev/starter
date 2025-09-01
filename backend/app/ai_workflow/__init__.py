@@ -10,14 +10,14 @@ The system is designed to support:
 - Continuous quality validation and monitoring
 """
 
-from .messaging import AgentMessageBus
-from .state_manager import WorkflowStateManager  
 from .execution_engine import TaskExecutionEngine
+from .messaging import AgentMessageBus
 from .quality_gates import AutomatedQualityGates
+from .state_manager import WorkflowStateManager
 
 __all__ = [
     "AgentMessageBus",
-    "WorkflowStateManager", 
+    "WorkflowStateManager",
     "TaskExecutionEngine",
     "AutomatedQualityGates",
 ]

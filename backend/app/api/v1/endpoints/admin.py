@@ -1,19 +1,19 @@
 """Admin API endpoints."""
-from typing import Any, List
 import logging
+from datetime import datetime
+from typing import Any, List
 
+from app.crud.audit_log import audit_log as audit_crud
+from app.models.admin import Admin, AdminRole
+from app.schemas import admin as schemas
+from app.schemas.common import PaginatedResponse
+from app.schemas.user import UserCreate
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud
 from app.api import deps
 from app.core.auth import get_password_hash
-from app.models.admin import Admin, AdminRole
-from app.schemas import admin as schemas
-from app.schemas.common import PaginatedResponse
-from app.crud.audit_log import audit_log as audit_crud
-from datetime import datetime
-from app.schemas.user import UserCreate
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -28,8 +28,10 @@ def check_admin_permission(
     resource: str,
 ) -> None:
     """Check if admin has required permissions."""
-    logger.debug(f"Checking permissions for admin {current_admin.id}, role={current_admin.role}, required_role={required_role}")
-    
+    logger.debug(
+        f"Checking permissions for admin {current_admin.id}, role={current_admin.role}, required_role={required_role}"
+    )
+
     # Super admin can do anything
     if current_admin.role == AdminRole.SUPER_ADMIN:
         logger.debug("Admin is super admin, allowing action")
@@ -49,11 +51,13 @@ def check_admin_permission(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Admin role {current_admin.role} cannot perform {action} on {resource}",
         )
-    
+
     logger.debug(f"Permission granted: {current_admin.role} >= {required_role}")
 
 
-@router.post("/", response_model=schemas.AdminWithUser, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=schemas.AdminWithUser, status_code=status.HTTP_201_CREATED
+)
 async def create_admin(
     *,
     db: AsyncSession = Depends(deps.get_db),
@@ -61,8 +65,10 @@ async def create_admin(
     current_admin: Admin = Depends(deps.get_current_admin),
 ) -> Any:
     """Create new admin user."""
-    logger.debug(f"Creating admin user, current_admin={current_admin.id}, role={current_admin.role}")
-    
+    logger.debug(
+        f"Creating admin user, current_admin={current_admin.id}, role={current_admin.role}"
+    )
+
     # Check permissions
     check_admin_permission(
         current_admin=current_admin,
@@ -82,19 +88,15 @@ async def create_admin(
     # Create user first
     user_in = admin_in.to_user_create()
     user = await crud.user.create(db, obj_in=user_in)
-    
+
     # Create admin with user_id
     admin_data = schemas.AdminCreateWithoutUser(
-        role=admin_in.role,
-        is_active=admin_in.is_active
+        role=admin_in.role, is_active=admin_in.is_active
     )
     admin = await crud.admin.create(
-        db=db,
-        obj_in=admin_data,
-        actor_id=current_admin.id,
-        user_id=user.id
+        db=db, obj_in=admin_data, actor_id=current_admin.id, user_id=user.id
     )
-    
+
     # Create response using AdminWithUser schema
     response_data = schemas.AdminWithUser(
         id=admin.id,
@@ -105,9 +107,9 @@ async def create_admin(
         created_at=admin.created_at,
         updated_at=admin.updated_at,
         email=user.email,
-        full_name=user.full_name
+        full_name=user.full_name,
     )
-    
+
     return response_data
 
 
@@ -132,7 +134,7 @@ async def read_admin_me(
         created_at=current_admin.created_at,
         updated_at=current_admin.updated_at,
         email=user.email,
-        full_name=user.full_name
+        full_name=user.full_name,
     )
 
 
@@ -151,7 +153,7 @@ async def read_admin(
         action="read",
         resource="admin",
     )
-    
+
     # Get admin
     admin = await crud.admin.get(db, id=admin_id)
     if not admin:
@@ -159,7 +161,7 @@ async def read_admin(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Admin not found",
         )
-    
+
     # Get the associated user
     user = await crud.user.get(db, id=admin.user_id)
     if not user:
@@ -167,7 +169,7 @@ async def read_admin(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
+
     return schemas.AdminWithUser(
         id=admin.id,
         user_id=admin.user_id,
@@ -177,7 +179,7 @@ async def read_admin(
         created_at=admin.created_at,
         updated_at=admin.updated_at,
         email=user.email,
-        full_name=user.full_name
+        full_name=user.full_name,
     )
 
 
@@ -226,7 +228,9 @@ async def list_audit_logs(
         }
         for it in items
     ]
-    return PaginatedResponse(items=payload_items, total=total, page=page, page_size=page_size, pages=pages)
+    return PaginatedResponse(
+        items=payload_items, total=total, page=page, page_size=page_size, pages=pages
+    )
 
 
 @router.get("/", response_model=List[schemas.AdminWithUser])
@@ -250,7 +254,7 @@ async def read_admins(
         skip=skip,
         limit=limit,
     )
-    
+
     # Format the response to include user information
     result = []
     for admin, user in admins:
@@ -258,7 +262,7 @@ async def read_admins(
         admin_data["email"] = user.email
         admin_data["full_name"] = user.full_name
         result.append(admin_data)
-    
+
     return result
 
 
@@ -278,7 +282,7 @@ async def update_admin(
         action="update",
         resource="admin",
     )
-    
+
     # Get admin
     admin = await crud.admin.get(db, id=admin_id)
     if not admin:
@@ -286,7 +290,7 @@ async def update_admin(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Admin not found",
         )
-    
+
     # Get the associated user
     user = await crud.user.get(db, id=admin.user_id)
     if not user:
@@ -294,7 +298,7 @@ async def update_admin(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
+
     # Update user if needed
     if admin_in.email or admin_in.full_name or admin_in.password:
         user_update = {}
@@ -305,21 +309,14 @@ async def update_admin(
         if admin_in.password:
             user_update["password"] = admin_in.password
             user_update["password_confirm"] = admin_in.password
-        
-        user = await crud.user.update(
-            db=db,
-            db_obj=user,
-            obj_in=user_update
-        )
-    
+
+        user = await crud.user.update(db=db, db_obj=user, obj_in=user_update)
+
     # Update admin
     admin = await crud.admin.update(
-        db=db,
-        db_obj=admin,
-        obj_in=admin_in,
-        actor_id=current_admin.id
+        db=db, db_obj=admin, obj_in=admin_in, actor_id=current_admin.id
     )
-    
+
     # Create response using AdminWithUser schema
     response_data = schemas.AdminWithUser(
         id=admin.id,
@@ -330,9 +327,9 @@ async def update_admin(
         created_at=admin.created_at,
         updated_at=admin.updated_at,
         email=user.email,
-        full_name=user.full_name
+        full_name=user.full_name,
     )
-    
+
     return response_data
 
 
@@ -367,7 +364,10 @@ async def delete_admin(
         )
 
     # Only super admin can delete other super admins
-    if admin.role == AdminRole.SUPER_ADMIN and current_admin.role != AdminRole.SUPER_ADMIN:
+    if (
+        admin.role == AdminRole.SUPER_ADMIN
+        and current_admin.role != AdminRole.SUPER_ADMIN
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only super admins can delete other super admins",
@@ -378,4 +378,4 @@ async def delete_admin(
         id=admin_id,
         actor_id=current_admin.id,
     )
-    return admin 
+    return admin

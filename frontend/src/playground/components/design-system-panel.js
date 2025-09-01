@@ -356,7 +356,7 @@ export class DesignSystemPanel extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    
+
     // Listen to theme changes
     this.themeUnsubscribe = themeManager.addListener((event, data) => {
       if (event === 'themeChanged') {
@@ -388,17 +388,17 @@ export class DesignSystemPanel extends LitElement {
       </div>
 
       <nav class="tab-navigation">
-        <button 
+        <button
           class="tab-button ${this.activeTab === 'themes' ? 'active' : ''}"
           @click=${() => this.setActiveTab('themes')}>
           Themes
         </button>
-        <button 
+        <button
           class="tab-button ${this.activeTab === 'tokens' ? 'active' : ''}"
           @click=${() => this.setActiveTab('tokens')}>
           Tokens
         </button>
-        <button 
+        <button
           class="tab-button ${this.activeTab === 'export' ? 'active' : ''}"
           @click=${() => this.setActiveTab('export')}>
           Export
@@ -432,7 +432,7 @@ export class DesignSystemPanel extends LitElement {
         <h3 class="section-title">Select Theme</h3>
         <div class="theme-grid">
           ${availableThemes.map(theme => html`
-            <div 
+            <div
               class="theme-card ${this.currentTheme === theme.id ? 'active' : ''}"
               @click=${() => this.switchTheme(theme.id)}>
               <div class="theme-preview">
@@ -449,11 +449,11 @@ export class DesignSystemPanel extends LitElement {
         <button class="create-theme-button" @click=${this.createCustomTheme}>
           + Create Custom Theme
         </button>
-        
+
         ${this.customThemes.length > 0 ? html`
           <div class="theme-grid" style="margin-top: var(--spacing-3, 0.75rem);">
             ${this.customThemes.map(theme => html`
-              <div 
+              <div
                 class="theme-card ${this.currentTheme === theme.id ? 'active' : ''}"
                 @click=${() => this.switchTheme(theme.id)}>
                 <div class="theme-preview">
@@ -495,7 +495,7 @@ export class DesignSystemPanel extends LitElement {
       <div class="token-browser">
         <div class="token-category-selector">
           ${categories.map(category => html`
-            <button 
+            <button
               class="category-button ${this.selectedTokenCategory === category ? 'active' : ''}"
               @click=${() => this.selectTokenCategory(category)}>
               ${this.formatCategoryName(category)}
@@ -522,7 +522,7 @@ export class DesignSystemPanel extends LitElement {
   renderTokenGroup(tokenGroup, basePath = '') {
     return Object.entries(tokenGroup).map(([key, value]) => {
       const tokenPath = basePath ? `${basePath}.${key}` : key;
-      
+
       if (value && typeof value === 'object' && value.value !== undefined) {
         // This is a token with a value
         return this.renderTokenItem(tokenPath, value);
@@ -543,7 +543,7 @@ export class DesignSystemPanel extends LitElement {
 
   renderTokenItem(tokenPath, tokenData) {
     const currentValue = this.tokenEdits.get(tokenPath) || tokenData.value;
-    
+
     return html`
       <div class="token-item">
         <div class="token-preview" style="${this.getTokenPreviewStyle(tokenData.type, currentValue)}"></div>
@@ -551,7 +551,7 @@ export class DesignSystemPanel extends LitElement {
           <div class="token-name">${this.formatTokenName(tokenPath.split('.').pop())}</div>
           <div class="token-value">${currentValue}</div>
         </div>
-        <input 
+        <input
           class="token-editor-input"
           type="text"
           .value=${currentValue}
@@ -646,7 +646,7 @@ export class DesignSystemPanel extends LitElement {
     const baseTheme = this.currentTheme;
     const customThemeId = `custom-${Date.now()}`;
     const customThemeName = prompt('Enter custom theme name:', 'My Custom Theme');
-    
+
     if (customThemeName) {
       const customTheme = themeManager.createThemeVariant(
         baseTheme,
@@ -655,7 +655,7 @@ export class DesignSystemPanel extends LitElement {
         customThemeName,
         `Custom theme based on ${baseTheme}`
       );
-      
+
       this.customThemes = [...this.customThemes, customTheme];
       this.tokenEdits.clear();
       this.unsavedChanges = false;
@@ -663,9 +663,9 @@ export class DesignSystemPanel extends LitElement {
   }
 
   exportTokens(format) {
-    const exported = DesignIntegration.exportTokensForDesignTools()[format] || 
+    const exported = DesignIntegration.exportTokensForDesignTools()[format] ||
                     DesignIntegration.TokenExporter.toCSS(designTokens);
-    
+
     this.downloadFile(`neoforge-tokens.${format}`, exported, 'application/json');
   }
 
@@ -679,7 +679,7 @@ export class DesignSystemPanel extends LitElement {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    
+
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -693,14 +693,14 @@ export class DesignSystemPanel extends LitElement {
         }
       }
     };
-    
+
     input.click();
   }
 
   async syncWithFigma() {
     const accessToken = prompt('Enter Figma Access Token:');
     const fileKey = prompt('Enter Figma File Key:');
-    
+
     if (accessToken && fileKey) {
       try {
         const tokens = await DesignIntegration.syncWithFigma(accessToken, fileKey);
@@ -741,7 +741,7 @@ export class DesignSystemPanel extends LitElement {
   downloadFile(filename, content, mimeType) {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;

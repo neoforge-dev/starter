@@ -114,20 +114,20 @@ const addStyles = () => {
       --color-error-light: #f8d7da;
       --color-text: #212529;
       --color-gray-100: #f8f9fa;
-      
+
       --spacing-xs: 0.25rem;
       --spacing-sm: 0.5rem;
       --spacing-md: 1rem;
       --spacing-lg: 1.5rem;
-      
+
       --radius-md: 0.375rem;
-      
+
       --font-family: system-ui, -apple-system, sans-serif;
       --font-size-sm: 0.875rem;
       --font-size-base: 1rem;
       --font-size-lg: 1.125rem;
       --font-weight-medium: 500;
-      
+
       --transition-fast: 150ms ease-in-out;
     }
   `;
@@ -251,4 +251,3 @@ describe("neo-button visual regression", () => {
     expect(visualDiff).toHaveBeenCalledWith(element, "button-with-icons");
   });
 });
-

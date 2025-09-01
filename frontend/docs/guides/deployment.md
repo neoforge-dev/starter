@@ -122,7 +122,7 @@ NeoForge uses Docker for all deployments, with separate configurations for devel
    on:
      push:
        branches: [main]
-   
+
    jobs:
      deploy:
        runs-on: ubuntu-latest
@@ -265,4 +265,4 @@ NeoForge uses Docker for all deployments, with separate configurations for devel
    # Check system resources
    docker system df
    docker system prune -a --volumes
-   ``` 
+   ```

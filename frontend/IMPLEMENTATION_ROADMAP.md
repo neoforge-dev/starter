@@ -26,7 +26,7 @@ Transform NeoForge frontend into a modern, testable, and highly performant devel
   ```bash
   # Find all CDN imports
   find src -name "*.js" -exec grep -l "cdn.jsdelivr.net" {} \;
-  
+
   # Replace with standard imports
   sed -i '' 's|from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js"|from "lit"|g' src/**/*.js
   ```
@@ -41,7 +41,7 @@ Transform NeoForge frontend into a modern, testable, and highly performant devel
   - Ensure component/story import consistency
   - Validate story functionality
 
-**Success Criteria**: 
+**Success Criteria**:
 - ✅ Zero CDN imports in component files
 - ✅ All story files use bundled imports
 - ✅ No import-related build errors
@@ -56,7 +56,7 @@ Transform NeoForge frontend into a modern, testable, and highly performant devel
   {
     "packageManager": "bun@1.2.17"
   }
-  
+
   # Update scripts to use bun
   "test": "bun test",
   "test:fast": "bun test --bail"
@@ -190,7 +190,7 @@ Transform NeoForge frontend into a modern, testable, and highly performant devel
       <h2>Button Component</h2>
       ${variants.map(props => html`
         <div class="variant-demo">
-          <neo-button 
+          <neo-button
             variant="${props.variant}"
             size="${props.size}"
             ?disabled="${props.disabled || false}"
@@ -207,7 +207,7 @@ Transform NeoForge frontend into a modern, testable, and highly performant devel
 
 - [ ] **Auto-Generate Showcases for All Atoms**
   - Input component showcase
-  - Icon component showcase  
+  - Icon component showcase
   - Badge component showcase
   - Checkbox component showcase
   - Radio component showcase
@@ -232,7 +232,7 @@ Transform NeoForge frontend into a modern, testable, and highly performant devel
       this.propDefs = propDefs;
       this.render();
     }
-    
+
     updateProp(propName, value) {
       this.component[propName] = value;
       this.component.requestUpdate();
@@ -278,7 +278,7 @@ Transform NeoForge frontend into a modern, testable, and highly performant devel
       await page.goto('/playground/components/atoms/button-showcase');
       await expect(page.locator('.component-showcase')).toHaveScreenshot();
     });
-    
+
     test('responsive button behavior', async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 667 }); // Mobile
       await page.goto('/playground/components/atoms/button-showcase');
@@ -329,14 +329,14 @@ Transform NeoForge frontend into a modern, testable, and highly performant devel
 
   test('Button render performance', async () => {
     const start = performance.now();
-    
+
     // Create 1000 button instances
     for (let i = 0; i < 1000; i++) {
       const button = document.createElement('neo-button');
       button.setAttribute('variant', 'primary');
       document.body.appendChild(button);
     }
-    
+
     const end = performance.now();
     expect(end - start).toBeLessThan(100); // 100ms for 1000 buttons
   });
@@ -369,7 +369,7 @@ Transform NeoForge frontend into a modern, testable, and highly performant devel
   test('Button accessibility', async ({ page }) => {
     await page.goto('/playground/components/atoms/button-showcase');
     await injectAxe(page);
-    
+
     await checkA11y(page, '.component-showcase', {
       detailedReport: true,
       detailedReportOptions: { html: true },

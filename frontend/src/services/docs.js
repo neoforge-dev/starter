@@ -50,7 +50,7 @@ class DocsService {
 
   /**
    * Extracts front matter from markdown content
-   * @param {string} markdown 
+   * @param {string} markdown
    * @returns {{content: string, frontMatter: Object}}
    */
   _extractFrontMatter(markdown) {
@@ -83,7 +83,7 @@ class DocsService {
 
   /**
    * Processes markdown content
-   * @param {string} markdown 
+   * @param {string} markdown
    * @returns {Promise<string>}
    */
   async _processMarkdown(markdown) {
@@ -96,7 +96,7 @@ class DocsService {
         const lang = langMatch ? langMatch[0] : 'plaintext';
         return `<code-snippet language="${lang}" code="${escapeHtml(code)}"></code-snippet>`;
       };
-      
+
       // Parse the markdown with custom renderer and options
       const html = marked.parse(markdown, {
         renderer: renderer,
@@ -112,7 +112,7 @@ class DocsService {
 
   /**
    * Generates a table of contents from markdown content
-   * @param {string} markdown 
+   * @param {string} markdown
    * @returns {Array<{text: string, level: number, id: string}>}
    */
   _generateToc(markdown) {
@@ -137,7 +137,7 @@ class DocsService {
 
   /**
    * Generates a title from the document path
-   * @param {string} path 
+   * @param {string} path
    * @returns {string}
    */
   _generateTitle(path) {
@@ -150,7 +150,7 @@ class DocsService {
 
   /**
    * Escapes HTML special characters
-   * @param {string} html 
+   * @param {string} html
    * @returns {string}
    */
   _escapeHtml(html) {
@@ -161,7 +161,7 @@ class DocsService {
 
   /**
    * Searches documentation content
-   * @param {string} query 
+   * @param {string} query
    * @returns {Promise<Array>}
    */
   async search(query) {
@@ -188,4 +188,3 @@ class DocsService {
 }
 
 export const docsService = new DocsService();
-

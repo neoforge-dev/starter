@@ -42,7 +42,7 @@ beforeEach(() => {
     // Properties
     property1: "value1",
     property2: "value2",
-    
+
     // Methods
     method1: function() {
       // Implementation
@@ -50,12 +50,12 @@ beforeEach(() => {
     method2: function() {
       // Implementation
     },
-    
+
     // Event handling
     addEventListener: function(event, callback) {
       this[\`_\${event}Callback\`] = callback;
     },
-    
+
     // Shadow DOM
     shadowRoot: {
       querySelector: function(selector) {
@@ -67,7 +67,7 @@ beforeEach(() => {
         return [];
       }
     },
-    
+
     // Other properties needed for testing
     updateComplete: Promise.resolve(true),
     classList: {
@@ -197,7 +197,7 @@ beforeEach(() => {
   ${camelCase(componentName)}Props = {
     // Properties
 ${properties.map((prop) => `    ${prop}: undefined,`).join("\n")}
-    
+
     // Methods
 ${methods
   .map(
@@ -206,12 +206,12 @@ ${methods
     },`
   )
   .join("\n")}
-    
+
     // Event handling
     addEventListener: function(event, callback) {
       this[\`_\${event}Callback\`] = callback;
     },
-    
+
     // Shadow DOM
     shadowRoot: {
       querySelector: function(selector) {
@@ -223,7 +223,7 @@ ${methods
         return [];
       }
     },
-    
+
     // Other properties needed for testing
     updateComplete: Promise.resolve(true),
     classList: {

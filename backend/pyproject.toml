@@ -79,4 +79,4 @@ check_untyped_defs = true
 minversion = "7.0"
 addopts = "-ra -q --cov=app --cov-report=term-missing"
 testpaths = ["tests"]
-asyncio_mode = "auto" 
+asyncio_mode = "auto"

@@ -26,7 +26,7 @@ export const baseStyles = css`
     --color-surface: #ffffff;
     --color-background: #f9fafb;
     --color-border: #d1d5db; /* Slightly darker for better visibility */
-    
+
     /* Gray scale with proper contrast ratios */
     --color-gray-50: #f9fafb;
     --color-gray-100: #f3f4f6;

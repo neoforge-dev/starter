@@ -88,4 +88,4 @@ docker compose -f docker-compose.dev.yml run --rm \
   }
 
 echo "Test environment initialized successfully!"
-echo "You can now run tests with: make test" 
+echo "You can now run tests with: make test"

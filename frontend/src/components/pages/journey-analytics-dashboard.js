@@ -18,23 +18,23 @@ export class JourneyAnalyticsDashboard extends LitElement {
       autoRefresh: { type: Boolean },
       refreshInterval: { type: Number },
       loading: { type: Boolean },
-      
+
       // Data
       journeyData: { type: Object },
       funnelData: { type: Array },
       flowData: { type: Array },
       metricsData: { type: Object },
       insights: { type: Array },
-      
+
       // Real-time updates
       eventSubscription: { type: Object },
       lastUpdate: { type: Number },
-      
+
       // Filters and settings
       selectedSegment: { type: String },
       dateRange: { type: Object },
       comparisonMode: { type: Boolean },
-      
+
       // UI state
       showSettings: { type: Boolean },
       expandedInsights: { type: Set },
@@ -603,14 +603,14 @@ export class JourneyAnalyticsDashboard extends LitElement {
     this.autoRefresh = true;
     this.refreshInterval = 60000; // 1 minute
     this.loading = false;
-    
+
     // Data initialization
     this.journeyData = {};
     this.funnelData = [];
     this.flowData = [];
     this.metricsData = {};
     this.insights = [];
-    
+
     // State
     this.eventSubscription = null;
     this.lastUpdate = Date.now();
@@ -619,7 +619,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
     this.comparisonMode = false;
     this.showSettings = false;
     this.expandedInsights = new Set();
-    
+
     this.refreshTimer = null;
   }
 
@@ -639,7 +639,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
   setupEventListeners() {
     // Listen for journey events from journey-tracker
     this.addEventListener('journey-event', this.handleJourneyEvent);
-    
+
     // Listen for component interactions
     this.addEventListener('step-selected', this.handleStepSelected);
     this.addEventListener('node-selected', this.handleNodeSelected);
@@ -654,7 +654,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
   getDateRange(timeRange) {
     const end = new Date();
     const start = new Date();
-    
+
     switch (timeRange) {
       case '1d':
         start.setDate(end.getDate() - 1);
@@ -671,13 +671,13 @@ export class JourneyAnalyticsDashboard extends LitElement {
       default:
         start.setDate(end.getDate() - 7);
     }
-    
+
     return { start, end };
   }
 
   async loadAnalyticsData() {
     this.loading = true;
-    
+
     try {
       // Load all analytics data in parallel
       const [metricsResponse, funnelResponse, insightsResponse] = await Promise.all([
@@ -685,13 +685,13 @@ export class JourneyAnalyticsDashboard extends LitElement {
         this.fetchFunnelData(),
         this.fetchInsights(),
       ]);
-      
+
       this.metricsData = metricsResponse;
       this.funnelData = funnelResponse;
       this.insights = insightsResponse;
-      
+
       this.lastUpdate = Date.now();
-      
+
     } catch (error) {
       console.error('[JourneyAnalyticsDashboard] Error loading analytics data:', error);
     } finally {
@@ -701,7 +701,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
 
   async fetchMetrics() {
     const { start, end } = this.dateRange;
-    
+
     try {
       const response = await api.get('/api/v1/events/analytics', {
         params: {
@@ -744,7 +744,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
           metrics.pageViews += count;
           break;
         case 'conversion':
-          metrics.conversionRate = metrics.totalSessions > 0 ? 
+          metrics.conversionRate = metrics.totalSessions > 0 ?
             (count / metrics.totalSessions) * 100 : 0;
           break;
         case 'journey_end':
@@ -755,7 +755,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
     });
 
     // Calculate bounce rate (sessions with only one page view)
-    metrics.bounceRate = metrics.totalSessions > 0 ? 
+    metrics.bounceRate = metrics.totalSessions > 0 ?
       ((metrics.totalSessions - metrics.pageViews + metrics.totalSessions) / metrics.totalSessions) * 100 : 0;
 
     // Add trend calculations (would need historical data in real implementation)
@@ -771,12 +771,12 @@ export class JourneyAnalyticsDashboard extends LitElement {
 
   calculateTrend(current, previous, isInverse = false) {
     if (previous === 0) return { direction: 'neutral', percentage: 0 };
-    
+
     const change = ((current - previous) / previous) * 100;
-    const direction = isInverse ? 
+    const direction = isInverse ?
       (change > 0 ? 'negative' : change < 0 ? 'positive' : 'neutral') :
       (change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral');
-    
+
     return {
       direction,
       percentage: Math.abs(change).toFixed(1),
@@ -878,7 +878,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
 
   startRealTimeUpdates() {
     if (!this.autoRefresh) return;
-    
+
     this.refreshTimer = setInterval(() => {
       this.loadAnalyticsData();
     }, this.refreshInterval);
@@ -894,14 +894,14 @@ export class JourneyAnalyticsDashboard extends LitElement {
   handleJourneyEvent(event) {
     // Handle real-time journey events
     const journeyEvent = event.detail;
-    
+
     // Update metrics in real-time
     if (journeyEvent.event_type === 'journey_start') {
       this.metricsData.totalSessions++;
     } else if (journeyEvent.event_type === 'conversion') {
       this.recalculateConversionRate();
     }
-    
+
     this.lastUpdate = Date.now();
     this.requestUpdate();
   }
@@ -909,7 +909,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
   handleStepSelected(event) {
     const { step, data } = event.detail;
     console.log('Funnel step selected:', step, data);
-    
+
     // Could show detailed analysis for the selected step
     this.selectedSegment = step.name;
   }
@@ -917,7 +917,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
   handleNodeSelected(event) {
     const { node, paths } = event.detail;
     console.log('Flow node selected:', node, paths);
-    
+
     // Could show detailed path analysis
     this.selectedSegment = node.title;
   }
@@ -942,7 +942,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
 
   toggleAutoRefresh() {
     this.autoRefresh = !this.autoRefresh;
-    
+
     if (this.autoRefresh) {
       this.startRealTimeUpdates();
     } else {
@@ -1007,9 +1007,9 @@ export class JourneyAnalyticsDashboard extends LitElement {
 
   renderInsight(insight) {
     const isExpanded = this.expandedInsights.has(insight.id);
-    
+
     return html`
-      <div 
+      <div
         class="insight-item ${insight.type}"
         @click=${() => this.toggleInsight(insight.id)}
       >
@@ -1018,7 +1018,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
           <div class="insight-priority ${insight.priority}">${insight.priority}</div>
         </div>
         <div class="insight-description">${insight.description}</div>
-        
+
         ${isExpanded ? html`
           <div class="insight-recommendations">
             <ul class="recommendation-list">
@@ -1136,14 +1136,14 @@ export class JourneyAnalyticsDashboard extends LitElement {
           <div class="section-title">Real-time Updates</div>
           <div class="setting-item">
             <span class="setting-label">Auto Refresh</span>
-            <div 
+            <div
               class="toggle-switch ${this.autoRefresh ? 'active' : ''}"
               @click=${this.toggleAutoRefresh}
             ></div>
           </div>
           <div class="setting-item">
             <span class="setting-label">Comparison Mode</span>
-            <div 
+            <div
               class="toggle-switch ${this.comparisonMode ? 'active' : ''}"
               @click=${this.toggleComparisonMode}
             ></div>
@@ -1154,7 +1154,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
           <div class="section-title">Refresh Interval</div>
           <div class="setting-item">
             <span class="setting-label">Update Frequency</span>
-            <select 
+            <select
               class="control-select"
               .value=${this.refreshInterval.toString()}
               @change=${(e) => this.refreshInterval = parseInt(e.target.value)}
@@ -1173,7 +1173,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
   render() {
     return html`
       <journey-tracker .autoTrack=${true} .debug=${false}></journey-tracker>
-      
+
       <div class="dashboard-container">
         <div class="dashboard-header">
           <div class="header-content">
@@ -1192,7 +1192,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
           <div class="dashboard-controls">
             <div class="control-group">
               <span class="control-label">Time Range:</span>
-              <select 
+              <select
                 class="control-select"
                 .value=${this.timeRange}
                 @change=${this.handleTimeRangeChange}
@@ -1204,7 +1204,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
               </select>
             </div>
 
-            <button 
+            <button
               class="control-button ${this.autoRefresh ? 'active' : ''}"
               @click=${this.toggleAutoRefresh}
             >
@@ -1218,19 +1218,19 @@ export class JourneyAnalyticsDashboard extends LitElement {
         </div>
 
         <div class="view-tabs">
-          <div 
+          <div
             class="view-tab ${this.activeView === 'overview' ? 'active' : ''}"
             @click=${() => this.handleViewChange('overview')}
           >
             📊 Overview
           </div>
-          <div 
+          <div
             class="view-tab ${this.activeView === 'funnel' ? 'active' : ''}"
             @click=${() => this.handleViewChange('funnel')}
           >
             🎯 Funnel Analysis
           </div>
-          <div 
+          <div
             class="view-tab ${this.activeView === 'flow' ? 'active' : ''}"
             @click=${() => this.handleViewChange('flow')}
           >

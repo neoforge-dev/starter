@@ -208,14 +208,14 @@ def cache_response(ttl_seconds: int = 3600):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             cache_key = f"{func.__name__}:{args}:{kwargs}"
-            
+
             # Check cache
             if cached := await redis.get(cache_key):
                 return json.loads(cached)
-            
+
             # Get fresh data
             result = await func(*args, **kwargs)
-            
+
             # Cache result
             await redis.set(cache_key, json.dumps(result), ex=ttl_seconds)
             return result
@@ -268,7 +268,7 @@ from app.core.config import settings
 async def rate_limit(request: Request):
     client_ip = request.client.host
     current = await redis.incr(f"rate_limit:{client_ip}")
-    
+
     if current == 1:
         await redis.expire(f"rate_limit:{client_ip}", 60)
     elif current > settings.RATE_LIMIT:
@@ -335,7 +335,7 @@ class Settings(BaseSettings):
     REDIS_URL: Optional[str] = None
     SECRET_KEY: str
     DEBUG: bool = False
-    
+
     class Config:
         env_file = ".env"
 ```

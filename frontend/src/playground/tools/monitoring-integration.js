@@ -1,6 +1,6 @@
 /**
  * Monitoring Integration
- * 
+ *
  * Sets up comprehensive monitoring for deployed applications including:
  * - Uptime monitoring
  * - Performance tracking
@@ -149,14 +149,14 @@ class ApplicationMonitor {
       flushInterval: 5000,
       ...config
     };
-    
+
     this.metrics = [];
     this.errors = [];
     this.performance = {
       navigation: null,
       vitals: {}
     };
-    
+
     this.init();
   }
 
@@ -169,7 +169,7 @@ class ApplicationMonitor {
     this.setupUserInteractionTracking();
     this.setupCustomEventTracking();
     this.startBatchReporting();
-    
+
     console.log('📊 Monitoring initialized for ${appConfig.name}');
   }
 
@@ -192,10 +192,10 @@ class ApplicationMonitor {
 
     // Core Web Vitals
     this.observeWebVitals();
-    
+
     // Resource timing
     this.observeResourceTiming();
-    
+
     // Long tasks
     this.observeLongTasks();
   }
@@ -497,10 +497,10 @@ export class PerformanceMonitor {
       fid: 100,
       cls: 0.1
     };
-    
+
     this.measurements = new Map();
     this.watchers = new Set();
-    
+
     this.startMonitoring();
   }
 
@@ -532,7 +532,7 @@ export class PerformanceMonitor {
    */
   recordPageLoadMetrics() {
     const timing = performance.timing;
-    
+
     const metrics = {
       dns: timing.domainLookupEnd - timing.domainLookupStart,
       connect: timing.connectEnd - timing.connectStart,
@@ -560,13 +560,13 @@ export class PerformanceMonitor {
     new PerformanceObserver((entryList) => {
       const entries = entryList.getEntries();
       const lastEntry = entries[entries.length - 1];
-      
+
       this.measurements.set('lcp', {
         value: lastEntry.startTime,
         timestamp: Date.now(),
         performant: lastEntry.startTime < this.thresholds.lcp
       });
-      
+
       this.notifyWatchers('lcp', lastEntry.startTime);
     }).observe({ entryTypes: ['largest-contentful-paint'] });
 
@@ -575,13 +575,13 @@ export class PerformanceMonitor {
       const entries = entryList.getEntries();
       const firstInput = entries[0];
       const fid = firstInput.processingStart - firstInput.startTime;
-      
+
       this.measurements.set('fid', {
         value: fid,
         timestamp: Date.now(),
         performant: fid < this.thresholds.fid
       });
-      
+
       this.notifyWatchers('fid', fid);
     }).observe({ entryTypes: ['first-input'] });
 
@@ -593,13 +593,13 @@ export class PerformanceMonitor {
           clsValue += entry.value;
         }
       }
-      
+
       this.measurements.set('cls', {
         value: clsValue,
         timestamp: Date.now(),
         performant: clsValue < this.thresholds.cls
       });
-      
+
       this.notifyWatchers('cls', clsValue);
     }).observe({ entryTypes: ['layout-shift'] });
   }
@@ -618,13 +618,13 @@ export class PerformanceMonitor {
       }));
 
       const slowResources = resources.filter(r => r.slow);
-      
+
       if (slowResources.length > 0) {
         this.measurements.set('slowResources', {
           resources: slowResources,
           timestamp: Date.now()
         });
-        
+
         this.notifyWatchers('slowResources', slowResources);
       }
     }).observe({ entryTypes: ['resource'] });
@@ -641,15 +641,15 @@ export class PerformanceMonitor {
           total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024),
           limit: Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024)
         };
-        
+
         memory.percentage = Math.round((memory.used / memory.limit) * 100);
         memory.healthy = memory.percentage < 80;
-        
+
         this.measurements.set('memory', {
           ...memory,
           timestamp: Date.now()
         });
-        
+
         if (!memory.healthy) {
           this.notifyWatchers('memoryWarning', memory);
         }
@@ -744,10 +744,10 @@ export class ErrorTracker {
       ],
       ...config
     };
-    
+
     this.errors = [];
     this.listeners = new Set();
-    
+
     this.setupErrorHandling();
   }
 
@@ -757,10 +757,10 @@ export class ErrorTracker {
   setupErrorHandling() {
     // JavaScript errors
     window.addEventListener('error', this.handleError.bind(this));
-    
+
     // Unhandled promise rejections
     window.addEventListener('unhandledrejection', this.handleRejection.bind(this));
-    
+
     // Resource errors
     window.addEventListener('error', this.handleResourceError.bind(this), true);
   }
@@ -831,7 +831,7 @@ export class ErrorTracker {
     error.id = this.generateErrorId();
     error.sessionId = this.getSessionId();
     error.buildVersion = '${appConfig.version || '1.0.0'}';
-    
+
     // Add browser context
     error.context = {
       viewport: {
@@ -848,7 +848,7 @@ export class ErrorTracker {
     };
 
     this.errors.push(error);
-    
+
     // Limit stored errors
     if (this.errors.length > this.config.maxErrors) {
       this.errors = this.errors.slice(-this.config.maxErrors);
@@ -856,7 +856,7 @@ export class ErrorTracker {
 
     // Notify listeners
     this.notifyListeners(error);
-    
+
     // Report immediately for critical errors
     if (this.isCriticalError(error)) {
       this.reportError(error);
@@ -869,7 +869,7 @@ export class ErrorTracker {
    * Check if error should be ignored
    */
   shouldIgnoreError(message) {
-    return this.config.ignorePatterns.some(pattern => 
+    return this.config.ignorePatterns.some(pattern =>
       pattern.test ? pattern.test(message) : message.includes(pattern)
     );
   }
@@ -878,7 +878,7 @@ export class ErrorTracker {
    * Check if error is critical
    */
   isCriticalError(error) {
-    return error.type === 'javascript' && 
+    return error.type === 'javascript' &&
            !error.filename?.includes('extension') &&
            !error.message?.includes('Script error');
   }
@@ -946,7 +946,7 @@ export class ErrorTracker {
    */
   getErrorSummary() {
     const errorCounts = {};
-    const recentErrors = this.errors.filter(error => 
+    const recentErrors = this.errors.filter(error =>
       Date.now() - error.timestamp < 3600000 // Last hour
     );
 
@@ -1023,15 +1023,15 @@ export const errorTracker = new ErrorTracker();`;
    */
   getHealthEndpoints(appConfig, baseUrl) {
     const endpoints = [];
-    
+
     if (appConfig.type === 'frontend-only' || appConfig.type === 'static-site') {
       endpoints.push('/health.html');
     }
-    
+
     if (appConfig.type === 'api-only' || appConfig.type === 'fullstack') {
       endpoints.push('/api/health', '/health');
     }
-    
+
     return endpoints;
   }
 
@@ -1040,11 +1040,11 @@ export const errorTracker = new ErrorTracker();`;
    */
   getMetricsEndpoints(appConfig, baseUrl) {
     const endpoints = [];
-    
+
     if (appConfig.type === 'api-only' || appConfig.type === 'fullstack') {
       endpoints.push('/api/metrics', '/metrics');
     }
-    
+
     return endpoints;
   }
 
@@ -1053,11 +1053,11 @@ export const errorTracker = new ErrorTracker();`;
    */
   getAPIEndpoints(appConfig, baseUrl) {
     const endpoints = [];
-    
+
     if (appConfig.type === 'api-only' || appConfig.type === 'fullstack') {
       endpoints.push('/api/', '/api/status');
     }
-    
+
     return endpoints;
   }
 
@@ -1074,14 +1074,14 @@ export const errorTracker = new ErrorTracker();`;
       },
       responseTime: {
         threshold: 5000,
-        window: '5m', 
+        window: '5m',
         severity: 'warning',
         message: \`\${appConfig.name} response time is high\`
       },
       errorRate: {
         threshold: 0.05,
         window: '5m',
-        severity: 'warning', 
+        severity: 'warning',
         message: \`\${appConfig.name} error rate is elevated\`
       },
       healthCheck: {
@@ -1141,7 +1141,7 @@ export const errorTracker = new ErrorTracker();`;
   }
 
   generateDatadogConfig(appConfig) {
-    return { 
+    return {
       applicationId: 'YOUR_DATADOG_APP_ID',
       clientToken: 'YOUR_DATADOG_CLIENT_TOKEN',
       service: appConfig.name
@@ -1149,7 +1149,7 @@ export const errorTracker = new ErrorTracker();`;
   }
 
   generateNewRelicConfig(appConfig) {
-    return { 
+    return {
       accountId: 'YOUR_NEWRELIC_ACCOUNT_ID',
       licenseKey: 'YOUR_NEWRELIC_LICENSE_KEY',
       applicationName: appConfig.name

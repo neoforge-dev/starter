@@ -67,18 +67,18 @@ export class StatusPage extends BaseComponent {
     try {
       this.subscribing = true;
       this.error = null;
-      
+
       await apiService.subscribeToStatusUpdates(this.email);
-      
+
       this.subscribed = true;
       this.subscribing = false;
-      
+
       // Show success message
       this.dispatchEvent(new CustomEvent('subscription-success', {
         detail: { email: this.email },
         bubbles: true
       }));
-      
+
     } catch (error) {
       this.error = `Subscription failed: ${error.message}`;
       this.subscribing = false;
@@ -239,7 +239,7 @@ export class StatusPage extends BaseComponent {
                 <div class="subscribe-section">
                   <h2>Stay Updated</h2>
                   <p>Get notified about system status changes and maintenance windows.</p>
-                  
+
                   ${this.subscribed
                     ? html`
                         <div class="success-message">
@@ -266,7 +266,7 @@ export class StatusPage extends BaseComponent {
                             ${this.subscribing ? "Subscribing..." : "Subscribe"}
                           </button>
                         </div>
-                        
+
                         ${this.error && !this.loading
                           ? html`<div class="error-message">${this.error}</div>`
                           : ""

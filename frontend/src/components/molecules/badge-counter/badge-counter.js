@@ -6,7 +6,7 @@ import "../../atoms/badge/badge.js";
 /**
  * Badge with animated count updates and accessibility features
  * @element neo-badge-counter
- * 
+ *
  * @prop {number} count - Current count value
  * @prop {number} maxCount - Maximum count to display (shows 99+ if exceeded)
  * @prop {string} variant - Badge variant (primary, secondary, success, warning, error, neutral)
@@ -17,7 +17,7 @@ import "../../atoms/badge/badge.js";
  * @prop {string} suffix - Text suffix for count (e.g., "new messages")
  * @prop {boolean} showZero - Whether to show the badge when count is 0
  * @prop {number} animationDuration - Animation duration in milliseconds
- * 
+ *
  * @fires neo-count-change - When count value changes
  * @fires neo-badge-click - When badge is clicked
  */
@@ -233,7 +233,7 @@ export class NeoBadgeCounter extends BaseComponent {
   _handleCountChange(previousCount) {
     const oldCount = previousCount ?? this._previousCount;
     const newCount = this.count;
-    
+
     this._previousCount = oldCount;
     this._updateDisplayCount();
     this._updateVisibility();
@@ -277,7 +277,7 @@ export class NeoBadgeCounter extends BaseComponent {
    */
   _updateVisibility() {
     const shouldHide = this.count === 0 && this.hideOnZero && !this.showZero;
-    
+
     if (shouldHide) {
       this.setAttribute('hidden', '');
     } else {
@@ -293,7 +293,7 @@ export class NeoBadgeCounter extends BaseComponent {
 
     this._isAnimating = true;
     const badge = this.shadowRoot?.querySelector('neo-badge');
-    
+
     if (!badge) {
       this._isAnimating = false;
       return;
@@ -304,7 +304,7 @@ export class NeoBadgeCounter extends BaseComponent {
 
     // Choose animation based on count change type
     let animationClass = 'pulse';
-    
+
     if (newCount > oldCount) {
       // Count increased
       if (newCount - oldCount > 5) {
@@ -325,7 +325,7 @@ export class NeoBadgeCounter extends BaseComponent {
     // Trigger animation
     requestAnimationFrame(() => {
       badge.classList.add(animationClass);
-      
+
       setTimeout(() => {
         if (badge) {
           badge.classList.remove(animationClass, 'glow');
@@ -340,16 +340,16 @@ export class NeoBadgeCounter extends BaseComponent {
    */
   _announceCountChange(oldCount, newCount) {
     const announcement = this._getCountAnnouncement(newCount);
-    
+
     // Create temporary live region for announcement
     const liveRegion = document.createElement('div');
     liveRegion.setAttribute('aria-live', 'polite');
     liveRegion.setAttribute('aria-atomic', 'true');
     liveRegion.className = 'sr-only';
     liveRegion.textContent = announcement;
-    
+
     this.shadowRoot?.appendChild(liveRegion);
-    
+
     // Remove after announcement
     setTimeout(() => {
       if (liveRegion.parentNode) {
@@ -364,7 +364,7 @@ export class NeoBadgeCounter extends BaseComponent {
   _getCountAnnouncement(count) {
     const baseLabel = this.label || 'notifications';
     const suffix = this.suffix || '';
-    
+
     if (count === 0) {
       return `No ${baseLabel}`;
     } else if (count === 1) {
@@ -422,9 +422,9 @@ export class NeoBadgeCounter extends BaseComponent {
   }
 
   render() {
-    const isClickable = this.hasAttribute('clickable') || 
+    const isClickable = this.hasAttribute('clickable') ||
                        this.hasEventListener('neo-badge-click');
-    
+
     const ariaLabel = this._getCountAnnouncement(this.count);
 
     return html`
@@ -439,7 +439,7 @@ export class NeoBadgeCounter extends BaseComponent {
           aria-label="${ariaLabel}">
           ${this._displayCount}
         </neo-badge>
-        
+
         <span class="sr-only" aria-live="polite" aria-atomic="true"></span>
       </div>
     `;

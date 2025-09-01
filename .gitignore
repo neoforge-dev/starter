@@ -58,5 +58,5 @@ logs/
 tmp/
 /.env*
 !/backend/.env.test
-!.env.example 
+!.env.example
 .aider*

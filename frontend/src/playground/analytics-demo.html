@@ -132,7 +132,7 @@
 
         // Make analytics available globally for demo
         window.analytics = analytics;
-        
+
         // Enable analytics dashboard visibility
         document.addEventListener('DOMContentLoaded', () => {
             const dashboard = document.getElementById('analytics-dashboard');
@@ -167,7 +167,7 @@
 
         window.simulateSearchActivity = function() {
             const searches = ['button', 'input', 'card', 'table', 'form', 'modal', 'dropdown'];
-            
+
             searches.forEach((query, index) => {
                 setTimeout(() => {
                     const startTime = performance.now();
@@ -205,7 +205,7 @@
 
         window.simulateKeyboardShortcuts = function() {
             const shortcuts = ['Ctrl+H', 'Ctrl+K', 'Ctrl+Shift+C', 'Ctrl+E', 'Ctrl+R', 'Ctrl+/', 'Ctrl+N'];
-            
+
             shortcuts.forEach((shortcut, index) => {
                 setTimeout(() => {
                     analytics.trackKeyboardShortcut(shortcut);
@@ -220,7 +220,7 @@
             try {
                 const jsonData = analytics.exportData('json', '24h');
                 const csvData = analytics.exportData('csv', '24h');
-                
+
                 // Create download links
                 const jsonBlob = new Blob([jsonData], { type: 'application/json' });
                 const jsonUrl = URL.createObjectURL(jsonBlob);
@@ -257,7 +257,7 @@
             // Clear other analytics data
             analytics.performanceData.clear();
             analytics.errorData.length = 0;
-            
+
             // Refresh dashboard
             const dashboard = document.getElementById('analytics-dashboard');
             if (dashboard) {

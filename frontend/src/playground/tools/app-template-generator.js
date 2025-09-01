@@ -1,6 +1,6 @@
 /**
  * Application Template Generator
- * 
+ *
  * Generates working applications using playground components.
  * Addresses the critical gap: playground → production apps.
  */
@@ -124,14 +124,14 @@ export class AppTemplateGenerator {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${appConfig.name}</title>
     <style>
-        body { 
-            margin: 0; 
-            font-family: system-ui, -apple-system, sans-serif; 
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
         }
-        .app-container { 
-            min-height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
     </style>
 </head>
@@ -152,7 +152,7 @@ export class AppTemplateGenerator {
     const hasRouting = features.includes('routing');
     const routingImport = hasRouting ? "import { router } from './routes.js';" : '';
     const initMethod = hasRouting ? 'this.setupRouting();' : 'this.render();';
-    
+
     let classBody = '';
     if (hasRouting) {
       classBody = this.generateRoutingMethods();
@@ -194,12 +194,12 @@ document.addEventListener('DOMContentLoaded', () => {
   generateRoutingMethods() {
     return `    setupRouting() {
         router.init(this.container);
-        
+
         // Handle navigation
         window.addEventListener('popstate', () => {
             router.navigate(window.location.pathname);
         });
-        
+
         // Initial route
         router.navigate(window.location.pathname || '/');
     }`;
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * Generate simple render methods for non-routing apps
    */
   generateSimpleRenderMethods(appConfig) {
-    const componentsList = appConfig.components.map(comp => 
+    const componentsList = appConfig.components.map(comp =>
       `                    <${comp} style="margin: 1rem 0;"></${comp}>`
     ).join('\n');
 
@@ -303,7 +303,7 @@ export const router = {
         'testimonials': "import '../../../components/marketing/testimonials.js';",
         'faq-accordion': "import '../../../components/marketing/faq-accordion.js';"
       };
-      
+
       return importMap[component] || `// ${component} - add import path`;
     });
 
@@ -358,7 +358,7 @@ console.log('Components loaded for ${appConfig.name}');`;
                     <p>Describe your first feature here.</p>
                     <neo-button variant="primary">Learn More</neo-button>
                 </neo-card>
-                
+
                 <neo-card style="padding: 1.5rem;">
                     <h3>Feature 2</h3>
                     <p>Describe your second feature here.</p>
@@ -380,18 +380,18 @@ export default class HomePage {
     render() {
         const page = document.createElement('div');
         page.style.cssText = 'max-width: 1200px; margin: 0 auto; padding: 2rem;';
-        
+
         page.innerHTML = \`
             <header style="text-align: center; margin-bottom: 3rem;">
                 <h1>${appConfig.name}</h1>
                 <p>Built with NeoForge Web Components</p>
             </header>
-            
+
             <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">${cardSection}
             </section>
             ${dashboardSection}
         \`;
-        
+
         return page;
     }
 }`;
@@ -404,7 +404,7 @@ export default class HomePage {
     const tableSection = appConfig.components.includes('neo-table') ? `
             <section style="margin-bottom: 2rem;">
                 <h2>Data Table</h2>
-                <neo-table 
+                <neo-table
                     data='[{"id":1,"name":"John Doe","email":"john@example.com"},{"id":2,"name":"Jane Smith","email":"jane@example.com"}]'
                     columns='[{"key":"name","label":"Name"},{"key":"email","label":"Email"}]'
                     pageable="true">
@@ -414,7 +414,7 @@ export default class HomePage {
     const formSection = appConfig.components.includes('neo-form-builder') ? `
             <section>
                 <h2>Quick Form</h2>
-                <neo-form-builder 
+                <neo-form-builder
                     fields='[{"type":"text","name":"title","label":"Title"},{"type":"email","name":"email","label":"Email"}]'>
                 </neo-form-builder>
             </section>` : '';
@@ -427,19 +427,19 @@ export default class DashboardPage {
     render() {
         const page = document.createElement('div');
         page.style.cssText = 'max-width: 1400px; margin: 0 auto; padding: 2rem;';
-        
+
         page.innerHTML = \`
             <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h1>Dashboard</h1>
                 <neo-button onclick="router.navigate('/')">← Back to Home</neo-button>
             </header>
-            
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
                 <neo-card style="padding: 1.5rem;">
                     <h3>Quick Stats</h3>
                     <p>Overview of your data</p>
                 </neo-card>
-                
+
                 <neo-card style="padding: 1.5rem;">
                     <h3>Recent Activity</h3>
                     <p>Latest updates and changes</p>
@@ -448,7 +448,7 @@ export default class DashboardPage {
             ${tableSection}
             ${formSection}
         \`;
-        
+
         return page;
     }
 }`;
@@ -460,12 +460,12 @@ export default class DashboardPage {
   generateDependencies(appConfig) {
     const deps = ['@neoforge/web-components'];
     const features = appConfig.features || [];
-    
+
     if (features.includes('routing')) {
       // For simple routing, we're not adding external deps
       // Using vanilla JS routing implementation
     }
-    
+
     return deps;
   }
 

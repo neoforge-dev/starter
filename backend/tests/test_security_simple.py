@@ -1,5 +1,6 @@
 """Simple test file for security module that doesn't depend on any fixtures."""
-from datetime import datetime, timedelta, UTC, timezone
+from datetime import UTC, datetime, timedelta, timezone
+
 from jose import jwt
 
 from app.core.config import get_settings
@@ -9,7 +10,7 @@ from app.core.security import create_access_token
 def test_create_access_token():
     """Test creating a JWT access token."""
     current_settings = get_settings()
-    
+
     # Test with default expiration
     token = create_access_token(subject="test-user", settings=current_settings)
     payload = jwt.decode(
@@ -22,10 +23,12 @@ def test_create_access_token():
     assert "exp" in payload
     exp_datetime = datetime.fromtimestamp(payload["exp"], tz=UTC)
     assert exp_datetime > datetime.now(UTC)
-    
+
     # Test with custom expiration
     custom_expires = timedelta(minutes=30)
-    token = create_access_token(subject="test-user", settings=current_settings, expires_delta=custom_expires)
+    token = create_access_token(
+        subject="test-user", settings=current_settings, expires_delta=custom_expires
+    )
     payload = jwt.decode(
         token,
         current_settings.secret_key.get_secret_value(),
@@ -49,7 +52,7 @@ def test_expired_token():
         settings.secret_key.get_secret_value(),
         algorithm=settings.algorithm,
     )
-    
+
     # Verify token is expired
     try:
         jwt.decode(
@@ -59,4 +62,4 @@ def test_expired_token():
         )
         assert False, "Token should be expired"
     except jwt.ExpiredSignatureError:
-        assert True 
+        assert True

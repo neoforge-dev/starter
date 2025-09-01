@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import hashlib
 from datetime import datetime, timedelta
-from typing import Optional, List, Tuple
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional, Tuple
 
 from app.models.user_session import UserSession
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def hash_token(token: str) -> str:
@@ -37,8 +36,12 @@ class CRUDUserSession:
         await db.refresh(entry)
         return entry
 
-    async def get_by_hashed(self, db: AsyncSession, *, hashed: str) -> Optional[UserSession]:
-        res = await db.execute(select(UserSession).where(UserSession.hashed_refresh_token == hashed))
+    async def get_by_hashed(
+        self, db: AsyncSession, *, hashed: str
+    ) -> Optional[UserSession]:
+        res = await db.execute(
+            select(UserSession).where(UserSession.hashed_refresh_token == hashed)
+        )
         return res.scalar_one_or_none()
 
     async def revoke(self, db: AsyncSession, *, session: UserSession) -> UserSession:
@@ -85,8 +88,7 @@ class CRUDUserSession:
         """
         res = await db.execute(
             select(UserSession).where(
-                UserSession.user_id == user_id,
-                UserSession.revoked_at.is_(None)
+                UserSession.user_id == user_id, UserSession.revoked_at.is_(None)
             )
         )
         sessions = list(res.scalars().all())
@@ -115,7 +117,9 @@ class CRUDUserSession:
         )
         items = list(res_items.scalars().all())
         # total count (simple way)
-        res_all = await db.execute(select(UserSession).where(UserSession.user_id == user_id))
+        res_all = await db.execute(
+            select(UserSession).where(UserSession.user_id == user_id)
+        )
         total = len(list(res_all.scalars().all()))
         return items, total
 
@@ -133,7 +137,8 @@ class CRUDUserSession:
         # Fetch candidates, then delete
         res = await db.execute(
             select(UserSession).where(
-                (UserSession.revoked_at.is_not(None)) | (UserSession.expires_at < cutoff)
+                (UserSession.revoked_at.is_not(None))
+                | (UserSession.expires_at < cutoff)
             )
         )
         sessions = list(res.scalars().all())

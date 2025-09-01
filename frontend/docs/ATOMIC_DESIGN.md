@@ -42,7 +42,7 @@ import { NeoButton, NeoInput } from '@components/atoms';
 <neo-button variant="primary">Click Me</neo-button>
 
 // Input usage
-<neo-input 
+<neo-input
   type="email"
   label="Email Address"
   required
@@ -182,7 +182,7 @@ Design tokens are the visual design atoms of the design system. They're used in 
 ### Token Categories
 
 ```javascript
-import { 
+import {
   colors,
   typography,
   spacing,
@@ -288,4 +288,4 @@ import {
 
 - [Atomic Design by Brad Frost](https://atomicdesign.bradfrost.com/)
 - [Web Components MDN](https://developer.mozilla.org/en-US/docs/Web/Web_Components)
-- [Lit Documentation](https://lit.dev/) 
+- [Lit Documentation](https://lit.dev/)

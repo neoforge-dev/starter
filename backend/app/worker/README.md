@@ -41,13 +41,13 @@ async def lifespan(app: FastAPI):
     # Initialize email queue
     email_queue = EmailQueue(redis=redis_client)
     await email_queue.connect()
-    
+
     # Initialize and start email worker
     email_worker.queue = email_queue
     email_worker.start()
-    
+
     yield
-    
+
     # Cleanup
     email_worker.stop()
     await email_queue.disconnect()
@@ -137,4 +137,4 @@ To run the tests:
 ```bash
 # Run the email worker tests
 pytest tests/worker/test_email_worker.py -v
-``` 
+```

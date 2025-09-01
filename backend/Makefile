@@ -45,4 +45,4 @@ clean-test:
 
 # Default test command
 test:
-	./scripts/run_tests_fixed.sh -v 
+	./scripts/run_tests_fixed.sh -v

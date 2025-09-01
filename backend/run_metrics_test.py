@@ -2,7 +2,8 @@
 """Script to run metrics tests directly without pytest."""
 import time
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import psutil
 
 
@@ -62,7 +63,7 @@ class TestMetrics(unittest.TestCase):
         process_time = get_process_time()
         self.assertIsInstance(process_time, float)
         self.assertGreaterEqual(process_time, 0)
-        
+
         # Process time should increase over time
         start_time = get_process_time()
         time.sleep(0.1)  # Sleep for a short time
@@ -76,7 +77,7 @@ class TestMetrics(unittest.TestCase):
         mock_process_instance = MagicMock()
         mock_process.return_value = mock_process_instance
         mock_process_instance.memory_info.return_value.rss = 1024 * 1024  # 1 MB
-        
+
         # Get process memory
         memory = get_process_memory()
         self.assertEqual(memory, 1024 * 1024)
@@ -87,7 +88,7 @@ class TestMetrics(unittest.TestCase):
         """Test getting system CPU usage."""
         # Mock the CPU percent
         mock_cpu_percent.return_value = 42.5
-        
+
         # Get system CPU
         cpu = get_system_cpu()
         self.assertEqual(cpu, 42.5)
@@ -101,7 +102,7 @@ class TestMetrics(unittest.TestCase):
         mock_memory.total = 8 * 1024 * 1024 * 1024  # 8 GB
         mock_memory.available = 4 * 1024 * 1024 * 1024  # 4 GB
         mock_virtual_memory.return_value = mock_memory
-        
+
         # Get system memory
         total, available, percent = get_system_memory()
         self.assertEqual(total, 8 * 1024 * 1024 * 1024)
@@ -111,4 +112,4 @@ class TestMetrics(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()

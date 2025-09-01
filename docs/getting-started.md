@@ -8,7 +8,7 @@
 
 ### Prerequisites
 - Docker & Docker Compose
-- Make  
+- Make
 - Git
 - Node.js 18+ (optional, for frontend development outside containers)
 
@@ -84,7 +84,7 @@ make build-frontend   # Production build
 ### **📋 Complete Setup Guide**
 → **[Complete Getting Started Guide](getting-started/index.md)** - Full setup, first feature, and comprehensive workflow
 
-### **💻 Daily Development** 
+### **💻 Daily Development**
 → **[Development Guide](development/)** - Workflows, testing, best practices
 
 ### **🏗️ System Architecture**
@@ -98,7 +98,7 @@ make build-frontend   # Production build
 
 ## 🆘 Need Help?
 
-- **Quick Issues**: [Troubleshooting Guide](getting-started/troubleshooting.md)  
+- **Quick Issues**: [Troubleshooting Guide](getting-started/troubleshooting.md)
 - **Development Questions**: [Development Guide](development/)
 - **Production Support**: [Operations Guide](operations/)
 - **Bug Reports**: [GitHub Issues](https://github.com/yourusername/neoforge/issues)

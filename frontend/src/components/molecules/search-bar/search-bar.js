@@ -7,7 +7,7 @@ import "../../atoms/button/button.js";
 /**
  * Search input with icon, clear button, and enhanced functionality
  * @element neo-search-bar
- * 
+ *
  * @prop {string} value - Search query value
  * @prop {string} placeholder - Placeholder text
  * @prop {boolean} disabled - Whether search is disabled
@@ -19,7 +19,7 @@ import "../../atoms/button/button.js";
  * @prop {boolean} loading - Whether search is in loading state
  * @prop {string} searchIcon - Custom search icon
  * @prop {boolean} autofocus - Whether to autofocus on mount
- * 
+ *
  * @fires neo-search - Debounced search event
  * @fires neo-search-immediate - Immediate search event
  * @fires neo-suggestion-select - When suggestion is selected
@@ -236,7 +236,7 @@ export class NeoSearchBar extends BaseComponent {
   connectedCallback() {
     super.connectedCallback();
     this._setupKeyboardShortcuts();
-    
+
     if (this.autofocus) {
       this.updateComplete.then(() => {
         this.focus();
@@ -374,7 +374,7 @@ export class NeoSearchBar extends BaseComponent {
     this._filteredSuggestions = this.suggestions.filter(suggestion =>
       suggestion.toLowerCase().includes(query)
     );
-    
+
     this._showDropdown = this._filteredSuggestions.length > 0;
     this._suggestionIndex = -1;
   }
@@ -459,7 +459,7 @@ export class NeoSearchBar extends BaseComponent {
           <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
           </svg>
-          
+
           <neo-input
             .value="${this.value}"
             placeholder="${this.placeholder}"
@@ -494,9 +494,9 @@ export class NeoSearchBar extends BaseComponent {
 
         ${this._showDropdown ? html`
           <div class="suggestions-dropdown">
-            ${this._filteredSuggestions.length > 0 ? 
+            ${this._filteredSuggestions.length > 0 ?
               this._filteredSuggestions.map((suggestion, index) => html`
-                <div 
+                <div
                   class="suggestion-item ${index === this._suggestionIndex ? 'highlighted' : ''}"
                   @click="${() => this._selectSuggestion(suggestion)}">
                   <svg class="suggestion-icon" viewBox="0 0 20 20" fill="currentColor">

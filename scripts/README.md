@@ -10,7 +10,7 @@
 # Show all available sections and workflows
 python scripts/nav.py help
 
-# View specific section details  
+# View specific section details
 python scripts/nav.py section getting_started
 python scripts/nav.py section architecture
 python scripts/nav.py section testing
@@ -44,7 +44,7 @@ python scripts/nav.py open system_architecture
 
 - **Section Navigation**: Browse documentation by topic
 - **Workflow Guidance**: Step-by-step file lists for common tasks
-- **Single Source Lookup**: Quick access to canonical documents  
+- **Single Source Lookup**: Quick access to canonical documents
 - **Status Reporting**: Documentation consolidation metrics
 - **Editor Integration**: Automatically opens files in available editors
 

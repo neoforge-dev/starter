@@ -1,11 +1,21 @@
-from typing import Any, Dict, List, Optional, Union
-from pydantic import AnyHttpUrl, EmailStr, Field, SecretStr, field_validator, model_validator, ValidationInfo
-from pydantic_settings import BaseSettings, SettingsConfigDict
-import logging
 import json
+import logging
 import os
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import (
+    AnyHttpUrl,
+    EmailStr,
+    Field,
+    SecretStr,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
+
 
 class Settings(BaseSettings):
     app_name: str = Field(default="NeoForge", env="APP_NAME")
@@ -18,19 +28,19 @@ class Settings(BaseSettings):
     api_v1_str: str = Field(default="/api/v1", env="API_V1_STR")
     database_url_for_env: str = Field(alias="database_url", env="DATABASE_URL")
     debug: bool = Field(
-        default=False,
-        env="DEBUG",
-        json_schema_extra={"coerce_boolean": True}
+        default=False, env="DEBUG", json_schema_extra={"coerce_boolean": True}
     )
     testing: bool = Field(default=False, env="TESTING")
     redis_url: str = Field(default="redis://redis:6379/0", env="REDIS_URL")
     environment: str = Field(
-        default="development",
-        env="ENVIRONMENT",
-        validation_alias="environment"
+        default="development", env="ENVIRONMENT", validation_alias="environment"
     )
-    cors_origins: List[str] = Field(default=["http://localhost:3000"], env="CORS_ORIGINS")
-    access_token_expire_minutes: int = Field(default=10080, env="ACCESS_TOKEN_EXPIRE_MINUTES")
+    cors_origins: List[str] = Field(
+        default=["http://localhost:3000"], env="CORS_ORIGINS"
+    )
+    access_token_expire_minutes: int = Field(
+        default=10080, env="ACCESS_TOKEN_EXPIRE_MINUTES"
+    )
     smtp_user: Optional[str] = Field(default=None, env="SMTP_USER")
     smtp_password: Optional[str] = Field(default=None, env="SMTP_PASSWORD")
 
@@ -43,7 +53,7 @@ class Settings(BaseSettings):
         validate_default=True,
         validate_assignment=True,
         env_nested_delimiter="__",
-        secrets_dir="/run/secrets"
+        secrets_dir="/run/secrets",
     )
 
     @field_validator("environment", mode="before")
@@ -60,7 +70,7 @@ class Settings(BaseSettings):
             secret_value = v.get_secret_value()
         else:
             secret_value = str(v)
-        
+
         if len(secret_value) < 32:
             raise ValueError("Secret key must be at least 32 characters long")
         return SecretStr(secret_value)
@@ -77,7 +87,7 @@ class Settings(BaseSettings):
             return v.lower() == "true"
         return bool(v)
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_smtp(self):
         if (self.smtp_user or self.smtp_password) and not (
             self.smtp_user and self.smtp_password
@@ -91,7 +101,9 @@ class Settings(BaseSettings):
             # Ensure these overrides happen *after* individual fields are validated
             self.testing = True
             self.debug = False
-            self.cors_origins = [] # Ensure this override is correctly placed and executed
+            self.cors_origins = (
+                []
+            )  # Ensure this override is correctly placed and executed
 
         # SMTP validation
         if bool(self.smtp_user) != bool(self.smtp_password):
@@ -99,6 +111,7 @@ class Settings(BaseSettings):
             raise ValueError("SMTP user and password must both be set or both be None")
 
         return self
+
 
 def verify_settings():
     """Runtime validation for critical production settings"""

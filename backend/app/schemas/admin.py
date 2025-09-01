@@ -2,14 +2,14 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, ConfigDict
-
 from app.models.admin import AdminRole
 from app.schemas.user import UserCreate
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class AdminPermissionBase(BaseModel):
     """Base schema for admin permissions."""
+
     role: AdminRole
     resource: str
     can_create: bool = False
@@ -20,11 +20,13 @@ class AdminPermissionBase(BaseModel):
 
 class AdminPermissionCreate(AdminPermissionBase):
     """Schema for creating admin permissions."""
+
     pass
 
 
 class AdminPermissionUpdate(AdminPermissionBase):
     """Schema for updating admin permissions."""
+
     role: Optional[AdminRole] = None
     resource: Optional[str] = None
     can_create: Optional[bool] = None
@@ -35,6 +37,7 @@ class AdminPermissionUpdate(AdminPermissionBase):
 
 class AdminPermission(AdminPermissionBase):
     """Schema for admin permission responses."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -44,12 +47,14 @@ class AdminPermission(AdminPermissionBase):
 
 class AdminBase(BaseModel):
     """Base schema for admin operations."""
+
     role: AdminRole
     is_active: bool = True
 
 
 class AdminCreate(AdminBase):
     """Schema for creating admin users."""
+
     email: EmailStr
     full_name: str
     password: str
@@ -69,17 +74,19 @@ class AdminCreate(AdminBase):
             password=self.password,
             password_confirm=self.password_confirm,
             is_superuser=True,
-            is_active=self.is_active
+            is_active=self.is_active,
         )
 
 
 class AdminCreateWithoutUser(AdminBase):
     """Schema for creating admin users when user already exists."""
+
     pass
 
 
 class AdminUpdate(AdminBase):
     """Schema for updating admin users."""
+
     role: Optional[AdminRole] = None
     is_active: Optional[bool] = None
     email: Optional[EmailStr] = None
@@ -89,6 +96,7 @@ class AdminUpdate(AdminBase):
 
 class Admin(AdminBase):
     """Schema for admin responses."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -100,8 +108,9 @@ class Admin(AdminBase):
 
 class AdminWithUser(Admin):
     """Schema for admin responses with user information."""
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     email: EmailStr
     full_name: str
     user_id: int
@@ -109,6 +118,7 @@ class AdminWithUser(Admin):
 
 class AdminAuditLogBase(BaseModel):
     """Base schema for admin audit logs."""
+
     action: str
     resource: str
     resource_id: Optional[str] = None
@@ -117,13 +127,15 @@ class AdminAuditLogBase(BaseModel):
 
 class AdminAuditLogCreate(AdminAuditLogBase):
     """Schema for creating admin audit logs."""
+
     admin_id: int
 
 
 class AdminAuditLog(AdminAuditLogBase):
     """Schema for admin audit log responses."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     admin_id: int
-    created_at: datetime 
+    created_at: datetime

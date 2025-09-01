@@ -39,10 +39,10 @@ describe('VerifyEmail Component Tests', () => {
     // Create a test container
     container = document.createElement('div');
     document.body.appendChild(container);
-    
+
     // Reset mocks
     vi.clearAllMocks();
-    
+
     // Reset window.location.search
     window.location.search = '';
   });
@@ -61,7 +61,7 @@ describe('VerifyEmail Component Tests', () => {
 
       const verifyEmail = document.createElement('verify-email');
       container.appendChild(verifyEmail);
-      
+
       // Wait for component to be fully rendered and connectedCallback to run
       await verifyEmail.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -79,7 +79,7 @@ describe('VerifyEmail Component Tests', () => {
 
       const verifyEmail = document.createElement('verify-email');
       container.appendChild(verifyEmail);
-      
+
       // Wait for component to be fully rendered and connectedCallback to run
       await verifyEmail.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -93,7 +93,7 @@ describe('VerifyEmail Component Tests', () => {
     it('should show loading state during verification', async () => {
       // Arrange
       window.location.search = '?token=loading123';
-      
+
       let resolveVerify;
       authService.verifyEmail.mockImplementation(() => {
         return new Promise(resolve => {
@@ -103,14 +103,14 @@ describe('VerifyEmail Component Tests', () => {
 
       const verifyEmail = document.createElement('verify-email');
       container.appendChild(verifyEmail);
-      
+
       // Wait for component to be rendered and verification to start
       await verifyEmail.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 50));
 
       // Assert loading state
       expect(verifyEmail.loading).toBe(true);
-      
+
       // Check loading UI is shown
       const loadingIcon = verifyEmail.shadowRoot.querySelector('.material-icons');
       expect(loadingIcon.textContent).toBe('hourglass_empty');
@@ -130,13 +130,13 @@ describe('VerifyEmail Component Tests', () => {
       const verifyEmail = document.createElement('verify-email');
       verifyEmail.verificationSuccess = true;
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       // Assert
       const successIcon = verifyEmail.shadowRoot.querySelector('.material-icons');
       expect(successIcon.textContent).toBe('check_circle');
-      
+
       const title = verifyEmail.shadowRoot.querySelector('.title');
       expect(title.textContent).toBe('Email Verified!');
 
@@ -149,7 +149,7 @@ describe('VerifyEmail Component Tests', () => {
       const verifyEmail = document.createElement('verify-email');
       verifyEmail.verificationSuccess = true;
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       // Mock window.location.href setter
@@ -182,7 +182,7 @@ describe('VerifyEmail Component Tests', () => {
       const verifyEmail = document.createElement('verify-email');
       verifyEmail.email = 'test@example.com';
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       authService.resendVerification.mockResolvedValue({ success: true });
@@ -202,7 +202,7 @@ describe('VerifyEmail Component Tests', () => {
       const verifyEmail = document.createElement('verify-email');
       verifyEmail.email = 'test@example.com';
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       authService.resendVerification.mockRejectedValue(new Error('Failed to send email'));
@@ -222,7 +222,7 @@ describe('VerifyEmail Component Tests', () => {
       const verifyEmail = document.createElement('verify-email');
       verifyEmail.email = ''; // Empty email
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       // Act
@@ -241,13 +241,13 @@ describe('VerifyEmail Component Tests', () => {
       verifyEmail.email = 'test@example.com';
       verifyEmail.verificationSent = true;
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       // Assert
       const icon = verifyEmail.shadowRoot.querySelector('.material-icons');
       expect(icon.textContent).toBe('mark_email_read');
-      
+
       const title = verifyEmail.shadowRoot.querySelector('.title');
       expect(title.textContent).toBe('Verification Email Sent');
 
@@ -260,7 +260,7 @@ describe('VerifyEmail Component Tests', () => {
       const verifyEmail = document.createElement('verify-email');
       verifyEmail.verificationSent = true;
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       // Act
@@ -278,7 +278,7 @@ describe('VerifyEmail Component Tests', () => {
       // Arrange
       const verifyEmail = document.createElement('verify-email');
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       // Assert
@@ -297,7 +297,7 @@ describe('VerifyEmail Component Tests', () => {
       // Arrange
       const verifyEmail = document.createElement('verify-email');
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       // Act
@@ -314,7 +314,7 @@ describe('VerifyEmail Component Tests', () => {
       const verifyEmail = document.createElement('verify-email');
       verifyEmail.email = 'test@example.com';
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       authService.resendVerification.mockResolvedValue({ success: true });
@@ -332,7 +332,7 @@ describe('VerifyEmail Component Tests', () => {
       // Arrange
       const verifyEmail = document.createElement('verify-email');
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       // Mock window.location.href setter
@@ -367,7 +367,7 @@ describe('VerifyEmail Component Tests', () => {
 
       const verifyEmail = document.createElement('verify-email');
       container.appendChild(verifyEmail);
-      
+
       // Wait for component to be fully rendered and verification to complete
       await verifyEmail.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -384,7 +384,7 @@ describe('VerifyEmail Component Tests', () => {
       const verifyEmail = document.createElement('verify-email');
       verifyEmail.error = 'Something went wrong';
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       // Assert
@@ -398,7 +398,7 @@ describe('VerifyEmail Component Tests', () => {
       const verifyEmail = document.createElement('verify-email');
       verifyEmail.error = '';
       container.appendChild(verifyEmail);
-      
+
       await verifyEmail.updateComplete;
 
       // Assert
@@ -411,10 +411,10 @@ describe('VerifyEmail Component Tests', () => {
     it('should extract token and email from URL parameters', () => {
       // Arrange
       window.location.search = '?token=abc123&email=test@example.com';
-      
+
       // Act
       const verifyEmail = document.createElement('verify-email');
-      
+
       // Assert
       expect(verifyEmail.token).toBe('abc123');
       expect(verifyEmail.email).toBe('test@example.com');
@@ -423,10 +423,10 @@ describe('VerifyEmail Component Tests', () => {
     it('should handle missing URL parameters gracefully', () => {
       // Arrange
       window.location.search = '';
-      
+
       // Act
       const verifyEmail = document.createElement('verify-email');
-      
+
       // Assert
       expect(verifyEmail.token).toBeNull();
       expect(verifyEmail.email).toBe('');
@@ -435,10 +435,10 @@ describe('VerifyEmail Component Tests', () => {
     it('should handle partial URL parameters', () => {
       // Arrange
       window.location.search = '?token=abc123';
-      
+
       // Act
       const verifyEmail = document.createElement('verify-email');
-      
+
       // Assert
       expect(verifyEmail.token).toBe('abc123');
       expect(verifyEmail.email).toBe('');

@@ -10,14 +10,16 @@ This test verifies that the Celery app is configured correctly, including:
 All tests use mocking to avoid actual Celery connections.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 from datetime import timedelta
+from unittest.mock import MagicMock, patch
+
+import pytest
 from celery import Celery
 
-from app.core.config import Settings, get_settings, Environment
 # Import the factory function
 from app.core.celery import create_celery_app
+from app.core.config import Environment, Settings, get_settings
+
 # Import the test_settings fixture implicitly via usefixtures or explicitly if needed
 from tests.conftest import test_settings
 
@@ -76,14 +78,14 @@ def test_celery_default_queue_settings(test_settings: Settings):
     assert celery_app_instance.conf.task_default_routing_key == "default"
 
 
-@patch('app.core.celery.Celery')
+@patch("app.core.celery.Celery")
 def test_celery_app_factory_mocking(mock_Celery):
     """Test the factory function with mocking the Celery class itself."""
     # Create mock Settings
     mock_settings_obj = MagicMock(spec=Settings)
     mock_redis_url = "redis://mocked-redis:6379/1"
     mock_settings_obj.redis_url = mock_redis_url
-    
+
     # Mock return value of Celery()
     mock_celery_instance = MagicMock()
     # Configure the mock instance's conf attribute to be a MagicMock as well

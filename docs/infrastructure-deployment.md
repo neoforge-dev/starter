@@ -9,7 +9,7 @@ graph LR
     A[Cloudflare CDN] --> B[Digital Ocean Droplet]
     B --> C[Nomad Orchestrator]
     C --> D[PostgreSQL Container]
-    C --> E[Redis Container] 
+    C --> E[Redis Container]
     C --> F[API Container]
     C --> G[Frontend Container]
     C --> H[Monitoring Stack]
@@ -26,7 +26,7 @@ graph LR
 
 ### Scaling Path
 1. **Bootstrap** ($10/month) → Single droplet, co-hosted services
-2. **Growth** ($50/month) → Multiple droplets, managed database  
+2. **Growth** ($50/month) → Multiple droplets, managed database
 3. **Scale** ($200+/month) → Auto-scaling, multi-region, HA setup
 
 ## Infrastructure Setup
@@ -159,7 +159,7 @@ job "postgres" {
       config {
         image = "postgres:15-alpine"
         ports = ["postgres"]
-        
+
         auth {
           username = "neoforge"
           password = "${POSTGRES_PASSWORD}"
@@ -179,14 +179,14 @@ job "postgres" {
       service {
         name = "postgres"
         port = "postgres"
-        
+
         check {
           name     = "postgres-tcp"
           type     = "tcp"
           interval = "10s"
           timeout  = "2s"
         }
-        
+
         check {
           name     = "postgres-script"
           type     = "script"
@@ -246,7 +246,7 @@ job "redis" {
       service {
         name = "redis"
         port = "redis"
-        
+
         check {
           type     = "tcp"
           interval = "10s"
@@ -299,7 +299,7 @@ job "api" {
       service {
         name = "api"
         port = "http"
-        
+
         check {
           name     = "api-health"
           type     = "http"
@@ -418,7 +418,7 @@ server {
     # SSL configuration
     ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
-    
+
     # Security headers
     add_header X-Frame-Options DENY;
     add_header X-Content-Type-Options nosniff;
@@ -441,7 +441,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+
         # Handle client-side routing
         try_files $uri $uri/ /index.html;
     }
@@ -483,11 +483,11 @@ job "monitoring" {
 
     task "prometheus" {
       driver = "docker"
-      
+
       config {
         image = "prom/prometheus:latest"
         ports = ["prometheus"]
-        
+
         mount {
           type   = "bind"
           source = "local/prometheus.yml"
@@ -504,7 +504,7 @@ scrape_configs:
   - job_name: 'nomad'
     static_configs:
       - targets: ['localhost:4646']
-  
+
   - job_name: 'api'
     static_configs:
       - targets: ['{{ range service "api" }}{{ .Address }}:{{ .Port }}{{ end }}']
@@ -537,7 +537,7 @@ EOH
 
     task "grafana" {
       driver = "docker"
-      
+
       config {
         image = "grafana/grafana:latest"
         ports = ["grafana"]

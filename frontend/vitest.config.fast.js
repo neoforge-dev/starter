@@ -22,20 +22,20 @@ export default defineConfig({
       },
     },
     globals: true,
-    
+
     // Optimized for speed and stability
     threads: false,
     pool: "forks",
     isolate: false, // Faster execution, less isolation
-    
+
     // Fast execution settings
     testTimeout: 5000,  // Reduced from 8000
     hookTimeout: 2000,  // Reduced from 4000
-    
+
     // Exclude problematic tests for fast execution
     exclude: [
       "**/node_modules/**",
-      "**/tests-old/**", 
+      "**/tests-old/**",
       "**/tests-backup-old/**",
       "test/**",
       "src/test/e2e/**",
@@ -43,19 +43,19 @@ export default defineConfig({
       "src/test/integration/api-communication.test.js",
       "src/test/integration/auth-flow-integration.test.js",
     ],
-    
+
     // Minimal coverage for speed
     coverage: {
       enabled: false, // Disable coverage for fast mode
       provider: "v8",
     },
-    
+
     // Fast setup files
     setupFiles: [
       "./src/test/setup/optimized-performance-polyfill.js",
       "./vitest-fast-setup.js", // Custom fast setup
     ],
-    
+
     // Optimized pool settings
     poolOptions: {
       forks: {
@@ -63,21 +63,21 @@ export default defineConfig({
         isolate: false, // Faster execution
       },
     },
-    
+
     // Fast execution settings
     retry: 0,
     bail: 5, // Stop after 5 failures
     silent: false,
-    
+
     // Single worker for consistency
     maxWorkers: 1,
     minWorkers: 1,
-    
+
     // Watch mode optimizations
     watch: {
       ignored: ["**/node_modules/**", "**/dist/**", "**/coverage/**"],
     },
-    
+
     // Faster dependency optimization
     deps: {
       optimizer: {
@@ -86,7 +86,7 @@ export default defineConfig({
         },
       },
     },
-    
+
     // Custom reporters for different modes
     reporters: process.env.CI ? ["json"] : ["default"],
   },

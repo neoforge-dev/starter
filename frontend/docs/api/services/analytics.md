@@ -242,4 +242,4 @@ console.log(analytics.userEvents);
 3. **Error Logging:**
    - Sanitize error messages
    - Remove sensitive information
-   - Implement log rotation 
+   - Implement log rotation

@@ -1,6 +1,6 @@
 /**
  * PerformanceValidator Unit Tests
- * 
+ *
  * Comprehensive unit tests for the Performance Validator tool.
  * Tests performance measurement accuracy and realistic validation scenarios.
  */
@@ -13,7 +13,7 @@ describe('PerformanceValidator', () => {
 
   beforeEach(() => {
     validator = new PerformanceValidator();
-    
+
     // Mock performance API for consistent testing
     mockPerformance = {
       now: vi.fn(() => Date.now()),
@@ -23,7 +23,7 @@ describe('PerformanceValidator', () => {
         jsHeapSizeLimit: 100 * 1024 * 1024 // 100MB
       }
     };
-    
+
     global.performance = mockPerformance;
   });
 
@@ -46,7 +46,7 @@ describe('PerformanceValidator', () => {
 
     it('should have sensible default performance thresholds', () => {
       const thresholds = validator.thresholds;
-      
+
       expect(thresholds.firstContentfulPaint).toBe(1500);
       expect(thresholds.largestContentfulPaint).toBe(2500);
       expect(thresholds.cumulativeLayoutShift).toBe(0.1);
@@ -72,9 +72,9 @@ describe('PerformanceValidator', () => {
 
     it('should generate realistic user data structure', () => {
       const data = validator.generateLargeDataset(5);
-      
+
       expect(data.length).toBe(5);
-      
+
       data.forEach((item, index) => {
         expect(item.id).toBe(index + 1);
         expect(item.name).toContain('User');
@@ -113,9 +113,9 @@ describe('PerformanceValidator', () => {
     it('should generate HTML for neo-table component', () => {
       const scenario = { components: ['neo-table'] };
       const testData = [{ id: 1, name: 'Test', email: 'test@example.com' }];
-      
+
       const html = validator.generateComponentHTML(scenario, testData);
-      
+
       expect(html).toContain('<neo-table');
       expect(html).toContain('data=\'[{"id":1,"name":"Test","email":"test@example.com"}]\'');
       expect(html).toContain('sortable="true"');
@@ -126,9 +126,9 @@ describe('PerformanceValidator', () => {
     it('should generate HTML for neo-form-builder component', () => {
       const scenario = { components: ['neo-form-builder'] };
       const testData = [];
-      
+
       const html = validator.generateComponentHTML(scenario, testData);
-      
+
       expect(html).toContain('<neo-form-builder');
       expect(html).toContain('"type":"text"');
       expect(html).toContain('"name":"name"');
@@ -140,9 +140,9 @@ describe('PerformanceValidator', () => {
     it('should generate HTML for neo-data-grid component', () => {
       const scenario = { components: ['neo-data-grid'] };
       const testData = [{ id: 1, name: 'Test' }];
-      
+
       const html = validator.generateComponentHTML(scenario, testData);
-      
+
       expect(html).toContain('<neo-data-grid');
       expect(html).toContain('editable="true"');
       expect(html).toContain('virtual-scroll="true"');
@@ -154,9 +154,9 @@ describe('PerformanceValidator', () => {
         { id: 1, name: 'John', email: 'john@test.com', department: 'Engineering' },
         { id: 2, name: 'Jane', email: 'jane@test.com', department: 'Sales' }
       ];
-      
+
       const html = validator.generateComponentHTML(scenario, testData);
-      
+
       expect(html).toContain('<neo-card>');
       expect(html).toContain('<h3>John</h3>');
       expect(html).toContain('<p>john@test.com</p>');
@@ -168,9 +168,9 @@ describe('PerformanceValidator', () => {
     it('should generate HTML for neo-button component', () => {
       const scenario = { components: ['neo-button'] };
       const testData = [];
-      
+
       const html = validator.generateComponentHTML(scenario, testData);
-      
+
       expect(html).toContain('<neo-button variant="primary">Primary Action</neo-button>');
       expect(html).toContain('<neo-button variant="secondary">Secondary Action</neo-button>');
     });
@@ -178,18 +178,18 @@ describe('PerformanceValidator', () => {
     it('should handle unknown components gracefully', () => {
       const scenario = { components: ['unknown-component'] };
       const testData = [];
-      
+
       const html = validator.generateComponentHTML(scenario, testData);
-      
+
       expect(html).toContain('Component unknown-component - Performance Test');
     });
 
     it('should wrap components in container div', () => {
       const scenario = { components: ['neo-button'] };
       const testData = [];
-      
+
       const html = validator.generateComponentHTML(scenario, testData);
-      
+
       expect(html).toContain('<div style="padding: 20px;">');
       expect(html).toContain('</div>');
     });
@@ -203,13 +203,13 @@ describe('PerformanceValidator', () => {
       };
 
       const testEnvironment = await validator.setupTestEnvironment(scenario);
-      
+
       expect(testEnvironment.container).toBeDefined();
       expect(testEnvironment.container.id).toBe('perf-test-container');
       expect(testEnvironment.data).toBeDefined();
       expect(Array.isArray(testEnvironment.data)).toBe(true);
       expect(testEnvironment.components).toEqual(['neo-button']);
-      
+
       // Container should be positioned off-screen
       expect(testEnvironment.container.style.position).toBe('absolute');
       expect(testEnvironment.container.style.top).toBe('-10000px');
@@ -217,7 +217,7 @@ describe('PerformanceValidator', () => {
 
     it('should measure memory usage when performance.memory is available', () => {
       const memoryMetrics = validator.measureMemoryUsage();
-      
+
       expect(memoryMetrics.memoryUsed).toBe(10 * 1024 * 1024);
       expect(memoryMetrics.memoryTotal).toBe(50 * 1024 * 1024);
       expect(memoryMetrics.memoryLimit).toBe(100 * 1024 * 1024);
@@ -225,9 +225,9 @@ describe('PerformanceValidator', () => {
 
     it('should handle missing performance.memory gracefully', () => {
       global.performance = { now: mockPerformance.now };
-      
+
       const memoryMetrics = validator.measureMemoryUsage();
-      
+
       expect(memoryMetrics.memoryUsed).toBe('unknown');
       expect(memoryMetrics.memoryTotal).toBe('unknown');
       expect(memoryMetrics.memoryLimit).toBe('unknown');
@@ -238,27 +238,27 @@ describe('PerformanceValidator', () => {
       const container = document.createElement('div');
       container.style.width = '100px';
       container.style.height = '100px';
-      
+
       const smallElement = document.createElement('div');
       smallElement.style.width = '50px';
       smallElement.style.height = '50px';
-      
+
       const largeElement = document.createElement('div');
       largeElement.style.width = '200px';
       largeElement.style.height = '200px';
-      
+
       container.appendChild(smallElement);
       container.appendChild(largeElement);
       document.body.appendChild(container);
-      
+
       // Mock getBoundingClientRect
       smallElement.getBoundingClientRect = () => ({ width: 50, height: 50 });
       largeElement.getBoundingClientRect = () => ({ width: 200, height: 200 });
-      
+
       const largest = validator.findLargestContentfulElement(container);
-      
+
       expect(largest).toBe(largeElement);
-      
+
       // Cleanup
       document.body.removeChild(container);
     });
@@ -269,17 +269,17 @@ describe('PerformanceValidator', () => {
       const testEnvironment = {
         container: document.createElement('div')
       };
-      
+
       const table = document.createElement('neo-table');
       testEnvironment.container.appendChild(table);
-      
+
       let eventFired = false;
       table.addEventListener('sort', (event) => {
         expect(event.detail.column).toBe('name');
         expect(event.detail.direction).toBe('asc');
         eventFired = true;
       });
-      
+
       await validator.simulateSort(testEnvironment);
       expect(eventFired).toBe(true);
     });
@@ -288,17 +288,17 @@ describe('PerformanceValidator', () => {
       const testEnvironment = {
         container: document.createElement('div')
       };
-      
+
       const table = document.createElement('neo-table');
       testEnvironment.container.appendChild(table);
-      
+
       let eventFired = false;
       table.addEventListener('filter', (event) => {
         expect(event.detail.column).toBe('department');
         expect(event.detail.value).toBe('Engineering');
         eventFired = true;
       });
-      
+
       await validator.simulateFilter(testEnvironment);
       expect(eventFired).toBe(true);
     });
@@ -307,10 +307,10 @@ describe('PerformanceValidator', () => {
       const testEnvironment = {
         container: document.createElement('div')
       };
-      
+
       const grid = document.createElement('neo-data-grid');
       testEnvironment.container.appendChild(grid);
-      
+
       let eventFired = false;
       grid.addEventListener('cell-edit', (event) => {
         expect(event.detail.row).toBe(0);
@@ -318,7 +318,7 @@ describe('PerformanceValidator', () => {
         expect(event.detail.value).toBe('Updated Name');
         eventFired = true;
       });
-      
+
       await validator.simulateEdit(testEnvironment);
       expect(eventFired).toBe(true);
     });
@@ -327,16 +327,16 @@ describe('PerformanceValidator', () => {
       const testEnvironment = {
         container: document.createElement('div')
       };
-      
+
       const form = document.createElement('neo-form-builder');
       testEnvironment.container.appendChild(form);
-      
+
       let eventFired = false;
       form.addEventListener('submit', (event) => {
         expect(event.detail.data.name).toBe('Test User');
         eventFired = true;
       });
-      
+
       await validator.simulateSubmit(testEnvironment);
       expect(eventFired).toBe(true);
     });
@@ -345,7 +345,7 @@ describe('PerformanceValidator', () => {
       const emptyEnvironment = {
         container: document.createElement('div')
       };
-      
+
       // Should not throw errors for missing components
       await expect(validator.simulateSort(emptyEnvironment)).resolves.toBeUndefined();
       await expect(validator.simulateFilter(emptyEnvironment)).resolves.toBeUndefined();
@@ -361,15 +361,15 @@ describe('PerformanceValidator', () => {
         largestContentfulPaint: 2200,
         cumulativeLayoutShift: 0.08
       };
-      
+
       const targetMetrics = {
         firstContentfulPaint: 1500,
         largestContentfulPaint: 2500,
         cumulativeLayoutShift: 0.1
       };
-      
+
       const results = validator.analyzeResults(metrics, targetMetrics);
-      
+
       expect(results.passed).toBe(true);
       expect(results.issues.length).toBe(0);
       expect(results.metrics.firstContentfulPaint).toBe(metrics.firstContentfulPaint);
@@ -383,15 +383,15 @@ describe('PerformanceValidator', () => {
         largestContentfulPaint: 3000, // Exceeds 2500ms target
         cumulativeLayoutShift: 0.15 // Exceeds 0.1 target
       };
-      
+
       const targetMetrics = {
         firstContentfulPaint: 1500,
         largestContentfulPaint: 2500,
         cumulativeLayoutShift: 0.1
       };
-      
+
       const results = validator.analyzeResults(slowMetrics, targetMetrics);
-      
+
       expect(results.passed).toBe(false);
       expect(results.issues.length).toBeGreaterThanOrEqual(2); // At least FCP and LCP issues
       expect(results.issues.some(issue => issue.includes('First Contentful Paint'))).toBe(true);
@@ -401,13 +401,13 @@ describe('PerformanceValidator', () => {
     it('should simulate CLS based on render time', () => {
       const fastMetrics = { firstContentfulPaint: 500 };
       const slowMetrics = { firstContentfulPaint: 2000 };
-      
+
       const fastCLS = validator.simulateCLS(fastMetrics);
       const slowCLS = validator.simulateCLS(slowMetrics);
-      
+
       expect(fastCLS).toBeGreaterThan(0);
       expect(slowCLS).toBeGreaterThanOrEqual(fastCLS);
-      
+
       // Should cap the impact
       expect(slowCLS).toBeLessThanOrEqual(0.1); // Reasonable upper bound
     });
@@ -419,9 +419,9 @@ describe('PerformanceValidator', () => {
         metrics: { firstContentfulPaint: 1200 },
         issues: []
       };
-      
+
       const recommendations = validator.generateRecommendations(slowFCPResults);
-      
+
       expect(recommendations).toContain('Consider lazy loading non-critical components');
       expect(recommendations).toContain('Optimize component render methods for faster initial paint');
     });
@@ -431,9 +431,9 @@ describe('PerformanceValidator', () => {
         metrics: { largestContentfulPaint: 2100 },
         issues: []
       };
-      
+
       const recommendations = validator.generateRecommendations(slowLCPResults);
-      
+
       expect(recommendations).toContain('Implement virtual scrolling for large data sets');
       expect(recommendations).toContain('Use progressive loading for complex components');
     });
@@ -443,9 +443,9 @@ describe('PerformanceValidator', () => {
         metrics: { cumulativeLayoutShift: 0.12 },
         issues: []
       };
-      
+
       const recommendations = validator.generateRecommendations(highCLSResults);
-      
+
       expect(recommendations).toContain('Add explicit dimensions to prevent layout shifts');
       expect(recommendations).toContain('Use skeleton screens during loading');
     });
@@ -455,9 +455,9 @@ describe('PerformanceValidator', () => {
         metrics: { memoryUsed: 60 * 1024 * 1024 }, // 60MB
         issues: []
       };
-      
+
       const recommendations = validator.generateRecommendations(highMemoryResults);
-      
+
       expect(recommendations).toContain('Implement component cleanup to prevent memory leaks');
       expect(recommendations).toContain('Use object pooling for frequently created/destroyed elements');
     });
@@ -472,7 +472,7 @@ describe('PerformanceValidator', () => {
         },
         issues: []
       };
-      
+
       const recommendations = validator.generateRecommendations(goodResults);
       expect(recommendations.length).toBe(0);
     });
@@ -492,7 +492,7 @@ describe('PerformanceValidator', () => {
       };
 
       const result = await validator.validateScenario(scenario);
-      
+
       expect(result).toBeDefined();
       expect(result.passed).toBeDefined();
       expect(result.metrics).toBeDefined();
@@ -516,10 +516,10 @@ describe('PerformanceValidator', () => {
       };
 
       const result = await validator.validateScenario(complexScenario);
-      
+
       expect(result.scenario).toBe('neo-table, neo-form-builder, neo-card');
       expect(result.metrics).toBeDefined();
-      
+
       // Should have interaction timing metrics
       if (result.metrics.sortTime) {
         expect(typeof result.metrics.sortTime).toBe('number');
@@ -550,10 +550,10 @@ describe('PerformanceValidator', () => {
       const testEnvironment = {
         container: document.createElement('div')
       };
-      
+
       document.body.appendChild(testEnvironment.container);
       expect(document.body.contains(testEnvironment.container)).toBe(true);
-      
+
       validator.cleanup(testEnvironment);
       expect(document.body.contains(testEnvironment.container)).toBe(false);
     });
@@ -562,7 +562,7 @@ describe('PerformanceValidator', () => {
       const testEnvironment = {
         container: document.createElement('div')
       };
-      
+
       // Container not added to DOM
       expect(() => validator.cleanup(testEnvironment)).not.toThrow();
     });

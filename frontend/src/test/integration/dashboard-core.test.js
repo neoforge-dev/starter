@@ -16,16 +16,16 @@ describe('Dashboard Core Integration Tests', () => {
     // Create container and dashboard element
     container = document.createElement('div');
     document.body.appendChild(container);
-    
+
     dashboard = document.createElement('dashboard-page');
     container.appendChild(dashboard);
-    
+
     // Wait for element to be upgraded and connected
     await dashboard.updateComplete;
-    
+
     // Wait for connectedCallback and fetchTasks to complete
     await new Promise(resolve => setTimeout(resolve, 50));
-    
+
     // Mock window.auth
     window.auth = {
       currentUser: {
@@ -83,7 +83,7 @@ describe('Dashboard Core Integration Tests', () => {
     delete window.auth;
     delete window.api;
     delete window.matchMedia;
-    
+
     // Clean up DOM
     if (container && container.parentNode) {
       container.parentNode.removeChild(container);
@@ -135,7 +135,7 @@ describe('Dashboard Core Integration Tests', () => {
     it('should load and display tasks correctly', async () => {
       await dashboard.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 10));
-      
+
       // Set tasks directly in the test since fetchTasks override didn't work
       dashboard.tasks = [
         { id: 1, title: 'Test Task 1', description: 'Description 1', status: 'pending', priority: 'high', dueDate: '2024-01-01' },
@@ -144,7 +144,7 @@ describe('Dashboard Core Integration Tests', () => {
       ];
       dashboard.requestUpdate();
       await dashboard.updateComplete;
-      
+
       // Tasks should now be set
       expect(dashboard.tasks.length).toBe(3);
 
@@ -162,7 +162,7 @@ describe('Dashboard Core Integration Tests', () => {
       await dashboard.updateComplete;
 
       // Mock delayed API response
-      window.api.getTasks = vi.fn().mockImplementation(() => 
+      window.api.getTasks = vi.fn().mockImplementation(() =>
         new Promise(resolve => setTimeout(() => resolve({ tasks: [] }), 100))
       );
 
@@ -220,7 +220,7 @@ describe('Dashboard Core Integration Tests', () => {
       await dashboard.updateComplete;
 
       expect(dashboard.isMobile).toBe(true);
-      
+
       const dashboardContainer = dashboard.shadowRoot?.querySelector('.dashboard-container');
       expect(dashboardContainer?.classList.contains('mobile')).toBe(true);
     });
@@ -255,7 +255,7 @@ describe('Dashboard Core Integration Tests', () => {
     it('should update task status correctly', async () => {
       await dashboard.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 10));
-      
+
       // Set tasks directly in the test
       dashboard.tasks = [
         { id: 1, title: 'Test Task 1', description: 'Description 1', status: 'pending', priority: 'high', dueDate: '2024-01-01' },
@@ -264,7 +264,7 @@ describe('Dashboard Core Integration Tests', () => {
       ];
       dashboard.requestUpdate();
       await dashboard.updateComplete;
-      
+
       expect(dashboard.tasks.length).toBe(3);
       const initialTask = dashboard.tasks.find(task => task.id === 1);
       expect(initialTask.status).toBe('pending');
@@ -295,7 +295,7 @@ describe('Dashboard Core Integration Tests', () => {
     it('should handle update button clicks', async () => {
       await dashboard.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 10));
-      
+
       // Set tasks directly in the test
       dashboard.tasks = [
         { id: 1, title: 'Test Task 1', description: 'Description 1', status: 'pending', priority: 'high', dueDate: '2024-01-01' },
@@ -304,9 +304,9 @@ describe('Dashboard Core Integration Tests', () => {
       ];
       dashboard.requestUpdate();
       await dashboard.updateComplete;
-      
+
       expect(dashboard.tasks.length).toBe(3);
-      
+
       const updateButtons = dashboard.shadowRoot?.querySelectorAll('.update-button');
       expect(updateButtons.length).toBe(3);
 
@@ -350,7 +350,7 @@ describe('Dashboard Core Integration Tests', () => {
 
     it('should clean up timer on disconnect', () => {
       const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
-      
+
       dashboard.disconnectedCallback();
 
       expect(clearIntervalSpy).toHaveBeenCalledWith(dashboard.updateTimer);
@@ -363,13 +363,13 @@ describe('Dashboard Core Integration Tests', () => {
       ];
 
       const initialValues = dashboard.chartData.map(item => item.value);
-      
+
       dashboard.updateChartData();
 
       // Values should have changed (random update)
       const updatedValues = dashboard.chartData.map(item => item.value);
       expect(updatedValues).not.toEqual(initialValues);
-      
+
       // Values should be within expected range (original + 0-9)
       updatedValues.forEach((value, index) => {
         expect(value).toBeGreaterThanOrEqual(initialValues[index]);
@@ -388,7 +388,7 @@ describe('Dashboard Core Integration Tests', () => {
         document.createElement('button'),
         document.createElement('button')
       ];
-      
+
       mockButtons.forEach((btn, index) => {
         btn.className = 'quick-action';
         btn.textContent = `Action ${index + 1}`;
@@ -400,7 +400,7 @@ describe('Dashboard Core Integration Tests', () => {
         value: mockButtons[0],
         writable: true
       });
-      
+
       const focusSpy = vi.spyOn(mockButtons[1], 'focus');
 
       // Simulate right arrow key
@@ -429,7 +429,7 @@ describe('Dashboard Core Integration Tests', () => {
   describe('Component Lifecycle', () => {
     it('should set up event listeners on connect', () => {
       const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-      
+
       dashboard.connectedCallback();
 
       expect(addEventListenerSpy).toHaveBeenCalledWith('resize', dashboard.checkMobileView);
@@ -437,7 +437,7 @@ describe('Dashboard Core Integration Tests', () => {
 
     it('should clean up event listeners on disconnect', () => {
       const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-      
+
       dashboard.disconnectedCallback();
 
       expect(removeEventListenerSpy).toHaveBeenCalledWith('resize', dashboard.checkMobileView);

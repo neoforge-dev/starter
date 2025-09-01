@@ -2,13 +2,13 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
-
 from app.models.email_tracking import EmailStatus
+from pydantic import BaseModel
 
 
 class EmailEventBase(BaseModel):
     """Base schema for email events."""
+
     event_type: EmailStatus
     occurred_at: datetime
     user_agent: Optional[str] = None
@@ -19,11 +19,13 @@ class EmailEventBase(BaseModel):
 
 class EmailEventCreate(EmailEventBase):
     """Schema for creating email events."""
+
     pass
 
 
 class EmailEvent(EmailEventBase):
     """Schema for email events."""
+
     id: int
     email_id: int
 
@@ -33,6 +35,7 @@ class EmailEvent(EmailEventBase):
 
 class EmailTrackingBase(BaseModel):
     """Base schema for email tracking."""
+
     email_id: str
     recipient: str
     subject: str
@@ -49,11 +52,13 @@ class EmailTrackingBase(BaseModel):
 
 class EmailTrackingCreate(EmailTrackingBase):
     """Schema for creating email tracking."""
+
     pass
 
 
 class EmailTracking(EmailTrackingBase):
     """Schema for email tracking."""
+
     id: int
     created_at: datetime
     updated_at: datetime
@@ -65,6 +70,7 @@ class EmailTracking(EmailTrackingBase):
 
 class EmailTrackingStats(BaseModel):
     """Schema for email tracking statistics."""
+
     total_sent: int
     total_delivered: int
     total_opened: int
@@ -76,4 +82,4 @@ class EmailTrackingStats(BaseModel):
     open_rate: float  # opened / delivered
     click_rate: float  # clicked / opened
     bounce_rate: float  # bounced / sent
-    spam_rate: float  # spam / sent 
+    spam_rate: float  # spam / sent

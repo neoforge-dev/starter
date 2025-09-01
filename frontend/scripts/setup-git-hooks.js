@@ -2,7 +2,7 @@
 
 /**
  * Git Hooks Setup Script
- * 
+ *
  * This script sets up pre-commit hooks for quality gates and automated checks.
  * It creates hooks that run before commits to ensure code quality and prevent
  * regressions from being committed.
@@ -28,22 +28,22 @@ class GitHooksSetup {
 
   async setup() {
     console.log('🪝 Setting up Git hooks...');
-    
+
     try {
       // Ensure .git/hooks directory exists
       await fs.mkdir(gitHooksDir, { recursive: true });
-      
+
       // Install each hook
       for (const [hookName, hookContent] of Object.entries(this.hooks)) {
         await this.installHook(hookName, hookContent);
       }
-      
+
       console.log('✅ Git hooks installed successfully!');
       console.log('📝 The following hooks are now active:');
       console.log('  • pre-commit: Quality checks before commit');
       console.log('  • pre-push: Full validation before push');
       console.log('  • commit-msg: Commit message validation');
-      
+
     } catch (error) {
       console.error('❌ Failed to setup Git hooks:', error.message);
       throw error;
@@ -52,13 +52,13 @@ class GitHooksSetup {
 
   async installHook(hookName, hookContent) {
     const hookPath = path.join(gitHooksDir, hookName);
-    
+
     // Write hook content
     await fs.writeFile(hookPath, hookContent);
-    
+
     // Make hook executable
     await fs.chmod(hookPath, 0o755);
-    
+
     console.log(`🪝 Installed ${hookName} hook`);
   }
 
@@ -143,7 +143,7 @@ fi
 if [[ \${#STAGED_JS_FILES[@]} -gt 5 ]]; then
   echo "📦 Checking bundle size impact..."
   npm run build --silent
-  
+
   # Simple bundle size check
   BUNDLE_SIZE=$(find dist -name "*.js" -exec stat -f%z {} + 2>/dev/null | awk '{sum += $1} END {print sum}' || echo "0")
   if [[ $BUNDLE_SIZE -gt 1048576 ]]; then # > 1MB
@@ -292,12 +292,12 @@ fi
 # Check for component-specific commits
 if [[ $commit_message =~ (feat|fix)\\(([^)]+)\\): ]]; then
   component="\${BASH_REMATCH[2]}"
-  
+
   # Check if component actually exists
-  if [[ ! -d "frontend/src/components/atoms/$component" && 
-        ! -d "frontend/src/components/molecules/$component" && 
-        ! -d "frontend/src/components/organisms/$component" && 
-        ! -d "frontend/src/components/pages/$component" && 
+  if [[ ! -d "frontend/src/components/atoms/$component" &&
+        ! -d "frontend/src/components/molecules/$component" &&
+        ! -d "frontend/src/components/organisms/$component" &&
+        ! -d "frontend/src/components/pages/$component" &&
         ! -f "frontend/src/components/*/$component.js" ]]; then
     echo "⚠️ Warning: Component '$component' not found in component directories"
     echo "Make sure the component name in your commit message is correct"
@@ -317,11 +317,11 @@ echo "✅ Commit message format is valid"
 
   async remove() {
     console.log('🗑️ Removing Git hooks...');
-    
+
     try {
       for (const hookName of Object.keys(this.hooks)) {
         const hookPath = path.join(gitHooksDir, hookName);
-        
+
         try {
           await fs.unlink(hookPath);
           console.log(`🗑️ Removed ${hookName} hook`);
@@ -331,9 +331,9 @@ echo "✅ Commit message format is valid"
           }
         }
       }
-      
+
       console.log('✅ Git hooks removed successfully!');
-      
+
     } catch (error) {
       console.error('❌ Failed to remove Git hooks:', error.message);
       throw error;
@@ -345,21 +345,21 @@ echo "✅ Commit message format is valid"
 async function main() {
   const args = process.argv.slice(2);
   const command = args[0];
-  
+
   const setup = new GitHooksSetup();
-  
+
   try {
     switch (command) {
       case 'install':
       case 'setup':
         await setup.setup();
         break;
-        
+
       case 'remove':
       case 'uninstall':
         await setup.remove();
         break;
-        
+
       default:
         console.log(\`
 Usage: node setup-git-hooks.js <command>
@@ -370,7 +370,7 @@ Commands:
 
 The following hooks will be installed:
   pre-commit         Quality checks before commit
-  pre-push          Full validation before push  
+  pre-push          Full validation before push
   commit-msg        Commit message validation
         \`);
         process.exit(1);

@@ -1,6 +1,6 @@
 /**
  * Component Template Generator
- * 
+ *
  * Generates the base Lit component template based on user inputs
  */
 
@@ -29,12 +29,12 @@ export function generateComponentTemplate(config) {
   }).join('\n');
 
   const eventJSDoc = hasEvents ? `
- * 
+ *
  * @event ${componentName}-change - Fired when component state changes
  * @event ${componentName}-click - Fired when component is clicked` : '';
 
   const slotJSDoc = hasSlots ? `
- * 
+ *
  * @slot default - Main content slot` : '';
 
   return `import { html, css } from "lit";
@@ -95,11 +95,11 @@ ${constructorDefaults}
   _handleInteraction(event) {
     event.preventDefault();
     event.stopPropagation();
-    
+
     this.dispatchEvent(new CustomEvent('${componentName}-change', {
       bubbles: true,
       composed: true,
-      detail: { 
+      detail: {
         value: event.target.value,
         originalEvent: event
       }

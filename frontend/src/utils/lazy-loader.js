@@ -130,11 +130,11 @@ export async function loadRouteComponents(routes, currentRoute) {
   if (!routeConfig) return;
 
   const { components = [] } = routeConfig;
-  
+
   // Load critical components first
   const criticalComponents = components.filter(c => c.critical);
   await Promise.all(
-    criticalComponents.map(({ path, tagName }) => 
+    criticalComponents.map(({ path, tagName }) =>
       lazyLoadComponent(path, tagName)
     )
   );
@@ -222,6 +222,6 @@ export async function loadComponentByTag(tagName) {
       }
     }
   }
-  
+
   throw new Error(`Component ${tagName} not found in registry`);
 }

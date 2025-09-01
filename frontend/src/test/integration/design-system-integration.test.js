@@ -89,9 +89,9 @@ describe('Design System Integration', () => {
     it('should support token updates', () => {
       const tokenPath = 'colors.brand.primary';
       const newValue = '#ff0000';
-      
+
       updateToken(tokenPath, newValue);
-      
+
       expect(document.documentElement.style.setProperty).toHaveBeenCalledWith(
         '--colors-brand-primary',
         newValue
@@ -104,9 +104,9 @@ describe('Design System Integration', () => {
         'colors.brand.primary': '#ff0000',
         'colors.brand.secondary': '#00ff00'
       };
-      
+
       batchUpdateTokens(updates);
-      
+
       expect(window.requestAnimationFrame).toHaveBeenCalled();
       expect(window.dispatchEvent).toHaveBeenCalled();
     });
@@ -116,7 +116,7 @@ describe('Design System Integration', () => {
       const jsonExport = TokenExporter.toJSON();
       const scssExport = TokenExporter.toSCSS();
       const figmaExport = TokenExporter.toFigmaTokens();
-      
+
       expect(cssExport).toContain(':root {');
       expect(cssExport).toContain('--colors-brand-primary');
       expect(typeof jsonExport).toBe('string');
@@ -138,7 +138,7 @@ describe('Design System Integration', () => {
       const availableThemes = themeManager.getAvailableThemes();
       expect(availableThemes).toBeInstanceOf(Array);
       expect(availableThemes.length).toBeGreaterThan(0);
-      
+
       const lightTheme = availableThemes.find(t => t.id === 'light');
       expect(lightTheme).toBeDefined();
       expect(lightTheme).toHaveProperty('name');
@@ -148,7 +148,7 @@ describe('Design System Integration', () => {
     it('should support theme switching', () => {
       const result = themeManager.applyTheme('dark');
       expect(result).toBe(true);
-      
+
       const currentTheme = themeManager.getCurrentTheme();
       expect(currentTheme.id).toBe('dark');
     });
@@ -160,14 +160,14 @@ describe('Design System Integration', () => {
         addEventListener: vi.fn(),
         removeEventListener: vi.fn()
       });
-      
+
       const result = themeManager.applyTheme('system');
       expect(result).toBe(true);
     });
 
     it('should support theme persistence', () => {
       themeManager.applyTheme('neoforge');
-      
+
       expect(window.localStorage.setItem).toHaveBeenCalledWith(
         'neoforge-theme',
         'neoforge'
@@ -177,7 +177,7 @@ describe('Design System Integration', () => {
     it('should export themes', () => {
       const jsonExport = themeManager.exportTheme('json');
       const cssExport = themeManager.exportTheme('css');
-      
+
       expect(typeof jsonExport).toBe('string');
       expect(typeof cssExport).toBe('string');
     });
@@ -186,14 +186,14 @@ describe('Design System Integration', () => {
       const overrides = {
         'colors.brand.primary': '#custom-color'
       };
-      
+
       const customTheme = themeManager.createThemeVariant(
         'light',
         overrides,
         'custom-test',
         'Test Custom Theme'
       );
-      
+
       expect(customTheme).toBeDefined();
       expect(customTheme.id).toBe('custom-test');
       expect(customTheme.tokens['colors.brand.primary']).toBe('#custom-color');
@@ -243,7 +243,7 @@ describe('Design System Integration', () => {
 
     it('should export tokens for design tools', () => {
       const exports = DesignIntegration.exportTokensForDesignTools();
-      
+
       expect(exports).toHaveProperty('figma');
       expect(exports).toHaveProperty('sketch');
       expect(exports).toHaveProperty('adobeXD');
@@ -275,9 +275,9 @@ describe('Design System Integration', () => {
         'colors.brand.primary': '#test1',
         'colors.brand.secondary': '#test2'
       };
-      
+
       batchUpdateTokens(updates);
-      
+
       // Should use requestAnimationFrame for batching
       expect(window.requestAnimationFrame).toHaveBeenCalled();
     });
@@ -286,14 +286,14 @@ describe('Design System Integration', () => {
   describe('Integration with Existing Components', () => {
     it('should apply theme classes to document element', () => {
       themeManager.applyTheme('dark');
-      
+
       expect(document.documentElement.classList.add).toHaveBeenCalledWith('theme-dark');
       expect(document.documentElement.setAttribute).toHaveBeenCalledWith('data-theme', 'dark');
     });
 
     it('should update color scheme for browser UI', () => {
       themeManager.applyTheme('dark');
-      
+
       expect(document.documentElement.style.setProperty).toHaveBeenCalledWith(
         expect.stringContaining('color-scheme'),
         expect.any(String)
@@ -317,7 +317,7 @@ describe('Design System Integration', () => {
     it('should register design-system-panel custom element', async () => {
       // Import the component to register it
       await import('../../playground/components/design-system-panel.js');
-      
+
       // In a real browser, this would be available
       // For testing, we just verify the import doesn't throw
       expect(true).toBe(true);

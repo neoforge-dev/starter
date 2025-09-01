@@ -9,7 +9,7 @@
  * @param {Class} superClass - The base class to extend
  * @returns {Class} Enhanced class with keyboard navigation capabilities
  */
-export const KeyboardNavigationMixin = (superClass) => 
+export const KeyboardNavigationMixin = (superClass) =>
   class extends superClass {
     constructor() {
       super();
@@ -27,7 +27,7 @@ export const KeyboardNavigationMixin = (superClass) =>
       this.addEventListener('keyup', this._keyupHandler);
       this.addEventListener('focus', this._focusHandler, true);
       this.addEventListener('blur', this._blurHandler, true);
-      
+
       // Set initial tabindex if not already set
       if (!this.hasAttribute('tabindex') && this._shouldBeInitiallyFocusable()) {
         this.setAttribute('tabindex', '0');
@@ -104,10 +104,10 @@ export const KeyboardNavigationMixin = (superClass) =>
     _handleFocus(event) {
       this._updateFocusableElements();
       this._currentFocusIndex = this._focusableElements.indexOf(event.target);
-      
+
       // Add visual focus indicator if needed
       this._addFocusIndicator?.(event.target);
-      
+
       this._handleCustomFocus?.(event);
     }
 
@@ -118,7 +118,7 @@ export const KeyboardNavigationMixin = (superClass) =>
     _handleBlur(event) {
       // Remove visual focus indicator if needed
       this._removeFocusIndicator?.(event.target);
-      
+
       this._handleCustomBlur?.(event);
     }
 
@@ -140,10 +140,10 @@ export const KeyboardNavigationMixin = (superClass) =>
       ].join(', ');
 
       // Check both shadow DOM and light DOM
-      const shadowElements = this.shadowRoot ? 
+      const shadowElements = this.shadowRoot ?
         Array.from(this.shadowRoot.querySelectorAll(selectors)) : [];
       const lightElements = Array.from(this.querySelectorAll(selectors));
-      
+
       this._focusableElements = [...shadowElements, ...lightElements].filter(el => {
         return this._isElementVisible(el) && !this._isElementDisabled(el);
       });
@@ -156,8 +156,8 @@ export const KeyboardNavigationMixin = (superClass) =>
      */
     _isElementVisible(element) {
       const style = getComputedStyle(element);
-      return style.display !== 'none' && 
-             style.visibility !== 'hidden' && 
+      return style.display !== 'none' &&
+             style.visibility !== 'hidden' &&
              element.offsetParent !== null;
     }
 
@@ -167,7 +167,7 @@ export const KeyboardNavigationMixin = (superClass) =>
      * @returns {boolean}
      */
     _isElementDisabled(element) {
-      return element.disabled || 
+      return element.disabled ||
              element.getAttribute('aria-disabled') === 'true' ||
              element.getAttribute('tabindex') === '-1';
     }
@@ -190,7 +190,7 @@ export const KeyboardNavigationMixin = (superClass) =>
       this._updateFocusableElements();
       if (this._focusableElements.length === 0) return;
 
-      const prevIndex = this._currentFocusIndex <= 0 ? 
+      const prevIndex = this._currentFocusIndex <= 0 ?
         this._focusableElements.length - 1 : this._currentFocusIndex - 1;
       this._focusableElements[prevIndex].focus();
     }
@@ -294,7 +294,7 @@ export const KeyboardNavigationMixin = (superClass) =>
           return;
         }
       }
-      
+
       // Fallback to focusing the host element
       super.focus?.() || HTMLElement.prototype.focus.call(this);
     }
@@ -342,7 +342,7 @@ export const KeyboardNavigationMixin = (superClass) =>
  * Menu/List Navigation Mixin
  * Specialized for menu and list components that need arrow key navigation
  */
-export const MenuNavigationMixin = (superClass) => 
+export const MenuNavigationMixin = (superClass) =>
   class extends KeyboardNavigationMixin(superClass) {
     constructor() {
       super();
@@ -385,13 +385,13 @@ export const MenuNavigationMixin = (superClass) =>
       if (this._currentFocusIndex >= 0 && this._focusableElements[this._currentFocusIndex]) {
         const item = this._focusableElements[this._currentFocusIndex];
         this._activateElement(item);
-        
+
         // Update selected index
         this._selectedIndex = this._currentFocusIndex;
-        
+
         // Dispatch selection event
         this.dispatchEvent(new CustomEvent('item-selected', {
-          detail: { 
+          detail: {
             selectedIndex: this._selectedIndex,
             selectedItem: item
           },

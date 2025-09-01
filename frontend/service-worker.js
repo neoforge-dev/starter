@@ -136,11 +136,11 @@ self.addEventListener("fetch", (event) => {
 // Handle API requests with caching and offline support
 async function handleApiRequest(request) {
   const url = new URL(request.url);
-  
+
   try {
     // Try network first
     const response = await fetch(request);
-    
+
     if (response.ok) {
       // Cache successful GET requests
       if (request.method === 'GET') {
@@ -149,7 +149,7 @@ async function handleApiRequest(request) {
       }
       return response;
     }
-    
+
     // If response not ok, try cache for GET requests
     if (request.method === 'GET') {
       const cachedResponse = await caches.match(request);
@@ -158,11 +158,11 @@ async function handleApiRequest(request) {
         return cachedResponse;
       }
     }
-    
+
     return response;
   } catch (error) {
     log('warn', `Network request failed for ${url.pathname}`, error.message);
-    
+
     // For GET requests, try to serve from cache
     if (request.method === 'GET') {
       const cachedResponse = await caches.match(request);
@@ -171,7 +171,7 @@ async function handleApiRequest(request) {
         return cachedResponse;
       }
     }
-    
+
     // Return offline response for failed API requests
     return new Response(
       JSON.stringify({
@@ -240,7 +240,7 @@ async function processOfflineActions() {
     const tx = db.transaction(['offline_actions'], 'readonly');
     const store = tx.objectStore('offline_actions');
     const actions = await getAllFromStore(store);
-    
+
     for (const action of actions) {
       try {
         const response = await fetch(action.url, {
@@ -248,7 +248,7 @@ async function processOfflineActions() {
           headers: action.headers,
           body: action.body
         });
-        
+
         if (response.ok) {
           // Remove successful action from queue
           await removeFromOfflineQueue(action.id);
@@ -267,10 +267,10 @@ async function processOfflineActions() {
 function openDatabase() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('neoforge-offline', 1);
-    
+
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
-    
+
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
       if (!db.objectStoreNames.contains('offline_actions')) {
@@ -296,7 +296,7 @@ function removeFromOfflineQueue(actionId) {
       const tx = db.transaction(['offline_actions'], 'readwrite');
       const store = tx.objectStore('offline_actions');
       const request = store.delete(actionId);
-      
+
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve();
     } catch (error) {
@@ -325,13 +325,13 @@ async function queueOfflineAction(action) {
     const db = await openDatabase();
     const tx = db.transaction(['offline_actions'], 'readwrite');
     const store = tx.objectStore('offline_actions');
-    
+
     const actionWithId = {
       ...action,
       id: Date.now() + Math.random(),
       timestamp: Date.now()
     };
-    
+
     await store.add(actionWithId);
     log('info', `Queued offline action: ${actionWithId.id}`);
   } catch (error) {

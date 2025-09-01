@@ -233,13 +233,13 @@ export class NeoDivider extends BaseComponent {
    */
   _getContainerClasses() {
     const classes = ["divider-container"];
-    
+
     classes.push(this.orientation);
     classes.push(`variant-${this.variant}`);
     classes.push(`size-${this.size}`);
     classes.push(`color-${this.color}`);
     classes.push(`spacing-${this.spacing}`);
-    
+
     return classes.join(" ");
   }
 
@@ -253,7 +253,7 @@ export class NeoDivider extends BaseComponent {
         role: "presentation"
       };
     }
-    
+
     return {
       role: "separator",
       "aria-orientation": this.orientation
@@ -290,7 +290,7 @@ export class NeoDivider extends BaseComponent {
    */
   updated(changedProperties) {
     super.updated(changedProperties);
-    
+
     // Listen for slot changes to update layout
     const slot = this.shadowRoot?.querySelector("slot");
     if (slot) {

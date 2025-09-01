@@ -21,11 +21,11 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
       expect(results.summary.totalViolations).toBe(0);
     });
@@ -36,7 +36,7 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       // Should have touch target violation
       const touchTargetViolations = results.customChecks.touchTargets;
       expect(touchTargetViolations.length).toBeGreaterThan(0);
@@ -49,7 +49,7 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       // Should have no keyboard navigation violations
       const keyboardViolations = results.customChecks.keyboardNavigation;
       expect(keyboardViolations.length).toBe(0);
@@ -61,11 +61,11 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
     });
   });
@@ -75,9 +75,9 @@ describe('Component Accessibility Tests', () => {
       const element = await fixture(html`
         <div>
           <label for="test-input">Email Address</label>
-          <neo-input 
-            id="test-input" 
-            type="email" 
+          <neo-input
+            id="test-input"
+            type="email"
             placeholder="Enter your email"
             aria-describedby="email-help"
           ></neo-input>
@@ -86,11 +86,11 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
     });
 
@@ -98,9 +98,9 @@ describe('Component Accessibility Tests', () => {
       const element = await fixture(html`
         <div>
           <label for="error-input">Required Field</label>
-          <neo-input 
-            id="error-input" 
-            type="text" 
+          <neo-input
+            id="error-input"
+            type="text"
             aria-invalid="true"
             aria-describedby="error-message"
           ></neo-input>
@@ -109,25 +109,25 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
     });
 
     it('should have sufficient touch target size', async () => {
       const element = await fixture(html`
-        <neo-input 
-          type="text" 
+        <neo-input
+          type="text"
           style="min-height: 44px; min-width: 44px;"
           aria-label="Accessible input"
         ></neo-input>
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       const touchTargetViolations = results.customChecks.touchTargets;
       expect(touchTargetViolations.length).toBe(0);
     });
@@ -136,8 +136,8 @@ describe('Component Accessibility Tests', () => {
   describe('Modal Component', () => {
     it('should have proper focus management and ARIA attributes', async () => {
       const element = await fixture(html`
-        <neo-modal 
-          open 
+        <neo-modal
+          open
           aria-labelledby="modal-title"
           aria-describedby="modal-description"
           role="dialog"
@@ -151,11 +151,11 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
     });
 
@@ -169,7 +169,7 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       const keyboardViolations = results.customChecks.keyboardNavigation;
       expect(keyboardViolations.length).toBe(0);
     });
@@ -186,11 +186,11 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
     });
 
@@ -203,7 +203,7 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       // Note: Real color contrast testing would require proper color calculation
       // This is a placeholder test structure
       expect(results).toBeDefined();
@@ -216,34 +216,34 @@ describe('Component Accessibility Tests', () => {
         <form>
           <fieldset>
             <legend>Contact Information</legend>
-            
+
             <div>
               <label for="name">Full Name *</label>
               <input type="text" id="name" required aria-describedby="name-help">
               <div id="name-help">Enter your first and last name</div>
             </div>
-            
+
             <div>
               <label for="email">Email Address *</label>
               <input type="email" id="email" required>
             </div>
-            
+
             <div>
               <label for="phone">Phone Number</label>
               <input type="tel" id="phone">
             </div>
-            
+
             <button type="submit">Submit Form</button>
           </fieldset>
         </form>
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
     });
 
@@ -252,26 +252,26 @@ describe('Component Accessibility Tests', () => {
         <form>
           <div>
             <label for="invalid-email">Email Address *</label>
-            <input 
-              type="email" 
-              id="invalid-email" 
-              required 
+            <input
+              type="email"
+              id="invalid-email"
+              required
               aria-invalid="true"
               aria-describedby="email-error"
             >
             <div id="email-error" role="alert">Please enter a valid email address</div>
           </div>
-          
+
           <button type="submit">Submit</button>
         </form>
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
     });
   });
@@ -289,12 +289,12 @@ describe('Component Accessibility Tests', () => {
               </ul>
             </nav>
           </header>
-          
+
           <main>
             <h1>Page Title</h1>
             <p>Main content goes here.</p>
           </main>
-          
+
           <footer>
             <nav aria-label="Footer navigation">
               <a href="/privacy">Privacy</a>
@@ -305,11 +305,11 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
     });
 
@@ -328,11 +328,11 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
     });
   });
@@ -348,18 +348,18 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
     });
 
     it('should support screen reader announcements', async () => {
       const element = await fixture(html`
         <div>
-          <button 
+          <button
             type="button"
             aria-label="Delete item"
             aria-describedby="delete-help"
@@ -369,7 +369,7 @@ describe('Component Accessibility Tests', () => {
           <div id="delete-help" class="sr-only">
             This action cannot be undone
           </div>
-          
+
           <div role="status" aria-live="polite" id="status-message">
             Item deleted successfully
           </div>
@@ -377,11 +377,11 @@ describe('Component Accessibility Tests', () => {
       `);
 
       const results = await testComponentAccessibility(element);
-      
+
       if (results.hasViolations) {
         console.log(generateViolationReport(results.violations));
       }
-      
+
       expect(results.hasViolations).toBe(false);
     });
   });

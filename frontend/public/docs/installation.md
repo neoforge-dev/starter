@@ -132,4 +132,4 @@ If you encounter issues:
 - Read our [Architecture Guide](./architecture)
 - Explore [Components](./components)
 - Review [Best Practices](./best-practices)
-- Set up [Continuous Integration](./ci-cd) 
+- Set up [Continuous Integration](./ci-cd)

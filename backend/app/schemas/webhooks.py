@@ -4,13 +4,13 @@ import hmac
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
-
 from app.models.email_tracking import EmailStatus
+from pydantic import BaseModel, Field, field_validator
 
 
 class SendGridEvent(BaseModel):
     """SendGrid webhook event schema."""
+
     email: str
     timestamp: int
     smtp_id: Optional[str] = Field(None, alias="smtp-id")
@@ -27,16 +27,17 @@ class SendGridEvent(BaseModel):
     type: Optional[str] = None
     url_offset: Optional[Dict[str, int]] = None
     asm_group_id: Optional[int] = None
-    
+
     class Config:
         populate_by_name = True
 
 
 class SendGridWebhookPayload(BaseModel):
     """SendGrid webhook payload containing multiple events."""
+
     events: List[SendGridEvent]
-    
-    @field_validator('events', mode='before')
+
+    @field_validator("events", mode="before")
     @classmethod
     def parse_events(cls, v):
         """Parse events from raw webhook payload."""
@@ -47,6 +48,7 @@ class SendGridWebhookPayload(BaseModel):
 
 class SMTPEvent(BaseModel):
     """Generic SMTP webhook event schema."""
+
     message_id: str
     email: str
     event_type: str
@@ -61,9 +63,10 @@ class SMTPEvent(BaseModel):
 
 class SMTPWebhookPayload(BaseModel):
     """Generic SMTP webhook payload."""
+
     events: List[SMTPEvent]
-    
-    @field_validator('events', mode='before')
+
+    @field_validator("events", mode="before")
     @classmethod
     def parse_events(cls, v):
         """Parse events from raw webhook payload."""
@@ -74,6 +77,7 @@ class SMTPWebhookPayload(BaseModel):
 
 class WebhookEventMapping(BaseModel):
     """Webhook event mapping result."""
+
     email_id: Optional[str] = None
     recipient: str
     status: EmailStatus
@@ -87,6 +91,7 @@ class WebhookEventMapping(BaseModel):
 
 class WebhookProcessingResult(BaseModel):
     """Result of webhook processing."""
+
     processed_events: int
     successful_events: int
     failed_events: int
@@ -95,60 +100,55 @@ class WebhookProcessingResult(BaseModel):
 
 class WebhookSignatureValidator:
     """Webhook signature validation utilities."""
-    
+
     @staticmethod
     def validate_sendgrid_signature(
-        payload: bytes,
-        signature: str,
-        timestamp: str,
-        public_key: str
+        payload: bytes, signature: str, timestamp: str, public_key: str
     ) -> bool:
         """
         Validate SendGrid webhook signature using ECDSA.
-        
+
         Args:
             payload: Raw webhook payload bytes
             signature: Base64 encoded signature from header
             timestamp: Timestamp from header
             public_key: SendGrid public key for verification
-            
+
         Returns:
             True if signature is valid, False otherwise
         """
         try:
             import base64
+
             from cryptography.hazmat.primitives import hashes
             from cryptography.hazmat.primitives.asymmetric import ec
             from cryptography.hazmat.primitives.serialization import load_pem_public_key
-            
+
             # Load the public key
             key = load_pem_public_key(public_key.encode())
-            
+
             # Verify signature
             signature_bytes = base64.b64decode(signature)
             signed_payload = timestamp.encode() + payload
-            
+
             key.verify(signature_bytes, signed_payload, ec.ECDSA(hashes.SHA256()))
             return True
         except Exception:
             return False
-    
+
     @staticmethod
     def validate_hmac_signature(
-        payload: bytes,
-        signature: str,
-        secret: str,
-        algorithm: str = "sha256"
+        payload: bytes, signature: str, secret: str, algorithm: str = "sha256"
     ) -> bool:
         """
         Validate HMAC webhook signature.
-        
+
         Args:
             payload: Raw webhook payload bytes
             signature: HMAC signature from header
             secret: Webhook secret key
             algorithm: Hash algorithm (sha256, sha1, etc.)
-            
+
         Returns:
             True if signature is valid, False otherwise
         """
@@ -156,15 +156,11 @@ class WebhookSignatureValidator:
             # Remove algorithm prefix if present (e.g., "sha256=")
             if "=" in signature:
                 signature = signature.split("=", 1)[1]
-            
+
             # Calculate expected signature
             hash_func = getattr(hashlib, algorithm)
-            expected = hmac.new(
-                secret.encode(),
-                payload,
-                hash_func
-            ).hexdigest()
-            
+            expected = hmac.new(secret.encode(), payload, hash_func).hexdigest()
+
             # Secure comparison
             return hmac.compare_digest(signature, expected)
         except Exception:

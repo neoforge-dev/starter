@@ -41,7 +41,7 @@ class Router {
 
   /**
    * Handle click events for internal navigation
-   * @param {MouseEvent} event 
+   * @param {MouseEvent} event
    */
   _handleClick(event) {
     // Only handle primary mouse button clicks
@@ -75,7 +75,7 @@ class Router {
 
   /**
    * Check if a URL is internal
-   * @param {string} url 
+   * @param {string} url
    * @returns {boolean}
    */
   _isInternalUrl(url) {
@@ -89,8 +89,8 @@ class Router {
 
   /**
    * Parse route parameters from path
-   * @param {string} pattern 
-   * @param {string} path 
+   * @param {string} pattern
+   * @param {string} path
    * @returns {Object|null}
    */
   _parseParams(pattern, path) {
@@ -115,7 +115,7 @@ class Router {
 
   /**
    * Parse query parameters from search string
-   * @param {string} search 
+   * @param {string} search
    * @returns {Object}
    */
   _parseQuery(search) {
@@ -129,7 +129,7 @@ class Router {
 
   /**
    * Handle route change
-   * @param {string} url 
+   * @param {string} url
    */
   _handleRoute(url) {
     const [pathname, search] = url.split('?');
@@ -184,7 +184,7 @@ class Router {
 
   /**
    * Register a not found handler
-   * @param {Function} handler 
+   * @param {Function} handler
    */
   registerNotFound(handler) {
     this.notFoundHandler = handler;
@@ -192,7 +192,7 @@ class Router {
 
   /**
    * Navigate to a URL
-   * @param {string} url 
+   * @param {string} url
    * @param {Object} [options] - Navigation options
    * @param {boolean} [options.replace=false] - Replace current history entry
    */
@@ -220,7 +220,7 @@ class Router {
 
   /**
    * Check if current route matches pattern
-   * @param {string} pattern 
+   * @param {string} pattern
    * @returns {boolean}
    */
   isRoute(pattern) {
@@ -238,4 +238,4 @@ class Router {
   }
 }
 
-export const router = new Router(); 
+export const router = new Router();

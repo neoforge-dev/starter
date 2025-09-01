@@ -672,7 +672,7 @@
         "source": "docs/README.md",
         "broken_links": [
           "getting-started/troubleshooting.md",
-          "development/index.md", 
+          "development/index.md",
           "architecture/index.md",
           "operations/index.md"
         ],

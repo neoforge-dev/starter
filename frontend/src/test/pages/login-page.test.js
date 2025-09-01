@@ -21,7 +21,7 @@ describe("Login Page", () => {
     // Create the login-page element
     element = document.createElement('login-page');
     container.appendChild(element);
-    
+
     // Wait for component to be fully rendered
     await element.updateComplete;
   });
@@ -43,7 +43,7 @@ describe("Login Page", () => {
     const emailInput = shadowRoot.querySelector('input[type="email"]');
     const passwordInput = shadowRoot.querySelector('input[type="password"]');
     const submitButton = shadowRoot.querySelector('button[type="submit"]');
-    
+
     expect(form).toBeTruthy();
     expect(emailInput).toBeTruthy();
     expect(passwordInput).toBeTruthy();
@@ -53,12 +53,12 @@ describe("Login Page", () => {
   it("should handle loading state", async () => {
     element.loading = true;
     await element.updateComplete;
-    
+
     expect(element.loading).toBe(true);
     // When loading, the component shows a loading spinner instead of form elements
     const loadingSpinner = element.shadowRoot.querySelector('.loading-spinner');
     expect(loadingSpinner).toBeTruthy();
-    
+
     // No form elements should be visible when loading
     const form = element.shadowRoot.querySelector('form');
     expect(form).toBeNull();
@@ -67,7 +67,7 @@ describe("Login Page", () => {
   it("should display error message when error is set", async () => {
     element.error = "Invalid credentials";
     await element.updateComplete;
-    
+
     const errorContainer = element.shadowRoot.querySelector(".error-container");
     expect(errorContainer).toBeTruthy();
     expect(errorContainer.textContent).toContain("Invalid credentials");

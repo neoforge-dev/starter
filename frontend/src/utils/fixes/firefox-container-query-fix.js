@@ -18,7 +18,7 @@ export function fixContainerSizeCalculation() {
       position: relative;
       width: 100%;
     }
-    
+
     /* Fix for nested containers */
     .container .container {
       contain: layout inline-size style;
@@ -103,7 +103,7 @@ export function fixContainerStyleApplication() {
     .container {
       will-change: transform;
     }
-    
+
     /* Fix for container query transitions */
     .container[data-animating] {
       transition: none !important;

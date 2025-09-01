@@ -151,4 +151,4 @@
 .input-label[data-required="true"]::after {
   display: inline-block;
   animation: pulse 1s ease infinite;
-} 
+}

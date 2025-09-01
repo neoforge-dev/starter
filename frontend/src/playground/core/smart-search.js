@@ -1,6 +1,6 @@
 /**
  * Smart Search System for Playground
- * 
+ *
  * Provides lightning-fast search with:
  * - Fuzzy matching for typo tolerance
  * - Category and property-based search
@@ -17,7 +17,7 @@ export class SmartSearch {
     this.recentSearches = [];
     this.searchHistory = [];
     this.debounceTimeout = null;
-    
+
     this.initializeSearch();
   }
 
@@ -35,12 +35,12 @@ export class SmartSearch {
    */
   buildSearchIndex() {
     const componentButtons = document.querySelectorAll('.component-item');
-    
+
     componentButtons.forEach((item, index) => {
       const category = item.dataset.category;
       const componentName = item.dataset.component;
       const displayName = this.formatComponentName(componentName);
-      
+
       // Create search entry
       const searchEntry = {
         category,
@@ -51,7 +51,7 @@ export class SmartSearch {
         index,
         priority: this.calculatePriority(category, componentName)
       };
-      
+
       this.searchIndex.set(`${category}-${componentName}`, searchEntry);
     });
 
@@ -71,24 +71,24 @@ export class SmartSearch {
    */
   generateKeywords(category, componentName, displayName) {
     const keywords = new Set();
-    
+
     // Add component name variations
     keywords.add(componentName.toLowerCase());
     keywords.add(displayName.toLowerCase());
-    
+
     // Add category
     keywords.add(category.toLowerCase());
-    
+
     // Add hyphen-separated parts
     componentName.split('-').forEach(part => keywords.add(part.toLowerCase()));
-    
+
     // Add space-separated parts
     displayName.split(' ').forEach(part => keywords.add(part.toLowerCase()));
-    
+
     // Add purpose-based keywords
     const purposeKeywords = this.getPurposeKeywords(componentName);
     purposeKeywords.forEach(keyword => keywords.add(keyword));
-    
+
     return Array.from(keywords);
   }
 
@@ -135,18 +135,18 @@ export class SmartSearch {
    */
   calculatePriority(category, componentName) {
     let priority = 0;
-    
+
     // Atomic components have higher priority
     if (category === 'atoms') priority += 10;
     else if (category === 'molecules') priority += 7;
     else if (category === 'organisms') priority += 5;
-    
+
     // Common components get boost
     const commonComponents = ['button', 'input', 'card', 'modal', 'form'];
     if (commonComponents.some(common => componentName.includes(common))) {
       priority += 5;
     }
-    
+
     return priority;
   }
 
@@ -159,7 +159,7 @@ export class SmartSearch {
 
     // Create search suggestions container
     this.createSuggestionsContainer(searchInput);
-    
+
     // Enhanced search with debouncing
     searchInput.addEventListener('input', (e) => {
       clearTimeout(this.debounceTimeout);
@@ -192,7 +192,7 @@ export class SmartSearch {
   createSuggestionsContainer(searchInput) {
     this.suggestionsContainer = document.createElement('div');
     this.suggestionsContainer.className = 'search-suggestions';
-    
+
     // Style the suggestions container
     Object.assign(this.suggestionsContainer.style, {
       position: 'absolute',
@@ -209,13 +209,13 @@ export class SmartSearch {
       zIndex: '1000',
       display: 'none'
     });
-    
+
     // Make search container relative
     const searchContainer = searchInput.parentElement;
     if (searchContainer.style.position !== 'relative') {
       searchContainer.style.position = 'relative';
     }
-    
+
     searchContainer.appendChild(this.suggestionsContainer);
   }
 
@@ -224,7 +224,7 @@ export class SmartSearch {
    */
   performSearch(query) {
     const startTime = performance.now();
-    
+
     if (!query) {
       this.showAllComponents();
       this.showSuggestions();
@@ -233,11 +233,11 @@ export class SmartSearch {
 
     // Add to search history
     this.addToSearchHistory(query);
-    
+
     const results = this.fuzzySearch(query);
     this.displaySearchResults(results);
     this.updateSearchSuggestions(query, results);
-    
+
     const endTime = performance.now();
     console.log(`Search completed in ${(endTime - startTime).toFixed(2)}ms`);
   }
@@ -295,18 +295,18 @@ export class SmartSearch {
   calculateMatchScore(keyword, queryWord) {
     // Exact match
     if (keyword === queryWord) return 100;
-    
+
     // Prefix match
     if (keyword.startsWith(queryWord)) return 80;
-    
+
     // Contains match
     if (keyword.includes(queryWord)) return 60;
-    
+
     // Fuzzy match (Levenshtein distance)
     const distance = this.levenshteinDistance(keyword, queryWord);
     const maxLength = Math.max(keyword.length, queryWord.length);
     const similarity = 1 - (distance / maxLength);
-    
+
     // Only return score if similarity is high enough
     return similarity > 0.6 ? Math.floor(similarity * 40) : 0;
   }
@@ -316,10 +316,10 @@ export class SmartSearch {
    */
   levenshteinDistance(str1, str2) {
     const matrix = Array(str2.length + 1).fill().map(() => Array(str1.length + 1).fill(0));
-    
+
     for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
     for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
-    
+
     for (let j = 1; j <= str2.length; j++) {
       for (let i = 1; i <= str1.length; i++) {
         const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
@@ -330,7 +330,7 @@ export class SmartSearch {
         );
       }
     }
-    
+
     return matrix[str2.length][str1.length];
   }
 
@@ -340,17 +340,17 @@ export class SmartSearch {
   displaySearchResults(results) {
     const componentItems = document.querySelectorAll('.component-item');
     const categories = document.querySelectorAll('.component-category');
-    
+
     // Hide all items first
     componentItems.forEach(item => {
       item.style.display = 'none';
     });
-    
+
     // Show matching items
     results.forEach(result => {
       result.element.style.display = 'block';
     });
-    
+
     // Show/hide categories based on visible items
     categories.forEach(category => {
       const visibleItems = category.querySelectorAll('.component-item[style*="block"], .component-item:not([style*="none"])');
@@ -367,15 +367,15 @@ export class SmartSearch {
   showAllComponents() {
     const componentItems = document.querySelectorAll('.component-item');
     const categories = document.querySelectorAll('.component-category');
-    
+
     componentItems.forEach(item => {
       item.style.display = 'block';
     });
-    
+
     categories.forEach(category => {
       category.style.display = 'block';
     });
-    
+
     this.hideNoResultsMessage();
   }
 
@@ -384,7 +384,7 @@ export class SmartSearch {
    */
   showNoResultsMessage(show) {
     let noResultsDiv = document.getElementById('no-search-results');
-    
+
     if (show && !noResultsDiv) {
       noResultsDiv = document.createElement('div');
       noResultsDiv.id = 'no-search-results';
@@ -394,7 +394,7 @@ export class SmartSearch {
           <p style="font-size: 0.9em;">Try a different search term or browse categories</p>
         </div>
       `;
-      
+
       const treeContainer = document.getElementById('component-tree');
       if (treeContainer) {
         treeContainer.appendChild(noResultsDiv);
@@ -429,7 +429,7 @@ export class SmartSearch {
       component: result.componentName,
       score: result.score
     }));
-    
+
     this.renderSuggestions(suggestions, query);
   }
 
@@ -466,10 +466,10 @@ export class SmartSearch {
     }
 
     this.suggestionsContainer.innerHTML = suggestions.map((suggestion, index) => {
-      const highlightedText = query ? 
-        this.highlightText(suggestion.text, query) : 
+      const highlightedText = query ?
+        this.highlightText(suggestion.text, query) :
         suggestion.text;
-      
+
       return `
         <div class="suggestion-item" data-index="${index}" data-category="${suggestion.category}" data-component="${suggestion.component}">
           <span class="suggestion-icon">${suggestion.isRecent ? '🕐' : '🧩'}</span>
@@ -484,7 +484,7 @@ export class SmartSearch {
       item.addEventListener('click', () => {
         const category = item.dataset.category;
         const component = item.dataset.component;
-        
+
         if (category !== 'recent' && component) {
           this.selectSuggestion(category, component);
         }
@@ -492,7 +492,7 @@ export class SmartSearch {
     });
 
     this.suggestionsContainer.style.display = 'block';
-    
+
     // Style suggestion items
     this.styleSuggestionItems();
   }
@@ -547,7 +547,7 @@ export class SmartSearch {
    */
   highlightText(text, query) {
     if (!query) return text;
-    
+
     const regex = new RegExp(`(${query.split(' ').join('|')})`, 'gi');
     return text.replace(regex, '<mark>$1</mark>');
   }
@@ -564,13 +564,13 @@ export class SmartSearch {
    */
   selectSuggestion(category, component) {
     this.hideSuggestions();
-    
+
     // Update search input
     const searchInput = document.getElementById('component-search');
     if (searchInput) {
       searchInput.value = this.formatComponentName(component);
     }
-    
+
     // Load component
     if (this.app.loadComponent) {
       this.app.loadComponent(category, component);
@@ -582,7 +582,7 @@ export class SmartSearch {
    */
   handleSearchKeyboard(e) {
     const suggestions = this.suggestionsContainer.querySelectorAll('.suggestion-item');
-    
+
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       // Focus first suggestion
@@ -601,21 +601,21 @@ export class SmartSearch {
    */
   addToSearchHistory(query) {
     if (!query || query.length < 2) return;
-    
+
     // Remove if already exists
     this.searchHistory = this.searchHistory.filter(item => item.query !== query);
-    
+
     // Add to front
     this.searchHistory.unshift({
       query,
       timestamp: Date.now()
     });
-    
+
     // Keep only last 10
     if (this.searchHistory.length > 10) {
       this.searchHistory.pop();
     }
-    
+
     // Save to localStorage
     this.saveSearchHistory();
   }
@@ -649,7 +649,7 @@ export class SmartSearch {
    * Format component name for display
    */
   formatComponentName(name) {
-    return name.split('-').map(part => 
+    return name.split('-').map(part =>
       part.charAt(0).toUpperCase() + part.slice(1)
     ).join(' ');
   }

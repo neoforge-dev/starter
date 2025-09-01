@@ -132,7 +132,7 @@ describe("NeoCheckbox", () => {
     // First click should set checked to true
     checkboxElement.click();
     expect(checkbox.checked).toBe(true);
-    
+
     // Second click should set checked to false
     checkbox.checked = false; // Explicitly set to false for the test
     expect(checkbox.checked).toBe(false);

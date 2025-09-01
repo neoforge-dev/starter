@@ -1,10 +1,10 @@
-import pytest
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta
 
+import pytest
 from app.models.idempotency_key import IdempotencyKey
 from app.utils.idempotency import cleanup_idempotency_keys
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
@@ -41,7 +41,17 @@ async def test_idempotency_ttl_cleanup_removes_expired_entries(db: AsyncSession)
     # Verify expired was removed, active remains
     from sqlalchemy import select
 
-    rows = (await db.execute(select(IdempotencyKey).where(IdempotencyKey.key.in_(["ttl-expired", "ttl-active"])))).scalars().all()
+    rows = (
+        (
+            await db.execute(
+                select(IdempotencyKey).where(
+                    IdempotencyKey.key.in_(["ttl-expired", "ttl-active"])
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
     keys = {r.key for r in rows}
     assert "ttl-active" in keys
     assert "ttl-expired" not in keys

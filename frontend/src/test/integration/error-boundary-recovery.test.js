@@ -164,13 +164,13 @@ describe('Error Boundary and Recovery Integration Tests', () => {
     if (container && container.parentNode) {
       container.parentNode.removeChild(container);
     }
-    
+
     // Clear error listeners
     errorService._errorListeners.clear();
-    
+
     // Reset recovery manager
     recoveryManager.resetAttempts();
-    
+
     vi.restoreAllMocks();
   });
 
@@ -186,7 +186,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
           tagName: 'test-component'
         }
       });
-      
+
       window.dispatchEvent(errorEvent);
       await errorBoundary.updateComplete;
 
@@ -217,7 +217,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
       // Act
       const retryButton = errorBoundary.shadowRoot.querySelector('.retry-button');
       expect(retryButton).toBeTruthy();
-      
+
       retryButton.click();
 
       // Assert
@@ -227,7 +227,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
     it('should display error details in development mode', async () => {
       // Arrange
       const mockError = new Error('Detailed error message for debugging');
-      
+
       errorBoundary.hasError = true;
       errorBoundary.error = mockError;
       await errorBoundary.updateComplete;
@@ -262,31 +262,31 @@ describe('Error Boundary and Recovery Integration Tests', () => {
     it('should handle different error types correctly', async () => {
       const { showToast } = await import('../../components/ui/toast/index.js');
       const { Logger } = await import('../../utils/logger.js');
-      
+
       // Test validation error
       const validationError = new AppError('Invalid input', ErrorType.VALIDATION);
       await errorService.handleError(validationError);
-      
+
       expect(showToast).toHaveBeenCalledWith('Invalid input', 'warning');
       expect(Logger.error).toHaveBeenCalledWith('Error occurred:', validationError);
 
       // Test network error
       const networkError = new AppError('Network failed', ErrorType.NETWORK);
       await errorService.handleError(networkError);
-      
+
       expect(showToast).toHaveBeenCalledWith('Network error. Please check your connection.', 'error');
 
       // Test auth error
       const authError = new AppError('Session expired', ErrorType.AUTH);
       await errorService.handleError(authError);
-      
+
       expect(showToast).toHaveBeenCalledWith('Authentication error. Please log in again.', 'error');
     });
 
     it('should normalize different error types to AppError', async () => {
       // Test TypeError (network error)
       const typeError = new TypeError('Failed to fetch');
-      
+
       let capturedError = null;
       errorService.addListener((error) => {
         capturedError = error;
@@ -301,7 +301,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
 
     it('should report appropriate errors to backend', async () => {
       const { apiClient } = await import('../../services/api.js');
-      
+
       // Test API error (should be reported)
       const apiError = new AppError('API endpoint failed', ErrorType.API);
       await errorService.handleError(apiError);
@@ -323,7 +323,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
 
     it('should handle unhandled promise rejections', async () => {
       const { Logger } = await import('../../utils/logger.js');
-      
+
       // Simulate unhandled promise rejection
       const rejectionEvent = new Event('unhandledrejection');
       rejectionEvent.reason = new Error('Unhandled promise rejection');
@@ -381,10 +381,10 @@ describe('Error Boundary and Recovery Integration Tests', () => {
       // Assert
       expect(result2.success).toBe(true);
       expect(result2.data).toBe('Network recovered');
-      
+
       // Check that retry delay was applied
       expect(endTime - startTime).toBeGreaterThanOrEqual(100); // At least 100ms delay
-      
+
       // Check attempt counts
       expect(recoveryManager.getAttemptCount(networkError)).toBe(2);
     });
@@ -417,7 +417,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
     it('should stop retrying after max attempts', async () => {
       // Arrange
       const persistentError = new AppError('Persistent failure', ErrorType.NETWORK);
-      
+
       // Override strategy to always fail
       recoveryManager.registerStrategy(ErrorType.NETWORK, async () => {
         return { success: false, retry: true };
@@ -427,7 +427,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
       await recoveryManager.attemptRecovery(persistentError); // Attempt 1
       await recoveryManager.attemptRecovery(persistentError); // Attempt 2
       await recoveryManager.attemptRecovery(persistentError); // Attempt 3
-      
+
       // Attempt 4 should throw
       await expect(recoveryManager.attemptRecovery(persistentError))
         .rejects.toThrow('Max recovery attempts exceeded');
@@ -438,7 +438,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
     it('should handle cascade of component failures', async () => {
       // Arrange
       const errorLog = [];
-      
+
       errorService.addListener((error) => {
         errorLog.push(error);
       });
@@ -490,7 +490,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
     it('should handle memory leaks during error scenarios', async () => {
       // Arrange
       const initialListenerCount = errorService._errorListeners.size;
-      
+
       // Add temporary listeners
       const tempListeners = [];
       for (let i = 0; i < 10; i++) {
@@ -527,7 +527,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
 
       // Simulate coming back online
       networkStatus = 'online';
-      
+
       // Simulate successful network operation after recovery
       expect(networkErrors).toHaveLength(1);
       expect(networkErrors[0].message).toBe('Network unavailable');
@@ -542,7 +542,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
       // Arrange
       const errorCount = 100;
       const errors = [];
-      
+
       // Act - Generate many errors quickly
       for (let i = 0; i < errorCount; i++) {
         const error = new AppError(`High frequency error ${i}`, ErrorType.UNKNOWN);
@@ -559,7 +559,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
     it('should handle error reporting failures gracefully', async () => {
       const { apiClient } = await import('../../services/api.js');
       const { Logger } = await import('../../utils/logger.js');
-      
+
       // Arrange - Mock API failure
       apiClient.post.mockRejectedValue(new Error('Reporting service unavailable'));
 
@@ -577,7 +577,7 @@ describe('Error Boundary and Recovery Integration Tests', () => {
     it('should prioritize critical errors over non-critical ones', async () => {
       // Arrange
       const processedErrors = [];
-      
+
       errorService.addListener((error) => {
         processedErrors.push({
           type: error.type,
@@ -598,9 +598,9 @@ describe('Error Boundary and Recovery Integration Tests', () => {
 
       // Assert - All errors should be processed
       expect(processedErrors).toHaveLength(4);
-      
+
       // Critical errors (AUTH, API) should be handled
-      const criticalErrors = processedErrors.filter(e => 
+      const criticalErrors = processedErrors.filter(e =>
         e.type === ErrorType.AUTH || e.type === ErrorType.API
       );
       expect(criticalErrors).toHaveLength(2);

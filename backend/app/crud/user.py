@@ -1,17 +1,18 @@
 """User CRUD operations."""
+import logging
 from datetime import datetime
 from typing import Any, Dict, Optional, Union
 
+from app.crud.base import CRUDBase
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_password_hash, verify_password
-from app.crud.base import CRUDBase
-from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     """User CRUD operations."""
@@ -20,34 +21,28 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         """Initialize with User model."""
         super().__init__(User)
 
-    async def get_by_email(
-        self, db: AsyncSession, *, email: str
-    ) -> Optional[User]:
+    async def get_by_email(self, db: AsyncSession, *, email: str) -> Optional[User]:
         """
         Get user by email.
-        
+
         Args:
             db: Database session
             email: User email
-            
+
         Returns:
             User if found, None otherwise
         """
-        result = await db.execute(
-            select(User).where(User.email == email)
-        )
+        result = await db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
-    async def create(
-        self, db: AsyncSession, *, obj_in: UserCreate
-    ) -> User:
+    async def create(self, db: AsyncSession, *, obj_in: UserCreate) -> User:
         """
         Create new user.
-        
+
         Args:
             db: Database session
             obj_in: User data
-            
+
         Returns:
             Created user
         """
@@ -68,16 +63,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db: AsyncSession,
         *,
         db_obj: User,
-        obj_in: Union[UserUpdate, Dict[str, Any]]
+        obj_in: Union[UserUpdate, Dict[str, Any]],
     ) -> User:
         """
         Update user.
-        
+
         Args:
             db: Database session
             db_obj: Existing user
             obj_in: Update data
-            
+
         Returns:
             Updated user
         """
@@ -96,12 +91,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     ) -> Optional[User]:
         """
         Authenticate user.
-        
+
         Args:
             db: Database session
             email: User email
             password: User password
-            
+
         Returns:
             User if authenticated, None otherwise
         """
@@ -110,32 +105,34 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         if not user:
             logger.warning(f"Authentication failed: User {email} not found.")
             return None
-        
+
         logger.debug(f"User found: {user.email}, ID: {user.id}. Verifying password...")
         logger.debug(f"Stored hash: {user.hashed_password}")
-        
+
         # Log the first few chars of the provided password for debugging (AVOID logging full password)
         provided_password_snippet = password[:3] + "..."
         logger.debug(f"Provided password snippet: {provided_password_snippet}")
 
         if not verify_password(password, user.hashed_password):
-            logger.warning(f"Authentication failed: Incorrect password for user {email}.")
+            logger.warning(
+                f"Authentication failed: Incorrect password for user {email}."
+            )
             return None
-            
+
         if not user.is_active:
             logger.warning(f"Authentication failed: User {email} is inactive.")
             return None
-            
+
         logger.info(f"User {email} authenticated successfully.")
         return user
 
     def is_active(self, user: User) -> bool:
         """
         Check if user is active.
-        
+
         Args:
             user: User object
-            
+
         Returns:
             True if user is active, False otherwise
         """
@@ -144,10 +141,10 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def is_superuser(self, user: User) -> bool:
         """
         Check if user is superuser.
-        
+
         Args:
             user: User object
-            
+
         Returns:
             True if user is superuser, False otherwise
         """
@@ -156,22 +153,22 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     async def verify_email(self, db: AsyncSession, *, user_id: int) -> Optional[User]:
         """
         Mark user's email as verified.
-        
+
         Args:
             db: Database session
             user_id: User ID
-            
+
         Returns:
             Updated user if found, None otherwise
         """
         user = await self.get(db, id=user_id)
         if not user:
             return None
-        
+
         # Mark as verified with timestamp
         user.is_verified = True
         user.email_verified_at = datetime.utcnow()
-        
+
         await db.flush()
         await db.refresh(user)
         return user
@@ -179,250 +176,221 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def is_verified(self, user: User) -> bool:
         """
         Check if user's email is verified.
-        
+
         Args:
             user: User object
-            
+
         Returns:
             True if user is verified, False otherwise
         """
         return user.is_verified
 
     async def deactivate_account(
-        self, 
-        db: AsyncSession, 
-        *, 
-        user_id: int, 
-        reason: str
+        self, db: AsyncSession, *, user_id: int, reason: str
     ) -> Optional[User]:
         """
         Deactivate user account.
-        
+
         Args:
             db: Database session
             user_id: User ID
             reason: Reason for deactivation
-            
+
         Returns:
             Updated user if found, None otherwise
         """
         user = await self.get(db, id=user_id)
         if not user:
             return None
-        
+
         # Mark as deactivated
         user.is_active = False
         user.deactivated_at = datetime.utcnow()
         user.deactivation_reason = reason
-        
+
         await db.flush()
         await db.refresh(user)
         return user
-    
+
     async def reactivate_account(
-        self, 
-        db: AsyncSession, 
-        *, 
-        user_id: int
+        self, db: AsyncSession, *, user_id: int
     ) -> Optional[User]:
         """
         Reactivate user account.
-        
+
         Args:
             db: Database session
             user_id: User ID
-            
+
         Returns:
             Updated user if found, None otherwise
         """
         user = await self.get(db, id=user_id)
         if not user:
             return None
-        
+
         # Mark as active again
         user.is_active = True
         user.deactivated_at = None
         user.deactivation_reason = None
-        
+
         await db.flush()
         await db.refresh(user)
         return user
-    
+
     async def lock_account(
-        self, 
-        db: AsyncSession, 
-        *, 
-        user_id: int, 
-        lock_duration_minutes: int = 30
+        self, db: AsyncSession, *, user_id: int, lock_duration_minutes: int = 30
     ) -> Optional[User]:
         """
         Lock user account temporarily.
-        
+
         Args:
             db: Database session
             user_id: User ID
             lock_duration_minutes: Duration to lock account in minutes
-            
+
         Returns:
             Updated user if found, None otherwise
         """
         user = await self.get(db, id=user_id)
         if not user:
             return None
-        
+
         from datetime import timedelta
-        
+
         # Lock account until specified time
         user.locked_until = datetime.utcnow() + timedelta(minutes=lock_duration_minutes)
-        
+
         await db.flush()
         await db.refresh(user)
         return user
-    
-    async def unlock_account(
-        self, 
-        db: AsyncSession, 
-        *, 
-        user_id: int
-    ) -> Optional[User]:
+
+    async def unlock_account(self, db: AsyncSession, *, user_id: int) -> Optional[User]:
         """
         Unlock user account.
-        
+
         Args:
             db: Database session
             user_id: User ID
-            
+
         Returns:
             Updated user if found, None otherwise
         """
         user = await self.get(db, id=user_id)
         if not user:
             return None
-        
+
         # Remove lock
         user.locked_until = None
         user.failed_login_attempts = 0
-        
+
         await db.flush()
         await db.refresh(user)
         return user
-    
+
     async def increment_failed_login(
-        self, 
-        db: AsyncSession, 
-        *, 
-        user_id: int
+        self, db: AsyncSession, *, user_id: int
     ) -> Optional[User]:
         """
         Increment failed login attempts counter.
-        
+
         Args:
             db: Database session
             user_id: User ID
-            
+
         Returns:
             Updated user if found, None otherwise
         """
         user = await self.get(db, id=user_id)
         if not user:
             return None
-        
+
         user.failed_login_attempts += 1
-        
+
         # Auto-lock after 5 failed attempts
         if user.failed_login_attempts >= 5:
             from datetime import timedelta
+
             user.locked_until = datetime.utcnow() + timedelta(minutes=30)
-        
+
         await db.flush()
         await db.refresh(user)
         return user
-    
+
     async def update_login_info(
-        self, 
-        db: AsyncSession, 
-        *, 
-        user_id: int, 
-        ip_address: Optional[str] = None
+        self, db: AsyncSession, *, user_id: int, ip_address: Optional[str] = None
     ) -> Optional[User]:
         """
         Update user login information.
-        
+
         Args:
             db: Database session
             user_id: User ID
             ip_address: Client IP address
-            
+
         Returns:
             Updated user if found, None otherwise
         """
         user = await self.get(db, id=user_id)
         if not user:
             return None
-        
+
         # Update login info and reset failed attempts
         user.last_login_at = datetime.utcnow()
         user.last_login_ip = ip_address
         user.failed_login_attempts = 0
-        
+
         await db.flush()
         await db.refresh(user)
         return user
-    
+
     async def schedule_deletion(
-        self, 
-        db: AsyncSession, 
-        *, 
-        user_id: int, 
-        retention_days: int = 30
+        self, db: AsyncSession, *, user_id: int, retention_days: int = 30
     ) -> Optional[User]:
         """
         Schedule user account for deletion after retention period.
-        
+
         Args:
             db: Database session
             user_id: User ID
             retention_days: Days to retain data before deletion
-            
+
         Returns:
             Updated user if found, None otherwise
         """
         user = await self.get(db, id=user_id)
         if not user:
             return None
-        
+
         from datetime import timedelta
-        
+
         # Schedule deletion and deactivate account
         user.data_retention_until = datetime.utcnow() + timedelta(days=retention_days)
         user.is_active = False
         user.deactivated_at = datetime.utcnow()
         user.deactivation_reason = "Account deletion requested"
-        
+
         await db.flush()
         await db.refresh(user)
         return user
-    
+
     async def cancel_deletion(
-        self, 
-        db: AsyncSession, 
-        *, 
-        user_id: int
+        self, db: AsyncSession, *, user_id: int
     ) -> Optional[User]:
         """
         Cancel scheduled account deletion.
-        
+
         Args:
             db: Database session
             user_id: User ID
-            
+
         Returns:
             Updated user if found, None otherwise
         """
         user = await self.get(db, id=user_id)
         if not user:
             return None
-        
+
         # Cancel deletion and reactivate if was only scheduled for deletion
         if user.deactivation_reason == "Account deletion requested":
             user.data_retention_until = None
@@ -432,36 +400,33 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         else:
             # Just cancel deletion but keep deactivation
             user.data_retention_until = None
-        
+
         await db.flush()
         await db.refresh(user)
         return user
-    
+
     async def update_password_changed(
-        self, 
-        db: AsyncSession, 
-        *, 
-        user_id: int
+        self, db: AsyncSession, *, user_id: int
     ) -> Optional[User]:
         """
         Update password change timestamp.
-        
+
         Args:
             db: Database session
             user_id: User ID
-            
+
         Returns:
             Updated user if found, None otherwise
         """
         user = await self.get(db, id=user_id)
         if not user:
             return None
-        
+
         user.password_changed_at = datetime.utcnow()
-        
+
         await db.flush()
         await db.refresh(user)
         return user
 
 
-user = CRUDUser() 
+user = CRUDUser()

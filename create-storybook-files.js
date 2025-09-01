@@ -75,7 +75,7 @@ const config = {
   async viteFinal(config) {
     // Import the custom Vite config
     const customConfig = (await import('./vite.config.js')).default;
-    
+
     // Merge the configs
     return {
       ...config,

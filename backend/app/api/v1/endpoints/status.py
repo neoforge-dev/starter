@@ -1,16 +1,18 @@
 """System status endpoints with basic persistence for events."""
 from typing import Dict, List
-from fastapi import APIRouter, Depends, Request, Response, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
-from app.api import deps
+
 from app.crud.status_event import status_event as se_crud
-from app.schemas.status_event import StatusEventCreate, StatusEventRead
-from app.schemas.common import PaginatedResponse
 from app.models.status_event import StatusEvent
-from sqlalchemy import select, desc
-from app.utils.http_cache import set_etag, not_modified
-from app.core.config import get_settings, Environment
+from app.schemas.common import PaginatedResponse
+from app.schemas.status_event import StatusEventCreate, StatusEventRead
+from app.utils.http_cache import not_modified, set_etag
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from pydantic import BaseModel
+from sqlalchemy import desc, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api import deps
+from app.core.config import Environment, get_settings
 
 router = APIRouter()
 
@@ -25,14 +27,23 @@ async def get_status(db: AsyncSession = Depends(deps.get_db)) -> Dict[str, str]:
     for ev in recent.scalars():
         if ev.service_id not in latest_by_service:
             latest_by_service[ev.service_id] = ev.status
-    overall = "operational" if all(s == "operational" for s in latest_by_service.values()) else "degraded"
+    overall = (
+        "operational"
+        if all(s == "operational" for s in latest_by_service.values())
+        else "degraded"
+    )
     return {"status": overall}
 
 
 @router.get("/status/services/{service_id}", response_model=Dict[str, str])
-async def get_service_status(service_id: str, db: AsyncSession = Depends(deps.get_db)) -> Dict[str, str]:
+async def get_service_status(
+    service_id: str, db: AsyncSession = Depends(deps.get_db)
+) -> Dict[str, str]:
     res = await db.execute(
-        select(StatusEvent).where(StatusEvent.service_id == service_id).order_by(desc(StatusEvent.created_at)).limit(1)
+        select(StatusEvent)
+        .where(StatusEvent.service_id == service_id)
+        .order_by(desc(StatusEvent.created_at))
+        .limit(1)
     )
     ev = res.scalar_one_or_none()
     status = ev.status if ev else "unknown"

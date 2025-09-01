@@ -72,4 +72,4 @@ Implementation details:
 - All auth requests use HTTPS
 - Implements PKCE for additional security
 - Supports password reset via email
-- Includes rate limiting on auth endpoints 
+- Includes rate limiting on auth endpoints

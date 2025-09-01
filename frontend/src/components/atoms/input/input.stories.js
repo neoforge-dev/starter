@@ -70,15 +70,15 @@ export default {
 };
 
 // Base Template
-const Template = ({ 
-  type, 
-  label, 
-  placeholder, 
-  value, 
-  required, 
-  disabled, 
-  error, 
-  helper 
+const Template = ({
+  type,
+  label,
+  placeholder,
+  value,
+  required,
+  disabled,
+  error,
+  helper
 }) => html`
   <neo-input
     type=${type}
@@ -213,4 +213,4 @@ export const NumberInput = () => html`
       <neo-icon name="add"></neo-icon>
     </neo-button>
   </neo-input>
-`; 
+`;

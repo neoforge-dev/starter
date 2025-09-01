@@ -328,13 +328,13 @@ export class AbTestManager extends LitElement {
       .tests-grid {
         grid-template-columns: 1fr;
       }
-      
+
       .manager-header {
         flex-direction: column;
         gap: 16px;
         align-items: stretch;
       }
-      
+
       .test-metrics {
         grid-template-columns: 1fr;
       }
@@ -365,10 +365,10 @@ export class AbTestManager extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._loadTests();
-    
+
     // Listen for A/B testing service events
     this.unsubscribeFromAbTesting = abTestingService.subscribe((eventType, data) => {
-      if (eventType === 'test_created' || eventType === 'test_updated' || 
+      if (eventType === 'test_created' || eventType === 'test_updated' ||
           eventType === 'test_started' || eventType === 'test_stopped') {
         this._loadTests();
       }
@@ -466,7 +466,7 @@ export class AbTestManager extends LitElement {
   async _saveTest() {
     try {
       this.isLoading = true;
-      
+
       if (this.mode === 'create') {
         await abTestingService.createTest(this.formData);
       } else if (this.mode === 'edit') {
@@ -475,10 +475,10 @@ export class AbTestManager extends LitElement {
         delete updateData.variants; // Variants updated separately
         await abTestingService.updateTest(this.editingTest.id, updateData);
       }
-      
+
       this._cancelForm();
       await this._loadTests();
-      
+
     } catch (error) {
       console.error('Failed to save test:', error);
       this.error = `Failed to ${this.mode} test: ${error.message}`;
@@ -527,7 +527,7 @@ export class AbTestManager extends LitElement {
       is_control: false,
       configuration: {}
     };
-    
+
     this.formData = {
       ...this.formData,
       variants: [...this.formData.variants, newVariant]
@@ -537,7 +537,7 @@ export class AbTestManager extends LitElement {
 
   _removeVariant(index) {
     if (this.formData.variants.length <= 2) return; // Must have at least 2 variants
-    
+
     const variants = this.formData.variants.filter((_, i) => i !== index);
     this.formData = { ...this.formData, variants };
     this.requestUpdate();
@@ -607,23 +607,23 @@ export class AbTestManager extends LitElement {
               Start Test
             </button>
           ` : ''}
-          
+
           ${test.status === 'active' ? html`
             <button class="action-btn danger" @click=${() => this._stopTest(test)}>
               Stop Test
             </button>
           ` : ''}
-          
+
           ${test.status === 'paused' ? html`
             <button class="action-btn primary" @click=${() => this._startTest(test)}>
               Resume Test
             </button>
           ` : ''}
-          
+
           <button class="action-btn" @click=${() => this._showEditForm(test)}>
             Edit
           </button>
-          
+
           <button class="action-btn" @click=${() => this._viewAnalytics(test)}>
             Analytics
           </button>
@@ -634,16 +634,16 @@ export class AbTestManager extends LitElement {
 
   _renderTestForm() {
     const isEditing = this.mode === 'edit';
-    
+
     return html`
       <div class="test-form">
         <h3>${isEditing ? 'Edit Test' : 'Create New Test'}</h3>
-        
+
         <div class="form-group">
           <label class="form-label">Test Key</label>
-          <input 
-            class="form-input" 
-            type="text" 
+          <input
+            class="form-input"
+            type="text"
             .value=${this.formData.test_key}
             @input=${(e) => this._updateFormField('test_key', e.target.value)}
             ?disabled=${isEditing}
@@ -653,9 +653,9 @@ export class AbTestManager extends LitElement {
 
         <div class="form-group">
           <label class="form-label">Test Name</label>
-          <input 
-            class="form-input" 
-            type="text" 
+          <input
+            class="form-input"
+            type="text"
             .value=${this.formData.name}
             @input=${(e) => this._updateFormField('name', e.target.value)}
             placeholder="Descriptive test name"
@@ -664,8 +664,8 @@ export class AbTestManager extends LitElement {
 
         <div class="form-group">
           <label class="form-label">Description</label>
-          <textarea 
-            class="form-input form-textarea" 
+          <textarea
+            class="form-input form-textarea"
             .value=${this.formData.description}
             @input=${(e) => this._updateFormField('description', e.target.value)}
             placeholder="Test hypothesis and goals"
@@ -674,9 +674,9 @@ export class AbTestManager extends LitElement {
 
         <div class="form-group">
           <label class="form-label">Primary Metric</label>
-          <input 
-            class="form-input" 
-            type="text" 
+          <input
+            class="form-input"
+            type="text"
             .value=${this.formData.primary_metric}
             @input=${(e) => this._updateFormField('primary_metric', e.target.value)}
             placeholder="conversion"
@@ -695,44 +695,44 @@ export class AbTestManager extends LitElement {
                   </button>
                 ` : ''}
               </div>
-              
+
               <div class="form-group">
                 <label class="form-label">Variant Key</label>
-                <input 
-                  class="form-input" 
-                  type="text" 
+                <input
+                  class="form-input"
+                  type="text"
                   .value=${variant.variant_key}
                   @input=${(e) => this._updateVariant(index, 'variant_key', e.target.value)}
                 />
               </div>
-              
+
               <div class="form-group">
                 <label class="form-label">Name</label>
-                <input 
-                  class="form-input" 
-                  type="text" 
+                <input
+                  class="form-input"
+                  type="text"
                   .value=${variant.name}
                   @input=${(e) => this._updateVariant(index, 'name', e.target.value)}
                 />
               </div>
-              
+
               <div class="form-group">
                 <label class="form-label">Traffic Allocation</label>
-                <input 
-                  class="form-input" 
-                  type="number" 
-                  min="0" 
-                  max="1" 
+                <input
+                  class="form-input"
+                  type="number"
+                  min="0"
+                  max="1"
                   step="0.01"
                   .value=${variant.traffic_allocation}
                   @input=${(e) => this._updateVariant(index, 'traffic_allocation', parseFloat(e.target.value))}
                 />
               </div>
-              
+
               <div class="form-group">
                 <label>
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     .checked=${variant.is_control}
                     @change=${(e) => this._updateVariant(index, 'is_control', e.target.checked)}
                   />
@@ -741,7 +741,7 @@ export class AbTestManager extends LitElement {
               </div>
             </div>
           `)}
-          
+
           <button class="add-variant-btn" @click=${this._addVariant}>
             Add Variant
           </button>

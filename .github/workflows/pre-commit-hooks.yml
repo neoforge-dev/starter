@@ -44,21 +44,21 @@ jobs:
 
           echo "🏗️ Validating build..."
           bun run build
-          
+
           echo "📦 Checking bundle size..."
           node -e "
             const fs = require('fs');
             const path = require('path');
             const distPath = path.join(process.cwd(), 'dist');
-            
+
             if (!fs.existsSync(distPath)) {
               console.error('❌ Build output not found');
               process.exit(1);
             }
-            
+
             const files = fs.readdirSync(distPath, { recursive: true });
             const jsFiles = files.filter(f => f.endsWith('.js'));
-            
+
             let totalSize = 0;
             jsFiles.forEach(file => {
               const filePath = path.join(distPath, file);
@@ -66,9 +66,9 @@ jobs:
               totalSize += stats.size;
               console.log(\`📄 \${file}: \${(stats.size / 1024).toFixed(2)} KB\`);
             });
-            
+
             console.log(\`📦 Total bundle size: \${(totalSize / 1024).toFixed(2)} KB\`);
-            
+
             // Warn if main bundle exceeds 100KB
             const mainBundle = jsFiles.find(f => f.includes('index') || f.includes('main'));
             if (mainBundle) {
@@ -87,7 +87,7 @@ jobs:
         run: |
           echo "🛡️ Scanning for security vulnerabilities..."
           bunx audit --audit-level moderate || echo "⚠️ Audit check not available with Bun"
-          
+
           echo "🔒 Checking for hardcoded secrets..."
           # Simple pattern matching for common secrets
           if grep -r -E "(password|secret|key|token).*(=|:).*(\"[^\"]{8,}\"|'[^']{8,}')" src/ --include="*.js" --include="*.json"; then
@@ -101,7 +101,7 @@ jobs:
         run: |
           echo "⚡ Running performance tests..."
           bun run test:perf || echo "⚠️ Performance tests failed or not available"
-          
+
           echo "📈 Checking bundle performance..."
           # Create a simple performance benchmark
           node -e "
@@ -109,7 +109,7 @@ jobs:
             require('./dist/index.js').catch(() => {}); // Try to load main bundle
             const loadTime = Date.now() - start;
             console.log(\`📊 Bundle load time: \${loadTime}ms\`);
-            
+
             if (loadTime > 1000) {
               console.log('⚠️ Bundle load time exceeds 1 second - consider optimization');
               process.exit(1);
@@ -123,31 +123,31 @@ jobs:
         run: |
           echo "🧩 Validating component registry..."
           bun run lint:components || echo "⚠️ Component registry validation not available"
-          
+
           echo "📋 Checking component completeness..."
           node -e "
             const fs = require('fs');
             const path = require('path');
-            
+
             const categories = ['atoms', 'molecules', 'organisms', 'pages'];
             const components = new Map();
-            
+
             for (const category of categories) {
               const categoryDir = path.join('src/components', category);
               if (!fs.existsSync(categoryDir)) continue;
-              
+
               const files = fs.readdirSync(categoryDir);
               const jsFiles = files.filter(f => f.endsWith('.js') && !f.endsWith('.test.js') && !f.endsWith('.stories.js'));
-              
+
               jsFiles.forEach(file => {
                 const name = path.basename(file, '.js');
                 components.set(name, { category, hasStory: false, hasTest: false });
-                
+
                 // Check for story file
                 if (files.includes(\`\${name}.stories.js\`)) {
                   components.get(name).hasStory = true;
                 }
-                
+
                 // Check for test file in test directory
                 const testPath = path.join('src/test/components', \`\${name}.test.js\`);
                 if (fs.existsSync(testPath)) {
@@ -155,12 +155,12 @@ jobs:
                 }
               });
             }
-            
+
             console.log(\`📦 Found \${components.size} components\`);
-            
+
             let missingStories = 0;
             let missingTests = 0;
-            
+
             components.forEach((info, name) => {
               if (!info.hasStory) {
                 console.log(\`📚 Missing story: \${name}\`);
@@ -171,11 +171,11 @@ jobs:
                 missingTests++;
               }
             });
-            
+
             console.log(\`📊 Component Coverage:\`);
             console.log(\`  Stories: \${components.size - missingStories}/\${components.size} (\${Math.round(((components.size - missingStories) / components.size) * 100)}%)\`);
             console.log(\`  Tests: \${components.size - missingTests}/\${components.size} (\${Math.round(((components.size - missingTests) / components.size) * 100)}%)\`);
-            
+
             if (missingStories > 5 || missingTests > 10) {
               console.log('⚠️ Low component coverage - consider adding missing stories/tests');
             } else {
@@ -201,7 +201,7 @@ jobs:
           script: |
             const comment = `
             ## 🚦 Pre-commit Quality Gate Summary
-            
+
             | Check | Status |
             |-------|--------|
             | Linting | ✅ Passed |
@@ -211,20 +211,20 @@ jobs:
             | Security | ✅ Passed |
             | Performance | ✅ Passed |
             | Components | ✅ Validated |
-            
+
             ### Bundle Analysis
             - Main bundle size: Within limits
             - Total build output: Available in artifacts
             - Performance tests: Passed
-            
+
             ### Component Coverage
             - All components have required documentation
             - Test coverage meets minimum thresholds
             - No component registry violations detected
-            
+
             ✅ **Quality gate passed** - ready for review
             `;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

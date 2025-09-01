@@ -1,17 +1,17 @@
 """Item endpoints."""
 from typing import Annotated, Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 import structlog
+from app.models.item import Item as ItemModel
+from app.schemas.item import Item, ItemCreate, ItemUpdate
+from app.schemas.user import UserResponse
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models
 from app.api import deps
-from app.schemas.item import Item, ItemCreate, ItemUpdate
 from app.core.security import get_current_user
-from app.schemas.user import UserResponse
-from app.models.item import Item as ItemModel
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -123,4 +123,4 @@ async def delete_item(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
-    await crud.item.remove(db, id=item_id) 
+    await crud.item.remove(db, id=item_id)

@@ -10,4 +10,4 @@ Need async-capable Python framework
 Chose FastAPI over Django due to:
 - Native async support
 - Smaller footprint
-- Automatic OpenAPI 
+- Automatic OpenAPI

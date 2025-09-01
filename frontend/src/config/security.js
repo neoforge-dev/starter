@@ -154,7 +154,7 @@ export class SecurityConfig {
       const trustedDomains = await this.getTrustedDomains();
       const allowedDomains = trustedDomains[type] || [];
       const urlObj = new URL(url);
-      
+
       return allowedDomains.some(domain => {
         return urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain);
       });
@@ -169,7 +169,7 @@ export class SecurityConfig {
   async getStatus() {
     const dynamicStatus = dynamicConfig.getStatus();
     const securityConfig = dynamicStatus.loaded ? await this.getSecurityConfig() : null;
-    
+
     return {
       dynamic: dynamicStatus,
       security: {

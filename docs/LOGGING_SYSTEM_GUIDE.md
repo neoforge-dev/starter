@@ -7,7 +7,7 @@ A comprehensive production-ready logging infrastructure built on the ELK stack (
 The NeoForge logging system provides:
 
 - **Centralized Log Aggregation**: All application and system logs collected in one place
-- **Real-time Processing**: Sub-second log ingestion and search capabilities  
+- **Real-time Processing**: Sub-second log ingestion and search capabilities
 - **Structured Logging**: JSON-formatted logs with correlation IDs and metadata
 - **Security Monitoring**: Automated threat detection and alerting
 - **Performance Analytics**: Response time monitoring and bottleneck identification
@@ -86,7 +86,7 @@ from app.core.logging import set_request_context, logger
 # Set request context
 set_request_context(
     request_id="req-123",
-    user_id="user-456", 
+    user_id="user-456",
     session_id="sess-789"
 )
 
@@ -134,7 +134,7 @@ BusinessLoggingMixin.log_user_action(
 The system automatically classifies logs into categories:
 
 - **Security**: Authentication, authorization, access control
-- **Performance**: Response times, slow queries, bottlenecks  
+- **Performance**: Response times, slow queries, bottlenecks
 - **Business**: User actions, transactions, conversions
 - **System**: Infrastructure, health checks, errors
 - **Application**: General application events
@@ -266,7 +266,7 @@ ES_HEAP_SIZE=2g
 ES_NETWORK_HOST=0.0.0.0
 ES_DISCOVERY_TYPE=single-node
 
-# Fluent Bit Configuration  
+# Fluent Bit Configuration
 FLUENT_BIT_USER=fluent-bit
 FLUENT_BIT_PASSWORD=secure-password
 
@@ -379,7 +379,7 @@ The system includes automated health monitoring:
 
 **Pre-configured Alerts:**
 1. **High Error Rate**: >10% 5xx responses in 10 minutes
-2. **Security Breach**: 5+ failed logins in 5 minutes  
+2. **Security Breach**: 5+ failed logins in 5 minutes
 3. **Performance Degradation**: Average response time >5 seconds
 4. **Service Down**: Component health check failures
 5. **Storage Full**: Disk usage >85%
@@ -559,6 +559,6 @@ For issues and questions:
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: August 2025  
+**Version**: 1.0.0
+**Last Updated**: August 2025
 **Maintainer**: NeoForge DevOps Team

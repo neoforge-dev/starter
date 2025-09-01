@@ -8,7 +8,7 @@ import "../../atoms/badge/badge.js";
 /**
  * Enhanced select dropdown with search, multiple selection, and custom options
  * @element neo-select-dropdown
- * 
+ *
  * @prop {Array|string} options - Array of option objects or JSON string
  * @prop {string|Array} value - Selected value(s)
  * @prop {string} placeholder - Placeholder text
@@ -29,7 +29,7 @@ import "../../atoms/badge/badge.js";
  * @prop {boolean} groupBy - Enable option grouping
  * @prop {boolean} createOption - Allow creating new options
  * @prop {number} maxHeight - Maximum dropdown height in pixels
- * 
+ *
  * @fires neo-select-change - When selection changes
  * @fires neo-select-search - When search input changes
  * @fires neo-select-open - When dropdown opens
@@ -482,14 +482,14 @@ export class NeoSelectDropdown extends BaseComponent {
     this.groupBy = false;
     this.createOption = false;
     this.maxHeight = 200;
-    
+
     this._isOpen = false;
     this._searchTerm = '';
     this._selectedValues = [];
     this._filteredOptions = [];
     this._focusedIndex = -1;
     this._optionsData = [];
-    
+
     this._boundHandleDocumentClick = this._handleDocumentClick.bind(this);
   }
 
@@ -575,7 +575,7 @@ export class NeoSelectDropdown extends BaseComponent {
     this._filteredOptions = this._optionsData.filter(option => {
       const text = option.label || option.text || option.value || '';
       const description = option.description || '';
-      return text.toLowerCase().includes(searchLower) || 
+      return text.toLowerCase().includes(searchLower) ||
              description.toLowerCase().includes(searchLower);
     });
   }
@@ -594,7 +594,7 @@ export class NeoSelectDropdown extends BaseComponent {
    */
   _toggleDropdown() {
     if (this.disabled || this.loading) return;
-    
+
     if (this._isOpen) {
       this._closeDropdown();
     } else {
@@ -608,7 +608,7 @@ export class NeoSelectDropdown extends BaseComponent {
   _openDropdown() {
     this._isOpen = true;
     this._focusedIndex = -1;
-    
+
     this.dispatchEvent(new CustomEvent('neo-select-open', {
       bubbles: true,
       composed: true
@@ -630,7 +630,7 @@ export class NeoSelectDropdown extends BaseComponent {
     this._isOpen = false;
     this._searchTerm = '';
     this._focusedIndex = -1;
-    
+
     this.dispatchEvent(new CustomEvent('neo-select-close', {
       bubbles: true,
       composed: true
@@ -644,10 +644,10 @@ export class NeoSelectDropdown extends BaseComponent {
     if (option.disabled) return;
 
     const optionValue = option.value || option.label || option.text;
-    
+
     if (this.multiple) {
       const isSelected = this._selectedValues.includes(optionValue);
-      
+
       if (isSelected) {
         this._selectedValues = this._selectedValues.filter(v => v !== optionValue);
       } else {
@@ -656,7 +656,7 @@ export class NeoSelectDropdown extends BaseComponent {
         }
         this._selectedValues = [...this._selectedValues, optionValue];
       }
-      
+
       this.value = this._selectedValues;
     } else {
       this._selectedValues = [optionValue];
@@ -681,10 +681,10 @@ export class NeoSelectDropdown extends BaseComponent {
    */
   _removeValue(valueToRemove, e) {
     e.stopPropagation();
-    
+
     this._selectedValues = this._selectedValues.filter(v => v !== valueToRemove);
     this.value = this._selectedValues;
-    
+
     this.dispatchEvent(new CustomEvent('neo-select-change', {
       detail: {
         value: this.value,
@@ -701,10 +701,10 @@ export class NeoSelectDropdown extends BaseComponent {
    */
   _clearSelection(e) {
     e.stopPropagation();
-    
+
     this._selectedValues = [];
     this.value = this.multiple ? [] : '';
-    
+
     this.dispatchEvent(new CustomEvent('neo-select-change', {
       detail: {
         value: this.value,
@@ -722,7 +722,7 @@ export class NeoSelectDropdown extends BaseComponent {
   _handleSearch(e) {
     this._searchTerm = e.target.value;
     this._focusedIndex = -1;
-    
+
     this.dispatchEvent(new CustomEvent('neo-select-search', {
       detail: {
         searchTerm: this._searchTerm,
@@ -750,26 +750,26 @@ export class NeoSelectDropdown extends BaseComponent {
         e.preventDefault();
         this._closeDropdown();
         break;
-        
+
       case 'ArrowDown':
         e.preventDefault();
         this._focusedIndex = Math.min(this._focusedIndex + 1, this._filteredOptions.length - 1);
         this._scrollToFocused();
         break;
-        
+
       case 'ArrowUp':
         e.preventDefault();
         this._focusedIndex = Math.max(this._focusedIndex - 1, 0);
         this._scrollToFocused();
         break;
-        
+
       case 'Enter':
         e.preventDefault();
         if (this._focusedIndex >= 0 && this._filteredOptions[this._focusedIndex]) {
           this._selectOption(this._filteredOptions[this._focusedIndex], this._focusedIndex);
         }
         break;
-        
+
       case 'Tab':
         this._closeDropdown();
         break;
@@ -782,7 +782,7 @@ export class NeoSelectDropdown extends BaseComponent {
   _scrollToFocused() {
     const optionsList = this.shadowRoot?.querySelector('.options-list');
     const focusedOption = this.shadowRoot?.querySelector('.option.focused');
-    
+
     if (optionsList && focusedOption) {
       focusedOption.scrollIntoView({ block: 'nearest' });
     }
@@ -793,14 +793,14 @@ export class NeoSelectDropdown extends BaseComponent {
    */
   _createNewOption() {
     if (!this._searchTerm.trim()) return;
-    
+
     const newOption = {
       value: this._searchTerm,
       label: this._searchTerm,
       text: this._searchTerm,
       isNew: true
     };
-    
+
     this.dispatchEvent(new CustomEvent('neo-option-create', {
       detail: {
         option: newOption,
@@ -809,7 +809,7 @@ export class NeoSelectDropdown extends BaseComponent {
       bubbles: true,
       composed: true
     }));
-    
+
     // Optionally add to options and select
     this._optionsData.unshift(newOption);
     this._selectOption(newOption, 0);
@@ -822,15 +822,15 @@ export class NeoSelectDropdown extends BaseComponent {
     if (this._selectedValues.length === 0) {
       return this.placeholder;
     }
-    
+
     if (this.multiple) {
       return this._selectedValues;
     }
-    
-    const selectedOption = this._optionsData.find(opt => 
+
+    const selectedOption = this._optionsData.find(opt =>
       (opt.value || opt.label || opt.text) === this._selectedValues[0]
     );
-    
+
     return selectedOption?.label || selectedOption?.text || this._selectedValues[0];
   }
 
@@ -890,7 +890,7 @@ export class NeoSelectDropdown extends BaseComponent {
           ${this.required ? html`<span aria-label="required">*</span>` : ''}
         </label>
       ` : ''}
-      
+
       <div class="select-container">
         <div
           id="select-trigger"
@@ -904,15 +904,15 @@ export class NeoSelectDropdown extends BaseComponent {
           tabindex="${this.disabled ? '-1' : '0'}"
           @click="${this._toggleDropdown}"
           @keydown="${this._handleKeyDown}">
-          
+
           <div class="selected-values">
             ${this.multiple && hasValue ? html`
               <div class="multiple-values">
                 ${this._selectedValues.map(value => html`
                   <div class="value-tag">
                     <span class="value-tag-text">${value}</span>
-                    <neo-icon 
-                      name="x" 
+                    <neo-icon
+                      name="x"
                       class="value-tag-remove"
                       @click="${(e) => this._removeValue(value, e)}">
                     </neo-icon>
@@ -925,27 +925,27 @@ export class NeoSelectDropdown extends BaseComponent {
               </span>
             `}
           </div>
-          
+
           <div class="trigger-controls">
             ${this.loading ? html`
               <neo-icon name="loader" class="loading-spinner"></neo-icon>
             ` : html`
               ${showClear ? html`
-                <neo-icon 
-                  name="x" 
+                <neo-icon
+                  name="x"
                   class="clear-button"
                   @click="${this._clearSelection}">
                 </neo-icon>
               ` : ''}
-              
-              <neo-icon 
-                name="chevron-down" 
+
+              <neo-icon
+                name="chevron-down"
                 class="dropdown-arrow ${this._isOpen ? 'open' : ''}">
               </neo-icon>
             `}
           </div>
         </div>
-        
+
         ${this._isOpen ? html`
           <div class="dropdown">
             ${this.searchable ? html`
@@ -959,15 +959,15 @@ export class NeoSelectDropdown extends BaseComponent {
                   @keydown="${this._handleKeyDown}">
               </div>
             ` : ''}
-            
+
             <div class="options-list" role="listbox" aria-multiselectable="${this.multiple}">
               ${this._filteredOptions.length === 0 ? html`
                 <div class="no-options">
                   ${this.noOptionsText}
                 </div>
-                
+
                 ${this.createOption && this._searchTerm ? html`
-                  <button 
+                  <button
                     class="option create-option"
                     @click="${this._createNewOption}"
                     role="option">
@@ -980,7 +980,7 @@ export class NeoSelectDropdown extends BaseComponent {
                 ${this._filteredOptions.map((option, index) => {
                   const isSelected = this._isOptionSelected(option);
                   const isFocused = this._focusedIndex === index;
-                  
+
                   return html`
                     <button
                       class="option ${isSelected ? 'selected' : ''} ${isFocused ? 'focused' : ''} ${option.disabled ? 'disabled' : ''}"
@@ -988,25 +988,25 @@ export class NeoSelectDropdown extends BaseComponent {
                       aria-selected="${isSelected}"
                       @click="${() => this._selectOption(option, index)}"
                       @mouseover="${() => this._focusedIndex = index}">
-                      
+
                       <div class="option-content">
                         ${option.icon ? html`
                           <neo-icon name="${option.icon}" class="option-icon"></neo-icon>
                         ` : ''}
-                        
+
                         <div class="option-text">
                           ${option.label || option.text || option.value}
                           ${option.description ? html`
                             <div class="option-description">${option.description}</div>
                           ` : ''}
                         </div>
-                        
+
                         ${option.badge ? html`
                           <neo-badge class="option-badge" size="sm" variant="${option.badgeVariant || 'neutral'}">
                             ${option.badge}
                           </neo-badge>
                         ` : ''}
-                        
+
                         ${this.multiple && isSelected ? html`
                           <neo-icon name="check" class="option-check"></neo-icon>
                         ` : ''}
@@ -1014,11 +1014,11 @@ export class NeoSelectDropdown extends BaseComponent {
                     </button>
                   `;
                 })}
-                
-                ${this.createOption && this._searchTerm && !this._filteredOptions.some(opt => 
+
+                ${this.createOption && this._searchTerm && !this._filteredOptions.some(opt =>
                   (opt.label || opt.text || opt.value).toLowerCase() === this._searchTerm.toLowerCase()
                 ) ? html`
-                  <button 
+                  <button
                     class="option create-option"
                     @click="${this._createNewOption}"
                     role="option">
@@ -1032,11 +1032,11 @@ export class NeoSelectDropdown extends BaseComponent {
           </div>
         ` : ''}
       </div>
-      
+
       ${this.help ? html`
         <div id="select-help" class="field-help">${this.help}</div>
       ` : ''}
-      
+
       ${this.error ? html`
         <div id="select-error" class="field-error">${this.error}</div>
       ` : ''}

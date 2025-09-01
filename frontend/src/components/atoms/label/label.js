@@ -137,9 +137,9 @@ export class NeoLabel extends BaseComponent {
       new CustomEvent("neo-label-click", {
         bubbles: true,
         composed: true,
-        detail: { 
+        detail: {
           for: this.for,
-          originalEvent: e 
+          originalEvent: e
         },
       })
     );
@@ -150,11 +150,11 @@ export class NeoLabel extends BaseComponent {
    */
   getAriaAttributes() {
     const attributes = {};
-    
+
     if (this.helpText) {
       attributes['aria-describedby'] = this._helpId;
     }
-    
+
     if (this.required) {
       attributes['aria-required'] = 'true';
     }
@@ -186,11 +186,11 @@ export class NeoLabel extends BaseComponent {
             ? html`<span class="required-indicator" aria-label="required">*</span>`
             : ""}
         </label>
-        
+
         ${this.helpText
           ? html`
-              <div 
-                id="${this._helpId}" 
+              <div
+                id="${this._helpId}"
                 class="help-text"
                 role="note"
                 aria-live="polite"

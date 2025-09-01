@@ -86,7 +86,7 @@ job "neoforge-frontend" {
       service {
         name = "frontend"
         port = "http"
-        
+
         check {
           type     = "http"
           path     = "/"
@@ -115,22 +115,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
-      
+
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
           push: true
           tags: your-org/neoforge-frontend:latest
-      
+
       - name: Deploy to Digital Ocean
         uses: appleboy/ssh-action@master
         with:
@@ -283,4 +283,4 @@ For deployment issues:
 
 - [Docker Documentation](https://docs.docker.com/)
 - [Nomad Documentation](https://www.nomadproject.io/docs)
-- [Cloudflare Documentation](https://developers.cloudflare.com/) 
+- [Cloudflare Documentation](https://developers.cloudflare.com/)

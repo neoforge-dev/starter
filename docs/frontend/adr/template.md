@@ -30,4 +30,4 @@ Date: YYYY-MM-DD
 
 ## Notes
 
-[Any additional information, links, or references that might be helpful] 
+[Any additional information, links, or references that might be helpful]

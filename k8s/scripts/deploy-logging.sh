@@ -36,26 +36,26 @@ log_error() {
 # Check prerequisites
 check_prerequisites() {
     log_info "Checking prerequisites..."
-    
+
     # Check kubectl
     if ! command -v kubectl &> /dev/null; then
         log_error "kubectl is not installed or not in PATH"
         exit 1
     fi
-    
+
     # Check cluster connection
     if ! kubectl cluster-info &> /dev/null; then
         log_error "Cannot connect to Kubernetes cluster"
         exit 1
     fi
-    
+
     # Check storage class
     if ! kubectl get storageclass neoforge-ssd &> /dev/null; then
         log_warning "Storage class 'neoforge-ssd' not found, using default"
         # Update storage class in manifests to default
         find ../k8s -name "*.yaml" -exec sed -i 's/storageClassName: neoforge-ssd/storageClassName: standard/g' {} \;
     fi
-    
+
     log_success "Prerequisites check completed"
 }
 
@@ -71,11 +71,11 @@ deploy_namespace() {
 deploy_elasticsearch() {
     log_info "Deploying Elasticsearch..."
     kubectl apply -f ../elasticsearch-deployment.yaml
-    
+
     log_info "Waiting for Elasticsearch to be ready..."
     kubectl wait --for=condition=Ready --timeout=$TIMEOUT \
         pod -l app=elasticsearch,component=search-engine -n $NAMESPACE
-    
+
     # Wait for Elasticsearch service to be healthy
     log_info "Checking Elasticsearch health..."
     for i in {1..30}; do
@@ -96,19 +96,19 @@ deploy_elasticsearch() {
 setup_elasticsearch_policies() {
     log_info "Setting up Elasticsearch index templates and ILM policies..."
     kubectl apply -f ../log-policies.yaml
-    
+
     # Apply ILM policies
     kubectl exec -n $NAMESPACE deployment/elasticsearch -- \
         curl -X PUT http://localhost:9200/_ilm/policy/application-logs-policy \
         -H "Content-Type: application/json" \
         -d @/tmp/application-logs-policy.json || true
-    
+
     # Apply index templates
     kubectl exec -n $NAMESPACE deployment/elasticsearch -- \
         curl -X PUT http://localhost:9200/_index_template/neoforge-logs-template \
         -H "Content-Type: application/json" \
         -d @/tmp/neoforge-logs-template.json || true
-    
+
     log_success "Elasticsearch policies configured"
 }
 
@@ -116,11 +116,11 @@ setup_elasticsearch_policies() {
 deploy_fluent_bit() {
     log_info "Deploying Fluent Bit DaemonSet..."
     kubectl apply -f ../fluent-bit-daemonset.yaml
-    
+
     log_info "Waiting for Fluent Bit to be ready..."
     kubectl wait --for=condition=Ready --timeout=$TIMEOUT \
         pod -l app=fluent-bit,component=log-collector -n $NAMESPACE
-    
+
     log_success "Fluent Bit deployed and ready"
 }
 
@@ -128,11 +128,11 @@ deploy_fluent_bit() {
 deploy_kibana() {
     log_info "Deploying Kibana..."
     kubectl apply -f ../kibana-deployment.yaml
-    
+
     log_info "Waiting for Kibana to be ready..."
     kubectl wait --for=condition=Ready --timeout=$TIMEOUT \
         pod -l app=kibana,component=visualization -n $NAMESPACE
-    
+
     # Wait for Kibana service to be healthy
     log_info "Checking Kibana health..."
     for i in {1..20}; do
@@ -153,11 +153,11 @@ deploy_kibana() {
 deploy_dashboards() {
     log_info "Deploying dashboards and alerting..."
     kubectl apply -f ../logging-dashboards.yaml
-    
+
     log_info "Waiting for ElastAlert to be ready..."
     kubectl wait --for=condition=Ready --timeout=$TIMEOUT \
         pod -l app=elastalert,component=alerting -n $NAMESPACE || true
-    
+
     log_success "Dashboards and alerting deployed"
 }
 
@@ -165,7 +165,7 @@ deploy_dashboards() {
 deploy_security() {
     log_info "Deploying security configuration..."
     kubectl apply -f ../logging-security.yaml
-    
+
     log_success "Security configuration deployed"
 }
 
@@ -173,15 +173,15 @@ deploy_security() {
 run_tests() {
     log_info "Running logging system tests..."
     kubectl apply -f ../logging-tests.yaml
-    
+
     log_info "Waiting for test job to complete..."
     kubectl wait --for=condition=Complete --timeout=$TIMEOUT \
         job/logging-system-test -n $NAMESPACE || true
-    
+
     # Show test results
     log_info "Test results:"
     kubectl logs job/logging-system-test -n $NAMESPACE || true
-    
+
     log_success "Tests completed"
 }
 
@@ -189,30 +189,30 @@ run_tests() {
 display_summary() {
     log_info "Deployment Summary"
     echo "=================="
-    
+
     # Get service endpoints
     ES_SERVICE=$(kubectl get svc elasticsearch -n $NAMESPACE -o jsonpath='{.spec.clusterIP}')
     KIBANA_SERVICE=$(kubectl get svc kibana -n $NAMESPACE -o jsonpath='{.spec.clusterIP}')
-    
+
     echo "📊 Elasticsearch: http://$ES_SERVICE:9200"
     echo "📈 Kibana: http://$KIBANA_SERVICE:5601"
     echo ""
-    
+
     # Get pod status
     echo "🔍 Pod Status:"
     kubectl get pods -n $NAMESPACE -o wide
     echo ""
-    
+
     # Get storage usage
     echo "💾 Storage Usage:"
     kubectl get pvc -n $NAMESPACE
     echo ""
-    
+
     # Get service status
     echo "🌐 Services:"
     kubectl get svc -n $NAMESPACE
     echo ""
-    
+
     log_success "Logging system deployment completed successfully!"
     echo ""
     echo "🎯 Next Steps:"
@@ -240,9 +240,9 @@ cleanup_on_error() {
 main() {
     # Set trap for cleanup on error
     trap cleanup_on_error ERR
-    
+
     log_info "Starting NeoForge Logging System deployment"
-    
+
     check_prerequisites
     deploy_namespace
     deploy_elasticsearch
@@ -253,7 +253,7 @@ main() {
     deploy_security
     run_tests
     display_summary
-    
+
     log_success "🎉 NeoForge Logging System deployed successfully!"
 }
 

@@ -32,7 +32,7 @@ describe('JourneyAnalyticsDashboard', () => {
 
   beforeEach(async () => {
     clock = useFakeTimers();
-    
+
     // Mock API responses
     apiStub = stub(window, 'fetch').resolves({
       ok: true,
@@ -46,7 +46,7 @@ describe('JourneyAnalyticsDashboard', () => {
         .autoRefresh=${false}
       ></journey-analytics-dashboard>
     `);
-    
+
     // Wait for initial data loading
     await new Promise(resolve => setTimeout(resolve, 100));
     await element.updateComplete;
@@ -102,7 +102,7 @@ describe('JourneyAnalyticsDashboard', () => {
 
     it('should process metrics correctly', () => {
       const metrics = element.metricsData;
-      
+
       expect(metrics.totalSessions).to.be.a('number');
       expect(metrics.uniqueUsers).to.be.a('number');
       expect(metrics.conversionRate).to.be.a('number');
@@ -119,7 +119,7 @@ describe('JourneyAnalyticsDashboard', () => {
 
     it('should generate insights based on metrics', () => {
       expect(element.insights).to.be.an('array');
-      
+
       if (element.insights.length > 0) {
         const insight = element.insights[0];
         expect(insight).to.have.property('type');
@@ -133,9 +133,9 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should handle API errors gracefully', async () => {
       apiStub.restore();
       apiStub = stub(window, 'fetch').rejects(new Error('Network error'));
-      
+
       await element.loadAnalyticsData();
-      
+
       expect(element.loading).to.be.false;
       // Should not crash and should maintain empty state
       expect(element.metricsData).to.be.an('object');
@@ -146,7 +146,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should start real-time updates when enabled', () => {
       element.autoRefresh = true;
       element.startRealTimeUpdates();
-      
+
       expect(element.refreshTimer).to.exist;
     });
 
@@ -154,7 +154,7 @@ describe('JourneyAnalyticsDashboard', () => {
       element.autoRefresh = true;
       element.startRealTimeUpdates();
       element.stopRealTimeUpdates();
-      
+
       expect(element.refreshTimer).to.be.null;
     });
 
@@ -162,17 +162,17 @@ describe('JourneyAnalyticsDashboard', () => {
       element.autoRefresh = true;
       element.refreshInterval = 1000;
       element.startRealTimeUpdates();
-      
+
       const loadDataSpy = spy(element, 'loadAnalyticsData');
-      
+
       clock.tick(1000);
-      
+
       expect(loadDataSpy.called).to.be.true;
     });
 
     it('should handle journey events in real-time', () => {
       const initialSessions = element.metricsData.totalSessions || 0;
-      
+
       const journeyEvent = new CustomEvent('journey-event', {
         detail: {
           event_type: 'journey_start',
@@ -180,21 +180,21 @@ describe('JourneyAnalyticsDashboard', () => {
           timestamp: Date.now()
         }
       });
-      
+
       element.handleJourneyEvent(journeyEvent);
-      
+
       expect(element.metricsData.totalSessions).to.equal(initialSessions + 1);
     });
 
     it('should update last update timestamp', () => {
       const initialTimestamp = element.lastUpdate;
-      
+
       clock.tick(5000);
-      
+
       element.handleJourneyEvent(new CustomEvent('journey-event', {
         detail: { event_type: 'test' }
       }));
-      
+
       expect(element.lastUpdate).to.be.greaterThan(initialTimestamp);
     });
   });
@@ -203,7 +203,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should change active view', async () => {
       element.handleViewChange('funnel');
       await element.updateComplete;
-      
+
       expect(element.activeView).to.equal('funnel');
     });
 
@@ -213,13 +213,13 @@ describe('JourneyAnalyticsDashboard', () => {
       await element.updateComplete;
       let content = element.shadowRoot.querySelector('.view-content');
       expect(content).to.exist;
-      
+
       // Funnel view
       element.activeView = 'funnel';
       await element.updateComplete;
       content = element.shadowRoot.querySelector('.view-content');
       expect(content).to.exist;
-      
+
       // Flow view
       element.activeView = 'flow';
       await element.updateComplete;
@@ -230,12 +230,12 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should show active tab styling', async () => {
       element.activeView = 'funnel';
       await element.updateComplete;
-      
+
       const tabs = element.shadowRoot.querySelectorAll('.view-tab');
-      const activeTab = Array.from(tabs).find(tab => 
+      const activeTab = Array.from(tabs).find(tab =>
         tab.textContent.includes('Funnel')
       );
-      
+
       expect(activeTab.classList.contains('active')).to.be.true;
     });
   });
@@ -243,10 +243,10 @@ describe('JourneyAnalyticsDashboard', () => {
   describe('Time Range Management', () => {
     it('should handle time range changes', async () => {
       const loadDataSpy = spy(element, 'loadAnalyticsData');
-      
+
       const event = { target: { value: '30d' } };
       element.handleTimeRangeChange(event);
-      
+
       expect(element.timeRange).to.equal('30d');
       expect(loadDataSpy.called).to.be.true;
     });
@@ -258,7 +258,7 @@ describe('JourneyAnalyticsDashboard', () => {
         '30d': 30,
         '90d': 90
       };
-      
+
       Object.entries(ranges).forEach(([range, days]) => {
         const dateRange = element.getDateRange(range);
         const daysDiff = Math.round((dateRange.end - dateRange.start) / (1000 * 60 * 60 * 24));
@@ -269,7 +269,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should update date range when time range changes', () => {
       element.timeRange = '30d';
       element.dateRange = element.getDateRange(element.timeRange);
-      
+
       const daysDiff = Math.round((element.dateRange.end - element.dateRange.start) / (1000 * 60 * 60 * 24));
       expect(daysDiff).to.equal(30);
     });
@@ -278,36 +278,36 @@ describe('JourneyAnalyticsDashboard', () => {
   describe('Settings Management', () => {
     it('should toggle auto refresh', () => {
       const initialState = element.autoRefresh;
-      
+
       element.toggleAutoRefresh();
-      
+
       expect(element.autoRefresh).to.equal(!initialState);
     });
 
     it('should start/stop refresh timer with auto refresh toggle', () => {
       element.autoRefresh = false;
       element.toggleAutoRefresh();
-      
+
       expect(element.refreshTimer).to.exist;
-      
+
       element.toggleAutoRefresh();
       expect(element.refreshTimer).to.be.null;
     });
 
     it('should toggle comparison mode', () => {
       const initialState = element.comparisonMode;
-      
+
       element.toggleComparisonMode();
-      
+
       expect(element.comparisonMode).to.equal(!initialState);
     });
 
     it('should toggle settings panel', async () => {
       element.toggleSettings();
       await element.updateComplete;
-      
+
       expect(element.showSettings).to.be.true;
-      
+
       const settingsPanel = element.shadowRoot.querySelector('.settings-panel');
       expect(settingsPanel.classList.contains('visible')).to.be.true;
     });
@@ -338,7 +338,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should render metric cards in overview', async () => {
       element.activeView = 'overview';
       await element.updateComplete;
-      
+
       const metricCards = element.shadowRoot.querySelectorAll('.metric-card');
       expect(metricCards.length).to.be.greaterThan(0);
     });
@@ -358,7 +358,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should show trend indicators', async () => {
       element.activeView = 'overview';
       await element.updateComplete;
-      
+
       const trendElements = element.shadowRoot.querySelectorAll('.metric-trend');
       expect(trendElements.length).to.be.greaterThan(0);
     });
@@ -390,7 +390,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should render insights panel when insights exist', async () => {
       element.activeView = 'overview';
       await element.updateComplete;
-      
+
       const insightsPanel = element.shadowRoot.querySelector('.insights-panel');
       expect(insightsPanel).to.exist;
     });
@@ -398,7 +398,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should render individual insights', async () => {
       element.activeView = 'overview';
       await element.updateComplete;
-      
+
       const insightItems = element.shadowRoot.querySelectorAll('.insight-item');
       expect(insightItems.length).to.equal(2);
     });
@@ -406,12 +406,12 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should toggle insight expansion', async () => {
       element.activeView = 'overview';
       await element.updateComplete;
-      
+
       const insightId = element.insights[0].id;
-      
+
       element.toggleInsight(insightId);
       expect(element.expandedInsights.has(insightId)).to.be.true;
-      
+
       element.toggleInsight(insightId);
       expect(element.expandedInsights.has(insightId)).to.be.false;
     });
@@ -420,7 +420,7 @@ describe('JourneyAnalyticsDashboard', () => {
       element.activeView = 'overview';
       element.expandedInsights.add(element.insights[0].id);
       await element.updateComplete;
-      
+
       const recommendations = element.shadowRoot.querySelector('.insight-recommendations');
       expect(recommendations).to.exist;
     });
@@ -428,10 +428,10 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should apply correct styling based on insight type', async () => {
       element.activeView = 'overview';
       await element.updateComplete;
-      
+
       const warningInsight = element.shadowRoot.querySelector('.insight-item.warning');
       const successInsight = element.shadowRoot.querySelector('.insight-item.success');
-      
+
       expect(warningInsight).to.exist;
       expect(successInsight).to.exist;
     });
@@ -443,10 +443,10 @@ describe('JourneyAnalyticsDashboard', () => {
         step: { name: 'Checkout', index: 2 },
         data: { insights: [], recommendations: [] }
       };
-      
+
       const event = new CustomEvent('step-selected', { detail: stepData });
       element.handleStepSelected(event);
-      
+
       expect(element.selectedSegment).to.equal('Checkout');
     });
 
@@ -455,18 +455,18 @@ describe('JourneyAnalyticsDashboard', () => {
         node: { title: 'Product Page', path: '/product' },
         paths: [['Home', 'Product', 'Cart']]
       };
-      
+
       const event = new CustomEvent('node-selected', { detail: nodeData });
       element.handleNodeSelected(event);
-      
+
       expect(element.selectedSegment).to.equal('Product Page');
     });
 
     it('should recalculate conversion rate on conversion events', () => {
       element.metricsData = { totalSessions: 100, conversionRate: 2.0 };
-      
+
       element.recalculateConversionRate();
-      
+
       expect(element.metricsData.conversionRate).to.be.a('number');
     });
   });
@@ -475,7 +475,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should show loading overlay when loading', async () => {
       element.loading = true;
       await element.updateComplete;
-      
+
       const loadingOverlay = element.shadowRoot.querySelector('.loading-overlay');
       expect(loadingOverlay).to.exist;
     });
@@ -483,17 +483,17 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should hide loading overlay when not loading', async () => {
       element.loading = false;
       await element.updateComplete;
-      
+
       const loadingOverlay = element.shadowRoot.querySelector('.loading-overlay');
       expect(loadingOverlay).to.be.null;
     });
 
     it('should set loading state during data fetch', async () => {
       expect(element.loading).to.be.false;
-      
+
       const loadPromise = element.loadAnalyticsData();
       expect(element.loading).to.be.true;
-      
+
       await loadPromise;
       expect(element.loading).to.be.false;
     });
@@ -508,14 +508,14 @@ describe('JourneyAnalyticsDashboard', () => {
 
     it('should set up event listeners for journey events', () => {
       const eventSpy = spy(element, 'handleJourneyEvent');
-      
+
       const journeyEvent = new CustomEvent('journey-event', {
         detail: { event_type: 'test' },
         bubbles: true
       });
-      
+
       element.dispatchEvent(journeyEvent);
-      
+
       // Event should be handled (note: depends on event bubbling setup)
       expect(eventSpy.called).to.be.true;
     });
@@ -524,10 +524,10 @@ describe('JourneyAnalyticsDashboard', () => {
   describe('Dashboard Header', () => {
     it('should display dashboard title and subtitle', async () => {
       await element.updateComplete;
-      
+
       const title = element.shadowRoot.querySelector('.dashboard-title');
       const subtitle = element.shadowRoot.querySelector('.dashboard-subtitle');
-      
+
       expect(title).to.exist;
       expect(title.textContent).to.include('User Journey Analytics');
       expect(subtitle).to.exist;
@@ -536,7 +536,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should show last update time', async () => {
       element.lastUpdate = Date.now();
       await element.updateComplete;
-      
+
       const lastUpdate = element.shadowRoot.querySelector('.last-update');
       expect(lastUpdate).to.exist;
     });
@@ -544,7 +544,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should show update indicator when auto-refresh is active', async () => {
       element.autoRefresh = true;
       await element.updateComplete;
-      
+
       const indicator = element.shadowRoot.querySelector('.update-indicator');
       expect(indicator).to.exist;
     });
@@ -552,7 +552,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should show selected segment filter', async () => {
       element.selectedSegment = 'Checkout';
       await element.updateComplete;
-      
+
       const subtitle = element.shadowRoot.querySelector('.dashboard-subtitle');
       expect(subtitle.textContent).to.include('Checkout');
     });
@@ -561,36 +561,36 @@ describe('JourneyAnalyticsDashboard', () => {
   describe('Dashboard Controls', () => {
     it('should render time range selector', async () => {
       await element.updateComplete;
-      
+
       const timeRangeSelect = element.shadowRoot.querySelector('select[class*="control-select"]');
       expect(timeRangeSelect).to.exist;
     });
 
     it('should render auto refresh button', async () => {
       await element.updateComplete;
-      
+
       const autoRefreshButton = Array.from(element.shadowRoot.querySelectorAll('.control-button'))
         .find(button => button.textContent.includes('Auto Refresh'));
-      
+
       expect(autoRefreshButton).to.exist;
     });
 
     it('should render settings button', async () => {
       await element.updateComplete;
-      
+
       const settingsButton = Array.from(element.shadowRoot.querySelectorAll('.control-button'))
         .find(button => button.textContent.includes('Settings'));
-      
+
       expect(settingsButton).to.exist;
     });
 
     it('should show active state on auto refresh button', async () => {
       element.autoRefresh = true;
       await element.updateComplete;
-      
+
       const autoRefreshButton = Array.from(element.shadowRoot.querySelectorAll('.control-button'))
         .find(button => button.textContent.includes('Auto Refresh'));
-      
+
       expect(autoRefreshButton.classList.contains('active')).to.be.true;
     });
   });
@@ -598,27 +598,27 @@ describe('JourneyAnalyticsDashboard', () => {
   describe('Tab Navigation', () => {
     it('should render view tabs', async () => {
       await element.updateComplete;
-      
+
       const tabs = element.shadowRoot.querySelectorAll('.view-tab');
       expect(tabs.length).to.equal(3); // Overview, Funnel, Flow
     });
 
     it('should handle tab clicks', async () => {
       await element.updateComplete;
-      
+
       const funnelTab = Array.from(element.shadowRoot.querySelectorAll('.view-tab'))
         .find(tab => tab.textContent.includes('Funnel'));
-      
+
       funnelTab.click();
       await element.updateComplete;
-      
+
       expect(element.activeView).to.equal('funnel');
     });
 
     it('should show correct active tab', async () => {
       element.activeView = 'flow';
       await element.updateComplete;
-      
+
       const activeTab = element.shadowRoot.querySelector('.view-tab.active');
       expect(activeTab.textContent).to.include('Flow');
     });
@@ -632,10 +632,10 @@ describe('JourneyAnalyticsDashboard', () => {
         configurable: true,
         value: 600,
       });
-      
+
       element.dispatchEvent(new Event('resize'));
       await element.updateComplete;
-      
+
       // Should still render correctly
       const container = element.shadowRoot.querySelector('.dashboard-container');
       expect(container).to.exist;
@@ -643,7 +643,7 @@ describe('JourneyAnalyticsDashboard', () => {
 
     it('should adapt metric cards to screen size', async () => {
       await element.updateComplete;
-      
+
       const metricsGrid = element.shadowRoot.querySelector('.metrics-overview');
       expect(metricsGrid).to.exist;
     });
@@ -653,7 +653,7 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should handle component rendering errors gracefully', async () => {
       // Simulate error state
       element.metricsData = null;
-      
+
       expect(() => {
         element.requestUpdate();
       }).to.not.throw();
@@ -663,7 +663,7 @@ describe('JourneyAnalyticsDashboard', () => {
       element.insights = null;
       element.metricsData = {};
       await element.updateComplete;
-      
+
       const container = element.shadowRoot.querySelector('.dashboard-container');
       expect(container).to.exist;
     });
@@ -673,19 +673,19 @@ describe('JourneyAnalyticsDashboard', () => {
     it('should clean up timers on disconnect', () => {
       element.autoRefresh = true;
       element.startRealTimeUpdates();
-      
+
       expect(element.refreshTimer).to.exist;
-      
+
       element.disconnectedCallback();
-      
+
       expect(element.refreshTimer).to.be.null;
     });
 
     it('should remove event listeners on disconnect', () => {
       const removeEventListenerSpy = spy(element, 'removeEventListeners');
-      
+
       element.disconnectedCallback();
-      
+
       expect(removeEventListenerSpy.called).to.be.true;
     });
   });
@@ -697,9 +697,9 @@ describe('JourneyAnalyticsDashboard', () => {
         uniqueUsers: 800,
         conversionRate: 5.2
       };
-      
+
       element.metricsData = validMetrics;
-      
+
       expect(element.metricsData.totalSessions).to.be.a('number');
       expect(element.metricsData.uniqueUsers).to.be.a('number');
       expect(element.metricsData.conversionRate).to.be.a('number');
@@ -707,7 +707,7 @@ describe('JourneyAnalyticsDashboard', () => {
 
     it('should handle invalid insights data', () => {
       element.insights = [{ invalid: 'data' }];
-      
+
       expect(() => {
         element.renderInsight(element.insights[0]);
       }).to.not.throw();

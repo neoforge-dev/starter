@@ -1,13 +1,13 @@
 """Redis connection module with advanced pooling and monitoring."""
-from typing import AsyncGenerator, Optional, Tuple
 import time
+from typing import AsyncGenerator, Optional, Tuple
 
-from redis.asyncio import Redis, ConnectionPool, BlockingConnectionPool
+import structlog
+from prometheus_client import Counter, Histogram
+from redis.asyncio import BlockingConnectionPool, ConnectionPool, Redis
 from redis.asyncio.retry import Retry
 from redis.backoff import ExponentialBackoff
 from redis.exceptions import ConnectionError, TimeoutError
-import structlog
-from prometheus_client import Counter, Histogram
 
 from app.core.config import Settings, get_settings
 from app.core.metrics import get_metrics
@@ -31,7 +31,9 @@ REDIS_OPERATION_DURATION = Histogram(
 
 # Configure retry strategy with exponential backoff
 retry_strategy = Retry(
-    ExponentialBackoff(cap=10, base=1),  # Start at 1s, increase exponentially, cap at 10s
+    ExponentialBackoff(
+        cap=10, base=1
+    ),  # Start at 1s, increase exponentially, cap at 10s
     3,  # Maximum 3 retries
 )
 
@@ -50,6 +52,7 @@ pool = BlockingConnectionPool.from_url(
     health_check_interval=30 if not current_settings.testing else 5,
 )
 
+
 # Create a global Redis client with monitoring
 class MonitoredRedis(Redis):
     """Redis client with operation monitoring."""
@@ -58,7 +61,7 @@ class MonitoredRedis(Redis):
         """Execute Redis command with monitoring."""
         command = args[0] if args else "unknown"
         start_time = time.time()
-        
+
         try:
             result = await super().execute_command(*args, **options)
             REDIS_OPERATIONS.labels(operation=command).inc()
@@ -84,13 +87,13 @@ redis_client = MonitoredRedis.from_pool(pool)
 async def get_redis() -> AsyncGenerator[Redis, None]:
     """
     Get Redis connection from pool with monitoring.
-    
+
     This function provides a Redis connection with:
     - Connection pooling
     - Automatic retries
     - Monitoring and metrics
     - Error handling
-    
+
     Yields:
         Redis connection with monitoring
     """
@@ -100,17 +103,17 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
         logger.error("redis_connection_error", error=str(e))
         # Fetch settings inside the function for conditional logic
         s = get_settings()
-        if not s.testing: # Use fetched settings
+        if not s.testing:  # Use fetched settings
             raise
 
 
 async def check_redis_health(redis: Redis) -> Tuple[bool, Optional[str]]:
     """
     Check Redis connection health.
-    
+
     Args:
         redis: Redis connection to check
-        
+
     Returns:
         Tuple of (is_healthy, error_message)
     """
@@ -120,4 +123,4 @@ async def check_redis_health(redis: Redis) -> Tuple[bool, Optional[str]]:
         return True, None
     except Exception as e:
         logger.error("redis_health_check_error", error=str(e))
-        return False, str(e) 
+        return False, str(e)

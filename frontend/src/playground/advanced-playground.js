@@ -1,6 +1,6 @@
 /**
  * Advanced Native Web Components Playground Controller
- * 
+ *
  * Main application logic that ties together all playground components to create
  * a complete Storybook replacement experience.
  */
@@ -38,31 +38,31 @@ class PlaygroundApp {
     this.storyExtractor = new StoryExtractor();
     this.currentComponent = null;
     this.currentProps = {};
-    
+
     // Initialize UX enhancement systems
     this.keyboardNavigation = null;
     this.smartSearch = null;
     this.sessionMemory = null;
     this.performanceOptimizer = null;
     this.designSystemPanel = null;
-    
+
     // Initialize Application Integration tools
     this.appTemplateGenerator = new AppTemplateGenerator();
     this.projectIntegrator = new ProjectIntegrator();
     this.deploymentExamples = new DeploymentExamples();
     this.performanceValidator = new PerformanceValidator();
     this.usageExamples = new UsageExamples();
-    
+
     // Initialize Production-Ready tools
     this.gitHubRepoGenerator = new GitHubRepoGenerator();
     this.oneClickDeployment = new OneClickDeployment();
     this.fullStackProjectGenerator = new FullStackProjectGenerator();
     this.productionConfigManager = new ProductionConfigManager();
     this.projectExporter = new ProjectExporter();
-    
+
     // Initialize Deployment Validation System
     this.deploymentWorkflow = new DeploymentWorkflowIntegration(this);
-    
+
     // Application Integration state
     this.appBuilderState = {
       currentStep: 1,
@@ -71,33 +71,33 @@ class PlaygroundApp {
       appConfiguration: {},
       generatedApp: null
     };
-    
+
     this.initializeApp();
   }
 
   async initializeApp() {
     console.log('🚀 Initializing Enhanced Playground...');
-    
+
     // Initialize UX enhancement systems first
     this.sessionMemory = new SessionMemory(this);
     this.performanceOptimizer = new PerformanceOptimizer(this);
-    
+
     this.bindEventListeners();
     await this.populateComponentTree();
-    
+
     // Initialize enhanced systems after DOM is ready
     this.keyboardNavigation = new KeyboardNavigation(this);
     this.smartSearch = new SmartSearch(this);
-    
+
     this.setupDesignSystemPanel();
     this.setupPanelToggles();
     this.setupResponsiveControls();
     this.setupCodeGeneration();
     this.setupDeveloperWorkflowShortcuts();
-    
+
     // Initialize deployment validation integration
     this.deploymentWorkflow.initialize();
-    
+
     console.log('✨ Enhanced Playground Ready!', {
       keyboardShortcuts: '15 shortcuts available (Press Ctrl+H for help)',
       smartSearch: 'Fuzzy matching and suggestions enabled',
@@ -170,9 +170,9 @@ class PlaygroundApp {
     if (!treeContainer) return;
 
     const availableComponents = this.componentLoader.getAvailableComponents();
-    
+
     let treeHtml = '';
-    
+
     // Build hierarchical component tree
     Object.entries(availableComponents).forEach(([category, components]) => {
       if (components.length > 0) {
@@ -246,7 +246,7 @@ class PlaygroundApp {
 
       // Update UI to show loading state
       this.updateComponentTitle(`Loading ${this.formatComponentName(name)}...`);
-      
+
       // Load playground configuration (with performance optimization if available)
       let playgroundConfig;
       if (this.performanceOptimizer && this.performanceOptimizer.optimizedLoadComponent) {
@@ -254,7 +254,7 @@ class PlaygroundApp {
       } else {
         playgroundConfig = await this.componentLoader.loadPlayground(category, name);
       }
-      
+
       if (playgroundConfig.error) {
         this.showComponentError(playgroundConfig);
         return;
@@ -263,11 +263,11 @@ class PlaygroundApp {
       // Auto-detect properties from actual component
       const componentName = playgroundConfig.component;
       const detectedProps = this.componentLoader.detectComponentProperties(componentName);
-      
+
       // Merge detected properties with playground config and remembered values
       let mergedArgTypes = { ...detectedProps, ...playgroundConfig.argTypes };
       let defaultProps = this.extractDefaultProps(mergedArgTypes);
-      
+
       // Apply remembered properties if available
       if (this.sessionMemory) {
         const rememberedProps = this.sessionMemory.getRememberedProperties(category, name);
@@ -280,12 +280,12 @@ class PlaygroundApp {
       // Update UI components with live component integration
       this.updateComponentTitle(playgroundConfig.title, playgroundConfig.description);
       this.renderLiveComponentExamples(this.currentComponent);
-      
+
       // Setup props editor after live components are created
       setTimeout(() => {
         this.setupLivePropsEditor(mergedArgTypes, componentName);
       }, 100);
-      
+
       this.updateCodeGeneration();
 
       // Highlight active component in tree
@@ -296,11 +296,11 @@ class PlaygroundApp {
 
     } catch (error) {
       console.error('Error loading component:', error);
-      this.showComponentError({ 
+      this.showComponentError({
         title: `${name} (Error)`,
         description: `Failed to load component: ${error.message}`
       });
-      
+
       // Still complete tracking even on error
       analytics.trackComponentSwitchEnd(category, name);
     }
@@ -390,7 +390,7 @@ class PlaygroundApp {
    */
   createLiveComponent(componentName, props) {
     const element = document.createElement(componentName);
-    
+
     // Set properties
     Object.entries(props || {}).forEach(([key, value]) => {
       if (key === 'label' || key === 'text') {
@@ -421,7 +421,7 @@ class PlaygroundApp {
     propEditor.argTypes = argTypes;
     propEditor.values = this.currentProps;
     propEditor.component = componentName;
-    
+
     // Connect to live interactive component
     if (this.liveInteractiveComponent) {
       propEditor.targetComponent = this.liveInteractiveComponent;
@@ -463,7 +463,7 @@ class PlaygroundApp {
    */
   handlePropsReset(detail) {
     this.currentProps = detail.values;
-    
+
     // Reset live interactive component
     if (this.liveInteractiveComponent) {
       Object.entries(this.currentProps).forEach(([key, value]) => {
@@ -474,7 +474,7 @@ class PlaygroundApp {
         }
       });
     }
-    
+
     this.updateCodeGeneration();
   }
 
@@ -528,11 +528,11 @@ class PlaygroundApp {
       themeButton.className = 'tool-button';
       themeButton.title = 'Design System & Themes';
       themeButton.innerHTML = '🎨 Design';
-      
+
       themeButton.addEventListener('click', () => {
         this.toggleDesignSystemPanel();
       });
-      
+
       toolbar.appendChild(themeButton);
     }
 
@@ -548,7 +548,7 @@ class PlaygroundApp {
   toggleDesignSystemPanel() {
     if (this.designSystemPanel) {
       const isOpen = this.designSystemPanel.hasAttribute('is-open');
-      
+
       if (isOpen) {
         this.designSystemPanel.removeAttribute('is-open');
         this.designSystemPanel.isOpen = false;
@@ -597,7 +597,7 @@ class PlaygroundApp {
     if (!isVisible) {
       panel.style.display = 'block';
       panel.classList.add('active');
-      
+
       // Special handling for analytics panel
       if (panelId === 'analytics-panel') {
         const analyticsComponent = document.getElementById('playground-analytics');
@@ -608,7 +608,7 @@ class PlaygroundApp {
     } else {
       panel.style.display = 'none';
       panel.classList.remove('active');
-      
+
       // Special handling for analytics panel
       if (panelId === 'analytics-panel') {
         const analyticsComponent = document.getElementById('playground-analytics');
@@ -641,7 +641,7 @@ class PlaygroundApp {
         const width = button.dataset.width;
         const height = button.dataset.height;
         this.setViewportSize(width, height);
-        
+
         // Update active button
         viewportButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
@@ -674,7 +674,7 @@ class PlaygroundApp {
       button.addEventListener('click', () => {
         const tabType = button.dataset.tab;
         this.updateCodeGeneration(tabType);
-        
+
         // Update active tab
         tabButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
@@ -766,7 +766,7 @@ render() {
    * Utility functions
    */
   formatComponentName(name) {
-    return name.split('-').map(part => 
+    return name.split('-').map(part =>
       part.charAt(0).toUpperCase() + part.slice(1)
     ).join(' ');
   }
@@ -774,7 +774,7 @@ render() {
   updateComponentTitle(title, description = '') {
     const titleElement = document.getElementById('current-component-title');
     const descElement = document.getElementById('current-component-description');
-    
+
     if (titleElement) titleElement.textContent = title;
     if (descElement) descElement.textContent = description;
   }
@@ -890,7 +890,7 @@ render() {
     const metricsHtml = `
       <div class="performance-metrics">
         <h3>⚡ Performance Metrics</h3>
-        
+
         <div class="metrics-grid">
           <div class="metric-category">
             <h4>Component Switching</h4>
@@ -907,7 +907,7 @@ render() {
               </span>
             </div>
           </div>
-          
+
           <div class="metric-category">
             <h4>Search Performance</h4>
             <div class="metric-item">
@@ -923,7 +923,7 @@ render() {
               </span>
             </div>
           </div>
-          
+
           <div class="metric-category">
             <h4>Caching</h4>
             <div class="metric-item">
@@ -937,7 +937,7 @@ render() {
               <span class="metric-value">${metrics.caching.cacheSize} components</span>
             </div>
           </div>
-          
+
           ${memoryStats ? `
           <div class="metric-category">
             <h4>Session Memory</h4>
@@ -1004,10 +1004,10 @@ render() {
    */
   handleComponentGenerated(generationResult) {
     console.log('🧩 Component Generated:', generationResult);
-    
+
     // Show success notification
     this.showNotification('success', `Component "${generationResult.config.componentName}" generated successfully!`);
-    
+
     // Log the generation result for developer
     console.group('📋 Component Generation Result');
     console.log('Config:', generationResult.config);
@@ -1129,7 +1129,7 @@ render() {
       <div style="max-width: 600px; padding: 1rem;">
         <h3>🚀 Integration Instructions</h3>
         <p style="margin: 1rem 0;">Your component has been generated! Follow these steps to integrate it:</p>
-        
+
         <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
           <h4>1. Create Files</h4>
           <p>Create these files in your project:</p>
@@ -1137,18 +1137,18 @@ render() {
             ${Object.keys(generationResult.files).map(file => `<li><code>${file}</code></li>`).join('')}
           </ul>
         </div>
-        
+
         <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
           <h4>2. Update ComponentLoader</h4>
           <p>Add the following to <code>ComponentLoader.loadComponent()</code> in the <code>${generationResult.config.category}</code> switch statement:</p>
           <pre style="background: #fff; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8rem; overflow-x: auto;"><code>${generationResult.loaderUpdate.categoryUpdate.importStatement}</code></pre>
         </div>
-        
+
         <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
           <h4>3. Update Available Components</h4>
           <p>Add <code>'${generationResult.config.name}'</code> to the <code>${generationResult.config.category}</code> array in <code>getAvailableComponents()</code></p>
         </div>
-        
+
         <div style="background: #e8f5e8; padding: 1rem; border-radius: 6px; margin: 1rem 0; border-left: 4px solid #28a745;">
           <h4>✨ What's Next?</h4>
           <ul style="margin: 0.5rem 0 0 1.5rem;">
@@ -1158,7 +1158,7 @@ render() {
             <li>Write additional tests</li>
           </ul>
         </div>
-        
+
         <p style="margin: 1rem 0 0 0; font-size: 0.9rem; color: #666;">
           💡 <strong>Tip:</strong> All generated code follows the existing project patterns and includes comprehensive tests!
         </p>
@@ -1202,10 +1202,10 @@ render() {
     // Show the panel
     panel.style.display = 'block';
     panel.classList.add('panel-open');
-    
+
     // Initialize the panel
     this.initializeAppIntegrationPanel();
-    
+
     // Reset to step 1
     this.appBuilderState.currentStep = 1;
     this.updateWorkflowStep(1);
@@ -1302,7 +1302,7 @@ render() {
     if (!container) return;
 
     let availableComponents = this.componentLoader.getAvailableComponents();
-    
+
     // Provide fallback mock data for testing
     if (!availableComponents || Object.keys(availableComponents).length === 0) {
       availableComponents = {
@@ -1311,7 +1311,7 @@ render() {
         organisms: ['neo-table', 'neo-data-grid']
       };
     }
-    
+
     let componentsHtml = '';
 
     Object.entries(availableComponents).forEach(([category, components]) => {
@@ -1322,8 +1322,8 @@ render() {
             <div class="component-checkboxes">
               ${components.map(componentName => `
                 <label class="checkbox-label">
-                  <input type="checkbox" class="component-checkbox" 
-                         data-category="${category}" 
+                  <input type="checkbox" class="component-checkbox"
+                         data-category="${category}"
                          data-component="${componentName}"
                          onchange="playgroundApp.handleComponentSelection(event)">
                   <span>${this.formatComponentName(componentName)}</span>
@@ -1344,7 +1344,7 @@ render() {
   handleComponentSelection(event) {
     const checkbox = event.target;
     const componentName = checkbox.dataset.component;
-    
+
     if (checkbox.checked) {
       if (!this.appBuilderState.selectedComponents.includes(componentName)) {
         this.appBuilderState.selectedComponents.push(componentName);
@@ -1491,8 +1491,8 @@ render() {
         ${templateRecommendations.map(comp => `
           <div class="recommendation-item ${this.appBuilderState.selectedComponents.includes(comp) ? 'selected' : ''}">
             <span class="component-name">${this.formatComponentName(comp)}</span>
-            ${this.appBuilderState.selectedComponents.includes(comp) ? 
-              '<span class="checkmark">✓</span>' : 
+            ${this.appBuilderState.selectedComponents.includes(comp) ?
+              '<span class="checkmark">✓</span>' :
               `<button class="add-component-btn" onclick="playgroundApp.addRecommendedComponent('${comp}')">Add</button>`
             }
           </div>
@@ -1507,7 +1507,7 @@ render() {
   addRecommendedComponent(componentName) {
     if (!this.appBuilderState.selectedComponents.includes(componentName)) {
       this.appBuilderState.selectedComponents.push(componentName);
-      
+
       // Update the corresponding checkbox
       const checkbox = document.querySelector(`[data-component="${componentName}"]`);
       if (checkbox) {
@@ -1603,7 +1603,7 @@ render() {
     document.querySelectorAll('.workflow-step').forEach(step => {
       step.classList.remove('active');
     });
-    
+
     const activeStep = document.querySelector(`[data-step="${stepNumber}"]`);
     if (activeStep) {
       activeStep.classList.add('active');
@@ -1628,7 +1628,7 @@ render() {
   updateWorkflowNavigation() {
     const prevButton = document.getElementById('prev-step-button');
     const nextButton = document.getElementById('next-step-button');
-    
+
     if (prevButton) {
       prevButton.disabled = this.appBuilderState.currentStep <= 1;
     }
@@ -1640,8 +1640,8 @@ render() {
     // Update generate button in step 4
     const generateButton = document.getElementById('generate-app-button');
     if (generateButton) {
-      const canGenerate = this.appBuilderState.selectedComponents.length > 0 && 
-                         this.appBuilderState.selectedTemplate && 
+      const canGenerate = this.appBuilderState.selectedComponents.length > 0 &&
+                         this.appBuilderState.selectedTemplate &&
                          this.appBuilderState.appConfiguration.appName;
       generateButton.disabled = !canGenerate;
     }
@@ -1657,7 +1657,7 @@ render() {
       case 2: // Template selection
         return this.appBuilderState.selectedTemplate !== null;
       case 3: // App configuration
-        return this.appBuilderState.appConfiguration.appName && 
+        return this.appBuilderState.appConfiguration.appName &&
                this.appBuilderState.appConfiguration.appName.length > 0;
       case 4: // Generation
         return false; // Final step
@@ -1699,7 +1699,7 @@ render() {
 
       // Generate basic frontend application
       const frontendResult = await this.appTemplateGenerator.generateApp(appConfig);
-      
+
       // Update progress
       this.updateGenerationProgress('Generating full-stack project...', 40);
 
@@ -1716,7 +1716,7 @@ render() {
       };
 
       const fullStackResult = await this.fullStackProjectGenerator.generateFullStackProject(fullStackConfig);
-      
+
       // Update progress
       this.updateGenerationProgress('Generating production configurations...', 60);
 
@@ -1770,7 +1770,7 @@ render() {
     } catch (error) {
       console.error('App generation failed:', error);
       this.showNotification('error', `Generation failed: ${error.message}`);
-      
+
       // Hide progress
       if (progressIndicator) {
         progressIndicator.style.display = 'none';
@@ -1785,7 +1785,7 @@ render() {
   async validateAppPerformance() {
     const resultsPanel = document.getElementById('performance-validation-panel');
     const resultsContainer = document.getElementById('performance-results');
-    
+
     if (resultsPanel) {
       resultsPanel.style.display = 'block';
     }
@@ -1820,15 +1820,15 @@ render() {
             </div>
             <div class="metrics-details">
               <div class="metric">
-                <span>First Contentful Paint:</span> 
+                <span>First Contentful Paint:</span>
                 <span>${result.metrics.firstContentfulPaint}ms</span>
               </div>
               <div class="metric">
-                <span>Largest Contentful Paint:</span> 
+                <span>Largest Contentful Paint:</span>
                 <span>${result.metrics.largestContentfulPaint}ms</span>
               </div>
               <div class="metric">
-                <span>Cumulative Layout Shift:</span> 
+                <span>Cumulative Layout Shift:</span>
                 <span>${result.metrics.cumulativeLayoutShift}</span>
               </div>
             </div>
@@ -1867,20 +1867,20 @@ render() {
 
       // Use the ProjectExporter to create a complete ZIP package
       const exportResult = await this.projectExporter.exportProject(this.appBuilderState.generatedApp.exportConfig);
-      
+
       if (exportResult.success) {
         // Trigger the download
         await this.projectExporter.triggerDownload(exportResult.package);
-        
+
         this.showNotification('success', `Complete project downloaded! (${exportResult.metadata.totalSize})`);
-        
+
         // Show next steps in console for development
         console.group('📦 Project Downloaded Successfully');
         console.log('Next Steps:', exportResult.nextSteps);
         console.log('Setup Instructions:', exportResult.downloadInstructions);
         console.log('Metadata:', exportResult.metadata);
         console.groupEnd();
-        
+
       } else {
         throw new Error(exportResult.error);
       }
@@ -1888,13 +1888,13 @@ render() {
     } catch (error) {
       console.error('Download failed:', error);
       this.showNotification('error', `Download failed: ${error.message}`);
-      
+
       // Fallback to JSON download
       console.log('Falling back to JSON export...');
       const appData = JSON.stringify(this.appBuilderState.generatedApp, null, 2);
       const blob = new Blob([appData], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      
+
       const a = document.createElement('a');
       a.href = url;
       a.download = `${this.appBuilderState.appConfiguration.appName}-export.json`;
@@ -1936,7 +1936,7 @@ render() {
     // Populate deployment guides
     const guides = this.deploymentExamples.getGuides();
     const platforms = this.oneClickDeployment.getAvailablePlatforms();
-    
+
     console.group('🚀 Deployment Options Available');
     console.log('One-Click Platforms:', platforms);
     console.log('Deployment Guides:', guides);
@@ -1968,29 +1968,29 @@ render() {
 
       // Check if we have authentication tokens (in a real app, this would be handled by OAuth)
       const hasToken = this.checkPlatformAuthentication(platform);
-      
+
       if (!hasToken) {
         // Show authentication instructions
         const authInstructions = this.generateAuthInstructions(platform);
         this.showNotification('info', authInstructions);
-        
+
         // For now, show deployment guide
         const guides = this.deploymentExamples.getGuides();
         const selectedGuide = guides.find(guide => guide.platform === platform);
-        
+
         if (selectedGuide) {
           console.group(`📖 ${platform} Deployment Guide`);
           console.log('Guide:', selectedGuide);
           console.log('Platform Info:', this.oneClickDeployment.platforms[platform]);
           console.groupEnd();
         }
-        
+
         return;
       }
 
       // Attempt one-click deployment
       const deploymentResult = await this.oneClickDeployment.deployApplication(deploymentConfig);
-      
+
       if (deploymentResult.success) {
         this.showNotification('success', `Successfully deployed to ${platform}!`);
         console.group(`✅ Deployment Successful - ${platform}`);
@@ -1998,10 +1998,10 @@ render() {
         console.log('Build Time:', deploymentResult.buildTime + 'ms');
         console.log('Next Steps:', deploymentResult.nextSteps);
         console.groupEnd();
-        
+
         // Open deployed app in new tab
         window.open(deploymentResult.url, '_blank');
-        
+
       } else {
         throw new Error(deploymentResult.error);
       }
@@ -2009,11 +2009,11 @@ render() {
     } catch (error) {
       console.error('Deployment failed:', error);
       this.showNotification('error', `Deployment to ${platform} failed: ${error.message}`);
-      
+
       // Fallback to deployment guide
       const guides = this.deploymentExamples.getGuides();
       const selectedGuide = guides.find(guide => guide.platform === platform);
-      
+
       if (selectedGuide) {
         console.group(`📖 ${platform} Manual Deployment Guide`);
         console.log('Guide:', selectedGuide);
@@ -2030,11 +2030,11 @@ render() {
     if (progressIndicator) {
       const progressText = progressIndicator.querySelector('.progress-text');
       const progressBar = progressIndicator.querySelector('.progress-bar');
-      
+
       if (progressText) {
         progressText.textContent = message;
       }
-      
+
       if (progressBar) {
         progressBar.style.width = `${percentage}%`;
       }
@@ -2060,7 +2060,7 @@ render() {
       'github-pages': 'To deploy to GitHub Pages, you need a GitHub repository. For now, please use the manual deployment guide.',
       'firebase': 'To deploy to Firebase, you need to authenticate with your Firebase project. For now, please use the manual deployment guide.'
     };
-    
+
     return instructions[platform] || `Authentication required for ${platform}. Please use the manual deployment guide.`;
   }
 
@@ -2107,7 +2107,7 @@ render() {
    */
   getEnhancedUXStats() {
     const baseStats = this.getUXStats();
-    
+
     return {
       ...baseStats,
       productionFeatures: {

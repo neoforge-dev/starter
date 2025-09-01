@@ -56,4 +56,4 @@ echo "Initializing test database schema..."
 docker compose -f backend/docker-compose.dev.yml run --rm api python -m app.db.init_db
 
 echo "PostgreSQL collation issues fixed successfully!"
-echo "You can now run tests with: ./scripts/run_tests.sh" 
+echo "You can now run tests with: ./scripts/run_tests.sh"

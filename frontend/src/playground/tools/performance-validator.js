@@ -1,6 +1,6 @@
 /**
  * Performance Validator
- * 
+ *
  * Validates component performance in real-world application scenarios.
  * Ensures components meet performance standards in production contexts.
  */
@@ -149,19 +149,19 @@ export class PerformanceValidator {
    */
   async measureRenderPerformance(testEnvironment, appScenario) {
     const startTime = performance.now();
-    
+
     // Create and render components
     const componentHTML = this.generateComponentHTML(appScenario, testEnvironment.data);
-    
+
     // Measure FCP (First Contentful Paint simulation)
     const beforeRender = performance.now();
     testEnvironment.container.innerHTML = componentHTML;
-    
+
     // Wait for components to be fully rendered
     await this.waitForComponentsReady(testEnvironment.container);
-    
+
     const afterRender = performance.now();
-    
+
     // Simulate LCP (Largest Contentful Paint)
     const largestElement = this.findLargestContentfulElement(testEnvironment.container);
     const lcpTime = afterRender - beforeRender + 100; // Add typical layout time
@@ -184,19 +184,19 @@ export class PerformanceValidator {
           return `<neo-table id="perf-neo-table" page-size="50"></neo-table>`;
 
         case 'neo-form-builder':
-          return `<neo-form-builder 
+          return `<neo-form-builder
             fields='[{"type":"text","name":"name","label":"Full Name"},{"type":"email","name":"email","label":"Email"},{"type":"select","name":"department","label":"Department","options":["Engineering","Sales","Marketing"]}]'>
           </neo-form-builder>`;
 
         case 'neo-data-grid':
-          return `<neo-data-grid 
-            data='${JSON.stringify(testData.slice(0, 100))}' 
+          return `<neo-data-grid
+            data='${JSON.stringify(testData.slice(0, 100))}'
             editable="true"
             virtual-scroll="true">
           </neo-data-grid>`;
 
         case 'neo-card':
-          return testData.slice(0, 10).map(item => 
+          return testData.slice(0, 10).map(item =>
             `<neo-card>
               <h3>${item.name}</h3>
               <p>${item.email}</p>
@@ -221,7 +221,7 @@ export class PerformanceValidator {
    */
   async waitForComponentsReady(container) {
     const components = container.querySelectorAll('[is], *[data-component]');
-    const customElements = Array.from(container.querySelectorAll('*')).filter(el => 
+    const customElements = Array.from(container.querySelectorAll('*')).filter(el =>
       el.tagName.includes('-') || el.hasAttribute('is')
     );
 

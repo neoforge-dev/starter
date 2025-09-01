@@ -1,6 +1,6 @@
 /**
  * Project Integrator
- * 
+ *
  * Helps developers integrate NeoForge components into existing projects.
  * Addresses the critical question: "How do I add this to my existing app?"
  */
@@ -16,7 +16,7 @@ export class ProjectIntegrator {
   analyzeProject(projectConfig) {
     const projectType = projectConfig.type;
     const compatibility = this.checkCompatibility(projectType);
-    
+
     if (compatibility === 'unsupported') {
       return {
         compatibility: 'unsupported',
@@ -46,7 +46,7 @@ export class ProjectIntegrator {
       'create-react-app', 'next.js', 'vanilla',
       'webpack', 'rollup', 'parcel'
     ];
-    
+
     return supported.includes(projectType) ? 'supported' : 'unsupported';
   }
 
@@ -204,13 +204,13 @@ function MyComponent() {
       <neo-button variant="primary" onClick={handleClick}>
         Click me
       </neo-button>
-      
+
       <neo-card style={{padding: '1rem', margin: '1rem 0'}}>
         <h3>Card Title</h3>
         <p>Card content goes here</p>
       </neo-card>
-      
-      <neo-table 
+
+      <neo-table
         data={JSON.stringify(tableData)}
         columns={JSON.stringify(columns)}
       />
@@ -222,19 +222,19 @@ function MyComponent() {
         return `<!-- Vue component example -->
 <template>
   <div>
-    <neo-button 
-      variant="primary" 
+    <neo-button
+      variant="primary"
       @click="handleClick"
     >
       Click me
     </neo-button>
-    
+
     <neo-card style="padding: 1rem; margin: 1rem 0;">
       <h3>Card Title</h3>
       <p>Card content goes here</p>
     </neo-card>
-    
-    <neo-table 
+
+    <neo-table
       :data="JSON.stringify(tableData)"
       :columns="JSON.stringify(columns)"
     />
@@ -246,13 +246,13 @@ function MyComponent() {
         return `// Vanilla JavaScript usage
 document.getElementById('app').innerHTML = \`
   <neo-button variant="primary">Click me</neo-button>
-  
+
   <neo-card style="padding: 1rem; margin: 1rem 0;">
     <h3>Card Title</h3>
     <p>Card content goes here</p>
   </neo-card>
-  
-  <neo-table 
+
+  <neo-table
     data='[{"name":"John","email":"john@example.com"}]'
     columns='[{"key":"name","label":"Name"},{"key":"email","label":"Email"}]'
   ></neo-table>
@@ -293,13 +293,13 @@ export default defineConfig({
         return `// webpack.config.js
 module.exports = {
   // Existing config...
-  
+
   resolve: {
     alias: {
       '@neoforge': '@neoforge/web-components'
     }
   },
-  
+
   module: {
     rules: [
       // Existing rules...
@@ -371,12 +371,12 @@ export function useWebComponent(elementRef, props) {
 // Example usage in component
 function MyComponent() {
   const tableRef = useRef(null);
-  
+
   useWebComponent(tableRef, {
     data: tableData,
     columns: columns
   });
-  
+
   return <neo-table ref={tableRef} />;
 }`;
 

@@ -19,7 +19,7 @@ export class JourneyIntelligenceService {
    */
   async generateReport(timeRange = '7d', options = {}) {
     const cacheKey = `report_${timeRange}_${JSON.stringify(options)}`;
-    
+
     if (this.cache.has(cacheKey)) {
       const { data, timestamp } = this.cache.get(cacheKey);
       if (Date.now() - timestamp < this.cacheTimeout) {
@@ -29,7 +29,7 @@ export class JourneyIntelligenceService {
 
     const report = await this.buildAnalyticsReport(timeRange, options);
     this.cache.set(cacheKey, { data: report, timestamp: Date.now() });
-    
+
     return report;
   }
 
@@ -72,7 +72,7 @@ export class JourneyIntelligenceService {
   async calculateJourneyMetrics(timeRange) {
     const endDate = new Date();
     const startDate = this.getStartDate(endDate, timeRange);
-    
+
     try {
       const response = await api.get('/api/v1/events/analytics', {
         params: {
@@ -153,10 +153,10 @@ export class JourneyIntelligenceService {
     const totalSessions = sessions.size;
     const totalPageViews = Array.from(pageMetrics.values()).reduce((sum, p) => sum + p.visits, 0);
     const avgPagesPerSession = totalSessions > 0 ? totalPageViews / totalSessions : 0;
-    
+
     // Calculate conversion metrics
     const conversionEvents = eventMetrics.get('conversion');
-    const conversionRate = totalSessions > 0 && conversionEvents ? 
+    const conversionRate = totalSessions > 0 && conversionEvents ?
       (conversionEvents.uniqueSessions.size / totalSessions) * 100 : 0;
 
     // Calculate engagement metrics
@@ -228,14 +228,14 @@ export class JourneyIntelligenceService {
     const durations = Array.from(sessions.values())
       .map(s => s.endTime && s.startTime ? s.endTime - s.startTime : 0)
       .filter(d => d > 0);
-    
+
     if (durations.length === 0) return 0;
     return durations.reduce((sum, d) => sum + d, 0) / durations.length;
   }
 
   calculateTimeToConversion(sessions, eventMetrics) {
     const conversions = [];
-    
+
     sessions.forEach(session => {
       if (session.conversions > 0 && session.startTime && session.endTime) {
         conversions.push(session.endTime - session.startTime);
@@ -269,7 +269,7 @@ export class JourneyIntelligenceService {
     sessions.forEach(session => {
       const pageCount = session.pages.size;
       const interactionCount = session.interactions;
-      
+
       if (pageCount >= 3 && interactionCount >= 5) {
         qualityMetrics.highEngagement++;
       } else if (pageCount >= 2 && interactionCount >= 2) {
@@ -280,8 +280,8 @@ export class JourneyIntelligenceService {
     });
 
     // Calculate overall quality score (0-100)
-    qualityMetrics.qualityScore = totalSessions > 0 ? 
-      ((qualityMetrics.highEngagement * 3 + qualityMetrics.mediumEngagement * 2 + qualityMetrics.lowEngagement * 1) / 
+    qualityMetrics.qualityScore = totalSessions > 0 ?
+      ((qualityMetrics.highEngagement * 3 + qualityMetrics.mediumEngagement * 2 + qualityMetrics.lowEngagement * 1) /
        (totalSessions * 3)) * 100 : 0;
 
     return qualityMetrics;
@@ -309,12 +309,12 @@ export class JourneyIntelligenceService {
     for (let i = 0; i < funnelSteps.length; i++) {
       const step = funnelSteps[i];
       const stepData = await this.analyzeFunnelStep(step, timeRange);
-      
+
       analysis.steps.push({
         ...step,
         ...stepData,
         stepIndex: i,
-        conversionFromPrevious: i > 0 ? 
+        conversionFromPrevious: i > 0 ?
           (stepData.uniqueUsers / analysis.steps[i-1].uniqueUsers) * 100 : 100
       });
 
@@ -332,7 +332,7 @@ export class JourneyIntelligenceService {
 
     // Analyze conversion paths
     analysis.conversionPaths = await this.analyzeConversionPaths(timeRange);
-    
+
     // Generate optimization recommendations
     analysis.optimization = this.generateFunnelOptimizations(analysis);
 
@@ -409,7 +409,7 @@ export class JourneyIntelligenceService {
   async generatePredictiveInsights(timeRange) {
     // AI-powered predictive analytics
     const historical = await this.getHistoricalData(timeRange);
-    
+
     return {
       conversionPrediction: this.predictConversionTrends(historical),
       churnPrediction: this.predictChurnRisk(historical),
@@ -541,7 +541,7 @@ export class JourneyIntelligenceService {
 
   generateRecommendations(insights) {
     const recommendations = [];
-    
+
     // Priority-based recommendation generation
     insights.forEach(insight => {
       if (insight.severity === 'critical') {
@@ -576,7 +576,7 @@ export class JourneyIntelligenceService {
   generateExecutiveSummary(metrics, insights) {
     const criticalIssues = insights.filter(i => i.severity === 'critical').length;
     const opportunities = insights.filter(i => i.type === 'opportunity').length;
-    
+
     return {
       headline: this.generateHeadline(metrics),
       keyMetrics: {
@@ -601,7 +601,7 @@ export class JourneyIntelligenceService {
   generateHeadline(metrics) {
     const conversionRate = metrics.overview.conversionRate;
     const engagementRate = metrics.overview.engagementRate;
-    
+
     if (conversionRate >= 3 && engagementRate >= 70) {
       return 'Excellent performance across key metrics';
     } else if (conversionRate >= 2 && engagementRate >= 50) {
@@ -616,7 +616,7 @@ export class JourneyIntelligenceService {
   getTrendDirection(trends) {
     const positive = Object.values(trends).filter(t => t.direction === 'up').length;
     const negative = Object.values(trends).filter(t => t.direction === 'down').length;
-    
+
     if (positive > negative) return 'improving';
     if (negative > positive) return 'declining';
     return 'stable';
@@ -634,7 +634,7 @@ export class JourneyIntelligenceService {
 
   getStartDate(endDate, timeRange) {
     const start = new Date(endDate);
-    
+
     switch (timeRange) {
       case '1d':
         start.setDate(start.getDate() - 1);
@@ -651,7 +651,7 @@ export class JourneyIntelligenceService {
       default:
         start.setDate(start.getDate() - 7);
     }
-    
+
     return start;
   }
 
@@ -701,29 +701,29 @@ export class JourneyIntelligenceService {
 class InsightEngine {
   generateInsights(data) {
     const insights = [];
-    
+
     // Performance insights
     insights.push(...this.analyzePerformance(data.metrics));
-    
+
     // Funnel insights
     insights.push(...this.analyzeFunnel(data.funnel));
-    
+
     // Cohort insights
     insights.push(...this.analyzeCohorts(data.cohorts));
-    
+
     // Segment insights
     insights.push(...this.analyzeSegments(data.segments));
-    
+
     // Predictive insights
     insights.push(...this.analyzePredictions(data.predictions));
-    
+
     return this.prioritizeInsights(insights);
   }
 
   analyzePerformance(metrics) {
     const insights = [];
     const { overview, quality } = metrics;
-    
+
     // Conversion rate analysis
     if (overview.conversionRate < 1.5) {
       insights.push({
@@ -789,7 +789,7 @@ class InsightEngine {
 
   analyzeFunnel(funnelData) {
     const insights = [];
-    
+
     funnelData.dropOffPoints?.forEach(dropOff => {
       if (dropOff.severity === 'critical') {
         insights.push({
@@ -826,7 +826,7 @@ class InsightEngine {
 
   analyzePredictions(predictions) {
     const insights = [];
-    
+
     if (predictions.churnPrediction?.highRiskUsers > 100) {
       insights.push({
         type: 'prediction',
@@ -847,12 +847,12 @@ class InsightEngine {
   prioritizeInsights(insights) {
     const priorityOrder = { immediate: 0, high: 1, medium: 2, low: 3 };
     const severityOrder = { critical: 0, warning: 1, info: 2, success: 3 };
-    
+
     return insights.sort((a, b) => {
       // First by priority
       const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
       if (priorityDiff !== 0) return priorityDiff;
-      
+
       // Then by severity
       return severityOrder[a.severity] - severityOrder[b.severity];
     });

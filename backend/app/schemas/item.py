@@ -16,8 +16,9 @@ class ItemCreate(ItemBase):
     """Schema for creating an item.
     Owner ID is derived from the authenticated user, not provided in payload.
     """
+
     # owner_id: Optional[int] = None # Removed: Owner ID comes from current_user
-    pass # No additional fields needed beyond ItemBase for creation payload
+    pass  # No additional fields needed beyond ItemBase for creation payload
 
 
 class ItemUpdate(ItemBase):
@@ -35,4 +36,4 @@ class Item(ItemBase):
     id: int
     owner_id: int
     created_at: datetime
-    updated_at: datetime 
+    updated_at: datetime

@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Example - NeoForge Component Library</title>
-  
+
   <!-- Global styles -->
   <link rel="stylesheet" href="../styles/global.css">
-  
+
   <!-- Component imports -->
   <script type="module" src="../components/organisms/dashboard-layout.js"></script>
   <script type="module" src="../components/organisms/notification-list.js"></script>
@@ -17,65 +17,65 @@
   <script type="module" src="../components/molecules/cta-button-row/cta-button-row.js"></script>
   <script type="module" src="../components/atoms/button/button.js"></script>
   <script type="module" src="../components/atoms/badge/badge.js"></script>
-  
+
   <style>
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-    
+
     .dashboard-content {
       padding: 0;
       height: 100%;
     }
-    
+
     .content-grid {
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 1.5rem;
       height: calc(100vh - 120px);
     }
-    
+
     .main-panel {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
     }
-    
+
     .side-panel {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
     }
-    
+
     .card {
       background: white;
       border: 1px solid #e5e7eb;
       border-radius: 8px;
       padding: 1.5rem;
     }
-    
+
     .card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 1rem;
     }
-    
+
     .card-title {
       font-size: 1.125rem;
       font-weight: 600;
       margin: 0;
       color: #1f2937;
     }
-    
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 1rem;
       margin-bottom: 1.5rem;
     }
-    
+
     .stat-card {
       background: white;
       border: 1px solid #e5e7eb;
@@ -83,32 +83,32 @@
       padding: 1rem;
       text-align: center;
     }
-    
+
     .stat-value {
       font-size: 2rem;
       font-weight: 700;
       color: #3b82f6;
       margin: 0;
     }
-    
+
     .stat-label {
       font-size: 0.875rem;
       color: #6b7280;
       margin: 0.25rem 0 0 0;
     }
-    
+
     .quick-actions {
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
     }
-    
+
     @media (max-width: 768px) {
       .content-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
       }
-      
+
       .stats-grid {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -122,9 +122,9 @@
     show-search
     show-notifications
     notification-count="3">
-    
+
     <span slot="page-title">Dashboard Overview</span>
-    
+
     <div class="dashboard-content">
       <!-- Stats Overview -->
       <div class="stats-grid">
@@ -145,7 +145,7 @@
           <div class="stat-label">Uptime</div>
         </div>
       </div>
-      
+
       <!-- Main Content Grid -->
       <div class="content-grid">
         <!-- Main Panel -->
@@ -159,7 +159,7 @@
                 <neo-button variant="primary" size="sm">Add User</neo-button>
               </div>
             </div>
-            
+
             <neo-table
               id="usersTable"
               selectable
@@ -167,13 +167,13 @@
               searchable>
             </neo-table>
           </div>
-          
+
           <!-- Quick Actions Form -->
           <div class="card">
             <div class="card-header">
               <h2 class="card-title">Quick Actions</h2>
             </div>
-            
+
             <form id="quickActionForm">
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                 <neo-input-field
@@ -182,7 +182,7 @@
                   placeholder="Enter user name"
                   required>
                 </neo-input-field>
-                
+
                 <neo-select-dropdown
                   label="Role"
                   name="role"
@@ -190,7 +190,7 @@
                   searchable>
                 </neo-select-dropdown>
               </div>
-              
+
               <neo-cta-button-row
                 alignment="right"
                 id="formActions">
@@ -198,7 +198,7 @@
             </form>
           </div>
         </div>
-        
+
         <!-- Side Panel -->
         <div class="side-panel">
           <!-- Notifications -->
@@ -207,7 +207,7 @@
               <h2 class="card-title">Recent Activity</h2>
               <neo-badge variant="primary" size="sm">3 new</neo-badge>
             </div>
-            
+
             <neo-notification-list
               id="notifications"
               group-by-date
@@ -216,14 +216,14 @@
               max-height="400">
             </neo-notification-list>
           </div>
-          
+
           <!-- System Status -->
           <div class="card">
             <div class="card-header">
               <h2 class="card-title">System Status</h2>
               <neo-badge variant="success" size="sm">All Systems Operational</neo-badge>
             </div>
-            
+
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span>API Server</span>
@@ -251,7 +251,7 @@
   <script type="module">
     // Dashboard setup
     const dashboard = document.getElementById('dashboard');
-    
+
     // Configure dashboard
     dashboard.user = {
       name: 'John Doe',
@@ -260,7 +260,7 @@
       role: 'Administrator',
       status: 'online'
     };
-    
+
     dashboard.navigationItems = [
       {
         href: '/dashboard',
@@ -292,13 +292,13 @@
         badgeVariant: 'warning'
       }
     ];
-    
+
     dashboard.quickActions = [
       { icon: 'plus', title: 'Add New', text: 'Add New' },
       { icon: 'download', title: 'Export Data', text: 'Export' },
       { icon: 'refresh-cw', title: 'Refresh', text: 'Refresh' }
     ];
-    
+
     // Configure users table
     const usersTable = document.getElementById('usersTable');
     usersTable.columns = [
@@ -335,7 +335,7 @@
         type: 'actions'
       }
     ];
-    
+
     usersTable.data = [
       {
         id: '1',
@@ -374,12 +374,12 @@
         ]
       }
     ];
-    
+
     usersTable.bulkActions = [
       { id: 'delete', text: 'Delete Selected', variant: 'error' },
       { id: 'export', text: 'Export Selected', variant: 'outline' }
     ];
-    
+
     // Configure role dropdown
     const roleSelect = document.querySelector('neo-select-dropdown[name="role"]');
     roleSelect.options = [
@@ -388,7 +388,7 @@
       { value: 'user', label: 'User' },
       { value: 'guest', label: 'Guest' }
     ];
-    
+
     // Configure form actions
     const formActions = document.getElementById('formActions');
     formActions.actions = [
@@ -406,7 +406,7 @@
         primary: true
       }
     ];
-    
+
     // Configure notifications
     const notifications = document.getElementById('notifications');
     notifications.notifications = [
@@ -447,67 +447,67 @@
         }
       }
     ];
-    
+
     notifications.bulkActions = [
       { id: 'mark-read', text: 'Mark as Read', variant: 'outline' },
       { id: 'delete', text: 'Delete', variant: 'error' }
     ];
-    
+
     // Event handlers
     dashboard.addEventListener('neo-dashboard-navigate', (e) => {
       console.log('Navigation:', e.detail);
       // Handle navigation
     });
-    
+
     dashboard.addEventListener('neo-dashboard-search', (e) => {
       console.log('Search:', e.detail);
       // Handle search
     });
-    
+
     dashboard.addEventListener('neo-dashboard-notification-click', (e) => {
       console.log('Notifications clicked');
       // Handle notification panel toggle
     });
-    
+
     dashboard.addEventListener('neo-dashboard-user-menu', (e) => {
       console.log('User menu action:', e.detail);
       // Handle user menu actions
     });
-    
+
     usersTable.addEventListener('neo-table-row-click', (e) => {
       console.log('User row clicked:', e.detail.row);
       // Navigate to user details
     });
-    
+
     usersTable.addEventListener('neo-table-bulk-action', (e) => {
       console.log('Bulk action:', e.detail);
       // Handle bulk actions
     });
-    
+
     notifications.addEventListener('neo-notification-click', (e) => {
       console.log('Notification clicked:', e.detail.notification);
       // Handle notification click
     });
-    
+
     notifications.addEventListener('neo-bulk-action', (e) => {
       console.log('Notification bulk action:', e.detail);
       // Handle notification bulk actions
     });
-    
+
     // Form handling
     const form = document.getElementById('quickActionForm');
     formActions.addEventListener('neo-action-click', (e) => {
       const { action } = e.detail;
-      
+
       if (action.id === 'save') {
         const formData = new FormData(form);
         const userData = {
           userName: formData.get('userName'),
           role: formData.get('role')
         };
-        
+
         console.log('Creating user:', userData);
-        
+
         // Add to table
         const newUser = {
           id: Date.now().toString(),
@@ -521,10 +521,10 @@
             { icon: 'trash', action: 'delete' }
           ]
         };
-        
+
         usersTable.data = [...usersTable.data, newUser];
         form.reset();
-        
+
         // Show success notification
         const newNotification = {
           id: Date.now().toString(),
@@ -538,15 +538,15 @@
             avatar: 'https://ui-avatars.com/api/?name=System&background=10b981&color=fff'
           }
         };
-        
+
         notifications.notifications = [newNotification, ...notifications.notifications];
         dashboard.notificationCount += 1;
-        
+
       } else if (action.id === 'reset') {
         form.reset();
       }
     });
-    
+
     // Simulate real-time updates
     setInterval(() => {
       // Randomly update user statuses
@@ -558,10 +558,10 @@
         { text: 'Busy', variant: 'error' },
         { text: 'Offline', variant: 'neutral' }
       ];
-      
+
       randomUser.status = statuses[Math.floor(Math.random() * statuses.length)];
       randomUser.lastSeen = new Date().toISOString();
-      
+
       usersTable.data = users;
     }, 30000); // Update every 30 seconds
   </script>

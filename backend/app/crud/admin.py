@@ -1,13 +1,12 @@
 """Admin CRUD operations."""
-from typing import Any, Dict, Optional, Union, List
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from typing import Any, Dict, List, Optional, Union
 
 from app.crud.base import CRUDBase
 from app.models.admin import Admin
 from app.schemas.admin import AdminCreate, AdminUpdate
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 
 class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
@@ -22,17 +21,15 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
     ) -> Optional[Admin]:
         """
         Get admin by user ID.
-        
+
         Args:
             db: Database session
             user_id: User ID
-            
+
         Returns:
             Admin if found, None otherwise
         """
-        result = await db.execute(
-            select(Admin).where(Admin.user_id == user_id)
-        )
+        result = await db.execute(select(Admin).where(Admin.user_id == user_id))
         return result.scalar_one_or_none()
 
     async def get_multi_with_users(
@@ -44,17 +41,17 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
     ) -> List[tuple[Admin, "User"]]:
         """
         Get multiple admins with their associated users.
-        
+
         Args:
             db: Database session
             skip: Number of records to skip
             limit: Maximum number of records to return
-            
+
         Returns:
             List of tuples containing (admin, user) pairs
         """
         from app.models.user import User
-        
+
         result = await db.execute(
             select(Admin, User)
             .join(User, Admin.user_id == User.id)
@@ -73,13 +70,13 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
     ) -> Admin:
         """
         Create new admin.
-        
+
         Args:
             db: Database session
             obj_in: Admin data
             actor_id: ID of the user creating the admin
             user_id: ID of the user to associate with this admin
-            
+
         Returns:
             Created admin
         """
@@ -103,13 +100,13 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
     ) -> Admin:
         """
         Update admin.
-        
+
         Args:
             db: Database session
             db_obj: Existing admin
             obj_in: Update data
             actor_id: ID of the user updating the admin
-            
+
         Returns:
             Updated admin
         """
@@ -129,12 +126,12 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
     ) -> Admin:
         """
         Remove admin by ID.
-        
+
         Args:
             db: Database session
             id: Admin ID
             actor_id: ID of the admin performing the action
-            
+
         Returns:
             Removed admin
         """
@@ -142,12 +139,12 @@ class CRUDAdmin(CRUDBase[Admin, AdminCreate, AdminUpdate]):
         admin = await self.get(db, id=id)
         if not admin:
             raise ValueError(f"Admin with ID {id} not found")
-        
+
         # Delete admin
         await db.delete(admin)
         await db.commit()
-        
+
         return admin
 
 
-admin = CRUDAdmin() 
+admin = CRUDAdmin()

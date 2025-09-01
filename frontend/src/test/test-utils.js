@@ -156,7 +156,7 @@ export function mountComponent(tagName) {
   return element;
 }
 
-// Add assertion utilities
+// Enhanced assertion utilities
 export class Assert {
   static equal(actual, expected, message) {
     if (actual !== expected) {
@@ -208,3 +208,194 @@ export class Assert {
     }
   }
 }
+
+// Performance testing utilities
+export class PerformanceTester {
+  static async measureRenderTime(ComponentClass, props = {}, iterations = 5) {
+    const times = [];
+
+    for (let i = 0; i < iterations; i++) {
+      const start = performance.now();
+
+      const element = await ComponentTester.render(ComponentClass);
+      Object.assign(element, props);
+      await element.updateComplete;
+
+      const end = performance.now();
+      times.push(end - start);
+
+      ComponentTester.cleanup();
+    }
+
+    return {
+      average: times.reduce((a, b) => a + b, 0) / times.length,
+      min: Math.min(...times),
+      max: Math.max(...times),
+      median: times.sort()[Math.floor(times.length / 2)],
+    };
+  }
+
+  static async measureMemoryUsage(ComponentClass, props = {}) {
+    const startMemory = performance.memory?.usedJSHeapSize;
+
+    const element = await ComponentTester.render(ComponentClass);
+    Object.assign(element, props);
+    await element.updateComplete;
+
+    const endMemory = performance.memory?.usedJSHeapSize;
+    const memoryIncrease = endMemory - startMemory;
+
+    ComponentTester.cleanup();
+
+    return {
+      startMemory,
+      endMemory,
+      memoryIncrease,
+      memoryIncreaseMB: memoryIncrease / 1024 / 1024,
+    };
+  }
+}
+
+// Accessibility testing utilities
+export class A11yTester {
+  static async checkBasicAccessibility(element) {
+    const violations = [];
+
+    // Check for missing alt text on images
+    const images = element.shadowRoot?.querySelectorAll('img') || [];
+    images.forEach(img => {
+      if (!img.alt) {
+        violations.push({
+          rule: 'missing-alt',
+          element: 'img',
+          message: 'Image missing alt attribute',
+        });
+      }
+    });
+
+    // Check for missing labels on form elements
+    const inputs = element.shadowRoot?.querySelectorAll('input, select, textarea') || [];
+    inputs.forEach(input => {
+      if (!input.labels?.length && !input.getAttribute('aria-label')) {
+        violations.push({
+          rule: 'missing-label',
+          element: input.tagName.toLowerCase(),
+          message: 'Form element missing label',
+        });
+      }
+    });
+
+    return violations;
+  }
+
+  static async testKeyboardNavigation(element) {
+    const results = {
+      focusable: false,
+      tabbable: false,
+    };
+
+    // Test focus
+    element.focus();
+    results.focusable = document.activeElement === element;
+
+    // Test tab navigation (basic check)
+    const tabIndex = element.getAttribute('tabindex');
+    results.tabbable = tabIndex !== '-1';
+
+    return results;
+  }
+}
+
+// Test data factories
+export class TestData {
+  static createUser(overrides = {}) {
+    return {
+      id: 1,
+      email: 'test@example.com',
+      full_name: 'Test User',
+      is_active: true,
+      is_verified: true,
+      created_at: new Date().toISOString(),
+      ...overrides,
+    };
+  }
+
+  static createComponentProps(overrides = {}) {
+    return {
+      disabled: false,
+      loading: false,
+      error: null,
+      className: '',
+      ...overrides,
+    };
+  }
+
+  static createMockEvent(type, detail = {}) {
+    return new CustomEvent(type, {
+      detail,
+      bubbles: true,
+      composed: true,
+    });
+  }
+}
+
+// Mock utilities enhancement
+export class EnhancedMock extends Mock {
+  static createServiceMock(serviceName, methods = {}) {
+    const mock = {
+      name: serviceName,
+      ...methods,
+    };
+
+    // Track calls for each method
+    mock.calls = {};
+    Object.keys(methods).forEach(method => {
+      mock.calls[method] = [];
+      const originalMethod = mock[method];
+      mock[method] = (...args) => {
+        mock.calls[method].push(args);
+        return originalMethod(...args);
+      };
+    });
+
+    return mock;
+  }
+
+  static mockFetch(responseData, status = 200) {
+    const originalFetch = global.fetch;
+    global.fetch = (...args) => {
+      return Promise.resolve({
+        ok: status >= 200 && status < 300,
+        status,
+        json: () => Promise.resolve(responseData),
+        text: () => Promise.resolve(JSON.stringify(responseData)),
+      });
+    };
+    return () => { global.fetch = originalFetch; };
+  }
+
+  static mockLocalStorage() {
+    const store = {};
+    const originalLocalStorage = global.localStorage;
+
+    global.localStorage = {
+      getItem: (key) => store[key] || null,
+      setItem: (key, value) => { store[key] = value; },
+      removeItem: (key) => { delete store[key]; },
+      clear: () => { Object.keys(store).forEach(key => delete store[key]); },
+    };
+
+    return {
+      store,
+      restore: () => { global.localStorage = originalLocalStorage; },
+    };
+  }
+}
+
+// Export enhanced utilities
+export {
+  PerformanceTester,
+  A11yTester,
+  TestData,
+  EnhancedMock,
+};

@@ -19,7 +19,7 @@ entropy = 3.5
 
 [[rules]]
 id = "aws-secret-access-key"
-description = "AWS Secret Access Key" 
+description = "AWS Secret Access Key"
 regex = '''(?i)(?:aws.{0,20})?(?-i)["\''`]?([0-9a-zA-Z/+]{40})["\''`]?'''
 keywords = ["aws", "secret"]
 secretGroup = 1
@@ -131,7 +131,7 @@ severity = "critical"
 
 [[rules]]
 id = "twilio-key"
-description = "Twilio API Key"  
+description = "Twilio API Key"
 regex = '''(?i)(?:twilio.{0,20})?(?-i)["\''`]?(SK[a-z0-9]{32})["\''`]?'''
 keywords = ["twilio", "SK"]
 secretGroup = 1
@@ -146,7 +146,7 @@ secretGroup = 1
 severity = "high"
 
 [[rules]]
-id = "sendgrid-key" 
+id = "sendgrid-key"
 description = "SendGrid API Key"
 regex = '''(?i)(?:sendgrid.{0,20})?(?-i)["\''`]?(SG\.[a-zA-Z0-9_-]{66})["\''`]?'''
 keywords = ["sendgrid", "SG."]
@@ -173,14 +173,14 @@ files = [
     "**/CHANGELOG.md",
     "**/*.example",
     "**/*.sample",
-    
+
     # Test files (be cautious with this)
     "**/test_*.py",
     "**/*.test.js",
     "**/tests/**",
-    
+
     # Lock files and package manifests
-    "**/package-lock.json", 
+    "**/package-lock.json",
     "**/yarn.lock",
     "**/poetry.lock",
     "**/requirements*.txt"
@@ -190,7 +190,7 @@ paths = [
     # Version control and CI
     ".git/",
     ".github/",
-    
+
     # Dependencies and build artifacts
     "node_modules/",
     "__pycache__/",
@@ -198,13 +198,13 @@ paths = [
     "build/",
     ".next/",
     ".nuxt/",
-    
+
     # Coverage and test reports
     "htmlcov/",
     ".coverage",
     ".pytest_cache/",
     "coverage/",
-    
+
     # IDE and editor files
     ".vscode/",
     ".idea/",

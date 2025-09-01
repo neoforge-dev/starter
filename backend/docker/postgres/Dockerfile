@@ -21,4 +21,4 @@ RUN mkdir -p /docker-entrypoint-initdb.d
 COPY ./init-test-db.sh /docker-entrypoint-initdb.d/
 
 # Make the script executable
-RUN chmod +x /docker-entrypoint-initdb.d/init-test-db.sh 
+RUN chmod +x /docker-entrypoint-initdb.d/init-test-db.sh

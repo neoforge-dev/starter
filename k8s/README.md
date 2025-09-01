@@ -151,7 +151,7 @@ Auto-scaling thresholds can be customized in `hpa.yaml`:
 - minReplicas: 2
 - maxReplicas: 10
 
-# Frontend scaling  
+# Frontend scaling
 - targetCPUUtilizationPercentage: 60
 - targetMemoryUtilizationPercentage: 70
 - minReplicas: 2
@@ -190,7 +190,7 @@ Default resource allocations:
 
 # Options
 --namespace, -n       Kubernetes namespace
---environment, -e     Environment (production/staging/development)  
+--environment, -e     Environment (production/staging/development)
 --tag, -t            Docker image tag
 --dry-run, -d        Show what would be deployed
 --verbose, -v        Verbose output
@@ -227,7 +227,7 @@ kubectl exec -it postgres-0 -n neoforge -- psql -U postgres -d neoforge
 # Backup database
 kubectl exec postgres-0 -n neoforge -- pg_dump -U postgres neoforge > backup.sql
 
-# Restore database  
+# Restore database
 kubectl exec -i postgres-0 -n neoforge -- psql -U postgres neoforge < backup.sql
 
 # Database migration
@@ -260,7 +260,7 @@ https://monitoring.neoforge.example.com/prometheus
 
 Pre-configured alerts for:
 - High error rates (>10% 5xx responses)
-- High response times (>1s 95th percentile)  
+- High response times (>1s 95th percentile)
 - Database/Redis connection issues
 - High resource usage (>80% CPU/memory)
 - Pod crash loops
@@ -343,7 +343,7 @@ Access application logs:
 # API logs
 kubectl logs -f deployment/api -n neoforge
 
-# Worker logs  
+# Worker logs
 kubectl logs -f deployment/celery-worker -n neoforge
 
 # Database logs
@@ -501,7 +501,7 @@ kubectl rollout undo deployment/api -n neoforge
 
 Track resource usage:
 - CPU and memory utilization per pod
-- Storage usage and growth rates  
+- Storage usage and growth rates
 - Network traffic and egress costs
 - Load balancer and ingress costs
 

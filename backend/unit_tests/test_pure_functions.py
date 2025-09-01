@@ -1,8 +1,10 @@
 """Pure unit tests that don't require any fixtures or external dependencies."""
 
-from app.core.auth import verify_password, get_password_hash
-from app.utils.datetime import utc_now
 from datetime import datetime, timezone
+
+from app.utils.datetime import utc_now
+
+from app.core.auth import get_password_hash, verify_password
 
 
 def test_simple():
@@ -22,7 +24,7 @@ def test_password_hashing():
     """Test password hashing and verification."""
     password = "test_password_123"
     hashed = get_password_hash(password)
-    
+
     assert hashed != password
     assert verify_password(password, hashed) is True
     assert verify_password("wrong_password", hashed) is False

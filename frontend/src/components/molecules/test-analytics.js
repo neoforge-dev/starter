@@ -316,22 +316,22 @@ export class TestAnalytics extends LitElement {
       .overview-metrics {
         grid-template-columns: 1fr;
       }
-      
+
       .analytics-header {
         flex-direction: column;
         gap: 12px;
         align-items: stretch;
       }
-      
+
       .variants-table {
         font-size: 12px;
       }
-      
+
       .variants-table th,
       .variants-table td {
         padding: 8px 12px;
       }
-      
+
       .conversion-chart {
         height: 150px;
       }
@@ -366,7 +366,7 @@ export class TestAnalytics extends LitElement {
     if (this.testId) {
       this._loadAnalytics();
     }
-    
+
     if (this.autoRefresh) {
       this._startAutoRefresh();
     }
@@ -379,11 +379,11 @@ export class TestAnalytics extends LitElement {
 
   updated(changedProperties) {
     super.updated(changedProperties);
-    
+
     if (changedProperties.has('testId') && this.testId) {
       this._loadAnalytics();
     }
-    
+
     if (changedProperties.has('autoRefresh')) {
       if (this.autoRefresh) {
         this._startAutoRefresh();
@@ -446,11 +446,11 @@ export class TestAnalytics extends LitElement {
     if (!this.analytics) return '';
 
     const control = this.analytics.control_variant;
-    const bestTreatment = this.analytics.treatment_variants.reduce((best, variant) => 
+    const bestTreatment = this.analytics.treatment_variants.reduce((best, variant) =>
       variant.conversion_rate > (best?.conversion_rate || 0) ? variant : best, null
     );
 
-    const improvement = bestTreatment && control.conversion_rate > 0 
+    const improvement = bestTreatment && control.conversion_rate > 0
       ? ((bestTreatment.conversion_rate - control.conversion_rate) / control.conversion_rate)
       : 0;
 
@@ -460,12 +460,12 @@ export class TestAnalytics extends LitElement {
           <div class="metric-value">${this._formatNumber(this.analytics.total_participants)}</div>
           <div class="metric-label">Total Participants</div>
         </div>
-        
+
         <div class="metric-card">
           <div class="metric-value">${this._formatPercentage(control.conversion_rate)}</div>
           <div class="metric-label">Control Conversion Rate</div>
         </div>
-        
+
         <div class="metric-card">
           <div class="metric-value">${bestTreatment ? this._formatPercentage(bestTreatment.conversion_rate) : 'N/A'}</div>
           <div class="metric-label">Best Variant Rate</div>
@@ -475,7 +475,7 @@ export class TestAnalytics extends LitElement {
             </div>
           ` : ''}
         </div>
-        
+
         <div class="metric-card">
           <div class="metric-value">${this.analytics.confidence_level * 100}%</div>
           <div class="metric-label">Confidence Level</div>
@@ -506,10 +506,10 @@ export class TestAnalytics extends LitElement {
           </thead>
           <tbody>
             ${allVariants.map(variant => {
-              const improvement = variant.relative_improvement 
+              const improvement = variant.relative_improvement
                 ? this._formatPercentage(variant.relative_improvement)
                 : '—';
-              
+
               return html`
                 <tr>
                   <td>
@@ -520,7 +520,7 @@ export class TestAnalytics extends LitElement {
                   <td>${this._formatNumber(variant.conversions)}</td>
                   <td>${this._formatPercentage(variant.conversion_rate)}</td>
                   <td class="confidence-interval">
-                    ${variant.confidence_interval 
+                    ${variant.confidence_interval
                       ? `[${this._formatPercentage(variant.confidence_interval[0])}, ${this._formatPercentage(variant.confidence_interval[1])}]`
                       : 'N/A'
                     }
@@ -552,11 +552,11 @@ export class TestAnalytics extends LitElement {
         <div class="conversion-chart">
           ${allVariants.map(variant => {
             const height = maxRate > 0 ? (variant.conversion_rate / maxRate) * 160 : 0;
-            
+
             return html`
               <div class="chart-bar">
-                <div 
-                  class="bar ${variant.is_control ? 'control' : ''}" 
+                <div
+                  class="bar ${variant.is_control ? 'control' : ''}"
                   style="height: ${height}px"
                 >
                   <div class="bar-value">${this._formatPercentage(variant.conversion_rate)}</div>
@@ -579,11 +579,11 @@ export class TestAnalytics extends LitElement {
         ${this.analytics.insights.map(insight => html`
           <div class="recommendation-item">• ${insight}</div>
         `)}
-        
+
         <div class="recommendation-item">
           <strong>Recommended Action:</strong> ${this.analytics.recommended_action.replace('_', ' ')}
         </div>
-        
+
         <div class="recommendation-item">
           <strong>Confidence in Result:</strong> ${(this.analytics.confidence_in_result * 100).toFixed(1)}%
         </div>
@@ -602,29 +602,29 @@ export class TestAnalytics extends LitElement {
             <span class="detail-label">Statistical Method</span>
             <span class="detail-value">${this.analytics.statistical_method}</span>
           </div>
-          
+
           <div class="detail-item">
             <span class="detail-label">Minimum Detectable Effect</span>
             <span class="detail-value">${this._formatPercentage(this.analytics.minimum_detectable_effect)}</span>
           </div>
-          
+
           <div class="detail-item">
             <span class="detail-label">Test Duration</span>
             <span class="detail-value">${this.analytics.test_duration_days || 0} days</span>
           </div>
-          
+
           <div class="detail-item">
             <span class="detail-label">Overall P-Value</span>
             <span class="detail-value ${this._getSignificanceLevel(this.analytics.overall_p_value)}">
               ${this._formatPValue(this.analytics.overall_p_value)}
             </span>
           </div>
-          
+
           <div class="detail-item">
             <span class="detail-label">Analysis Date</span>
             <span class="detail-value">${new Date(this.analytics.analysis_date).toLocaleString()}</span>
           </div>
-          
+
           <div class="detail-item">
             <span class="detail-label">Winner Variant</span>
             <span class="detail-value">

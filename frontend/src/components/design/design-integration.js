@@ -47,7 +47,7 @@ export class FigmaTokenSync {
       }
 
       const stylesData = await stylesResponse.json();
-      
+
       // Fetch file details for style values
       const fileResponse = await fetch(`${this.apiEndpoint}/files/${this.fileKey}`, {
         headers: {
@@ -126,7 +126,7 @@ export class FigmaTokenSync {
     // This is a simplified implementation
     // In a real integration, you'd need to traverse the Figma file structure
     // to find the actual color values from the style nodes
-    
+
     // For now, return a placeholder that demonstrates the structure
     return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
   }
@@ -171,12 +171,12 @@ export class FigmaTokenSync {
   async pushTokensToFigma(tokens) {
     // This would require a custom Figma plugin to receive the tokens
     // For now, we'll generate a format that can be manually imported
-    
+
     const figmaTokens = TokenExporter.toFigmaTokens(tokens);
-    
+
     // Create a downloadable file for manual import
     this.downloadTokensForFigma(figmaTokens, 'neoforge-tokens.json');
-    
+
     return {
       success: true,
       message: 'Tokens exported for Figma import',
@@ -191,7 +191,7 @@ export class FigmaTokenSync {
   downloadTokensForFigma(tokens, filename) {
     const blob = new Blob([tokens], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
@@ -226,7 +226,7 @@ export class AssetManager {
    */
   async optimizeAsset(file, options = {}) {
     const settings = { ...this.optimizationSettings, ...options };
-    
+
     // Check cache first
     const cacheKey = `${file.name}-${file.size}-${JSON.stringify(settings)}`;
     if (this.assetCache.has(cacheKey)) {
@@ -235,7 +235,7 @@ export class AssetManager {
 
     try {
       let optimizedAsset;
-      
+
       if (file.type.startsWith('image/')) {
         optimizedAsset = await this.optimizeImage(file, settings.images);
       } else if (file.type === 'image/svg+xml') {
@@ -246,7 +246,7 @@ export class AssetManager {
 
       // Cache the result
       this.assetCache.set(cacheKey, optimizedAsset);
-      
+
       return optimizedAsset;
     } catch (error) {
       console.error('Asset optimization failed:', error);
@@ -262,26 +262,26 @@ export class AssetManager {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
-      
+
       img.onload = () => {
         const optimizedVersions = {};
-        
+
         // Generate different sizes
         settings.sizes.forEach(size => {
           const aspectRatio = img.width / img.height;
           const width = Math.min(size, img.width);
           const height = width / aspectRatio;
-          
+
           canvas.width = width;
           canvas.height = height;
-          
+
           ctx.drawImage(img, 0, 0, width, height);
-          
+
           // Convert to different formats
           settings.formats.forEach(format => {
             const mimeType = format === 'jpg' ? 'image/jpeg' : `image/${format}`;
             const quality = settings.quality / 100;
-            
+
             try {
               const dataUrl = canvas.toDataURL(mimeType, quality);
               if (!optimizedVersions[format]) {
@@ -293,7 +293,7 @@ export class AssetManager {
             }
           });
         });
-        
+
         resolve({
           original: file,
           optimized: optimizedVersions,
@@ -305,7 +305,7 @@ export class AssetManager {
           }
         });
       };
-      
+
       img.onerror = reject;
       img.src = URL.createObjectURL(file);
     });
@@ -316,14 +316,14 @@ export class AssetManager {
    */
   async optimizeIcon(file, settings) {
     const text = await file.text();
-    
+
     if (settings.optimize) {
       // Basic SVG optimization (remove comments, unnecessary whitespace)
       const optimized = text
         .replace(/<!--[\s\S]*?-->/g, '') // Remove comments
         .replace(/\s+/g, ' ') // Normalize whitespace
         .trim();
-      
+
       return {
         original: file,
         optimized: new Blob([optimized], { type: 'image/svg+xml' }),
@@ -334,7 +334,7 @@ export class AssetManager {
         }
       };
     }
-    
+
     return { original: file, optimized: file };
   }
 
@@ -348,7 +348,7 @@ export class AssetManager {
 
     const formats = Object.keys(optimizedAsset.optimized);
     let html = '<picture>\n';
-    
+
     // Add source elements for different formats (modern formats first)
     const formatPriority = ['avif', 'webp', 'png', 'jpg'];
     formatPriority.forEach(format => {
@@ -357,19 +357,19 @@ export class AssetManager {
         const srcset = Object.entries(sizes)
           .map(([size, url]) => `${url} ${size}`)
           .join(', ');
-        
+
         html += `  <source srcset="${srcset}" type="image/${format}">\n`;
       }
     });
-    
+
     // Fallback img element
     const fallbackFormat = formats.includes('png') ? 'png' : formats[0];
     const fallbackSizes = optimizedAsset.optimized[fallbackFormat];
     const fallbackSrc = Object.values(fallbackSizes)[0];
-    
+
     html += `  <img src="${fallbackSrc}" alt="${alt}" class="${className}">\n`;
     html += '</picture>';
-    
+
     return html;
   }
 }
@@ -400,30 +400,30 @@ export class ComponentSpecGenerator {
    */
   generateSpec(componentElement, additionalData = {}) {
     const spec = { ...this.specTemplate };
-    
+
     // Extract basic information
     spec.name = componentElement.tagName.toLowerCase();
     spec.description = additionalData.description || 'Component specification';
     spec.category = this.categorizeComponent(componentElement);
-    
+
     // Analyze CSS custom properties used
     spec.tokens = this.extractUsedTokens(componentElement);
-    
+
     // Extract component properties
     spec.props = this.extractComponentProps(componentElement);
-    
+
     // Analyze component states
     spec.states = this.analyzeComponentStates(componentElement);
-    
+
     // Extract variants
     spec.variants = this.extractVariants(componentElement);
-    
+
     // Check accessibility features
     spec.accessibility = this.analyzeAccessibility(componentElement);
-    
+
     // Add usage guidelines
     spec.usage = additionalData.usage || spec.usage;
-    
+
     return spec;
   }
 
@@ -432,7 +432,7 @@ export class ComponentSpecGenerator {
    */
   categorizeComponent(element) {
     const tagName = element.tagName.toLowerCase();
-    
+
     // Basic categorization logic
     if (tagName.includes('button') || tagName.includes('input') || tagName.includes('icon')) {
       return 'atom';
@@ -443,7 +443,7 @@ export class ComponentSpecGenerator {
     } else if (tagName.includes('page')) {
       return 'template';
     }
-    
+
     return 'molecule'; // Default
   }
 
@@ -453,7 +453,7 @@ export class ComponentSpecGenerator {
   extractUsedTokens(element) {
     const computedStyle = window.getComputedStyle(element);
     const usedTokens = {};
-    
+
     // Get all CSS custom properties
     const allProperties = Array.from(document.styleSheets)
       .flatMap(sheet => {
@@ -466,7 +466,7 @@ export class ComponentSpecGenerator {
       .filter(rule => rule.style)
       .flatMap(rule => Array.from(rule.style))
       .filter(prop => prop.startsWith('--'));
-    
+
     // Check which tokens are used
     allProperties.forEach(prop => {
       const value = computedStyle.getPropertyValue(prop);
@@ -477,7 +477,7 @@ export class ComponentSpecGenerator {
         };
       }
     });
-    
+
     return usedTokens;
   }
 
@@ -504,7 +504,7 @@ export class ComponentSpecGenerator {
    */
   extractComponentProps(element) {
     const props = {};
-    
+
     // Get all attributes
     Array.from(element.attributes).forEach(attr => {
       props[attr.name] = {
@@ -513,7 +513,7 @@ export class ComponentSpecGenerator {
         required: false
       };
     });
-    
+
     // Try to get property definitions from constructor
     if (element.constructor.observedAttributes) {
       element.constructor.observedAttributes.forEach(attrName => {
@@ -526,7 +526,7 @@ export class ComponentSpecGenerator {
         }
       });
     }
-    
+
     return props;
   }
 
@@ -545,10 +545,10 @@ export class ComponentSpecGenerator {
    */
   analyzeComponentStates(element) {
     const states = {};
-    
+
     // Check common states
     const commonStates = ['disabled', 'loading', 'active', 'focused', 'error'];
-    
+
     commonStates.forEach(state => {
       if (element.hasAttribute(state) || element.classList.contains(state)) {
         states[state] = {
@@ -557,7 +557,7 @@ export class ComponentSpecGenerator {
         };
       }
     });
-    
+
     return states;
   }
 
@@ -566,15 +566,15 @@ export class ComponentSpecGenerator {
    */
   extractVariants(element) {
     const variants = {};
-    
+
     // Look for variant attributes/classes
     const variantIndicators = ['variant', 'type', 'size', 'color'];
-    
+
     variantIndicators.forEach(indicator => {
       const attrValue = element.getAttribute(indicator);
       const classVariant = Array.from(element.classList)
         .find(cls => cls.includes(indicator));
-      
+
       if (attrValue) {
         variants[indicator] = {
           options: [attrValue],
@@ -588,7 +588,7 @@ export class ComponentSpecGenerator {
         };
       }
     });
-    
+
     return variants;
   }
 
@@ -603,24 +603,24 @@ export class ComponentSpecGenerator {
       semanticHTML: false,
       colorContrast: 'unknown'
     };
-    
+
     // Check ARIA attributes
     Array.from(element.attributes)
       .filter(attr => attr.name.startsWith('aria-'))
       .forEach(attr => {
         accessibility.ariaLabels[attr.name] = attr.value;
       });
-    
+
     // Check for semantic HTML
     const semanticTags = ['button', 'input', 'select', 'textarea', 'nav', 'main', 'section', 'article'];
-    accessibility.semanticHTML = semanticTags.some(tag => 
+    accessibility.semanticHTML = semanticTags.some(tag =>
       element.tagName.toLowerCase() === tag || element.querySelector(tag)
     );
-    
+
     // Check tabindex for keyboard support
-    accessibility.keyboardSupport = element.hasAttribute('tabindex') || 
+    accessibility.keyboardSupport = element.hasAttribute('tabindex') ||
       element.tabIndex >= 0;
-    
+
     return accessibility;
   }
 
@@ -631,13 +631,13 @@ export class ComponentSpecGenerator {
     switch (format) {
       case 'json':
         return JSON.stringify(spec, null, 2);
-      
+
       case 'markdown':
         return this.specToMarkdown(spec);
-      
+
       case 'figma':
         return this.specToFigmaFormat(spec);
-      
+
       default:
         throw new Error(`Unknown export format: ${format}`);
     }
@@ -650,19 +650,19 @@ export class ComponentSpecGenerator {
     let md = `# ${spec.name}\n\n`;
     md += `${spec.description}\n\n`;
     md += `**Category:** ${spec.category}\n\n`;
-    
+
     // Props section
     if (Object.keys(spec.props).length > 0) {
       md += `## Properties\n\n`;
       md += `| Name | Type | Default | Required | Description |\n`;
       md += `|------|------|---------|----------|--------------|\n`;
-      
+
       Object.entries(spec.props).forEach(([name, prop]) => {
         md += `| ${name} | ${prop.type} | ${prop.default || 'N/A'} | ${prop.required ? 'Yes' : 'No'} | ${prop.description || ''} |\n`;
       });
       md += '\n';
     }
-    
+
     // Tokens section
     if (Object.keys(spec.tokens).length > 0) {
       md += `## Design Tokens\n\n`;
@@ -671,24 +671,24 @@ export class ComponentSpecGenerator {
       });
       md += '\n';
     }
-    
+
     // Usage guidelines
     if (spec.usage.dos.length > 0 || spec.usage.donts.length > 0) {
       md += `## Usage Guidelines\n\n`;
-      
+
       if (spec.usage.dos.length > 0) {
         md += `### Do\n\n`;
         spec.usage.dos.forEach(item => md += `- ${item}\n`);
         md += '\n';
       }
-      
+
       if (spec.usage.donts.length > 0) {
         md += `### Don't\n\n`;
         spec.usage.donts.forEach(item => md += `- ${item}\n`);
         md += '\n';
       }
     }
-    
+
     return md;
   }
 
@@ -795,13 +795,13 @@ export class DocumentationGenerator {
     switch (format) {
       case 'json':
         return JSON.stringify(documentation, null, 2);
-      
+
       case 'html':
         return this.generateHTMLDocumentation(documentation);
-      
+
       case 'storybook':
         return this.generateStorybookDocs(documentation);
-      
+
       default:
         throw new Error(`Unknown documentation format: ${format}`);
     }
@@ -831,7 +831,7 @@ export class DocumentationGenerator {
         <h1>${documentation.designSystem.name}</h1>
         <p>${documentation.designSystem.description}</p>
     `;
-    
+
     // Add components documentation
     Object.entries(documentation.components).forEach(([name, spec]) => {
       html += `
@@ -842,13 +842,13 @@ export class DocumentationGenerator {
         </div>
       `;
     });
-    
+
     html += `
       </div>
     </body>
     </html>
     `;
-    
+
     return html;
   }
 
@@ -878,7 +878,7 @@ export const DesignIntegration = {
   assetManager: new AssetManager(),
   specGenerator: new ComponentSpecGenerator(),
   docGenerator: new DocumentationGenerator(),
-  
+
   // Utility methods
   async syncWithFigma(accessToken, fileKey) {
     const figmaSync = new FigmaTokenSync();

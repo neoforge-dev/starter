@@ -8,7 +8,7 @@ import "../../atoms/badge/badge.js";
 /**
  * User profile display with avatar, name, status, and metadata
  * @element neo-user-profile-summary
- * 
+ *
  * @prop {Object|string} user - User object or JSON string with user data
  * @prop {string} layout - Layout style (compact, expanded, horizontal)
  * @prop {boolean} clickable - Whether the profile is clickable
@@ -19,7 +19,7 @@ import "../../atoms/badge/badge.js";
  * @prop {string} size - Avatar size (sm, md, lg, xl)
  * @prop {string} href - Link URL when clickable
  * @prop {boolean} showBorder - Whether to show border around component
- * 
+ *
  * @fires neo-profile-click - When profile is clicked
  * @fires neo-avatar-click - When avatar is clicked
  */
@@ -288,11 +288,11 @@ export class NeoUserProfileSummary extends BaseComponent {
     if (!this.clickable) return;
 
     e.preventDefault();
-    
+
     this.dispatchEvent(new CustomEvent('neo-profile-click', {
-      detail: { 
+      detail: {
         user: this._userData,
-        href: this.href 
+        href: this.href
       },
       bubbles: true,
       composed: true
@@ -313,7 +313,7 @@ export class NeoUserProfileSummary extends BaseComponent {
    */
   _handleAvatarClick(e) {
     e.stopPropagation();
-    
+
     this.dispatchEvent(new CustomEvent('neo-avatar-click', {
       detail: { user: this._userData },
       bubbles: true,
@@ -338,7 +338,7 @@ export class NeoUserProfileSummary extends BaseComponent {
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
-    
+
     return date.toLocaleDateString();
   }
 
@@ -353,7 +353,7 @@ export class NeoUserProfileSummary extends BaseComponent {
       member: 'secondary',
       guest: 'neutral'
     };
-    
+
     return roleVariants[role?.toLowerCase()] || 'neutral';
   }
 
@@ -388,16 +388,16 @@ export class NeoUserProfileSummary extends BaseComponent {
 
       <div class="profile-info">
         <div class="name-section">
-          <neo-heading 
-            level="3" 
-            visual-level="4" 
+          <neo-heading
+            level="3"
+            visual-level="4"
             class="user-name"
             truncate>
             ${name}
           </neo-heading>
-          
+
           ${this.showRole && role ? html`
-            <neo-badge 
+            <neo-badge
               class="user-role"
               variant="${this._getRoleVariant(role)}"
               size="sm">
@@ -426,7 +426,7 @@ export class NeoUserProfileSummary extends BaseComponent {
     `;
 
     return this.clickable && this.href ? html`
-      <a href="${this.href}" 
+      <a href="${this.href}"
          class="${containerClasses}"
          @click="${this._handleProfileClick}"
          role="button"

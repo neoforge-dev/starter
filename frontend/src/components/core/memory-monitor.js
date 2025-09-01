@@ -326,4 +326,3 @@ export class MemoryMonitor extends LitElement {
 if (!customElements.get("memory-monitor")) {
   customElements.define("memory-monitor", MemoryMonitor);
 }
-

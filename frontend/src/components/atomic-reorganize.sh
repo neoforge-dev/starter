@@ -46,4 +46,4 @@ mkdir -p tokens/{colors,typography,spacing,animation}
 # Create pattern directories
 mkdir -p patterns/{composition,behavior,layout}
 
-echo "Reorganization complete!" 
+echo "Reorganization complete!"

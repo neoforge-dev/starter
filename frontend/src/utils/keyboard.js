@@ -20,7 +20,7 @@ class KeyboardManager {
 
   /**
    * Handle keydown events
-   * @param {KeyboardEvent} event 
+   * @param {KeyboardEvent} event
    */
   _handleKeyDown(event) {
     if (!this.enabled) return;
@@ -43,7 +43,7 @@ class KeyboardManager {
 
   /**
    * Check if the event target is a typing element
-   * @param {EventTarget} target 
+   * @param {EventTarget} target
    * @returns {boolean}
    */
   _isTypingTarget(target) {
@@ -59,7 +59,7 @@ class KeyboardManager {
 
   /**
    * Get a standardized key string from a keyboard event
-   * @param {KeyboardEvent} event 
+   * @param {KeyboardEvent} event
    * @returns {string}
    */
   _getEventKey(event) {
@@ -85,7 +85,7 @@ class KeyboardManager {
    */
   register(key, callback, { description = '', category = 'general' } = {}) {
     const normalizedKey = key.toLowerCase();
-    
+
     if (this.shortcuts.has(normalizedKey)) {
       Logger.warn(`Keyboard shortcut '${normalizedKey}' is already registered`);
       return;
@@ -105,7 +105,7 @@ class KeyboardManager {
 
   /**
    * Unregister a keyboard shortcut
-   * @param {string} key 
+   * @param {string} key
    */
   unregister(key) {
     const normalizedKey = key.toLowerCase();
@@ -153,7 +153,7 @@ class KeyboardManager {
 
   /**
    * Check if a shortcut is registered
-   * @param {string} key 
+   * @param {string} key
    * @returns {boolean}
    */
   hasShortcut(key) {
@@ -178,4 +178,4 @@ class KeyboardManager {
   }
 }
 
-export const keyboard = new KeyboardManager(); 
+export const keyboard = new KeyboardManager();

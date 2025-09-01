@@ -226,7 +226,7 @@ async def test_external_service(self, client):
     # Mock the external service
     with patch("app.services.external.ExternalService.get_data") as mock_get_data:
         mock_get_data.return_value = {"key": "value"}
-        
+
         # Test code that uses the external service
         response = await client.get("/api/external-data")
         assert response.status_code == 200
@@ -239,7 +239,7 @@ For monkeypatching:
 async def test_with_monkeypatch(self, monkeypatch):
     # Replace a function or attribute
     monkeypatch.setattr("app.services.email.send_email", lambda *args, **kwargs: None)
-    
+
     # Test code that uses send_email
 ```
 
@@ -255,7 +255,7 @@ async def test_create_user(self, db):
     db.add(user)
     await db.commit()
     await db.refresh(user)
-    
+
     assert user.id is not None
     assert user.email == "test@example.com"
 ```
@@ -270,10 +270,10 @@ from tests.factories import UserFactory
 async def test_with_factory(self, db):
     # Create a user with default values
     user = await UserFactory.create(session=db)
-    
+
     # Create a user with specific values
     admin = await UserFactory.create(session=db, is_superuser=True)
-    
+
     assert user.is_superuser is False
     assert admin.is_superuser is True
 ```
@@ -381,4 +381,4 @@ If tests interfere with each other:
 9. **Review test failures**: Treat test failures as important issues
 10. **Update tests when code changes**: Keep tests in sync with implementation
 
-By following this guide, you'll be able to write effective tests for the NeoForge backend application. If you have any questions or need further assistance, please reach out to the team. 
+By following this guide, you'll be able to write effective tests for the NeoForge backend application. If you have any questions or need further assistance, please reach out to the team.

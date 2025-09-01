@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Tech Stack
 - **Backend**: FastAPI + SQLModel + PostgreSQL + Redis + Alembic migrations
-- **Frontend**: Lit 4.0 Web Components + Vite + PWA-ready configuration  
+- **Frontend**: Lit 4.0 Web Components + Vite + PWA-ready configuration
 - **Infrastructure**: Docker containers + Make automation + GitHub Actions CI/CD
 - **Monitoring**: Prometheus metrics + structured logging (structlog)
 - **Testing**: pytest (backend) + Vitest (frontend) + Factory Boy patterns

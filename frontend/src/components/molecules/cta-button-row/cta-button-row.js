@@ -6,7 +6,7 @@ import "../../atoms/button/button.js";
 /**
  * Call-to-action button row for form actions and key decisions
  * @element neo-cta-button-row
- * 
+ *
  * @prop {Array|string} actions - Array of action objects or JSON string
  * @prop {string} alignment - Button alignment (left, center, right, space-between, space-around)
  * @prop {string} orientation - Button orientation (horizontal, vertical)
@@ -19,7 +19,7 @@ import "../../atoms/button/button.js";
  * @prop {boolean} sticky - Whether to stick to bottom on mobile
  * @prop {string} primaryAction - ID of the primary action
  * @prop {boolean} loading - Whether any action is loading
- * 
+ *
  * @fires neo-action-click - When an action button is clicked
  * @fires neo-primary-action - When the primary action is triggered
  */
@@ -405,7 +405,7 @@ export class NeoCTAButtonRow extends BaseComponent {
           const isPrimary = action.id === this.primaryAction || action.primary;
           const variant = this._getActionVariant(action, index);
           const actionType = this._getActionType(action);
-          
+
           return html`
             <neo-button
               variant="${variant}"
@@ -421,7 +421,7 @@ export class NeoCTAButtonRow extends BaseComponent {
               ${action.icon ? html`<neo-icon name="${action.icon}"></neo-icon>` : ''}
               ${action.text || action.label || 'Action'}
             </neo-button>
-            
+
             ${action.description ? html`
               <span id="${action.id}-desc" class="sr-only">
                 ${action.description}

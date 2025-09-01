@@ -18,7 +18,7 @@ if (!globalThis.document) {
     pretendToBeVisual: true,
     resources: 'usable',
   });
-  
+
   globalThis.window = dom.window;
   globalThis.document = dom.window.document;
   globalThis.HTMLElement = dom.window.HTMLElement;
@@ -28,7 +28,7 @@ if (!globalThis.document) {
   globalThis.navigator = dom.window.navigator;
   globalThis.location = dom.window.location;
   globalThis.URL = dom.window.URL;
-  
+
   // Add missing browser APIs
   globalThis.window.matchMedia = vi.fn().mockImplementation(query => ({
     matches: false,
@@ -235,7 +235,7 @@ export function setupDashboardTest() {
       status: 'Updated'
     })
   };
-  
+
   window.api = api;
   return api;
 }
@@ -257,7 +257,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.clearAllMocks();
   store = {};
-  
+
   // Clean up any elements added to the body
   document.body.innerHTML = '';
 });

@@ -1,6 +1,6 @@
 /**
  * Playground-Focused Visual Regression Tests
- * 
+ *
  * Tests visual rendering specifically through the playground system
  * to catch regressions in live component rendering.
  */
@@ -21,7 +21,7 @@ test.describe('Playground Visual Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/playground.html');
-    
+
     // Wait for playground to initialize
     await page.waitForSelector('#component-showcase', { timeout: 15000 });
     await page.waitForFunction(() => window.playgroundApp !== undefined);
@@ -29,7 +29,7 @@ test.describe('Playground Visual Tests', () => {
 
   test('playground interface - initial load', async ({ page }) => {
     await waitForAnimations(page);
-    
+
     // Hide dynamic elements that might cause flaky tests
     await page.addStyleTag({
       content: `
@@ -38,7 +38,7 @@ test.describe('Playground Visual Tests', () => {
         }
       `
     });
-    
+
     await compareScreenshot(page, 'playground-initial-load', {
       fullPage: true,
       maxDiffPixels: 200
@@ -86,7 +86,7 @@ test.describe('Playground Visual Tests', () => {
     if (await variantSelect.count() > 0) {
       await variantSelect.selectOption('secondary');
       await waitForAnimations(page);
-      
+
       const interactivePreview = page.locator('#interactive-preview');
       await compareScreenshot(interactivePreview, 'playground-button-variant-secondary');
     }

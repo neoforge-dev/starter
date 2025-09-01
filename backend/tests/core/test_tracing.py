@@ -1,13 +1,15 @@
 """Tests for OpenTelemetry tracing utilities."""
 
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from app.core.tracing import (
+    _parse_otlp_headers,
     get_current_trace_context,
     inject_trace_headers,
-    setup_otlp_tracer_provider,
-    _parse_otlp_headers,
     setup_instrumentation,
+    setup_otlp_tracer_provider,
 )
 
 
@@ -24,7 +26,7 @@ class TestTraceContext:
         """Test trace context when no active span."""
         mock_span = Mock()
         mock_span.get_span_context.return_value.is_valid = False
-        
+
         with patch("app.core.tracing.trace") as mock_trace:
             mock_trace.get_current_span.return_value = mock_span
             result = get_current_trace_context()
@@ -34,12 +36,16 @@ class TestTraceContext:
         """Test successful trace context extraction."""
         mock_span = Mock()
         mock_span.get_span_context.return_value.is_valid = True
-        
+
         mock_propagator = Mock()
-        mock_propagator.inject.side_effect = lambda carrier: carrier.update({"traceparent": "test-trace-id"})
-        
-        with patch("app.core.tracing.trace") as mock_trace, \
-             patch("app.core.tracing.TraceContextTextMapPropagator", return_value=mock_propagator):
+        mock_propagator.inject.side_effect = lambda carrier: carrier.update(
+            {"traceparent": "test-trace-id"}
+        )
+
+        with patch("app.core.tracing.trace") as mock_trace, patch(
+            "app.core.tracing.TraceContextTextMapPropagator",
+            return_value=mock_propagator,
+        ):
             mock_trace.get_current_span.return_value = mock_span
             result = get_current_trace_context()
             assert result == "test-trace-id"
@@ -47,7 +53,9 @@ class TestTraceContext:
     def test_inject_trace_headers_no_otel(self):
         """Test header injection when OpenTelemetry is not available."""
         headers = {"existing": "header"}
-        with patch("app.core.tracing.TraceContextTextMapPropagator", side_effect=ImportError):
+        with patch(
+            "app.core.tracing.TraceContextTextMapPropagator", side_effect=ImportError
+        ):
             result = inject_trace_headers(headers)
             assert result == headers
 
@@ -55,8 +63,11 @@ class TestTraceContext:
         """Test successful header injection."""
         headers = {"existing": "header"}
         mock_propagator = Mock()
-        
-        with patch("app.core.tracing.TraceContextTextMapPropagator", return_value=mock_propagator):
+
+        with patch(
+            "app.core.tracing.TraceContextTextMapPropagator",
+            return_value=mock_propagator,
+        ):
             result = inject_trace_headers(headers)
             assert result == headers
             mock_propagator.inject.assert_called_once_with(headers)
@@ -104,7 +115,7 @@ class TestTracerProviderSetup:
         mock_settings = Mock()
         mock_settings.otel_sdk_disabled = True
         mock_settings.environment = "production"
-        
+
         result = setup_otlp_tracer_provider(mock_settings)
         assert result is None
 
@@ -114,7 +125,7 @@ class TestTracerProviderSetup:
         mock_settings.otel_sdk_disabled = False
         mock_settings.otel_traces_exporter = "none"
         mock_settings.environment = "development"
-        
+
         result = setup_otlp_tracer_provider(mock_settings)
         assert result is None
 
@@ -124,7 +135,7 @@ class TestTracerProviderSetup:
         mock_settings.otel_sdk_disabled = False
         mock_settings.otel_traces_exporter = "console"
         mock_settings.environment = "test"
-        
+
         result = setup_otlp_tracer_provider(mock_settings)
         assert result is None
 
@@ -134,7 +145,12 @@ class TestTracerProviderSetup:
     @patch("app.core.tracing.AlwaysOnSampler")
     @patch("app.core.tracing._create_span_processor")
     def test_setup_otlp_tracer_provider_console(
-        self, mock_create_processor, mock_sampler, mock_resource, mock_provider, mock_trace
+        self,
+        mock_create_processor,
+        mock_sampler,
+        mock_resource,
+        mock_provider,
+        mock_trace,
     ):
         """Test tracer provider setup with console exporter."""
         mock_settings = Mock()
@@ -153,9 +169,11 @@ class TestTracerProviderSetup:
         mock_provider.return_value = mock_provider_instance
 
         result = setup_otlp_tracer_provider(mock_settings)
-        
+
         assert result == mock_provider_instance
-        mock_provider_instance.add_span_processor.assert_called_once_with(mock_processor_instance)
+        mock_provider_instance.add_span_processor.assert_called_once_with(
+            mock_processor_instance
+        )
         mock_trace.set_tracer_provider.assert_called_once_with(mock_provider_instance)
 
     @patch("app.core.tracing.trace")
@@ -164,7 +182,12 @@ class TestTracerProviderSetup:
     @patch("app.core.tracing.TraceIdRatioBasedSampler")
     @patch("app.core.tracing._create_span_processor")
     def test_setup_otlp_tracer_provider_ratio_sampler(
-        self, mock_create_processor, mock_ratio_sampler, mock_resource, mock_provider, mock_trace
+        self,
+        mock_create_processor,
+        mock_ratio_sampler,
+        mock_resource,
+        mock_provider,
+        mock_trace,
     ):
         """Test tracer provider setup with ratio sampler."""
         mock_settings = Mock()
@@ -182,8 +205,10 @@ class TestTracerProviderSetup:
         mock_provider_instance = Mock()
         mock_provider.return_value = mock_provider_instance
 
-        result = setup_otlp_tracer_provider(mock_settings, service_name_suffix="-worker")
-        
+        result = setup_otlp_tracer_provider(
+            mock_settings, service_name_suffix="-worker"
+        )
+
         assert result == mock_provider_instance
         mock_ratio_sampler.assert_called_once_with(0.1)
 
@@ -194,7 +219,9 @@ class TestTracerProviderSetup:
         mock_settings.otel_traces_exporter = "console"
         mock_settings.environment = "development"
 
-        with patch("app.core.tracing.trace", side_effect=ImportError("otel not installed")):
+        with patch(
+            "app.core.tracing.trace", side_effect=ImportError("otel not installed")
+        ):
             result = setup_otlp_tracer_provider(mock_settings)
             assert result is None
 
@@ -206,9 +233,9 @@ class TestInstrumentationSetup:
     def test_setup_instrumentation_fastapi_only(self, mock_fastapi_instrumentor):
         """Test instrumentation setup with FastAPI only."""
         mock_app = Mock()
-        
+
         setup_instrumentation(app=mock_app)
-        
+
         mock_fastapi_instrumentor.instrument_app.assert_called_once_with(mock_app)
 
     @patch("app.core.tracing.FastAPIInstrumentor")
@@ -223,11 +250,13 @@ class TestInstrumentationSetup:
         mock_app = Mock()
         mock_engine = Mock()
         mock_engine.sync_engine = Mock()
-        
+
         setup_instrumentation(app=mock_app, engine=mock_engine)
-        
+
         mock_fastapi.instrument_app.assert_called_once_with(mock_app)
-        mock_sqlalchemy.return_value.instrument.assert_called_once_with(engine=mock_engine.sync_engine)
+        mock_sqlalchemy.return_value.instrument.assert_called_once_with(
+            engine=mock_engine.sync_engine
+        )
         mock_redis.return_value.instrument.assert_called_once()
         mock_httpx.return_value.instrument.assert_called_once()
         mock_celery.return_value.instrument.assert_called_once()
@@ -236,7 +265,7 @@ class TestInstrumentationSetup:
     def test_setup_instrumentation_import_error(self, mock_fastapi):
         """Test instrumentation setup with import error."""
         mock_app = Mock()
-        
+
         # Should not raise exception
         setup_instrumentation(app=mock_app)
 
@@ -256,14 +285,15 @@ class TestConfigValidation:
         mock_settings.otel_traces_sampler = "ratio"
         mock_settings.otel_traces_sampler_arg = "invalid"
 
-        with patch("app.core.tracing.trace"), \
-             patch("app.core.tracing.TracerProvider"), \
-             patch("app.core.tracing.Resource"), \
-             patch("app.core.tracing.TraceIdRatioBasedSampler") as mock_ratio_sampler, \
-             patch("app.core.tracing._create_span_processor"):
-            
+        with patch("app.core.tracing.trace"), patch(
+            "app.core.tracing.TracerProvider"
+        ), patch("app.core.tracing.Resource"), patch(
+            "app.core.tracing.TraceIdRatioBasedSampler"
+        ) as mock_ratio_sampler, patch(
+            "app.core.tracing._create_span_processor"
+        ):
             setup_otlp_tracer_provider(mock_settings)
-            
+
             # Should use default ratio of 1.0 for invalid value
             mock_ratio_sampler.assert_called_once_with(1.0)
 
@@ -279,14 +309,15 @@ class TestConfigValidation:
         mock_settings.otel_traces_sampler = "always_on"
         mock_settings.otel_traces_sampler_arg = None
 
-        with patch("app.core.tracing.trace"), \
-             patch("app.core.tracing.TracerProvider"), \
-             patch("app.core.tracing.Resource") as mock_resource, \
-             patch("app.core.tracing.AlwaysOnSampler"), \
-             patch("app.core.tracing._create_span_processor"):
-            
+        with patch("app.core.tracing.trace"), patch(
+            "app.core.tracing.TracerProvider"
+        ), patch("app.core.tracing.Resource") as mock_resource, patch(
+            "app.core.tracing.AlwaysOnSampler"
+        ), patch(
+            "app.core.tracing._create_span_processor"
+        ):
             setup_otlp_tracer_provider(mock_settings)
-            
+
             # Should still create resource with just service name
             mock_resource.assert_called_once()
             call_args = mock_resource.call_args[1]["attributes"]

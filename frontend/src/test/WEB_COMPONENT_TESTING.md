@@ -124,13 +124,13 @@ describe("My Component", () => {
 
   it("handles user interactions", async () => {
     const button = findInShadow(element, "button");
-    
+
     // Set up event listener
     const eventPromise = waitForEvent(element, "button-click");
-    
+
     // Perform action
     click(button);
-    
+
     // Wait for event
     const event = await eventPromise;
     expect(event.detail.clicked).to.be.true;
@@ -138,19 +138,19 @@ describe("My Component", () => {
 
   it("processes form submission", async () => {
     const form = findInShadow(element, "form");
-    
+
     // Fill form
     fillForm(form, {
       name: "John Doe",
       email: "john@example.com"
     });
-    
+
     // Submit form
     submitForm(form);
-    
+
     // Wait for component to update
     await waitForUpdate(element);
-    
+
     // Check results
     const successMessage = findInShadow(element, ".success-message");
     expect(successMessage).to.exist;
@@ -176,7 +176,7 @@ describe("My Component", () => {
    ```javascript
    // ❌ Don't use:
    element.querySelector(".button");
-   
+
    // ✅ Do use:
    findInShadow(element, ".button");
    ```
@@ -207,12 +207,12 @@ describe("My Component", () => {
    it("renders and handles clicks and submits forms", async () => {
      // Too many assertions
    });
-   
+
    // ✅ Do test one behavior:
    it("renders the form fields", async () => {
      // Assertions about rendering
    });
-   
+
    it("handles form submission", async () => {
      // Assertions about submission
    });
@@ -307,62 +307,62 @@ import "../../components/login-form.js";
 
 describe("Login Form", () => {
   let element;
-  
+
   beforeEach(async () => {
     // Mock auth service
     window.auth = {
       login: vi.fn().mockResolvedValue({ success: true })
     };
-    
+
     // Create component
     element = await createComponent("login-form");
   });
-  
+
   afterEach(() => {
     removeComponent(element);
   });
-  
+
   it("renders login form with email and password fields", async () => {
     const form = findInShadow(element, "form");
     const emailInput = form.querySelector("input[type='email']");
     const passwordInput = form.querySelector("input[type='password']");
-    
+
     expect(form).to.exist;
     expect(emailInput).to.exist;
     expect(passwordInput).to.exist;
   });
-  
+
   it("validates form inputs", async () => {
     const form = findInShadow(element, "form");
-    
+
     // Submit empty form
     submitForm(form);
     await waitForUpdate(element);
-    
+
     // Check for validation errors
     const errors = findAllInShadow(element, ".error-message");
     expect(errors.length).to.be.greaterThan(0);
   });
-  
+
   it("submits form with valid data", async () => {
     const form = findInShadow(element, "form");
-    
+
     // Fill form
     fillForm(form, {
       email: "test@example.com",
       password: "password123"
     });
-    
+
     // Submit form
     submitForm(form);
     await waitForUpdate(element);
-    
+
     // Check auth service was called
     expect(window.auth.login).to.have.been.calledWith({
       email: "test@example.com",
       password: "password123"
     });
-    
+
     // Check success message
     const successMessage = findInShadow(element, ".success-message");
     expect(successMessage).to.exist;
@@ -370,4 +370,4 @@ describe("Login Form", () => {
 });
 ```
 
-By following this guide, you'll be able to write reliable tests for web components in the NeoForge project. 
+By following this guide, you'll be able to write reliable tests for web components in the NeoForge project.

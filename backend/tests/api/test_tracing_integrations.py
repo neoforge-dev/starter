@@ -12,6 +12,7 @@ async def test_security_middleware_adds_trace_and_request_ids(client: AsyncClien
         trace_id = res.headers["X-Trace-Id"]
         assert isinstance(trace_id, str)
 
+
 async def test_tracing_does_not_break_endpoints(client: AsyncClient):
     # Basic smoke that endpoints work with instrumentation present
     r = await client.get("/health")

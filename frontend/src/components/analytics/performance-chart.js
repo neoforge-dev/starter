@@ -85,7 +85,7 @@ export class PerformanceChart extends LitElement {
 
   initializeChart() {
     if (!this.Chart) return; // Chart.js not loaded yet
-    
+
     const ctx = this.shadowRoot.querySelector("canvas").getContext("2d");
 
     this.chart = new this.Chart(ctx, {

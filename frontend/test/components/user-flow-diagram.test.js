@@ -47,7 +47,7 @@ describe('UserFlowDiagram', () => {
     });
 
     element = await fixture(html`
-      <user-flow-diagram 
+      <user-flow-diagram
         .timeRange=${'7d'}
         .viewMode=${'sankey'}
         .showMetrics=${true}
@@ -55,7 +55,7 @@ describe('UserFlowDiagram', () => {
         .height=${600}
       ></user-flow-diagram>
     `);
-    
+
     // Wait for data loading
     await new Promise(resolve => setTimeout(resolve, 100));
   });
@@ -97,7 +97,7 @@ describe('UserFlowDiagram', () => {
 
     it('should process analytics data into nodes and edges', () => {
       expect(element.nodes.size).to.be.greaterThan(0);
-      
+
       // Check node structure
       const firstNode = Array.from(element.nodes.values())[0];
       expect(firstNode).to.have.property('id');
@@ -108,7 +108,7 @@ describe('UserFlowDiagram', () => {
 
     it('should create edges between connected pages', () => {
       expect(element.edges).to.be.an('array');
-      
+
       if (element.edges.length > 0) {
         const firstEdge = element.edges[0];
         expect(firstEdge).to.have.property('from');
@@ -121,7 +121,7 @@ describe('UserFlowDiagram', () => {
     it('should filter nodes and edges by minimum threshold', () => {
       element.minFlowThreshold = 10;
       element.processFlowData({ results: [] });
-      
+
       // All remaining nodes should meet the threshold
       Array.from(element.nodes.values()).forEach(node => {
         expect(node.uniqueSessions).to.be.at.least(element.minFlowThreshold);
@@ -159,7 +159,7 @@ describe('UserFlowDiagram', () => {
         ['/product', { id: '/product', title: 'Product', path: '/product', type: 'intermediate' }],
         ['/checkout', { id: '/checkout', title: 'Checkout', path: '/checkout', type: 'end' }]
       ]);
-      
+
       element.edges = [
         { from: '/', to: '/product', sessions: 100 },
         { from: '/product', to: '/checkout', sessions: 50 }
@@ -169,7 +169,7 @@ describe('UserFlowDiagram', () => {
     it('should generate Sankey layout', () => {
       element.viewMode = 'sankey';
       element.generateLayout();
-      
+
       // Check that nodes have positions
       Array.from(element.nodes.values()).forEach(node => {
         expect(node.x).to.be.a('number');
@@ -182,7 +182,7 @@ describe('UserFlowDiagram', () => {
     it('should generate force layout', () => {
       element.viewMode = 'force';
       element.generateLayout();
-      
+
       // Check that nodes have positions within bounds
       Array.from(element.nodes.values()).forEach(node => {
         expect(node.x).to.be.within(0, element.width);
@@ -193,11 +193,11 @@ describe('UserFlowDiagram', () => {
     it('should generate hierarchical layout', () => {
       element.viewMode = 'hierarchical';
       element.generateLayout();
-      
+
       // Start nodes should be at the top
       const startNodes = Array.from(element.nodes.values()).filter(n => n.type === 'start');
       const otherNodes = Array.from(element.nodes.values()).filter(n => n.type !== 'start');
-      
+
       if (startNodes.length > 0 && otherNodes.length > 0) {
         expect(startNodes[0].y).to.be.lessThan(otherNodes[0].y);
       }
@@ -206,7 +206,7 @@ describe('UserFlowDiagram', () => {
     it('should handle empty node sets', () => {
       element.nodes.clear();
       element.edges = [];
-      
+
       expect(() => {
         element.generateLayout();
       }).to.not.throw();
@@ -225,20 +225,20 @@ describe('UserFlowDiagram', () => {
     it('should handle node clicks', () => {
       const eventSpy = spy();
       element.addEventListener('node-selected', eventSpy);
-      
+
       const node = element.nodes.get('/');
       element.handleNodeClick(node, new Event('click'));
-      
+
       expect(eventSpy.calledOnce).to.be.true;
       expect(element.highlightedNode).to.equal(node);
     });
 
     it('should toggle node selection on repeated clicks', () => {
       const node = element.nodes.get('/');
-      
+
       element.handleNodeClick(node, new Event('click'));
       expect(element.highlightedNode).to.equal(node);
-      
+
       element.handleNodeClick(node, new Event('click'));
       expect(element.highlightedNode).to.be.null;
     });
@@ -248,17 +248,17 @@ describe('UserFlowDiagram', () => {
         { from: '/', to: '/product', sessions: 100 },
         { from: '/product', to: '/checkout', sessions: 50 }
       ];
-      
-      element.nodes.set('/checkout', { 
-        id: '/checkout', 
-        title: 'Checkout', 
-        path: '/checkout', 
-        type: 'end' 
+
+      element.nodes.set('/checkout', {
+        id: '/checkout',
+        title: 'Checkout',
+        path: '/checkout',
+        type: 'end'
       });
-      
+
       const node = element.nodes.get('/');
       const paths = element.findPathsFromNode(node);
-      
+
       expect(paths).to.be.an('array');
       if (paths.length > 0) {
         expect(paths[0][0]).to.equal(node);
@@ -271,10 +271,10 @@ describe('UserFlowDiagram', () => {
         { from: '/', to: '/product', sessions: 100 },
         { from: '/product', to: '/', sessions: 50 }
       ];
-      
+
       const node = element.nodes.get('/');
       const paths = element.findPathsFromNode(node);
-      
+
       // Should not hang or create infinite paths
       expect(paths).to.be.an('array');
       paths.forEach(path => {
@@ -286,22 +286,22 @@ describe('UserFlowDiagram', () => {
   describe('Zoom and Pan', () => {
     it('should handle mouse wheel zoom', () => {
       const initialZoom = element.zoomLevel;
-      
-      const wheelEvent = new WheelEvent('wheel', { 
+
+      const wheelEvent = new WheelEvent('wheel', {
         deltaY: -100,
         bubbles: true,
         cancelable: true
       });
-      
+
       element.handleWheel(wheelEvent);
-      
+
       expect(element.zoomLevel).to.be.greaterThan(initialZoom);
     });
 
     it('should limit zoom levels', () => {
       // Test maximum zoom
       element.zoomLevel = 3;
-      const wheelEvent = new WheelEvent('wheel', { 
+      const wheelEvent = new WheelEvent('wheel', {
         deltaY: -100,
         bubbles: true,
         cancelable: true
@@ -311,7 +311,7 @@ describe('UserFlowDiagram', () => {
 
       // Test minimum zoom
       element.zoomLevel = 0.2;
-      const wheelEventOut = new WheelEvent('wheel', { 
+      const wheelEventOut = new WheelEvent('wheel', {
         deltaY: 100,
         bubbles: true,
         cancelable: true
@@ -324,24 +324,24 @@ describe('UserFlowDiagram', () => {
       element.isDragging = true;
       element.dragStart = { x: 100, y: 100 };
       element.panOffset = { x: 0, y: 0 };
-      
+
       const moveEvent = new MouseEvent('mousemove', {
         clientX: 150,
         clientY: 120
       });
-      
+
       element.handleMouseMove(moveEvent);
-      
+
       expect(element.panOffset.x).to.equal(50);
       expect(element.panOffset.y).to.equal(20);
     });
 
     it('should zoom in/out with controls', () => {
       const initialZoom = element.zoomLevel;
-      
+
       element.zoomIn();
       expect(element.zoomLevel).to.be.greaterThan(initialZoom);
-      
+
       element.zoomOut();
       expect(element.zoomLevel).to.be.closeTo(initialZoom, 0.01);
     });
@@ -349,9 +349,9 @@ describe('UserFlowDiagram', () => {
     it('should reset zoom and pan', () => {
       element.zoomLevel = 2;
       element.panOffset = { x: 100, y: 50 };
-      
+
       element.resetZoom();
-      
+
       expect(element.zoomLevel).to.equal(1);
       expect(element.panOffset.x).to.equal(0);
       expect(element.panOffset.y).to.equal(0);
@@ -361,27 +361,27 @@ describe('UserFlowDiagram', () => {
   describe('View Mode Changes', () => {
     it('should change view mode and regenerate layout', async () => {
       const generateLayoutSpy = spy(element, 'generateLayout');
-      
+
       element.handleViewModeChange({ target: { value: 'force' } });
-      
+
       expect(element.viewMode).to.equal('force');
       expect(generateLayoutSpy.calledOnce).to.be.true;
     });
 
     it('should handle threshold changes', async () => {
       const loadDataSpy = spy(element, 'loadFlowData');
-      
+
       element.handleThresholdChange({ target: { value: '10' } });
-      
+
       expect(element.minFlowThreshold).to.equal(10);
       expect(loadDataSpy.calledOnce).to.be.true;
     });
 
     it('should toggle metrics display', () => {
       const initialState = element.showMetrics;
-      
+
       element.toggleMetrics();
-      
+
       expect(element.showMetrics).to.equal(!initialState);
     });
   });
@@ -392,7 +392,7 @@ describe('UserFlowDiagram', () => {
         ['/', { id: '/', x: 0, y: 50, width: 100, height: 50 }],
         ['/product', { id: '/product', x: 200, y: 50, width: 100, height: 50 }]
       ]);
-      
+
       element.edges = [
         { from: '/', to: '/product', sessions: 100 }
       ];
@@ -404,7 +404,7 @@ describe('UserFlowDiagram', () => {
         { from: '/', to: '/checkout', sessions: 100 },  // Medium traffic
         { from: '/', to: '/about', sessions: 10 }       // Low traffic
       ];
-      
+
       expect(element.getEdgeThickness(element.edges[0])).to.equal('thick');
       expect(element.getEdgeThickness(element.edges[2])).to.equal('thin');
     });
@@ -412,13 +412,13 @@ describe('UserFlowDiagram', () => {
     it('should render edges with proper SVG paths', () => {
       const edge = element.edges[0];
       const renderedEdge = element.renderEdge(edge);
-      
+
       expect(renderedEdge).to.not.be.empty;
     });
 
     it('should handle missing nodes in edge rendering', () => {
       const invalidEdge = { from: '/nonexistent', to: '/also-nonexistent', sessions: 10 };
-      
+
       const result = element.renderEdge(invalidEdge);
       expect(result).to.equal('');
     });
@@ -431,7 +431,7 @@ describe('UserFlowDiagram', () => {
         { from: '/', to: '/about', sessions: 50 },
         { from: '/product', to: '/checkout', sessions: 30 }
       ];
-      
+
       element.nodes = new Map([
         ['/', { id: '/', uniqueSessions: 150, path: '/' }],
         ['/product', { id: '/product', uniqueSessions: 100, path: '/product' }],
@@ -442,10 +442,10 @@ describe('UserFlowDiagram', () => {
 
     it('should calculate outflow percentages', () => {
       element.calculateMetrics();
-      
+
       const homeToProduct = element.edges.find(e => e.from === '/' && e.to === '/product');
       const homeToAbout = element.edges.find(e => e.from === '/' && e.to === '/about');
-      
+
       if (homeToProduct && homeToAbout) {
         // Total outflow from home: 100 + 50 = 150
         // Product: 100/150 = 66.67%, About: 50/150 = 33.33%
@@ -456,7 +456,7 @@ describe('UserFlowDiagram', () => {
 
     it('should calculate bounce rates', () => {
       element.calculateMetrics();
-      
+
       const aboutNode = element.nodes.get('/about');
       if (aboutNode) {
         // About page has no outgoing edges, so bounce rate should be 100%
@@ -466,11 +466,11 @@ describe('UserFlowDiagram', () => {
 
     it('should handle nodes with no outgoing edges', () => {
       element.edges = []; // No edges
-      
+
       expect(() => {
         element.calculateMetrics();
       }).to.not.throw();
-      
+
       // All nodes should have 0% bounce rate with no edges
       Array.from(element.nodes.values()).forEach(node => {
         expect(node.bounceRate).to.equal(0);
@@ -485,11 +485,11 @@ describe('UserFlowDiagram', () => {
 
     it('should handle container resize', async () => {
       const initialWidth = element.width;
-      
+
       // Simulate resize
       element.width = 1200;
       element.height = 800;
-      
+
       expect(element.width).to.not.equal(initialWidth);
     });
   });
@@ -498,9 +498,9 @@ describe('UserFlowDiagram', () => {
     it('should handle API errors gracefully', async () => {
       apiStub.restore();
       apiStub = stub(window, 'fetch').rejects(new Error('Network error'));
-      
+
       const errorElement = await fixture(html`<user-flow-diagram></user-flow-diagram>`);
-      
+
       expect(errorElement).to.exist;
       expect(errorElement.loading).to.be.false;
     });
@@ -509,7 +509,7 @@ describe('UserFlowDiagram', () => {
       element.nodes.clear();
       element.edges = [];
       await element.updateComplete;
-      
+
       const emptyState = element.shadowRoot.querySelector('.empty-state');
       expect(emptyState).to.exist;
     });
@@ -520,9 +520,9 @@ describe('UserFlowDiagram', () => {
         ok: true,
         json: () => Promise.resolve({ data: null })
       });
-      
+
       await element.loadFlowData();
-      
+
       expect(element.nodes).to.be.instanceOf(Map);
       expect(element.edges).to.be.an('array');
     });
@@ -532,9 +532,9 @@ describe('UserFlowDiagram', () => {
     it('should use correct date range in API calls', async () => {
       element.timeRange = '30d';
       await element.loadFlowData();
-      
+
       expect(apiStub.called).to.be.true;
-      
+
       // Verify date parameters are passed correctly
       const call = apiStub.lastCall;
       if (call && call.args[1]) {
@@ -546,11 +546,11 @@ describe('UserFlowDiagram', () => {
 
     it('should handle different time range options', () => {
       const ranges = ['1d', '7d', '30d', '90d'];
-      
+
       ranges.forEach(range => {
         element.timeRange = range;
         const { start, end } = element.getDateRange ? element.getDateRange(range) : { start: new Date(), end: new Date() };
-        
+
         expect(start).to.be.instanceOf(Date);
         expect(end).to.be.instanceOf(Date);
         expect(start.getTime()).to.be.lessThan(end.getTime());
@@ -561,21 +561,21 @@ describe('UserFlowDiagram', () => {
   describe('Rendering', () => {
     beforeEach(async () => {
       element.nodes = new Map([
-        ['/', { 
-          id: '/', 
-          title: 'Home', 
-          path: '/', 
+        ['/', {
+          id: '/',
+          title: 'Home',
+          path: '/',
           type: 'start',
-          x: 100, 
-          y: 100, 
-          width: 150, 
+          x: 100,
+          y: 100,
+          width: 150,
           height: 80,
           visits: 1000,
           uniqueSessions: 800,
           bounceRate: 15
         }]
       ]);
-      
+
       await element.updateComplete;
     });
 
@@ -587,7 +587,7 @@ describe('UserFlowDiagram', () => {
     it('should show node metrics when enabled', async () => {
       element.showMetrics = true;
       await element.updateComplete;
-      
+
       const nodeMetrics = element.shadowRoot.querySelectorAll('.node-metrics');
       expect(nodeMetrics.length).to.be.greaterThan(0);
     });
@@ -595,7 +595,7 @@ describe('UserFlowDiagram', () => {
     it('should hide node metrics when disabled', async () => {
       element.showMetrics = false;
       await element.updateComplete;
-      
+
       const nodeMetrics = element.shadowRoot.querySelectorAll('.node-metrics');
       expect(nodeMetrics.length).to.equal(0);
     });
@@ -604,7 +604,7 @@ describe('UserFlowDiagram', () => {
       element.zoomLevel = 1.5;
       element.panOffset = { x: 50, y: 25 };
       await element.updateComplete;
-      
+
       const canvas = element.shadowRoot.querySelector('.flow-canvas');
       expect(canvas.style.transform).to.include('scale(1.5)');
       expect(canvas.style.transform).to.include('translate(50px, 25px)');
@@ -613,7 +613,7 @@ describe('UserFlowDiagram', () => {
     it('should show loading state', async () => {
       element.loading = true;
       await element.updateComplete;
-      
+
       const loadingSpinner = element.shadowRoot.querySelector('.loading-spinner');
       expect(loadingSpinner).to.exist;
     });
@@ -623,7 +623,7 @@ describe('UserFlowDiagram', () => {
       element.highlightedNode = node;
       element.selectedPath = [[node]];
       await element.updateComplete;
-      
+
       const pathDetails = element.shadowRoot.querySelector('.path-details');
       expect(pathDetails).to.exist;
     });
@@ -631,7 +631,7 @@ describe('UserFlowDiagram', () => {
     it('should render zoom controls', () => {
       const zoomControls = element.shadowRoot.querySelector('.zoom-controls');
       expect(zoomControls).to.exist;
-      
+
       const zoomButtons = element.shadowRoot.querySelectorAll('.zoom-button');
       expect(zoomButtons.length).to.equal(3); // +, -, reset
     });
@@ -639,7 +639,7 @@ describe('UserFlowDiagram', () => {
     it('should render legend', () => {
       const legend = element.shadowRoot.querySelector('.legend');
       expect(legend).to.exist;
-      
+
       const legendItems = element.shadowRoot.querySelectorAll('.legend-item');
       expect(legendItems.length).to.equal(3); // High, Medium, Low traffic
     });
@@ -648,7 +648,7 @@ describe('UserFlowDiagram', () => {
   describe('Accessibility', () => {
     it('should support keyboard navigation', () => {
       const nodes = element.shadowRoot.querySelectorAll('.flow-node');
-      
+
       nodes.forEach(node => {
         // Nodes should be keyboard accessible
         expect(node.getAttribute('tabindex')).to.not.be.null;
@@ -664,14 +664,14 @@ describe('UserFlowDiagram', () => {
   describe('Performance', () => {
     it('should limit the number of rendered paths', () => {
       const node = { path: '/' };
-      
+
       // Create many mock paths
       const mockPaths = Array.from({ length: 20 }, (_, i) => [
         { title: `Step ${i}`, uniqueSessions: 100 - i }
       ]);
-      
+
       element.selectedPath = mockPaths;
-      
+
       // Should limit to reasonable number
       expect(element.selectedPath.length).to.be.at.most(5);
     });
@@ -689,9 +689,9 @@ describe('UserFlowDiagram', () => {
           height: 50
         });
       }
-      
+
       element.nodes = largeNodeSet;
-      
+
       // Should render without performance issues
       expect(() => {
         element.requestUpdate();

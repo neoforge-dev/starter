@@ -181,7 +181,7 @@ export class NeoSwitch extends BaseComponent {
           .switch-track {
             border: 2px solid var(--color-text);
           }
-          
+
           .switch-thumb {
             border: 1px solid var(--color-text);
           }
@@ -223,13 +223,13 @@ export class NeoSwitch extends BaseComponent {
   _handleChange(e) {
     if (!this.disabled) {
       this.checked = e.target.checked;
-      
+
       this.dispatchEvent(
         new CustomEvent("neo-change", {
-          detail: { 
+          detail: {
             checked: this.checked,
             name: this.name,
-            value: this.value 
+            value: this.value
           },
           bubbles: true,
           composed: true,
@@ -290,7 +290,7 @@ export class NeoSwitch extends BaseComponent {
     };
 
     const currentStateLabel = this.checked ? this.onLabel : this.offLabel;
-    const ariaLabel = this.label || 
+    const ariaLabel = this.label ||
       (currentStateLabel ? `Switch, ${currentStateLabel}` : "Switch");
 
     return html`

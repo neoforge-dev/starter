@@ -14,17 +14,17 @@ const components = [
 async function registerComponent(name, component) {
   try {
     if (typeof component === "function") {
-      if (component.constructor && component.constructor.name === "AsyncFunction" || 
+      if (component.constructor && component.constructor.name === "AsyncFunction" ||
           component.toString().includes('import(')) {
         // If component is a dynamic import, wait for it to load
         try {
           const module = await component();
           // Try different ways to get the component class
-          const ComponentClass = 
-            module.default || 
+          const ComponentClass =
+            module.default ||
             module[name.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join("")] ||
             module[name.charAt(0).toUpperCase() + name.slice(1)];
-          
+
           if (ComponentClass && typeof ComponentClass === 'function') {
             BaseComponent.registerComponent(name, ComponentClass);
           } else {
@@ -61,4 +61,4 @@ export async function registerAllComponents() {
 const registrationPromise = registerAllComponents();
 
 // Export the promise for other modules to await
-export { registrationPromise as default }; 
+export { registrationPromise as default };

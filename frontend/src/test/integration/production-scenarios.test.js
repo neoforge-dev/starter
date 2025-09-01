@@ -1,6 +1,6 @@
 /**
  * Production Scenario Integration Tests
- * 
+ *
  * Tests real-world production integration paths that developers actually use.
  * Validates the complete workflow from playground → production deployment.
  */
@@ -36,7 +36,7 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const generatedApp = await generator.generateApp(dashboardConfig);
-      
+
       // Validate app structure
       expect(generatedApp.name).toBe('Production Dashboard');
       expect(generatedApp.template).toBe('dashboard-app');
@@ -59,7 +59,7 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const performanceResult = await validator.validateScenario(performanceScenario);
-      
+
       expect(performanceResult.passed).toBe(true);
       expect(performanceResult.metrics.firstContentfulPaint).toBeLessThan(2000);
       expect(performanceResult.recommendations).toBeDefined();
@@ -70,7 +70,7 @@ describe('Production Scenario Integration Tests', () => {
 
       const deploymentGuides = deployment.getGuides();
       const vercelGuide = deploymentGuides.find(g => g.platform === 'vercel');
-      
+
       expect(vercelGuide).toBeDefined();
       expect(vercelGuide.configFiles['vercel.json']).toBeDefined();
       expect(vercelGuide.buildCommands.build).toBe('npm run build');
@@ -96,10 +96,10 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const result = await validator.validateScenario(extremeScenario);
-      
+
       expect(result).toBeDefined();
       expect(result.metrics.memoryUsed).toBeDefined();
-      
+
       // Should provide recommendations for large datasets
       if (result.metrics.largestContentfulPaint > 3000) {
         expect(result.recommendations).toContain('Implement virtual scrolling for large data sets');
@@ -121,7 +121,7 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const generatedApp = await generator.generateApp(marketingConfig);
-      
+
       expect(generatedApp.buildConfig.optimization.minify).toBe(true);
       expect(generatedApp.buildConfig.optimization.treeshaking).toBe(true);
 
@@ -141,7 +141,7 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const result = await validator.validateScenario(marketingScenario);
-      
+
       // Marketing sites should meet strict performance targets
       expect(result.metrics.firstContentfulPaint).toBeLessThan(1200);
 
@@ -170,7 +170,7 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const generatedApp = await generator.generateApp(saasConfig);
-      
+
       // SaaS apps should enable code splitting
       expect(generatedApp.buildConfig.optimization.codesplitting).toBe(true);
 
@@ -185,7 +185,7 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const integrationPlan = integrator.analyzeProject(reactProject);
-      
+
       expect(integrationPlan.compatibility).toBe('supported');
       expect(integrationPlan.steps.length).toBeGreaterThan(3);
       expect(integrationPlan.codeExamples.mainEntry).toContain('import React');
@@ -223,15 +223,15 @@ describe('Production Scenario Integration Tests', () => {
 
       for (const project of reactProjects) {
         const plan = integrator.analyzeProject(project);
-        
+
         expect(plan.compatibility).toBe('supported');
         expect(plan.steps).toBeDefined();
         expect(plan.codeExamples).toBeDefined();
-        
+
         // Should include framework-specific configuration
         const installStep = plan.steps.find(s => s.type === 'install');
         expect(installStep.command).toBe('npm install @neoforge/web-components');
-        
+
         const frameworkStep = plan.steps.find(s => s.type === 'framework');
         expect(frameworkStep).toBeDefined();
       }
@@ -248,7 +248,7 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const plan = integrator.analyzeProject(vueProject);
-      
+
       expect(plan.compatibility).toBe('supported');
       expect(plan.codeExamples.mainEntry).toContain('import { createApp }');
       expect(plan.codeExamples.mainEntry).toContain('from \'vue\'');
@@ -265,7 +265,7 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const plan = integrator.analyzeProject(unsupportedProject);
-      
+
       expect(plan.compatibility).toBe('unsupported');
       expect(plan.reason).toContain('svelte is not currently supported');
       expect(plan.alternatives).toBeDefined();
@@ -280,12 +280,12 @@ describe('Production Scenario Integration Tests', () => {
 
       const scenarios = examples.getRealWorldScenarios();
       const userMgmt = scenarios.find(s => s.name === 'user-management-dashboard');
-      
+
       expect(userMgmt).toBeDefined();
       expect(userMgmt.components).toContain('neo-table');
       expect(userMgmt.components).toContain('neo-form-builder');
       expect(userMgmt.components).toContain('neo-modal');
-      
+
       expect(userMgmt.fullExample).toBeDefined();
       expect(userMgmt.fullExample.length).toBeGreaterThan(1000); // Substantial example
       expect(userMgmt.liveDemo).toBeDefined();
@@ -298,7 +298,7 @@ describe('Production Scenario Integration Tests', () => {
       const examples = new UsageExamples();
 
       const ecommerce = examples.getScenario('e-commerce-product-catalog');
-      
+
       expect(ecommerce).toBeDefined();
       expect(ecommerce.components).toContain('neo-card');
       expect(ecommerce.components).toContain('neo-pagination');
@@ -312,10 +312,10 @@ describe('Production Scenario Integration Tests', () => {
 
       const adminScenarios = examples.getScenariosByCategory('admin');
       const ecommerceScenarios = examples.getScenariosByCategory('e-commerce');
-      
+
       expect(adminScenarios.length).toBeGreaterThan(0);
       expect(ecommerceScenarios.length).toBeGreaterThan(0);
-      
+
       adminScenarios.forEach(scenario => {
         expect(scenario.category).toBe('admin');
       });
@@ -328,7 +328,7 @@ describe('Production Scenario Integration Tests', () => {
       const deployment = new DeploymentExamples();
 
       const guides = deployment.getGuides();
-      
+
       // Should support major platforms
       const platforms = guides.map(g => g.platform);
       expect(platforms).toContain('vercel');
@@ -351,14 +351,14 @@ describe('Production Scenario Integration Tests', () => {
       const deployment = new DeploymentExamples();
 
       const platforms = ['vercel', 'netlify', 'github-pages', 'docker'];
-      
+
       platforms.forEach(platform => {
         const tips = deployment.getOptimizationTips(platform);
         const security = deployment.getSecurityConsiderations(platform);
-        
+
         expect(Array.isArray(tips)).toBe(true);
         expect(Array.isArray(security)).toBe(true);
-        
+
         if (tips.length > 0) {
           tips.forEach(tip => {
             expect(typeof tip).toBe('string');
@@ -373,12 +373,12 @@ describe('Production Scenario Integration Tests', () => {
       const deployment = new DeploymentExamples();
 
       const dockerGuide = deployment.getGuides().find(g => g.platform === 'docker');
-      
+
       expect(dockerGuide.type).toBe('containerized');
       expect(dockerGuide.configFiles['Dockerfile']).toBeDefined();
       expect(dockerGuide.configFiles['nginx.conf']).toBeDefined();
       expect(dockerGuide.configFiles['.dockerignore']).toBeDefined();
-      
+
       // Should include multi-stage build
       expect(dockerGuide.configFiles['Dockerfile'].content).toContain('FROM node:18-alpine as build');
       expect(dockerGuide.configFiles['Dockerfile'].content).toContain('FROM nginx:alpine');
@@ -403,10 +403,10 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const result = await validator.validateScenario(productionScenario);
-      
+
       expect(result.metrics).toBeDefined();
       expect(result.recommendations).toBeDefined();
-      
+
       // Should provide actionable recommendations
       if (result.recommendations.length > 0) {
         result.recommendations.forEach(rec => {
@@ -433,9 +433,9 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const result = await validator.validateScenario(memoryScenario);
-      
+
       expect(result.metrics.memoryUsed).toBeDefined();
-      
+
       // Should complete without memory errors
       expect(result.passed).toBeDefined();
     });
@@ -475,7 +475,7 @@ describe('Production Scenario Integration Tests', () => {
         components: ['neo-table', 'neo-form-builder', 'neo-button'],
         features: ['routing', 'responsive']
       };
-      
+
       const app = await generator.generateApp(appConfig);
       expect(app.files.length).toBeGreaterThan(0);
 
@@ -512,7 +512,7 @@ describe('Production Scenario Integration Tests', () => {
 
     it('should provide recovery paths for failed workflows', async () => {
       // Test workflow resilience when things go wrong
-      
+
       const { PerformanceValidator } = await import('../../playground/tools/performance-validator.js');
       const validator = new PerformanceValidator();
 
@@ -529,16 +529,16 @@ describe('Production Scenario Integration Tests', () => {
       };
 
       const result = await validator.validateScenario(challengingScenario);
-      
+
       // Even if performance targets aren't met, should provide useful feedback
       expect(result.recommendations).toBeDefined();
       expect(Array.isArray(result.recommendations)).toBe(true);
-      
+
       if (result.recommendations.length > 0) {
         // Should provide specific, actionable recommendations
-        expect(result.recommendations.some(rec => 
-          rec.includes('virtual scrolling') || 
-          rec.includes('lazy loading') || 
+        expect(result.recommendations.some(rec =>
+          rec.includes('virtual scrolling') ||
+          rec.includes('lazy loading') ||
           rec.includes('optimize')
         )).toBe(true);
       }

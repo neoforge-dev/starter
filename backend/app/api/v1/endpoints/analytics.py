@@ -1,5 +1,6 @@
 """Minimal analytics endpoints for development (no-op)."""
-from typing import Dict, Any
+from typing import Any, Dict
+
 from fastapi import APIRouter
 
 router = APIRouter()

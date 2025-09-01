@@ -1,6 +1,6 @@
 /**
  * Comprehensive Cross-Browser Testing Suite
- * 
+ *
  * Multi-browser compatibility testing for all 33 playground components
  * Covers Chrome, Firefox, Safari, Edge, mobile browsers, Web Components polyfills
  */
@@ -93,7 +93,7 @@ class CrossBrowserTestUtils {
       es6Plus: this.testES6Support(),
       apis: this.testAPISupport()
     };
-    
+
     return capabilities;
   }
 
@@ -136,22 +136,22 @@ class CrossBrowserTestUtils {
 
   static async testComponentPolyfillRequirements(componentName) {
     const polyfillsNeeded = [];
-    
+
     // Test if Web Components polyfill is needed
     if (!BROWSER_FEATURES.WEB_COMPONENTS.customElements) {
       polyfillsNeeded.push('@webcomponents/webcomponentsjs');
     }
-    
+
     // Test if ResizeObserver polyfill is needed
     if (!BROWSER_FEATURES.APIS.resizeObserver) {
       polyfillsNeeded.push('resize-observer-polyfill');
     }
-    
+
     // Test if IntersectionObserver polyfill is needed
     if (!BROWSER_FEATURES.APIS.intersectionObserver) {
       polyfillsNeeded.push('intersection-observer');
     }
-    
+
     return polyfillsNeeded;
   }
 
@@ -163,14 +163,14 @@ class CrossBrowserTestUtils {
 
   static testTouchEventCompatibility(component) {
     if (!component) return { supported: false, score: 0 };
-    
+
     const touchSupport = {
       touchstart: false,
       touchend: false,
       touchmove: false,
       pointerEvents: 'PointerEvent' in window
     };
-    
+
     // Test touch event support
     try {
       const touchEvent = new TouchEvent('touchstart', {
@@ -180,14 +180,14 @@ class CrossBrowserTestUtils {
     } catch (e) {
       touchSupport.touchstart = false;
     }
-    
+
     const score = Object.values(touchSupport).filter(Boolean).length / 4;
     return { ...touchSupport, score };
   }
 
   static testKeyboardEventCompatibility(component) {
     if (!component) return { supported: false, score: 0 };
-    
+
     const keyboardSupport = {
       keydown: false,
       keyup: false,
@@ -195,28 +195,28 @@ class CrossBrowserTestUtils {
       code: false,
       key: false
     };
-    
+
     try {
       const keyEvent = new KeyboardEvent('keydown', {
         key: 'Enter',
         code: 'Enter',
         keyCode: 13
       });
-      
+
       keyboardSupport.keydown = true;
       keyboardSupport.key = 'key' in keyEvent;
       keyboardSupport.code = 'code' in keyEvent;
     } catch (e) {
       keyboardSupport.keydown = false;
     }
-    
+
     const score = Object.values(keyboardSupport).filter(Boolean).length / 5;
     return { ...keyboardSupport, score };
   }
 
   static testCSSFeatureSupport(component, feature) {
     if (!component) return false;
-    
+
     switch (feature) {
       case 'flexbox':
         return CSS.supports('display', 'flex');
@@ -238,7 +238,7 @@ class CrossBrowserTestUtils {
 
 // Main cross-browser test suite
 describe("Comprehensive Cross-Browser Testing Suite", () => {
-  
+
   beforeAll(async () => {
     // Initialize browser capability detection
     const capabilities = CrossBrowserTestUtils.detectBrowserCapabilities();
@@ -247,12 +247,12 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
 
   // Browser feature detection tests
   describe("Browser Feature Detection", () => {
-    
+
     test("Web Components API support", () => {
       const webComponentsSupport = CrossBrowserTestUtils.testWebComponentsSupport();
-      
+
       expect(webComponentsSupport.score).toBeGreaterThan(0.6); // At least 60% support
-      
+
       if (webComponentsSupport.score < 1.0) {
         console.log('Web Components polyfill may be required');
       }
@@ -260,22 +260,22 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
 
     test("Modern CSS features support", () => {
       const cssSupport = CrossBrowserTestUtils.testModernCSSSupport();
-      
+
       // Flexbox is critical
       expect(cssSupport.flexbox).toBe(true);
-      
+
       // Grid is highly desirable
       if (!cssSupport.grid) {
         console.log('CSS Grid fallbacks may be needed');
       }
-      
+
       // Custom properties are important for theming
       expect(cssSupport.customProperties).toBe(true);
     });
 
     test("ES6+ JavaScript features support", () => {
       const es6Support = CrossBrowserTestUtils.testES6Support();
-      
+
       expect(es6Support.score).toBeGreaterThan(0.8); // At least 80% ES6+ support
       expect(es6Support.classes).toBe(true);
       expect(es6Support.modules).toBe(true);
@@ -283,12 +283,12 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
 
     test("Modern Web APIs support", () => {
       const apiSupport = CrossBrowserTestUtils.testAPISupport();
-      
+
       // IntersectionObserver is commonly used for lazy loading
       if (!apiSupport.intersectionObserver) {
         console.log('IntersectionObserver polyfill may be required');
       }
-      
+
       // ResizeObserver is useful for responsive components
       if (!apiSupport.resizeObserver) {
         console.log('ResizeObserver polyfill may be required');
@@ -298,7 +298,7 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
 
   // Critical component cross-browser tests
   describe("Critical Components Cross-Browser Compatibility", () => {
-    
+
     describe("Critical Atom Components", () => {
       COMPONENT_BROWSER_MATRIX.atoms.critical.forEach(componentName => {
         test(`${componentName} - basic functionality across browsers`, async () => {
@@ -314,7 +314,7 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
           // Test basic rendering
           expect(component).toBeTruthy();
           expect(component.textContent?.trim()).toBe('Test Content');
-          
+
           // Test polyfill requirements
           const polyfillsNeeded = await CrossBrowserTestUtils.testComponentPolyfillRequirements(componentName);
           console.log(`${componentName} polyfills needed:`, polyfillsNeeded);
@@ -330,7 +330,7 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
 
           const keyboardCompat = CrossBrowserTestUtils.testKeyboardEventCompatibility(component);
           expect(keyboardCompat.score).toBeGreaterThan(0.6);
-          
+
           // Test Enter key functionality
           const enterPressed = new Promise(resolve => {
             component.addEventListener('keydown', (e) => {
@@ -338,17 +338,17 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
                 resolve(true);
               }
             });
-            
+
             setTimeout(() => resolve(false), 100);
           });
 
-          const keyEvent = new KeyboardEvent('keydown', { 
-            key: 'Enter', 
-            keyCode: 13, 
-            bubbles: true 
+          const keyEvent = new KeyboardEvent('keydown', {
+            key: 'Enter',
+            keyCode: 13,
+            bubbles: true
           });
           component.dispatchEvent(keyEvent);
-          
+
           const result = await enterPressed;
           expect(result).toBe(true);
         });
@@ -362,7 +362,7 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
           }
 
           const touchCompat = CrossBrowserTestUtils.testTouchEventCompatibility(component);
-          
+
           // Touch events may not be available in test environment
           if (touchCompat.score === 0) {
             console.log(`Touch events not available for ${componentName} testing`);
@@ -400,11 +400,11 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
           const content = component.querySelector('.content');
           const actions = component.querySelector('.actions');
           const buttons = component.querySelectorAll('button');
-          
+
           expect(content).toBeTruthy();
           expect(actions).toBeTruthy();
           expect(buttons.length).toBeGreaterThanOrEqual(2);
-          
+
           // Test ARIA attributes
           expect(component.getAttribute('role')).toBe('dialog');
           expect(component.getAttribute('aria-modal')).toBe('true');
@@ -421,19 +421,19 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
                   gap: 1rem;
                   container-type: inline-size;
                 }
-                
+
                 @container (min-width: 300px) {
                   .modern-styling {
                     grid-template-columns: 1fr 1fr 1fr;
                   }
                 }
-                
+
                 .fallback {
                   display: flex;
                   flex-wrap: wrap;
                   margin: -0.5rem;
                 }
-                
+
                 .fallback > * {
                   flex: 1;
                   margin: 0.5rem;
@@ -453,14 +453,14 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
           const hasGrid = CrossBrowserTestUtils.testCSSFeatureSupport(component, 'grid');
           const hasFlexbox = CrossBrowserTestUtils.testCSSFeatureSupport(component, 'flexbox');
           const hasContainerQueries = CrossBrowserTestUtils.testCSSFeatureSupport(component, 'containerQueries');
-          
+
           expect(hasFlexbox).toBe(true); // Flexbox should be supported everywhere
-          
+
           if (!hasGrid) {
             console.log(`CSS Grid fallback needed for ${componentName}`);
             expect(component.classList.contains('fallback')).toBe(true);
           }
-          
+
           if (!hasContainerQueries) {
             console.log(`Container queries not supported for ${componentName}`);
           }
@@ -523,12 +523,12 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
           // Test large DOM structure rendering
           const items = component.querySelectorAll('.item, td, input');
           expect(items.length).toBeGreaterThan(10);
-          
+
           // Test performance with large DOM
           const renderStart = performance.now();
           await component.updateComplete;
           const renderTime = performance.now() - renderStart;
-          
+
           expect(renderTime).toBeLessThan(100); // Should render within 100ms
         });
 
@@ -547,7 +547,7 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
             // Add enhanced functionality
             component.classList.remove('basic');
             component.classList.add('enhanced');
-            
+
             // Add interactive elements
             const enhancedContent = document.createElement('div');
             enhancedContent.className = 'enhanced-features';
@@ -560,11 +560,11 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
             // Test enhanced functionality
             const enhancedButton = component.querySelector('.enhanced-features button');
             const statusDiv = component.querySelector('[role="status"]');
-            
+
             expect(enhancedButton).toBeTruthy();
             expect(statusDiv).toBeTruthy();
             expect(statusDiv.getAttribute('aria-live')).toBe('polite');
-            
+
           } catch (error) {
             // Enhancement failed - ensure graceful degradation
             console.log(`Progressive enhancement failed for ${componentName}:`, error.message);
@@ -577,7 +577,7 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
 
   // Modern component cross-browser tests
   describe("Modern Components Cross-Browser Support", () => {
-    
+
     test("modern components with polyfill detection", async () => {
       const modernComponents = [
         ...COMPONENT_BROWSER_MATRIX.atoms.modern,
@@ -587,7 +587,7 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
 
       for (const componentName of modernComponents.slice(0, 5)) { // Test first 5
         const polyfillsNeeded = await CrossBrowserTestUtils.testComponentPolyfillRequirements(componentName);
-        
+
         if (polyfillsNeeded.length > 0) {
           console.log(`Modern component ${componentName} requires polyfills:`, polyfillsNeeded);
         }
@@ -616,43 +616,43 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
               /* Modern CSS with fallbacks */
               display: flex; /* Fallback */
               display: grid; /* Enhanced if supported */
-              
+
               /* Container queries with fallback */
               container-type: inline-size;
             }
-            
+
             @supports (display: grid) {
               .cutting-edge-styles {
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
                 gap: 1rem;
               }
             }
-            
+
             @supports not (display: grid) {
               .cutting-edge-styles {
                 flex-wrap: wrap;
               }
-              
+
               .cutting-edge-styles > * {
                 flex: 1 1 200px;
                 margin: 0.5rem;
               }
             }
-            
+
             /* Container query with media query fallback */
             @container (min-width: 400px) {
               .item {
                 font-size: 1.2rem;
               }
             }
-            
+
             @media (min-width: 400px) {
               .no-container-queries .item {
                 font-size: 1.2rem;
               }
             }
           </style>
-          
+
           <div class="item">Item 1</div>
           <div class="item">Item 2</div>
           <div class="item">Item 3</div>
@@ -661,39 +661,39 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
 
       // Test that component renders regardless of feature support
       expect(component).toBeTruthy();
-      
+
       const items = component.querySelectorAll('.item');
       expect(items.length).toBe(3);
-      
+
       // Test feature detection and fallback application
       const hasGrid = CrossBrowserTestUtils.testCSSFeatureSupport(component, 'grid');
       const hasContainerQueries = CrossBrowserTestUtils.testCSSFeatureSupport(component, 'containerQueries');
-      
+
       if (!hasContainerQueries) {
         component.classList.add('no-container-queries');
       }
-      
+
       expect(component.classList.contains('cutting-edge-styles')).toBe(true);
     });
   });
 
   // Mobile browser specific tests
   describe("Mobile Browser Compatibility", () => {
-    
+
     test("touch-friendly component sizing", async () => {
       const touchComponents = ['button', 'checkbox', 'radio', 'select'];
-      
+
       for (const componentName of touchComponents) {
         let component;
         try {
-          component = await fixture(html`<neo-${componentName} 
+          component = await fixture(html`<neo-${componentName}
             style="min-width: 44px; min-height: 44px; touch-action: manipulation;">
             Touch Target
           </neo-${componentName}>`);
         } catch (error) {
-          component = await fixture(html`<div 
-            class="neo-${componentName}" 
-            role="button" 
+          component = await fixture(html`<div
+            class="neo-${componentName}"
+            role="button"
             tabindex="0"
             style="min-width: 44px; min-height: 44px; touch-action: manipulation;">
             Touch Target
@@ -703,7 +703,7 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
         const rect = component.getBoundingClientRect();
         expect(rect.width).toBeGreaterThanOrEqual(44);
         expect(rect.height).toBeGreaterThanOrEqual(44);
-        
+
         // Test touch-action CSS property
         const computedStyle = window.getComputedStyle(component);
         expect(computedStyle.touchAction).toBe('manipulation');
@@ -712,7 +712,7 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
 
     test("viewport meta tag compatibility", async () => {
       const viewport = document.querySelector('meta[name="viewport"]');
-      
+
       if (!viewport) {
         // Create viewport meta tag for testing
         const viewportMeta = document.createElement('meta');
@@ -720,7 +720,7 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
         viewportMeta.content = 'width=device-width, initial-scale=1.0';
         document.head.appendChild(viewportMeta);
       }
-      
+
       const viewportContent = document.querySelector('meta[name="viewport"]')?.getAttribute('content');
       expect(viewportContent).toContain('width=device-width');
       expect(viewportContent).toContain('initial-scale=1');
@@ -736,35 +736,35 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
               margin: 0 auto;
               padding: 1rem;
             }
-            
+
             @media (max-width: 768px) {
               .responsive-container {
                 padding: 0.5rem;
               }
-              
+
               .responsive-item {
                 width: 100% !important;
                 margin-bottom: 1rem;
               }
             }
-            
+
             @media (max-width: 480px) {
               .responsive-container {
                 padding: 0.25rem;
               }
             }
           </style>
-          
+
           <neo-card class="responsive-item">Responsive Card</neo-card>
           <neo-button class="responsive-item">Responsive Button</neo-button>
         </div>
       `);
 
       expect(responsiveComponent).toBeTruthy();
-      
+
       const cards = responsiveComponent.querySelectorAll('.responsive-item');
       expect(cards.length).toBeGreaterThan(0);
-      
+
       // Test responsive breakpoints by simulating different viewport sizes
       const container = responsiveComponent.querySelector('.responsive-container');
       expect(container).toBeTruthy();
@@ -773,28 +773,28 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
 
   // Legacy browser support tests
   describe("Legacy Browser Graceful Degradation", () => {
-    
+
     test("ES5 fallback compatibility", async () => {
       // Simulate older browser environment
       const originalCustomElements = window.customElements;
       const originalSymbol = window.Symbol;
-      
+
       try {
         // Temporarily remove modern features
         delete window.customElements;
         delete window.Symbol;
-        
+
         // Test component fallback
         const fallbackComponent = await fixture(html`
           <div class="neo-button legacy-fallback" role="button" tabindex="0">
             Legacy Button
           </div>
         `);
-        
+
         expect(fallbackComponent).toBeTruthy();
         expect(fallbackComponent.getAttribute('role')).toBe('button');
         expect(fallbackComponent.getAttribute('tabindex')).toBe('0');
-        
+
       } finally {
         // Restore modern features
         if (originalCustomElements) {
@@ -814,11 +814,11 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
             <p>Please enable JavaScript and refresh the page.</p>
           </div>
         </noscript>
-        
+
         <div class="js-required" style="display: none;">
           <neo-button>JavaScript Required Button</neo-button>
         </div>
-        
+
         <div class="progressive-enhancement">
           <a href="/fallback-page" class="button-link">
             Fallback Action Link
@@ -834,33 +834,33 @@ describe("Comprehensive Cross-Browser Testing Suite", () => {
 
   // Performance across browsers
   describe("Cross-Browser Performance Consistency", () => {
-    
+
     test("consistent rendering performance across browser engines", async () => {
       const testComponents = ['button', 'card', 'modal', 'table'];
       const performanceResults = new Map();
 
       for (const componentName of testComponents) {
         const renderTimes = [];
-        
+
         for (let i = 0; i < 10; i++) {
           const start = performance.now();
-          
+
           let component;
           try {
             component = await fixture(html`<neo-${componentName}>Performance Test ${i}</neo-${componentName}>`);
           } catch (error) {
             component = await fixture(html`<div class="neo-${componentName}">Performance Test ${i}</div>`);
           }
-          
+
           await component.updateComplete;
           const end = performance.now();
-          
+
           renderTimes.push(end - start);
         }
-        
+
         const avgRenderTime = renderTimes.reduce((a, b) => a + b) / renderTimes.length;
         performanceResults.set(componentName, avgRenderTime);
-        
+
         // Performance should be consistent (under 50ms average)
         expect(avgRenderTime).toBeLessThan(50);
       }

@@ -93,4 +93,4 @@
 
 .toast-container[data-toast-count]:not([data-toast-count=""]):after {
   opacity: 0.7;
-} 
+}

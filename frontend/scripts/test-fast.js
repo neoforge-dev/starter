@@ -84,11 +84,11 @@ async function runTests(mode = 'unit') {
       case 'quick':
         log('blue', 'Running quick test suite (critical components + accessibility)');
         log('yellow', 'Duration estimate: ~20-30 seconds');
-        
+
         // Run critical component tests
         await runCommand('npm', ['run', 'test', '--', '--run', '--reporter=basic', 'src/test/components/atoms/', '--bail=5']);
         log('green', '✓ Critical component tests passed');
-        
+
         // Run accessibility tests
         await runCommand('npm', ['run', 'test', '--', '--run', '--reporter=basic', 'src/test/advanced/accessibility-comprehensive.test.js']);
         log('green', '✓ Accessibility tests passed');
@@ -109,22 +109,22 @@ async function runTests(mode = 'unit') {
       case 'all':
         log('blue', 'Running comprehensive test suite');
         log('yellow', 'Duration estimate: ~2-3 minutes');
-        
+
         // Phase 1: Unit tests
         log('yellow', 'Phase 1: Unit Tests');
         await runCommand('npm', ['run', 'test', '--', '--run', '--reporter=basic', 'src/test/components/', '--bail=10']);
         log('green', '✓ Unit tests completed');
-        
+
         // Phase 2: Integration tests
         log('yellow', 'Phase 2: Integration Tests');
         await runCommand('npm', ['run', 'test', '--', '--run', '--reporter=basic', 'src/test/integration/', '--bail=5']);
         log('green', '✓ Integration tests completed');
-        
+
         // Phase 3: Accessibility tests
         log('yellow', 'Phase 3: Accessibility Tests');
         await runCommand('npm', ['run', 'test', '--', '--run', '--reporter=basic', 'src/test/advanced/accessibility-comprehensive.test.js']);
         log('green', '✓ Accessibility tests completed');
-        
+
         // Phase 4: Performance tests
         log('yellow', 'Phase 4: Performance Tests');
         await runCommand('npm', ['run', 'test', '--', '--run', '--reporter=basic', 'src/test/performance/']);
@@ -149,7 +149,7 @@ async function runTests(mode = 'unit') {
     }
 
     log('green', '🎉 Test execution completed successfully!');
-    
+
   } catch (error) {
     log('red', `❌ Test execution failed: ${error.message}`);
     process.exit(1);

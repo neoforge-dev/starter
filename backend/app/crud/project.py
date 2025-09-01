@@ -1,10 +1,11 @@
 """CRUD for Project."""
 from typing import Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+
 from app.crud.base import CRUDBase
 from app.models.project import Project
 from app.schemas.project import ProjectCreate, ProjectUpdate
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class CRUDProject(CRUDBase[Project, ProjectCreate, ProjectUpdate]):

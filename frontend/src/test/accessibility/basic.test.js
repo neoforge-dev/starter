@@ -39,7 +39,7 @@ describe("Basic Accessibility Tests", () => {
       </html>
     `);
     document = dom.window.document;
-    
+
     // Make JSDOM globals available
     global.window = dom.window;
     global.document = document;
@@ -110,7 +110,7 @@ describe("Basic Accessibility Tests", () => {
     expect(document.querySelector('main')).toBeTruthy();
     expect(document.querySelector('header')).toBeTruthy();
     expect(document.querySelector('footer')).toBeTruthy();
-    
+
     // Test that elements have proper attributes
     expect(document.documentElement.getAttribute('lang')).toBe('en');
     expect(document.querySelector('title')).toBeTruthy();
@@ -128,22 +128,22 @@ describe("Basic Accessibility Tests", () => {
       </div>
     `;
     document.body.appendChild(testElement);
-    
+
     const button = testElement.querySelector('button');
     expect(button).toBeTruthy();
-    
+
     // In a real test, we'd verify contrast ratio
     const style = dom.window.getComputedStyle(button);
     expect(style.backgroundColor).toBeTruthy();
     expect(style.color).toBeTruthy();
-    
+
     document.body.removeChild(testElement);
   });
 
   it("should have sufficient touch target sizes", () => {
     const button = document.querySelector('button');
     expect(button).toBeTruthy();
-    
+
     // Mock getBoundingClientRect for testing
     button.getBoundingClientRect = () => ({
       width: 44,
@@ -153,7 +153,7 @@ describe("Basic Accessibility Tests", () => {
       bottom: 44,
       right: 44
     });
-    
+
     const rect = button.getBoundingClientRect();
     expect(rect.width).toBeGreaterThanOrEqual(44);
     expect(rect.height).toBeGreaterThanOrEqual(44);

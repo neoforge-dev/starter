@@ -500,12 +500,12 @@ export class NeoFormBuilder extends LitElement {
       .form-builder {
         flex-direction: column;
       }
-      
+
       .builder-sidebar,
       .properties-panel {
         width: 100%;
       }
-      
+
       .properties-panel {
         max-height: 300px;
       }
@@ -624,17 +624,17 @@ export class NeoFormBuilder extends LitElement {
 
     this.schema = { ...this.schema, fields };
     this.selectedField = newField;
-    
+
     this.dispatchEvent(new CustomEvent('field-add', {
       detail: { field: newField, index }
     }));
-    
+
     this.requestUpdate();
   }
 
   _createField(type) {
     const id = `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const baseField = {
       id,
       type,
@@ -684,15 +684,15 @@ export class NeoFormBuilder extends LitElement {
       ...this.schema,
       fields: this.schema.fields.filter(f => f.id !== field.id)
     };
-    
+
     if (this.selectedField?.id === field.id) {
       this.selectedField = null;
     }
-    
+
     this.dispatchEvent(new CustomEvent('field-delete', {
       detail: { field }
     }));
-    
+
     this.requestUpdate();
   }
 
@@ -703,7 +703,7 @@ export class NeoFormBuilder extends LitElement {
       name: `${field.name}_copy`,
       label: `${field.label} (Copy)`
     };
-    
+
     const index = this.schema.fields.indexOf(field);
     this.schema = {
       ...this.schema,
@@ -713,7 +713,7 @@ export class NeoFormBuilder extends LitElement {
         ...this.schema.fields.slice(index + 1)
       ]
     };
-    
+
     this.requestUpdate();
   }
 
@@ -721,7 +721,7 @@ export class NeoFormBuilder extends LitElement {
     if (!this.selectedField) return;
 
     this.selectedField = { ...this.selectedField, [property]: value };
-    
+
     // Update in schema
     const index = this.schema.fields.findIndex(f => f.id === this.selectedField.id);
     if (index >= 0) {
@@ -734,26 +734,26 @@ export class NeoFormBuilder extends LitElement {
         ]
       };
     }
-    
+
     this.dispatchEvent(new CustomEvent('field-update', {
       detail: { field: this.selectedField, property, value }
     }));
-    
+
     this.requestUpdate();
   }
 
   _updateValue(fieldName, value) {
     this.values = { ...this.values, [fieldName]: value };
-    
+
     // Validate if enabled
     if (this.validationEnabled) {
       this._validateField(fieldName, value);
     }
-    
+
     this.dispatchEvent(new CustomEvent('value-change', {
       detail: { field: fieldName, value, allValues: this.values }
     }));
-    
+
     this.requestUpdate();
   }
 
@@ -840,8 +840,8 @@ export class NeoFormBuilder extends LitElement {
           <div class="form-field" @click=${() => this._selectField(field)}>
             ${this.mode === 'builder' ? this._renderFieldControls(field) : ''}
             <label class="form-label ${field.required ? 'required' : ''}">${field.label}</label>
-            <select 
-              class="form-select" 
+            <select
+              class="form-select"
               .value=${value}
               @change=${(e) => this._updateValue(field.name, e.target.value)}
               ?disabled=${this.readonly}
@@ -861,7 +861,7 @@ export class NeoFormBuilder extends LitElement {
           <div class="form-field" @click=${() => this._selectField(field)}>
             ${this.mode === 'builder' ? this._renderFieldControls(field) : ''}
             <label class="form-label ${field.required ? 'required' : ''}">${field.label}</label>
-            <textarea 
+            <textarea
               class="form-textarea"
               rows=${field.rows || 4}
               placeholder=${field.placeholder || ''}
@@ -882,8 +882,8 @@ export class NeoFormBuilder extends LitElement {
             <div class="checkbox-group">
               ${field.options?.map(opt => html`
                 <label style="display: flex; align-items: center; font-weight: normal;">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     class="form-checkbox"
                     value=${opt.value}
                     .checked=${Array.isArray(value) && value.includes(opt.value)}
@@ -916,8 +916,8 @@ export class NeoFormBuilder extends LitElement {
             <div class="radio-group">
               ${field.options?.map(opt => html`
                 <label style="display: flex; align-items: center; font-weight: normal;">
-                  <input 
-                    type="radio" 
+                  <input
+                    type="radio"
                     class="form-radio"
                     name=${field.name}
                     value=${opt.value}
@@ -939,7 +939,7 @@ export class NeoFormBuilder extends LitElement {
           <div class="form-field" @click=${() => this._selectField(field)}>
             ${this.mode === 'builder' ? this._renderFieldControls(field) : ''}
             <label class="form-label ${field.required ? 'required' : ''}">${field.label}</label>
-            <input 
+            <input
               type=${field.type}
               class="form-input"
               placeholder=${field.placeholder || ''}
@@ -985,11 +985,11 @@ export class NeoFormBuilder extends LitElement {
     return html`
       <div class="properties-panel ${!this.showProperties ? 'hidden' : ''}">
         <div class="panel-header">Field Properties</div>
-        
+
         <div class="property-group">
           <label class="property-label">Label</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             class="property-input"
             .value=${field.label || ''}
             @input=${(e) => this._updateFieldProperty('label', e.target.value)}
@@ -998,8 +998,8 @@ export class NeoFormBuilder extends LitElement {
 
         <div class="property-group">
           <label class="property-label">Field Name</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             class="property-input"
             .value=${field.name || ''}
             @input=${(e) => this._updateFieldProperty('name', e.target.value)}
@@ -1009,8 +1009,8 @@ export class NeoFormBuilder extends LitElement {
         ${field.type !== 'section' && field.type !== 'spacer' ? html`
           <div class="property-group">
             <label style="display: flex; align-items: center; gap: 8px;">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 .checked=${field.required || false}
                 @change=${(e) => this._updateFieldProperty('required', e.target.checked)}
               />
@@ -1020,8 +1020,8 @@ export class NeoFormBuilder extends LitElement {
 
           <div class="property-group">
             <label class="property-label">Placeholder</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               class="property-input"
               .value=${field.placeholder || ''}
               @input=${(e) => this._updateFieldProperty('placeholder', e.target.value)}
@@ -1030,7 +1030,7 @@ export class NeoFormBuilder extends LitElement {
 
           <div class="property-group">
             <label class="property-label">Help Text</label>
-            <textarea 
+            <textarea
               class="property-input"
               rows="2"
               .value=${field.helpText || ''}
@@ -1042,7 +1042,7 @@ export class NeoFormBuilder extends LitElement {
         ${field.type === 'section' ? html`
           <div class="property-group">
             <label class="property-label">Description</label>
-            <textarea 
+            <textarea
               class="property-input"
               rows="2"
               .value=${field.description || ''}
@@ -1056,8 +1056,8 @@ export class NeoFormBuilder extends LitElement {
             <label class="property-label">Options</label>
             ${field.options?.map((opt, index) => html`
               <div style="display: flex; gap: 4px; margin-bottom: 4px;">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Label"
                   style="flex: 1;"
                   class="property-input"
@@ -1068,8 +1068,8 @@ export class NeoFormBuilder extends LitElement {
                     this._updateFieldProperty('options', options);
                   }}
                 />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Value"
                   style="flex: 1;"
                   class="property-input"
@@ -1080,7 +1080,7 @@ export class NeoFormBuilder extends LitElement {
                     this._updateFieldProperty('options', options);
                   }}
                 />
-                <button 
+                <button
                   style="width: 24px; height: 24px; border: none; background: #ef4444; color: white; border-radius: 4px; cursor: pointer;"
                   @click=${() => {
                     const options = field.options.filter((_, i) => i !== index);
@@ -1089,7 +1089,7 @@ export class NeoFormBuilder extends LitElement {
                 >×</button>
               </div>
             `)}
-            <button 
+            <button
               style="width: 100%; padding: 6px; border: 1px dashed #d1d5db; background: none; border-radius: 4px; cursor: pointer;"
               @click=${() => {
                 const options = [...(field.options || []), { label: 'New Option', value: `option_${Date.now()}` }];
@@ -1102,8 +1102,8 @@ export class NeoFormBuilder extends LitElement {
         ${field.type === 'number' ? html`
           <div class="property-group">
             <label class="property-label">Min Value</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               class="property-input"
               .value=${field.min || ''}
               @input=${(e) => this._updateFieldProperty('min', e.target.value)}
@@ -1111,8 +1111,8 @@ export class NeoFormBuilder extends LitElement {
           </div>
           <div class="property-group">
             <label class="property-label">Max Value</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               class="property-input"
               .value=${field.max || ''}
               @input=${(e) => this._updateFieldProperty('max', e.target.value)}
@@ -1120,8 +1120,8 @@ export class NeoFormBuilder extends LitElement {
           </div>
           <div class="property-group">
             <label class="property-label">Step</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               class="property-input"
               .value=${field.step || ''}
               @input=${(e) => this._updateFieldProperty('step', e.target.value)}
@@ -1132,8 +1132,8 @@ export class NeoFormBuilder extends LitElement {
         ${field.type === 'textarea' ? html`
           <div class="property-group">
             <label class="property-label">Rows</label>
-            <input 
-              type="number" 
+            <input
+              type="number"
               class="property-input"
               min="2"
               max="20"
@@ -1187,7 +1187,7 @@ export class NeoFormBuilder extends LitElement {
             <div class="palette-section">
               <div class="section-title">Input Fields</div>
               ${this.fieldTypes.filter(f => ['text', 'email', 'number', 'password', 'textarea', 'date', 'file'].includes(f.type)).map(fieldType => html`
-                <div 
+                <div
                   class="field-item"
                   draggable="true"
                   @dragstart=${(e) => this._handleFieldDragStart(e, fieldType.type)}
@@ -1201,7 +1201,7 @@ export class NeoFormBuilder extends LitElement {
             <div class="palette-section">
               <div class="section-title">Selection Fields</div>
               ${this.fieldTypes.filter(f => ['select', 'radio', 'checkbox'].includes(f.type)).map(fieldType => html`
-                <div 
+                <div
                   class="field-item"
                   draggable="true"
                   @dragstart=${(e) => this._handleFieldDragStart(e, fieldType.type)}
@@ -1215,7 +1215,7 @@ export class NeoFormBuilder extends LitElement {
             <div class="palette-section">
               <div class="section-title">Layout Elements</div>
               ${this.fieldTypes.filter(f => ['section', 'spacer'].includes(f.type)).map(fieldType => html`
-                <div 
+                <div
                   class="field-item"
                   draggable="true"
                   @dragstart=${(e) => this._handleFieldDragStart(e, fieldType.type)}

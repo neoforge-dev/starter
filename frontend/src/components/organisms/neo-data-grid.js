@@ -430,7 +430,7 @@ export class NeoDataGrid extends LitElement {
             break;
         }
       }
-      
+
       if (e.key === 'Escape') {
         this.cancelEdit();
       }
@@ -450,10 +450,10 @@ export class NeoDataGrid extends LitElement {
 
   _startEdit(rowIndex, colIndex) {
     if (!this.editable) return;
-    
+
     this.editingCell = { row: rowIndex, col: colIndex };
     this.requestUpdate();
-    
+
     this.dispatchEvent(new CustomEvent('cell-edit-start', {
       detail: { rowIndex, colIndex, data: this.data[rowIndex] }
     }));
@@ -463,7 +463,7 @@ export class NeoDataGrid extends LitElement {
     const row = this.data[rowIndex];
     const column = this.columns[colIndex];
     const oldValue = row[column.field];
-    
+
     // Validate if validation is enabled
     if (this.validateOnEdit && column.validate) {
       const validation = column.validate(value, row);
@@ -475,38 +475,38 @@ export class NeoDataGrid extends LitElement {
         this.validationErrors.delete(`${rowIndex}-${colIndex}`);
       }
     }
-    
+
     // Update the value
     row[column.field] = value;
-    
+
     // Track pending changes
     const changeKey = `${rowIndex}-${colIndex}`;
     this.pendingChanges.set(changeKey, { oldValue, newValue: value, row, column });
-    
+
     // Auto-save if enabled
     if (this.autoSave) {
       this._saveCell(rowIndex, colIndex);
     }
-    
+
     this.dispatchEvent(new CustomEvent('cell-value-change', {
       detail: { rowIndex, colIndex, oldValue, newValue: value, row }
     }));
-    
+
     this.requestUpdate();
   }
 
   async _saveCell(rowIndex, colIndex) {
     const changeKey = `${rowIndex}-${colIndex}`;
     const change = this.pendingChanges.get(changeKey);
-    
+
     if (!change) return;
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       this.pendingChanges.delete(changeKey);
-      
+
       this.dispatchEvent(new CustomEvent('cell-save-success', {
         detail: { rowIndex, colIndex, change }
       }));
@@ -515,7 +515,7 @@ export class NeoDataGrid extends LitElement {
         detail: { rowIndex, colIndex, error, change }
       }));
     }
-    
+
     this.requestUpdate();
   }
 
@@ -529,13 +529,13 @@ export class NeoDataGrid extends LitElement {
       const { row, col } = this.editingCell;
       const changeKey = `${row}-${col}`;
       const change = this.pendingChanges.get(changeKey);
-      
+
       if (change) {
         this.data[row][change.column.field] = change.oldValue;
         this.pendingChanges.delete(changeKey);
         this.validationErrors.delete(changeKey);
       }
-      
+
       this.editingCell = null;
       this.requestUpdate();
     }
@@ -543,24 +543,24 @@ export class NeoDataGrid extends LitElement {
 
   _handleSort(field) {
     if (!this.sortable) return;
-    
+
     if (this.sortField === field) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
       this.sortField = field;
       this.sortDirection = 'asc';
     }
-    
+
     this.data.sort((a, b) => {
       const aVal = a[field];
       const bVal = b[field];
       const direction = this.sortDirection === 'asc' ? 1 : -1;
-      
+
       if (aVal < bVal) return -direction;
       if (aVal > bVal) return direction;
       return 0;
     });
-    
+
     this.requestUpdate();
   }
 
@@ -570,19 +570,19 @@ export class NeoDataGrid extends LitElement {
     } else {
       this.selectedRows.delete(rowIndex);
     }
-    
+
     this.dispatchEvent(new CustomEvent('row-selection-change', {
       detail: { rowIndex, selected, selectedRows: Array.from(this.selectedRows) }
     }));
-    
+
     this.requestUpdate();
   }
 
   _renderCell(row, column, rowIndex, colIndex) {
-    const isEditing = this.editingCell && 
-                     this.editingCell.row === rowIndex && 
+    const isEditing = this.editingCell &&
+                     this.editingCell.row === rowIndex &&
                      this.editingCell.col === colIndex;
-    
+
     const value = row[column.field];
     const hasError = this.validationErrors.has(`${rowIndex}-${colIndex}`);
     const isPending = this.pendingChanges.has(`${rowIndex}-${colIndex}`);
@@ -592,7 +592,7 @@ export class NeoDataGrid extends LitElement {
     }
 
     return html`
-      <div 
+      <div
         class="cell-content"
         @click=${() => this._startEdit(rowIndex, colIndex)}
         @dblclick=${() => this._startEdit(rowIndex, colIndex)}
@@ -612,7 +612,7 @@ export class NeoDataGrid extends LitElement {
     switch (column.type) {
       case 'select':
         return html`
-          <select 
+          <select
             class="cell-select"
             .value=${value}
             @change=${(e) => this._updateCell(rowIndex, colIndex, e.target.value)}
@@ -629,7 +629,7 @@ export class NeoDataGrid extends LitElement {
             `)}
           </select>
         `;
-      
+
       case 'checkbox':
         return html`
           <input
@@ -640,7 +640,7 @@ export class NeoDataGrid extends LitElement {
             @blur=${() => this._finishEdit()}
           />
         `;
-      
+
       case 'number':
         return html`
           <input
@@ -655,7 +655,7 @@ export class NeoDataGrid extends LitElement {
             }}
           />
         `;
-      
+
       default:
         return html`
           <input
@@ -678,9 +678,9 @@ export class NeoDataGrid extends LitElement {
     this.columns.forEach(col => {
       newRow[col.field] = col.defaultValue || '';
     });
-    
+
     this.data = [...this.data, newRow];
-    
+
     this.dispatchEvent(new CustomEvent('row-add', {
       detail: { row: newRow, index: this.data.length - 1 }
     }));
@@ -690,22 +690,22 @@ export class NeoDataGrid extends LitElement {
     const row = this.data[rowIndex];
     this.data = this.data.filter((_, index) => index !== rowIndex);
     this.selectedRows.delete(rowIndex);
-    
+
     this.dispatchEvent(new CustomEvent('row-delete', {
       detail: { row, index: rowIndex }
     }));
-    
+
     this.requestUpdate();
   }
 
   _exportData() {
     const csv = [
       this.columns.map(col => col.header).join(','),
-      ...this.data.map(row => 
+      ...this.data.map(row =>
         this.columns.map(col => `"${row[col.field] || ''}"`).join(',')
       )
     ].join('\n');
-    
+
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -717,7 +717,7 @@ export class NeoDataGrid extends LitElement {
 
   render() {
     const hasSelection = this.selectedRows.size > 0;
-    
+
     return html`
       <div class="grid-container">
         <div class="grid-toolbar">
@@ -759,7 +759,7 @@ export class NeoDataGrid extends LitElement {
                 ${this.showRowNumbers ? html`<th class="row-number">#</th>` : ''}
                 ${this.dragToReorder ? html`<th width="30"></th>` : ''}
                 ${this.columns.map(col => html`
-                  <th 
+                  <th
                     class="${this.sortable ? 'sortable' : ''} ${this.sortField === col.field ? 'sorted-' + this.sortDirection : ''}"
                     style=${col.width ? `width: ${col.width}` : ''}
                     @click=${() => this._handleSort(col.field)}
@@ -790,7 +790,7 @@ export class NeoDataGrid extends LitElement {
             </thead>
             <tbody class="grid-body">
               ${this.data.map((row, rowIndex) => html`
-                <tr 
+                <tr
                   class="${this.selectedRows.has(rowIndex) ? 'selected' : ''} ${this.editingCell && this.editingCell.row === rowIndex ? 'editing' : ''}"
                   @contextmenu=${(e) => this._showContextMenu(e, rowIndex)}
                 >

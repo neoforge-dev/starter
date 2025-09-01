@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Technical Debt Analysis and Monitoring Tool
- * 
+ *
  * This script provides comprehensive technical debt detection and monitoring by:
  * - Running ESLint analysis and categorizing issues by severity and type
  * - Analyzing code complexity and maintainability metrics
@@ -23,10 +23,10 @@ class TechnicalDebtAnalyzer {
     this.projectRoot = path.resolve(__dirname, '..');
     this.reportDir = path.join(this.projectRoot, 'reports', 'technical-debt');
     this.previousReportsDir = path.join(this.reportDir, 'history');
-    
+
     // Ensure report directories exist
     this.ensureDirectories();
-    
+
     // Technical debt categories and severity levels
     this.categories = {
       'CRITICAL': {
@@ -58,13 +58,13 @@ class TechnicalDebtAnalyzer {
       'no-dupe-keys': 'CRITICAL',
       'no-const-assign': 'CRITICAL',
       'no-redeclare': 'CRITICAL',
-      
+
       // High priority maintainability issues
       'no-unused-vars': 'HIGH',
       'no-unused-imports': 'HIGH',
       'no-console': 'MEDIUM',
       'prefer-const': 'MEDIUM',
-      
+
       // Lower priority style issues
       'semi': 'LOW',
       'quotes': 'LOW',
@@ -82,20 +82,20 @@ class TechnicalDebtAnalyzer {
 
   async analyzeESLint() {
     console.log('🔍 Running ESLint analysis...');
-    
+
     try {
       // Run ESLint with JSON output
       const eslintOutput = execSync(
-        'npx eslint src --format json', 
-        { 
+        'npx eslint src --format json',
+        {
           cwd: this.projectRoot,
           encoding: 'utf8'
         }
       );
-      
+
       const results = JSON.parse(eslintOutput);
       return this.categorizeESLintResults(results);
-      
+
     } catch (error) {
       // ESLint returns non-zero exit code when issues are found
       if (error.stdout) {
@@ -126,9 +126,9 @@ class TechnicalDebtAnalyzer {
 
     results.forEach(fileResult => {
       fileResult.messages.forEach(message => {
-        const severity = this.eslintRuleCategories[message.ruleId] || 
+        const severity = this.eslintRuleCategories[message.ruleId] ||
                         (message.severity === 2 ? 'HIGH' : 'MEDIUM');
-        
+
         const issue = {
           file: fileResult.filePath.replace(this.projectRoot, ''),
           line: message.line,
@@ -140,7 +140,7 @@ class TechnicalDebtAnalyzer {
 
         categorized[severity].push(issue);
         categorized.totalIssues++;
-        
+
         if (message.severity === 2) {
           categorized.errorCount++;
         } else {
@@ -167,12 +167,12 @@ class TechnicalDebtAnalyzer {
 
   async analyzeTestCoverage() {
     console.log('📊 Analyzing test coverage...');
-    
+
     try {
       // Run test coverage analysis
       const coverageOutput = execSync(
         'npm run test:coverage -- --reporter=json',
-        { 
+        {
           cwd: this.projectRoot,
           encoding: 'utf8'
         }
@@ -181,7 +181,7 @@ class TechnicalDebtAnalyzer {
       // Parse coverage data if available
       const coverage = this.parseCoverageData();
       return coverage;
-      
+
     } catch (error) {
       console.warn('⚠️  Test coverage analysis failed:', error.message);
       return {
@@ -195,7 +195,7 @@ class TechnicalDebtAnalyzer {
 
   parseCoverageData() {
     const coverageFile = path.join(this.projectRoot, 'coverage', 'coverage-summary.json');
-    
+
     if (fs.existsSync(coverageFile)) {
       try {
         const coverageData = JSON.parse(fs.readFileSync(coverageFile, 'utf8'));
@@ -204,7 +204,7 @@ class TechnicalDebtAnalyzer {
         console.warn('⚠️  Failed to parse coverage data:', error.message);
       }
     }
-    
+
     return {
       lines: { covered: 0, total: 0, percentage: 0 },
       functions: { covered: 0, total: 0, percentage: 0 },
@@ -215,16 +215,16 @@ class TechnicalDebtAnalyzer {
 
   async analyzeBundleSize() {
     console.log('📦 Analyzing bundle size...');
-    
+
     try {
       // Run build and analyze bundle
       execSync('npm run build', { cwd: this.projectRoot, stdio: 'pipe' });
-      
+
       const distDir = path.join(this.projectRoot, 'dist');
       const bundleStats = this.getBundleStats(distDir);
-      
+
       return bundleStats;
-      
+
     } catch (error) {
       console.warn('⚠️  Bundle analysis failed:', error.message);
       return {
@@ -251,21 +251,21 @@ class TechnicalDebtAnalyzer {
     }
 
     const files = this.getAllFiles(distDir);
-    
+
     files.forEach(file => {
       const filePath = path.relative(distDir, file);
       const fileStats = fs.statSync(file);
       const size = fileStats.size;
       const ext = path.extname(file);
-      
+
       stats.files.push({
         path: filePath,
         size: size,
         sizeFormatted: this.formatBytes(size)
       });
-      
+
       stats.totalSize += size;
-      
+
       if (ext === '.js') {
         stats.jsSize += size;
       } else if (ext === '.css') {
@@ -280,14 +280,14 @@ class TechnicalDebtAnalyzer {
 
   getAllFiles(dir) {
     const files = [];
-    
+
     function traverse(currentDir) {
       const items = fs.readdirSync(currentDir);
-      
+
       items.forEach(item => {
         const fullPath = path.join(currentDir, item);
         const stat = fs.statSync(fullPath);
-        
+
         if (stat.isDirectory()) {
           traverse(fullPath);
         } else {
@@ -295,7 +295,7 @@ class TechnicalDebtAnalyzer {
         }
       });
     }
-    
+
     traverse(dir);
     return files;
   }
@@ -309,10 +309,10 @@ class TechnicalDebtAnalyzer {
 
   async analyzeCodeComplexity() {
     console.log('🧮 Analyzing code complexity...');
-    
+
     const srcDir = path.join(this.projectRoot, 'src');
     const complexity = await this.calculateComplexity(srcDir);
-    
+
     return complexity;
   }
 
@@ -335,7 +335,7 @@ class TechnicalDebtAnalyzer {
 
       // Simple complexity heuristics
       const cyclomaticComplexity = this.calculateCyclomaticComplexity(content);
-      
+
       if (cyclomaticComplexity > 10) {
         complexity.highComplexityFiles.push({
           file: path.relative(this.projectRoot, file),
@@ -345,7 +345,7 @@ class TechnicalDebtAnalyzer {
       }
     });
 
-    complexity.avgComplexity = complexity.totalFiles > 0 ? 
+    complexity.avgComplexity = complexity.totalFiles > 0 ?
       (complexity.totalLines / complexity.totalFiles) : 0;
 
     return complexity;
@@ -392,7 +392,7 @@ class TechnicalDebtAnalyzer {
 
     // Save detailed report
     const reportFile = path.join(
-      this.reportDir, 
+      this.reportDir,
       `technical-debt-${timestamp.split('T')[0]}.json`
     );
     fs.writeFileSync(reportFile, JSON.stringify(reportData, null, 2));
@@ -426,28 +426,28 @@ class TechnicalDebtAnalyzer {
   calculateDebtScore(analysis) {
     // Technical debt score (0-100, lower is better)
     let score = 0;
-    
+
     // ESLint issues weight
     score += analysis.eslint.CRITICAL.length * 10;
     score += analysis.eslint.HIGH.length * 3;
     score += analysis.eslint.MEDIUM.length * 1;
     score += analysis.eslint.LOW.length * 0.1;
-    
+
     // Coverage penalty
     const coveragePercentage = analysis.coverage.lines?.percentage || 0;
     if (coveragePercentage < 80) {
       score += (80 - coveragePercentage) * 2;
     }
-    
+
     // Bundle size penalty (penalize if over 2MB)
     const bundleSizeMB = analysis.bundle.totalSize / (1024 * 1024);
     if (bundleSizeMB > 2) {
       score += (bundleSizeMB - 2) * 5;
     }
-    
+
     // Complexity penalty
     score += analysis.complexity.highComplexityFiles.length * 2;
-    
+
     return Math.min(Math.round(score), 100);
   }
 
@@ -532,11 +532,11 @@ class TechnicalDebtAnalyzer {
     const maintainabilityScore = Math.max(0, 100 - (analysis.complexity.highComplexityFiles.length * 5));
     const overallHealthScore = this.calculateOverallHealth({
       codeQualityScore,
-      testCoverageScore, 
+      testCoverageScore,
       performanceScore,
       maintainabilityScore
     });
-    
+
     return {
       codeQualityScore,
       testCoverageScore,
@@ -577,22 +577,22 @@ class TechnicalDebtAnalyzer {
 
       // Generate comprehensive report
       const report = this.generateTechnicalDebtReport(analysis);
-      
+
       // Output summary to console
       this.printSummary(report);
-      
+
       const endTime = Date.now();
       console.log(`\n✅ Analysis completed in ${((endTime - startTime) / 1000).toFixed(1)}s`);
       console.log(`📄 Detailed report saved to: ${this.reportDir}`);
-      
+
       // Exit with appropriate code based on debt score
       const exitCode = report.summary.debtScore > 50 ? 1 : 0;
       if (exitCode === 1) {
         console.log('⚠️  Technical debt score is high - consider prioritizing debt reduction');
       }
-      
+
       return exitCode;
-      
+
     } catch (error) {
       console.error('❌ Technical debt analysis failed:', error.message);
       console.error(error.stack);
@@ -606,7 +606,7 @@ class TechnicalDebtAnalyzer {
     console.log(`🏥 Overall Health Score: ${report.metrics.overallHealthScore}/100`);
     console.log(`🚨 Technical Debt Score: ${report.summary.debtScore}/100 (lower is better)`);
     console.log();
-    
+
     console.log('📊 KEY METRICS');
     console.log('-'.repeat(30));
     console.log(`ESLint Issues: ${report.summary.totalDebtIssues} (${report.summary.criticalIssues} critical)`);

@@ -80,9 +80,9 @@ Our color system ensures compliance:
 <div id="help-text">This will close the dialog</div>
 
 <!-- Form controls -->
-<input 
-  id="email" 
-  type="email" 
+<input
+  id="email"
+  type="email"
   aria-label="Email address"
   aria-required="true"
   aria-invalid="false"
@@ -135,7 +135,7 @@ class NeoButton extends BaseComponent {
         min-width: 44px;
         cursor: pointer;
       }
-      
+
       button:focus-visible {
         outline: 2px solid var(--color-primary);
         outline-offset: 2px;
@@ -211,7 +211,7 @@ class NeoModal extends LitElement {
           <div id="modal-description">
             <slot></slot>
           </div>
-          <button 
+          <button
             type="button"
             aria-label="Close modal"
             @click="${this.close}"
@@ -310,9 +310,9 @@ _announceToScreenReader(message) {
   announcement.setAttribute('aria-atomic', 'true');
   announcement.className = 'sr-only';
   announcement.textContent = message;
-  
+
   document.body.appendChild(announcement);
-  
+
   // Remove after announcement
   setTimeout(() => {
     document.body.removeChild(announcement);
@@ -326,10 +326,10 @@ _announceToScreenReader(message) {
 _showError(message) {
   this.error = message;
   this.setAttribute('aria-invalid', 'true');
-  
+
   // Announce error to screen readers
   this._announceToScreenReader(`Error: ${message}`);
-  
+
   // Focus the input for correction
   this.focus();
 }

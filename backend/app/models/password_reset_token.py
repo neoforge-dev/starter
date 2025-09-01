@@ -2,9 +2,9 @@
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey
 from app.db.base_class import Base
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from .user import User
@@ -17,7 +17,9 @@ class PasswordResetToken(Base):
 
     # Token is stored hashed for security
     token_hash: Mapped[str] = mapped_column(unique=True, index=True, nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True
+    )
     expires_at: Mapped[datetime] = mapped_column(nullable=False)
     is_used: Mapped[bool] = mapped_column(default=False, nullable=False)
     used_at: Mapped[datetime | None] = mapped_column(nullable=True)

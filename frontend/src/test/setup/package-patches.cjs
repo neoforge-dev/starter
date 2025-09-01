@@ -1,6 +1,6 @@
 /**
  * Package Patches (CommonJS version)
- * 
+ *
  * This file contains patches for third-party packages that have issues in the test environment.
  * It's specifically designed for worker threads and other environments that require CommonJS.
  */
@@ -11,7 +11,7 @@ let isPatched = false;
 /**
  * Patch the @open-wc/semantic-dom-diff package to fix the deprecation warning
  * about missing "main" or "exports" field
- * 
+ *
  * @returns {boolean} Whether the patching was successful
  */
 function patchSemanticDomDiff() {
@@ -77,4 +77,4 @@ patchSemanticDomDiff();
 // Export the functions for use in other modules
 module.exports = {
   patchSemanticDomDiff
-}; 
+};

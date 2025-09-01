@@ -16,7 +16,7 @@
                     <input type="text" id="component-search" placeholder="Search components...">
                 </div>
             </header>
-            
+
             <nav class="component-tree" id="component-tree">
                 <!-- Will be populated by JavaScript -->
             </nav>
@@ -30,7 +30,7 @@
                     <h2 id="current-component-title">Select a Component</h2>
                     <p id="current-component-description">Choose a component from the sidebar to begin testing</p>
                 </div>
-                
+
                 <div class="toolbar-actions">
                     <button id="build-app-button" class="tool-button tool-button-success" title="Generate production application from selected components">
                         🚀 Build App
@@ -115,7 +115,7 @@
                     <h2>🚀 Build Production App</h2>
                     <button class="close-panel-btn" id="close-app-panel">✕</button>
                 </div>
-                
+
                 <div class="workflow-container">
                     <!-- Workflow Progress -->
                     <div class="workflow-progress">
@@ -190,7 +190,7 @@
                                     <input type="text" id="app-name" name="appName" placeholder="My Awesome App" required>
                                     <div class="config-error" style="display: none;"></div>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label>Features</label>
                                     <div class="checkbox-group">
@@ -209,7 +209,7 @@
                                     </div>
                                 </div>
                             </form>
-                            
+
                             <div id="config-preview" class="config-preview">
                                 <h4>Configuration Preview</h4>
                                 <pre id="config-preview-content">{}</pre>
@@ -219,7 +219,7 @@
                         <!-- Step 4: Generation & Deployment -->
                         <div class="workflow-step-content" data-step="4">
                             <h3>Generate & Deploy Your App</h3>
-                            
+
                             <div class="generation-section">
                                 <button id="generate-app-button" class="btn btn-primary" disabled>
                                     Generate Application
@@ -307,13 +307,13 @@
     <script type="module" src="./core/session-memory.js"></script>
     <script type="module" src="./core/performance-optimizer.js"></script>
     <script type="module" src="./components/component-generator-modal.js"></script>
-    
+
     <!-- Design System Integration -->
     <script type="module" src="../components/tokens/token-system.js"></script>
     <script type="module" src="../components/theme/theme-manager.js"></script>
     <script type="module" src="../components/design/design-integration.js"></script>
     <script type="module" src="./components/design-system-panel.js"></script>
-    
+
     <!-- Analytics and Main App -->
     <script type="module" src="../components/analytics/chart-visualizations.js"></script>
     <script type="module" src="../components/analytics/playground-analytics.js"></script>

@@ -125,4 +125,4 @@ echo "Running tests with: pytest $ARGS"
 docker compose -f backend/docker-compose.dev.yml run --rm api pytest $ARGS
 
 # Print success message
-echo "Tests completed successfully!" 
+echo "Tests completed successfully!"

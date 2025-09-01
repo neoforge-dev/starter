@@ -1,27 +1,29 @@
 """Test database session management."""
-import pytest
 import asyncio
-import logging # Import logging
+import logging  # Import logging
 from typing import AsyncGenerator
+
+import pytest
+from app.db.base import Base
+from app.db.session import AsyncSessionLocal, get_db
+from app.models.user import User
+from sqlalchemy import select, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
-    async_sessionmaker,
+    AsyncEngine,
     AsyncSession,
-    AsyncEngine
+    async_sessionmaker,
+    create_async_engine,
 )
 from sqlalchemy.pool import NullPool, QueuePool
-from sqlalchemy import text, select
-from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import Settings
-from app.db.session import get_db, AsyncSessionLocal
-from app.db.base import Base
-from app.models.user import User
-from tests.factories import UserFactory # Import UserFactory
+from tests.factories import UserFactory  # Import UserFactory
 
 pytestmark = pytest.mark.asyncio
 
-logger = logging.getLogger(__name__) # Get logger instance
+logger = logging.getLogger(__name__)  # Get logger instance
+
 
 async def test_engine_configuration(test_settings: Settings):
     """Test database engine configuration."""
@@ -33,15 +35,17 @@ async def test_engine_configuration(test_settings: Settings):
     assert engine.dialect.name == "postgresql"
     assert engine.echo == test_settings.debug
 
+
 async def test_session_context_manager(db: AsyncSession):
     """Test session context manager behavior."""
     s = None
-    s = db # Keep a reference to the session yielded by the fixture
+    s = db  # Keep a reference to the session yielded by the fixture
     assert s.is_active
-    
+
     # Execute test query
     result = await s.execute(text("SELECT 1"))
     assert result.scalar() == 1
+
 
 async def test_session_commit_rollback_within_fixture_transaction(db: AsyncSession):
     """Test savepoint (nested commit) and rollback behavior within the fixture's transaction using DML."""
@@ -55,7 +59,9 @@ async def test_session_commit_rollback_within_fixture_transaction(db: AsyncSessi
 
     # Start a nested transaction (savepoint)
     async with db.begin_nested() as nested_tx1:
-        user_committed_nested = await UserFactory.create(session=db, email="commit_nested@example.com")
+        user_committed_nested = await UserFactory.create(
+            session=db, email="commit_nested@example.com"
+        )
         await db.flush()
         committed_nested_id = user_committed_nested.id
         # This nested transaction will commit to the outer transaction (managed by db fixture)
@@ -67,7 +73,9 @@ async def test_session_commit_rollback_within_fixture_transaction(db: AsyncSessi
 
     # Start another nested transaction for rollback
     async with db.begin_nested() as nested_tx2:
-        user_rollback_nested = await UserFactory.create(session=db, email="rollback_nested@example.com")
+        user_rollback_nested = await UserFactory.create(
+            session=db, email="rollback_nested@example.com"
+        )
         await db.flush()
         rollback_nested_id = user_rollback_nested.id
 
@@ -93,6 +101,7 @@ async def test_session_commit_rollback_within_fixture_transaction(db: AsyncSessi
 
     # The fixture's final rollback will remove initial and committed_nested users.
 
+
 async def test_session_transaction_error(db: AsyncSession):
     """Test session error handling within the fixture's transaction."""
     # The db fixture uses a transaction that will be rolled back.
@@ -105,16 +114,17 @@ async def test_session_transaction_error(db: AsyncSession):
     try:
         # Execute invalid query to trigger an error
         await db.execute(text("SELECT * FROM nonexistent_table"))
-        pytest.fail("Expected SQLAlchemyError but none was raised.") # Fail if no error
+        pytest.fail("Expected SQLAlchemyError but none was raised.")  # Fail if no error
     except SQLAlchemyError as e:
         # Error occurred as expected.
         # In Postgres, the transaction is now likely aborted.
         # We should check if the session reflects this state.
         # We cannot reliably execute further queries in this transaction.
         logger.info(f"Caught expected SQLAlchemyError: {e}")
-        assert db.is_active # Session object itself might still be active
+        assert db.is_active  # Session object itself might still be active
 
     # The `db` fixture will handle the final rollback of the aborted transaction.
+
 
 async def test_session_nested_transaction_commit_on_exit(db: AsyncSession):
     """Test nested transaction commits automatically on successful exit."""
@@ -128,13 +138,15 @@ async def test_session_nested_transaction_commit_on_exit(db: AsyncSession):
     # Start nested transaction (savepoint)
     nested_commit_id = None
     async with db.begin_nested():
-        user_nested_commit = await UserFactory.create(session=db, email="nested_commit_on_exit@example.com")
+        user_nested_commit = await UserFactory.create(
+            session=db, email="nested_commit_on_exit@example.com"
+        )
         await db.flush()
         nested_commit_id = user_nested_commit.id
         # No explicit commit/rollback - commit should happen automatically on exit
 
     # Nested commit user should exist now (within the outer transaction)
-    assert nested_commit_id is not None # Ensure ID was captured
+    assert nested_commit_id is not None  # Ensure ID was captured
     fetched_nested_commit = await db.get(User, nested_commit_id)
     assert fetched_nested_commit is not None
     assert fetched_nested_commit.email == "nested_commit_on_exit@example.com"
@@ -145,6 +157,7 @@ async def test_session_nested_transaction_commit_on_exit(db: AsyncSession):
     assert fetched_outer_commit.email == "outer_commit@example.com"
 
     # The fixture will rollback the outer transaction, removing both users.
+
 
 async def test_session_concurrent_access(test_settings: Settings, engine):
     """Test concurrent session access. Requires separate factory based on main engine."""
@@ -157,15 +170,14 @@ async def test_session_concurrent_access(test_settings: Settings, engine):
 
     async def worker(id: int) -> None:
         async with concurrent_session_factory() as session:
-            async with session.begin(): # Use begin for auto-commit/rollback on success/error
+            async with session.begin():  # Use begin for auto-commit/rollback on success/error
                 # Simulate work specific to this worker if needed, e.g., insert unique data
                 await session.execute(text(f"SELECT pg_sleep(0.1)"))
                 # No explicit commit needed due to session.begin()
 
     # Run concurrent workers
-    await asyncio.gather(*[
-        worker(i) for i in range(5)
-    ])
+    await asyncio.gather(*[worker(i) for i in range(5)])
+
 
 async def test_session_pool_behavior(test_settings: Settings, engine):
     """Test session pool behavior. Requires separate factory based on main engine."""
@@ -186,16 +198,17 @@ async def test_session_pool_behavior(test_settings: Settings, engine):
 
     sessions = []
     try:
-        for _ in range(7): # More than pool_size but less than max_overflow
+        for _ in range(7):  # More than pool_size but less than max_overflow
             session = pool_session_factory()
             sessions.append(session)
-            await session.execute(text("SELECT 1")) # Activate connection
+            await session.execute(text("SELECT 1"))  # Activate connection
     finally:
         # Close sessions
         for session in sessions:
             await session.close()
         # Dispose the engine created specifically for this test
         await pool_engine.dispose()
+
 
 async def test_get_db_generator(db: AsyncSession):
     """Test database session generator behavior using the fixture."""
@@ -209,6 +222,7 @@ async def test_get_db_generator(db: AsyncSession):
     result = await session.execute(text("SELECT 1"))
     assert result.scalar() == 1
 
+
 async def test_async_session_local(db: AsyncSession):
     """Test AsyncSessionLocal configuration via the fixture."""
     # We assume the `db` fixture uses a setup similar to AsyncSessionLocal
@@ -218,8 +232,8 @@ async def test_async_session_local(db: AsyncSession):
     # Check a key configuration option (if applicable and consistent)
     # This requires knowing how the fixture session is configured vs AsyncSessionLocal
     # Let's assume the core behavior (query execution) is the main point.
-    assert not session.sync_session.expire_on_commit # Check config from fixture
+    assert not session.sync_session.expire_on_commit  # Check config from fixture
 
     # Test query execution
     result = await session.execute(text("SELECT 1"))
-    assert result.scalar() == 1 
+    assert result.scalar() == 1

@@ -13,51 +13,57 @@ import argparse
 import json
 import os
 import sys
-from pathlib import Path
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 from jinja2 import Environment, FileSystemLoader, Template
 
 
 class NeoForgeCLI:
     """Enhanced automation toolkit for NeoForge development"""
-    
+
     def __init__(self):
         self.project_root = Path(__file__).parent.parent
         self.templates_dir = self.project_root / "scripts" / "templates"
         self.ensure_templates_dir()
-        
+
         # Initialize Jinja2 environment
         self.jinja_env = Environment(
             loader=FileSystemLoader(str(self.templates_dir)),
             trim_blocks=True,
-            lstrip_blocks=True
+            lstrip_blocks=True,
         )
-    
+
     def ensure_templates_dir(self):
         """Ensure templates directory exists"""
         self.templates_dir.mkdir(parents=True, exist_ok=True)
-    
-    def create_component(self, name: str, component_type: str = "molecule", 
-                        has_state: bool = False, has_events: bool = False):
+
+    def create_component(
+        self,
+        name: str,
+        component_type: str = "molecule",
+        has_state: bool = False,
+        has_events: bool = False,
+    ):
         """Generate a complete Lit component with tests and stories"""
         print(f"🚀 Creating {component_type} component: {name}")
-        
+
         # Convert name formats
         kebab_name = self.to_kebab_case(name)
         pascal_name = self.to_pascal_case(name)
         camel_name = self.to_camel_case(name)
-        
+
         # Determine component directory
         component_dir = (
-            self.project_root / "frontend" / "src" / "components" / 
-            component_type + "s" / kebab_name
+            self.project_root / "frontend" / "src" / "components" / component_type
+            + "s" / kebab_name
         )
         component_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Generate component files
         files_generated = []
-        
+
         # Main component file
         component_content = self.generate_component_code(
             pascal_name, kebab_name, component_type, has_state, has_events
@@ -65,32 +71,39 @@ class NeoForgeCLI:
         component_file = component_dir / f"{kebab_name}.js"
         component_file.write_text(component_content)
         files_generated.append(str(component_file))
-        
+
         # Test file
         test_content = self.generate_component_test(pascal_name, kebab_name)
         test_file = component_dir / f"{kebab_name}.test.js"
         test_file.write_text(test_content)
         files_generated.append(str(test_file))
-        
+
         # Stories file (for Storybook)
         stories_content = self.generate_component_stories(pascal_name, kebab_name)
         stories_file = component_dir / f"{kebab_name}.stories.js"
         stories_file.write_text(stories_content)
         files_generated.append(str(stories_file))
-        
+
         # Update index.js exports
         self.update_component_exports(component_type, kebab_name, pascal_name)
-        
+
         print(f"✅ Generated {len(files_generated)} files:")
         for file_path in files_generated:
             print(f"   📄 {file_path}")
-        
+
         return files_generated
-    
-    def generate_component_code(self, pascal_name: str, kebab_name: str, 
-                               component_type: str, has_state: bool, has_events: bool) -> str:
+
+    def generate_component_code(
+        self,
+        pascal_name: str,
+        kebab_name: str,
+        component_type: str,
+        has_state: bool,
+        has_events: bool,
+    ) -> str:
         """Generate the main component code"""
-        template = Template('''import { html, css } from "lit";
+        template = Template(
+            """import { html, css } from "lit";
 import { baseStyles } from "../../styles/base.js";
 import { BaseComponent } from "../../base-component.js";
 {% if has_state %}
@@ -204,7 +217,7 @@ export class {{ pascal_name }} extends BaseComponent {
 
   render() {
     return html`
-      <div 
+      <div
         class="{{ kebab_name }}{% if has_state %} variant-${this.variant}{% endif %}"
 {% if has_events %}
         @click="${this._handleClick}"
@@ -218,25 +231,27 @@ export class {{ pascal_name }} extends BaseComponent {
 }
 
 customElements.define("{{ kebab_name }}", {{ pascal_name }});
-''')
-        
+"""
+        )
+
         return template.render(
             pascal_name=pascal_name,
             kebab_name=kebab_name,
             component_type=component_type,
             has_state=has_state,
-            has_events=has_events
+            has_events=has_events,
         )
-    
+
     def generate_component_test(self, pascal_name: str, kebab_name: str) -> str:
         """Generate component test file"""
-        template = Template('''import { html, fixture, expect } from "@open-wc/testing";
+        template = Template(
+            """import { html, fixture, expect } from "@open-wc/testing";
 import "../{{ kebab_name }}.js";
 
 describe("{{ pascal_name }}", () => {
   it("renders with default properties", async () => {
     const el = await fixture(html`<{{ kebab_name }}></{{ kebab_name }}>`);
-    
+
     expect(el).to.exist;
     expect(el.label).to.equal("");
     expect(el.disabled).to.be.false;
@@ -246,7 +261,7 @@ describe("{{ pascal_name }}", () => {
     const el = await fixture(
       html`<{{ kebab_name }} label="Test Label"></{{ kebab_name }}>`
     );
-    
+
     expect(el.label).to.equal("Test Label");
     expect(el.shadowRoot.querySelector(".label").textContent).to.equal("Test Label");
   });
@@ -255,7 +270,7 @@ describe("{{ pascal_name }}", () => {
     const el = await fixture(
       html`<{{ kebab_name }} disabled></{{ kebab_name }}>`
     );
-    
+
     expect(el.disabled).to.be.true;
     expect(el.hasAttribute("disabled")).to.be.true;
   });
@@ -264,19 +279,19 @@ describe("{{ pascal_name }}", () => {
     const el = await fixture(
       html`<{{ kebab_name }}><span>Slotted Content</span></{{ kebab_name }}>`
     );
-    
+
     const slottedContent = el.querySelector("span");
     expect(slottedContent.textContent).to.equal("Slotted Content");
   });
 
   it("dispatches custom events on click", async () => {
     const el = await fixture(html`<{{ kebab_name }}></{{ kebab_name }}>`);
-    
+
     let eventFired = false;
     el.addEventListener("{{ kebab_name }}-click", () => {
       eventFired = true;
     });
-    
+
     el.shadowRoot.querySelector(".{{ kebab_name }}").click();
     expect(eventFired).to.be.true;
   });
@@ -285,26 +300,25 @@ describe("{{ pascal_name }}", () => {
     const el = await fixture(
       html`<{{ kebab_name }} disabled></{{ kebab_name }}>`
     );
-    
+
     let eventFired = false;
     el.addEventListener("{{ kebab_name }}-click", () => {
       eventFired = true;
     });
-    
+
     el.shadowRoot.querySelector(".{{ kebab_name }}").click();
     expect(eventFired).to.be.false;
   });
 });
-''')
-        
-        return template.render(
-            pascal_name=pascal_name,
-            kebab_name=kebab_name
+"""
         )
-    
+
+        return template.render(pascal_name=pascal_name, kebab_name=kebab_name)
+
     def generate_component_stories(self, pascal_name: str, kebab_name: str) -> str:
         """Generate Storybook stories file"""
-        template = Template('''import { html } from "lit";
+        template = Template(
+            """import { html } from "lit";
 import "../{{ kebab_name }}.js";
 
 export default {
@@ -357,95 +371,112 @@ Interactive.args = {
 };
 Interactive.play = async ({ canvasElement }) => {
   const component = canvasElement.querySelector("{{ kebab_name }}");
-  
+
   // Add event listener for demo
   component.addEventListener("{{ kebab_name }}-click", (e) => {
     console.log("{{ pascal_name }} clicked!", e.detail);
   });
 };
-''')
-        
-        return template.render(
-            pascal_name=pascal_name,
-            kebab_name=kebab_name
+"""
         )
-    
-    def create_endpoint(self, name: str, model_name: Optional[str] = None,
-                       include_auth: bool = True, include_validation: bool = True):
+
+        return template.render(pascal_name=pascal_name, kebab_name=kebab_name)
+
+    def create_endpoint(
+        self,
+        name: str,
+        model_name: Optional[str] = None,
+        include_auth: bool = True,
+        include_validation: bool = True,
+    ):
         """Generate a complete CRUD API endpoint with validation and tests"""
         print(f"🚀 Creating CRUD endpoint: {name}")
-        
+
         if not model_name:
-            model_name = self.to_pascal_case(name.rstrip('s'))
-        
+            model_name = self.to_pascal_case(name.rstrip("s"))
+
         # Convert name formats
         plural_name = name.lower()
-        singular_name = plural_name.rstrip('s')
+        singular_name = plural_name.rstrip("s")
         pascal_name = self.to_pascal_case(singular_name)
         snake_name = self.to_snake_case(singular_name)
-        
+
         files_generated = []
-        
+
         # Generate model file
         model_content = self.generate_model_code(pascal_name, snake_name)
-        model_file = self.project_root / "backend" / "app" / "models" / f"{snake_name}.py"
+        model_file = (
+            self.project_root / "backend" / "app" / "models" / f"{snake_name}.py"
+        )
         model_file.write_text(model_content)
         files_generated.append(str(model_file))
-        
+
         # Generate schemas file
         schema_content = self.generate_schema_code(pascal_name, snake_name)
-        schema_file = self.project_root / "backend" / "app" / "schemas" / f"{snake_name}.py"
+        schema_file = (
+            self.project_root / "backend" / "app" / "schemas" / f"{snake_name}.py"
+        )
         schema_file.write_text(schema_content)
         files_generated.append(str(schema_file))
-        
+
         # Generate CRUD file
         crud_content = self.generate_crud_code(pascal_name, snake_name, plural_name)
         crud_file = self.project_root / "backend" / "app" / "crud" / f"{snake_name}.py"
         crud_file.write_text(crud_content)
         files_generated.append(str(crud_file))
-        
+
         # Generate endpoint file
         endpoint_content = self.generate_endpoint_code(
             pascal_name, snake_name, plural_name, include_auth, include_validation
         )
         endpoint_file = (
-            self.project_root / "backend" / "app" / "api" / "v1" / 
-            "endpoints" / f"{plural_name}.py"
+            self.project_root
+            / "backend"
+            / "app"
+            / "api"
+            / "v1"
+            / "endpoints"
+            / f"{plural_name}.py"
         )
         endpoint_file.parent.mkdir(parents=True, exist_ok=True)
         endpoint_file.write_text(endpoint_content)
         files_generated.append(str(endpoint_file))
-        
+
         # Generate test file
         test_content = self.generate_endpoint_test(
             pascal_name, snake_name, plural_name, include_auth
         )
         test_file = (
-            self.project_root / "backend" / "tests" / "api" / "v1" / 
-            f"test_{plural_name}.py"
+            self.project_root
+            / "backend"
+            / "tests"
+            / "api"
+            / "v1"
+            / f"test_{plural_name}.py"
         )
         test_file.parent.mkdir(parents=True, exist_ok=True)
         test_file.write_text(test_content)
         files_generated.append(str(test_file))
-        
+
         # Update router registration
         self.update_router_registration(plural_name)
-        
+
         print(f"✅ Generated {len(files_generated)} files:")
         for file_path in files_generated:
             print(f"   📄 {file_path}")
-        
+
         print(f"\n📝 Next steps:")
         print(f"   1. Add {pascal_name} to database imports")
         print(f"   2. Run: alembic revision --autogenerate -m 'Add {snake_name} model'")
         print(f"   3. Run: alembic upgrade head")
         print(f"   4. Test the endpoint: GET /api/v1/{plural_name}")
-        
+
         return files_generated
-    
+
     def generate_model_code(self, pascal_name: str, snake_name: str) -> str:
         """Generate SQLModel model code"""
-        template = Template('''from datetime import datetime
+        template = Template(
+            '''from datetime import datetime
 from typing import Optional
 from sqlmodel import Field, SQLModel
 
@@ -479,11 +510,11 @@ class {{ pascal_name }}Read({{ pascal_name }}Base):
 class {{ pascal_name }}({{ pascal_name }}Base, table=True):
     """{{ pascal_name }} database model"""
     __tablename__ = "{{ snake_name }}s"
-    
+
     id: Optional[int] = Field(default=None, primary_key=True, description="Unique identifier")
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     updated_at: Optional[datetime] = Field(default=None, description="Last update timestamp")
-    
+
     class Config:
         """Pydantic configuration"""
         from_attributes = True
@@ -494,17 +525,22 @@ class {{ pascal_name }}({{ pascal_name }}Base, table=True):
                 "is_active": True,
             }
         }
-''')
-        
-        return template.render(
-            pascal_name=pascal_name,
-            snake_name=snake_name
+'''
         )
-    
-    def generate_endpoint_code(self, pascal_name: str, snake_name: str, 
-                              plural_name: str, include_auth: bool, include_validation: bool) -> str:
+
+        return template.render(pascal_name=pascal_name, snake_name=snake_name)
+
+    def generate_endpoint_code(
+        self,
+        pascal_name: str,
+        snake_name: str,
+        plural_name: str,
+        include_auth: bool,
+        include_validation: bool,
+    ) -> str:
         """Generate FastAPI endpoint code"""
-        template = Template('''from typing import List, Optional
+        template = Template(
+            '''from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
@@ -530,7 +566,7 @@ async def get_{{ plural_name }}(
 ) -> List[{{ pascal_name }}Read]:
     """
     Retrieve {{ plural_name }}.
-    
+
     Returns a list of {{ plural_name }} with pagination support.
     """
     {{ plural_name }} = await {{ snake_name }}_crud.get_multi(
@@ -580,7 +616,7 @@ async def create_{{ snake_name }}(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Security validation failed: {', '.join(security_threats)}"
         )
-    
+
     if {{ snake_name }}_in.description:
         desc_threats = validate_input_security({{ snake_name }}_in.description)
         if desc_threats:
@@ -589,7 +625,7 @@ async def create_{{ snake_name }}(
                 detail=f"Description security validation failed: {', '.join(desc_threats)}"
             )
 {% endif %}
-    
+
     {{ snake_name }} = await {{ snake_name }}_crud.create(db=db, obj_in={{ snake_name }}_in)
     return {{ snake_name }}
 
@@ -613,7 +649,7 @@ async def update_{{ snake_name }}(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="{{ pascal_name }} not found"
         )
-    
+
 {% if include_validation %}
     # Security validation for updated fields
     if {{ snake_name }}_in.name:
@@ -623,7 +659,7 @@ async def update_{{ snake_name }}(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Security validation failed: {', '.join(security_threats)}"
             )
-    
+
     if {{ snake_name }}_in.description:
         desc_threats = validate_input_security({{ snake_name }}_in.description)
         if desc_threats:
@@ -632,7 +668,7 @@ async def update_{{ snake_name }}(
                 detail=f"Description security validation failed: {', '.join(desc_threats)}"
             )
 {% endif %}
-    
+
     {{ snake_name }} = await {{ snake_name }}_crud.update(
         db=db, db_obj={{ snake_name }}, obj_in={{ snake_name }}_in
     )
@@ -657,26 +693,30 @@ async def delete_{{ snake_name }}(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="{{ pascal_name }} not found"
         )
-    
+
     await {{ snake_name }}_crud.remove(db=db, id={{ snake_name }}_id)
     return {"message": "{{ pascal_name }} deleted successfully"}
-''')
-        
+'''
+        )
+
         return template.render(
             pascal_name=pascal_name,
             snake_name=snake_name,
             plural_name=plural_name,
             include_auth=include_auth,
-            include_validation=include_validation
+            include_validation=include_validation,
         )
-    
+
     def generate_schema_code(self, pascal_name: str, snake_name: str) -> str:
         """Generate Pydantic schema code (moved to models for simplicity)"""
-        return f'# Schemas moved to models/{snake_name}.py for better organization\n'
-    
-    def generate_crud_code(self, pascal_name: str, snake_name: str, plural_name: str) -> str:
+        return f"# Schemas moved to models/{snake_name}.py for better organization\n"
+
+    def generate_crud_code(
+        self, pascal_name: str, snake_name: str, plural_name: str
+    ) -> str:
         """Generate CRUD operations code"""
-        template = Template('''from typing import List, Optional
+        template = Template(
+            '''from typing import List, Optional
 from sqlmodel import Session, select
 from app.crud.base import CRUDBase
 from app.models.{{ snake_name }} import {{ pascal_name }}, {{ pascal_name }}Create, {{ pascal_name }}Update
@@ -684,25 +724,25 @@ from app.models.{{ snake_name }} import {{ pascal_name }}, {{ pascal_name }}Crea
 
 class CRUD{{ pascal_name }}(CRUDBase[{{ pascal_name }}, {{ pascal_name }}Create, {{ pascal_name }}Update]):
     """CRUD operations for {{ pascal_name }}"""
-    
+
     async def get_multi(
-        self, 
-        db: Session, 
+        self,
+        db: Session,
         *,
-        skip: int = 0, 
+        skip: int = 0,
         limit: int = 100,
         is_active: Optional[bool] = None
     ) -> List[{{ pascal_name }}]:
         """Get multiple {{ plural_name }} with optional filtering"""
         query = select({{ pascal_name }})
-        
+
         if is_active is not None:
             query = query.where({{ pascal_name }}.is_active == is_active)
-        
+
         query = query.offset(skip).limit(limit)
         result = await db.execute(query)
         return result.scalars().all()
-    
+
     async def get_by_name(self, db: Session, *, name: str) -> Optional[{{ pascal_name }}]:
         """Get {{ snake_name }} by name"""
         query = select({{ pascal_name }}).where({{ pascal_name }}.name == name)
@@ -711,18 +751,19 @@ class CRUD{{ pascal_name }}(CRUDBase[{{ pascal_name }}, {{ pascal_name }}Create,
 
 
 {{ snake_name }}_crud = CRUD{{ pascal_name }}({{ pascal_name }})
-''')
-        
-        return template.render(
-            pascal_name=pascal_name,
-            snake_name=snake_name,
-            plural_name=plural_name
+'''
         )
-    
-    def generate_endpoint_test(self, pascal_name: str, snake_name: str, 
-                              plural_name: str, include_auth: bool) -> str:
+
+        return template.render(
+            pascal_name=pascal_name, snake_name=snake_name, plural_name=plural_name
+        )
+
+    def generate_endpoint_test(
+        self, pascal_name: str, snake_name: str, plural_name: str, include_auth: bool
+    ) -> str:
         """Generate comprehensive endpoint tests"""
-        template = Template('''import pytest
+        template = Template(
+            '''import pytest
 from httpx import AsyncClient
 from sqlmodel import Session
 
@@ -732,7 +773,7 @@ from app.core.config import settings
 
 class Test{{ pascal_name }}Endpoints:
     """Test suite for {{ pascal_name }} CRUD endpoints"""
-    
+
     @pytest.fixture
     async def {{ snake_name }}_data(self):
         """Test {{ snake_name }} data"""
@@ -741,7 +782,7 @@ class Test{{ pascal_name }}Endpoints:
             "description": "A test {{ snake_name }} for testing purposes",
             "is_active": True
         }
-    
+
     {% if include_auth %}
     @pytest.fixture
     async def auth_headers(self, db: Session):
@@ -749,10 +790,10 @@ class Test{{ pascal_name }}Endpoints:
         user = await create_random_user(db)
         return await user_authentication_headers(user.email)
     {% endif %}
-    
+
     async def test_create_{{ snake_name }}(
-        self, 
-        client: AsyncClient, 
+        self,
+        client: AsyncClient,
         db: Session,
         {{ snake_name }}_data: dict
         {% if include_auth %}, auth_headers: dict{% endif %}
@@ -763,7 +804,7 @@ class Test{{ pascal_name }}Endpoints:
             json={{ snake_name }}_data,
             {% if include_auth %}headers=auth_headers{% endif %}
         )
-        
+
         assert response.status_code == 201
         data = response.json()
         assert data["name"] == {{ snake_name }}_data["name"]
@@ -771,10 +812,10 @@ class Test{{ pascal_name }}Endpoints:
         assert data["is_active"] == {{ snake_name }}_data["is_active"]
         assert "id" in data
         assert "created_at" in data
-    
+
     async def test_get_{{ plural_name }}(
-        self, 
-        client: AsyncClient, 
+        self,
+        client: AsyncClient,
         db: Session
         {% if include_auth %}, auth_headers: dict{% endif %}
     ):
@@ -783,14 +824,14 @@ class Test{{ pascal_name }}Endpoints:
             f"{settings.API_V1_STR}/{{ plural_name }}/",
             {% if include_auth %}headers=auth_headers{% endif %}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
-    
+
     async def test_get_{{ snake_name }}_by_id(
-        self, 
-        client: AsyncClient, 
+        self,
+        client: AsyncClient,
         db: Session,
         {{ snake_name }}_data: dict
         {% if include_auth %}, auth_headers: dict{% endif %}
@@ -803,21 +844,21 @@ class Test{{ pascal_name }}Endpoints:
             {% if include_auth %}headers=auth_headers{% endif %}
         )
         created_{{ snake_name }} = create_response.json()
-        
+
         # Then get it by ID
         response = await client.get(
             f"{settings.API_V1_STR}/{{ plural_name }}/{created_{{ snake_name }}['id']}",
             {% if include_auth %}headers=auth_headers{% endif %}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["id"] == created_{{ snake_name }}["id"]
         assert data["name"] == {{ snake_name }}_data["name"]
-    
+
     async def test_update_{{ snake_name }}(
-        self, 
-        client: AsyncClient, 
+        self,
+        client: AsyncClient,
         db: Session,
         {{ snake_name }}_data: dict
         {% if include_auth %}, auth_headers: dict{% endif %}
@@ -830,27 +871,27 @@ class Test{{ pascal_name }}Endpoints:
             {% if include_auth %}headers=auth_headers{% endif %}
         )
         created_{{ snake_name }} = create_response.json()
-        
+
         # Update data
         update_data = {
             "name": "Updated {{ pascal_name }}",
             "description": "Updated description"
         }
-        
+
         response = await client.put(
             f"{settings.API_V1_STR}/{{ plural_name }}/{created_{{ snake_name }}['id']}",
             json=update_data,
             {% if include_auth %}headers=auth_headers{% endif %}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == update_data["name"]
         assert data["description"] == update_data["description"]
-    
+
     async def test_delete_{{ snake_name }}(
-        self, 
-        client: AsyncClient, 
+        self,
+        client: AsyncClient,
         db: Session,
         {{ snake_name }}_data: dict
         {% if include_auth %}, auth_headers: dict{% endif %}
@@ -863,26 +904,26 @@ class Test{{ pascal_name }}Endpoints:
             {% if include_auth %}headers=auth_headers{% endif %}
         )
         created_{{ snake_name }} = create_response.json()
-        
+
         # Delete it
         response = await client.delete(
             f"{settings.API_V1_STR}/{{ plural_name }}/{created_{{ snake_name }}['id']}",
             {% if include_auth %}headers=auth_headers{% endif %}
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "message" in data
-        
+
         # Verify it's deleted
         get_response = await client.get(
             f"{settings.API_V1_STR}/{{ plural_name }}/{created_{{ snake_name }}['id']}",
             {% if include_auth %}headers=auth_headers{% endif %}
         )
         assert get_response.status_code == 404
-    
+
     async def test_{{ snake_name }}_not_found(
-        self, 
+        self,
         client: AsyncClient
         {% if include_auth %}, auth_headers: dict{% endif %}
     ):
@@ -892,9 +933,9 @@ class Test{{ pascal_name }}Endpoints:
             {% if include_auth %}headers=auth_headers{% endif %}
         )
         assert response.status_code == 404
-        
+
     async def test_create_{{ snake_name }}_security_validation(
-        self, 
+        self,
         client: AsyncClient,
         db: Session
         {% if include_auth %}, auth_headers: dict{% endif %}
@@ -905,46 +946,47 @@ class Test{{ pascal_name }}Endpoints:
             "description": "<script>alert('xss')</script>",
             "is_active": True
         }
-        
+
         response = await client.post(
             f"{settings.API_V1_STR}/{{ plural_name }}/",
             json=malicious_data,
             {% if include_auth %}headers=auth_headers{% endif %}
         )
-        
+
         assert response.status_code == 400
         assert "security validation failed" in response.json()["detail"].lower()
-''')
-        
+'''
+        )
+
         return template.render(
             pascal_name=pascal_name,
             snake_name=snake_name,
             plural_name=plural_name,
-            include_auth=include_auth
+            include_auth=include_auth,
         )
-    
+
     def add_integration(self, provider: str, integration_type: str):
         """Generate integration setup for common services"""
         print(f"🚀 Adding {provider} integration for {integration_type}")
-        
+
         integration_templates = {
             "auth0": self.generate_auth0_integration,
             "stripe": self.generate_stripe_integration,
             "sendgrid": self.generate_sendgrid_integration,
             "sentry": self.generate_sentry_integration,
         }
-        
+
         if provider not in integration_templates:
             print(f"❌ Unknown provider: {provider}")
             print(f"Available providers: {', '.join(integration_templates.keys())}")
             return []
-        
+
         return integration_templates[provider](integration_type)
-    
+
     def generate_auth0_integration(self, integration_type: str) -> List[str]:
         """Generate Auth0 authentication integration"""
         files_generated = []
-        
+
         auth0_service = '''"""
 Auth0 authentication service integration
 """
@@ -955,12 +997,12 @@ import httpx
 
 class Auth0Service:
     """Auth0 authentication service"""
-    
+
     def __init__(self):
         self.domain = settings.AUTH0_DOMAIN
         self.client_id = settings.AUTH0_CLIENT_ID
         self.client_secret = settings.AUTH0_CLIENT_SECRET
-        
+
     async def get_user_info(self, access_token: str) -> Dict[str, Any]:
         """Get user info from Auth0"""
         async with httpx.AsyncClient() as client:
@@ -970,7 +1012,7 @@ class Auth0Service:
             )
             response.raise_for_status()
             return response.json()
-    
+
     async def exchange_code_for_token(self, code: str, redirect_uri: str) -> Dict[str, Any]:
         """Exchange authorization code for tokens"""
         async with httpx.AsyncClient() as client:
@@ -989,18 +1031,20 @@ class Auth0Service:
 
 auth0_service = Auth0Service()
 '''
-        
-        service_file = self.project_root / "backend" / "app" / "services" / "auth0_service.py"
+
+        service_file = (
+            self.project_root / "backend" / "app" / "services" / "auth0_service.py"
+        )
         service_file.parent.mkdir(parents=True, exist_ok=True)
         service_file.write_text(auth0_service)
         files_generated.append(str(service_file))
-        
+
         return files_generated
-    
+
     def generate_sendgrid_integration(self, integration_type: str) -> List[str]:
         """Generate SendGrid email integration"""
         files_generated = []
-        
+
         sendgrid_service = '''"""
 SendGrid email service integration
 """
@@ -1012,11 +1056,11 @@ from app.core.config import settings
 
 class SendGridService:
     """SendGrid email service"""
-    
+
     def __init__(self):
         self.client = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
         self.from_email = settings.SENDGRID_FROM_EMAIL
-    
+
     async def send_email(
         self,
         to_emails: List[str],
@@ -1033,28 +1077,30 @@ class SendGridService:
                 html_content=html_content,
                 plain_text_content=plain_text_content
             )
-            
+
             response = self.client.send(message)
             return response.status_code == 202
-            
+
         except Exception as e:
             print(f"Email sending failed: {str(e)}")
             return False
 
 sendgrid_service = SendGridService()
 '''
-        
-        service_file = self.project_root / "backend" / "app" / "services" / "sendgrid_service.py"
+
+        service_file = (
+            self.project_root / "backend" / "app" / "services" / "sendgrid_service.py"
+        )
         service_file.parent.mkdir(parents=True, exist_ok=True)
         service_file.write_text(sendgrid_service)
         files_generated.append(str(service_file))
-        
+
         return files_generated
-    
+
     def generate_sentry_integration(self, integration_type: str) -> List[str]:
         """Generate Sentry monitoring integration"""
         files_generated = []
-        
+
         sentry_setup = '''"""
 Sentry monitoring setup
 """
@@ -1077,17 +1123,17 @@ def init_sentry():
             environment=settings.ENVIRONMENT,
         )
 '''
-        
+
         setup_file = self.project_root / "backend" / "app" / "core" / "sentry.py"
         setup_file.write_text(sentry_setup)
         files_generated.append(str(setup_file))
-        
+
         return files_generated
 
     def generate_stripe_integration(self, integration_type: str) -> List[str]:
         """Generate Stripe payment integration"""
         files_generated = []
-        
+
         # Create Stripe service
         stripe_service = '''"""
 Stripe payment service integration
@@ -1101,7 +1147,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class StripeService:
     """Stripe payment service"""
-    
+
     @staticmethod
     async def create_payment_intent(
         amount: int,
@@ -1122,7 +1168,7 @@ class StripeService:
             }
         except stripe.error.StripeError as e:
             raise Exception(f"Stripe error: {str(e)}")
-    
+
     @staticmethod
     async def create_customer(email: str, name: str) -> Dict[str, Any]:
         """Create a Stripe customer"""
@@ -1141,12 +1187,14 @@ class StripeService:
 
 stripe_service = StripeService()
 '''
-        
-        service_file = self.project_root / "backend" / "app" / "services" / "stripe_service.py"
+
+        service_file = (
+            self.project_root / "backend" / "app" / "services" / "stripe_service.py"
+        )
         service_file.parent.mkdir(parents=True, exist_ok=True)
         service_file.write_text(stripe_service)
         files_generated.append(str(service_file))
-        
+
         # Create payment endpoint
         payment_endpoint = '''"""
 Payment endpoints using Stripe
@@ -1196,13 +1244,21 @@ async def create_payment_intent(
             detail=str(e)
         )
 '''
-        
-        endpoint_file = self.project_root / "backend" / "app" / "api" / "v1" / "endpoints" / "payments.py"
+
+        endpoint_file = (
+            self.project_root
+            / "backend"
+            / "app"
+            / "api"
+            / "v1"
+            / "endpoints"
+            / "payments.py"
+        )
         endpoint_file.write_text(payment_endpoint)
         files_generated.append(str(endpoint_file))
-        
+
         # Add environment variables documentation
-        env_docs = '''
+        env_docs = """
 # Add these to your .env file:
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_PUBLISHABLE_KEY=pk_test_...
@@ -1210,12 +1266,12 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 # Add to requirements (already included in pyproject.toml):
 # stripe>=7.0.0
-'''
-        
+"""
+
         env_file = self.project_root / "STRIPE_SETUP.md"
         env_file.write_text(f"# Stripe Integration Setup\n\n{env_docs}")
         files_generated.append(str(env_file))
-        
+
         print(f"✅ Generated Stripe integration files:")
         for file_path in files_generated:
             print(f"   📄 {file_path}")
@@ -1223,43 +1279,51 @@ STRIPE_WEBHOOK_SECRET=whsec_...
         print(f"   1. Add Stripe keys to your .env file")
         print(f"   2. Add payments router to main API")
         print(f"   3. Test with: POST /api/v1/payments/payment-intent")
-        
+
         return files_generated
-    
+
     # Utility methods for name conversion
     def to_kebab_case(self, name: str) -> str:
         """Convert to kebab-case"""
-        return name.replace('_', '-').replace(' ', '-').lower()
-    
+        return name.replace("_", "-").replace(" ", "-").lower()
+
     def to_pascal_case(self, name: str) -> str:
         """Convert to PascalCase"""
-        return ''.join(word.capitalize() for word in name.replace('-', '_').split('_'))
-    
+        return "".join(word.capitalize() for word in name.replace("-", "_").split("_"))
+
     def to_camel_case(self, name: str) -> str:
         """Convert to camelCase"""
-        words = name.replace('-', '_').split('_')
-        return words[0].lower() + ''.join(word.capitalize() for word in words[1:])
-    
+        words = name.replace("-", "_").split("_")
+        return words[0].lower() + "".join(word.capitalize() for word in words[1:])
+
     def to_snake_case(self, name: str) -> str:
         """Convert to snake_case"""
-        return name.replace('-', '_').lower()
-    
-    def update_component_exports(self, component_type: str, kebab_name: str, pascal_name: str):
+        return name.replace("-", "_").lower()
+
+    def update_component_exports(
+        self, component_type: str, kebab_name: str, pascal_name: str
+    ):
         """Update component index.js exports"""
         index_file = (
-            self.project_root / "frontend" / "src" / "components" / 
-            f"{component_type}s" / "index.js"
+            self.project_root
+            / "frontend"
+            / "src"
+            / "components"
+            / f"{component_type}s"
+            / "index.js"
         )
-        
-        export_line = f'export {{ {pascal_name} }} from "./{kebab_name}/{kebab_name}.js";\n'
-        
+
+        export_line = (
+            f'export {{ {pascal_name} }} from "./{kebab_name}/{kebab_name}.js";\n'
+        )
+
         if index_file.exists():
             content = index_file.read_text()
             if export_line not in content:
                 index_file.write_text(content + export_line)
         else:
             index_file.write_text(export_line)
-    
+
     def update_router_registration(self, plural_name: str):
         """Update API router registration"""
         # This would update the main API router to include the new endpoint
@@ -1268,74 +1332,93 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 def main():
     """Main CLI entry point"""
-    parser = argparse.ArgumentParser(description="NeoForge CLI - Enhanced Automation Toolkit")
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
-    
-    # Component generator
-    component_parser = subparsers.add_parser("create-component", help="Generate a Lit component")
-    component_parser.add_argument("--name", required=True, help="Component name (PascalCase)")
-    component_parser.add_argument(
-        "--type", 
-        choices=["atom", "molecule", "organism"], 
-        default="molecule",
-        help="Component type (default: molecule)"
+    parser = argparse.ArgumentParser(
+        description="NeoForge CLI - Enhanced Automation Toolkit"
     )
-    component_parser.add_argument("--state", action="store_true", help="Include state management")
-    component_parser.add_argument("--events", action="store_true", help="Include event handling")
-    
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Component generator
+    component_parser = subparsers.add_parser(
+        "create-component", help="Generate a Lit component"
+    )
+    component_parser.add_argument(
+        "--name", required=True, help="Component name (PascalCase)"
+    )
+    component_parser.add_argument(
+        "--type",
+        choices=["atom", "molecule", "organism"],
+        default="molecule",
+        help="Component type (default: molecule)",
+    )
+    component_parser.add_argument(
+        "--state", action="store_true", help="Include state management"
+    )
+    component_parser.add_argument(
+        "--events", action="store_true", help="Include event handling"
+    )
+
     # API endpoint generator
-    endpoint_parser = subparsers.add_parser("create-endpoint", help="Generate CRUD API endpoint")
-    endpoint_parser.add_argument("--name", required=True, help="Endpoint name (plural, e.g., 'products')")
-    endpoint_parser.add_argument("--model", help="Model name (default: derived from endpoint name)")
-    endpoint_parser.add_argument("--no-auth", action="store_true", help="Skip authentication")
-    endpoint_parser.add_argument("--no-validation", action="store_true", help="Skip security validation")
-    
+    endpoint_parser = subparsers.add_parser(
+        "create-endpoint", help="Generate CRUD API endpoint"
+    )
+    endpoint_parser.add_argument(
+        "--name", required=True, help="Endpoint name (plural, e.g., 'products')"
+    )
+    endpoint_parser.add_argument(
+        "--model", help="Model name (default: derived from endpoint name)"
+    )
+    endpoint_parser.add_argument(
+        "--no-auth", action="store_true", help="Skip authentication"
+    )
+    endpoint_parser.add_argument(
+        "--no-validation", action="store_true", help="Skip security validation"
+    )
+
     # Integration generator
-    integration_parser = subparsers.add_parser("add-integration", help="Add service integration")
+    integration_parser = subparsers.add_parser(
+        "add-integration", help="Add service integration"
+    )
     integration_parser.add_argument(
-        "--provider", 
+        "--provider",
         required=True,
         choices=["auth0", "stripe", "sendgrid", "sentry"],
-        help="Integration provider"
+        help="Integration provider",
     )
     integration_parser.add_argument(
-        "--type", 
+        "--type",
         required=True,
         choices=["auth", "payment", "email", "monitoring"],
-        help="Integration type"
+        help="Integration type",
     )
-    
+
     args = parser.parse_args()
-    
+
     if not args.command:
         parser.print_help()
         return
-    
+
     cli = NeoForgeCLI()
-    
+
     try:
         if args.command == "create-component":
             cli.create_component(
                 name=args.name,
                 component_type=args.type,
                 has_state=args.state,
-                has_events=args.events
+                has_events=args.events,
             )
         elif args.command == "create-endpoint":
             cli.create_endpoint(
                 name=args.name,
                 model_name=args.model,
                 include_auth=not args.no_auth,
-                include_validation=not args.no_validation
+                include_validation=not args.no_validation,
             )
         elif args.command == "add-integration":
-            cli.add_integration(
-                provider=args.provider,
-                integration_type=args.type
-            )
-        
+            cli.add_integration(provider=args.provider, integration_type=args.type)
+
         print(f"\n🎉 {args.command} completed successfully!")
-        
+
     except Exception as e:
         print(f"❌ Error: {str(e)}")
         sys.exit(1)

@@ -58,7 +58,7 @@ For detailed implementation patterns, component examples, and project-specific g
     this._clearDismissTimeout();
     this.classList.remove('animating-in');
     this.classList.add('animating-out');
-    
+
     // Wait for animation to complete before changing state
     setTimeout(() => {
       this.dispatchEvent(
@@ -114,9 +114,9 @@ For detailed implementation patterns, component examples, and project-specific g
   ```javascript
   it('should handle complex operations', function(done) {
     this.timeout(5000); // Set timeout to 5 seconds
-    
+
     // Test logic here
-    
+
     done();
   });
   ```
@@ -166,7 +166,7 @@ For detailed implementation patterns, component examples, and project-specific g
 
 ### Test Execution Hanging
 - **Issue**: Tests hanging indefinitely, particularly with badge.test.js
-- **Solution**: 
+- **Solution**:
   1. Add explicit timeouts to tests
   2. Check for infinite loops in component lifecycle methods
   3. Ensure all promises are properly resolved
@@ -182,7 +182,7 @@ For detailed implementation patterns, component examples, and project-specific g
 ### Development Workflow
 - Prioritize fixing failing tests before adding new features
 - Maintain comprehensive documentation in Memory Bank
-- Regularly update progress tracking 
+- Regularly update progress tracking
 
 // Web Component Testing
 // When testing web components, follow these guidelines:
@@ -199,7 +199,7 @@ For detailed implementation patterns, component examples, and project-specific g
    beforeEach(async () => {
      // Mock dependencies
      window.someService = { method: vi.fn() };
-     
+
      // Create component
      element = await createComponent("my-component");
    });
@@ -215,7 +215,7 @@ For detailed implementation patterns, component examples, and project-specific g
    ```javascript
    // ❌ Don't use:
    element.querySelector(".button");
-   
+
    // ✅ Do use:
    findInShadow(element, ".button");
    ```
@@ -237,7 +237,7 @@ For detailed implementation patterns, component examples, and project-specific g
    - Break down large test files into smaller ones
    - Ensure proper cleanup in afterEach
    - Reduce the number of assertions per test
-   - Use the simplified test approach for complex components 
+   - Use the simplified test approach for complex components
 
 ## Senior Developer Debug Protocol
 

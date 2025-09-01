@@ -8,7 +8,7 @@ A modern, fast playground for testing and documenting Web Components, built as a
 # Start the playground development server
 npm run playground
 
-# Build for production  
+# Build for production
 npm run playground:build
 ```
 
@@ -38,7 +38,7 @@ The playground will be available at http://localhost:3001/
 ```
 src/playground/
 ├── advanced-playground.html       # Main playground interface
-├── advanced-playground.js         # Application controller  
+├── advanced-playground.js         # Application controller
 ├── styles/
 │   └── advanced-playground.css    # Complete UI styling
 ├── core/
@@ -134,7 +134,7 @@ npm test -- component-loader
 This playground system was created to replace Storybook. All original `.stories.js` files are preserved but no longer used. The playground provides equivalent functionality with:
 
 - ✅ Component examples and variants
-- ✅ Interactive property controls  
+- ✅ Interactive property controls
 - ✅ Documentation and descriptions
 - ✅ Responsive testing capabilities
 - ✅ Code generation (enhancement)
@@ -165,7 +165,7 @@ npm run playground
 # Build playground for production
 npm run playground:build
 
-# Test playground functionality  
+# Test playground functionality
 npm test -- playground
 ```
 

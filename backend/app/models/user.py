@@ -2,16 +2,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
+from app.db.base_class import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from app.db.base_class import Base
-
 if TYPE_CHECKING:
-    from .item import Item
+    from .ab_test import AbTest, AbTestAssignment
     from .admin import Admin
     from .event import Event
-    from .ab_test import AbTest, AbTestAssignment
+    from .item import Item
 
 
 class User(Base):
@@ -26,7 +25,7 @@ class User(Base):
     is_superuser: Mapped[bool] = mapped_column(default=False)
     is_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
     email_verified_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    
+
     # Account lifecycle fields
     deactivated_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
     deactivation_reason: Mapped[Optional[str]] = mapped_column(nullable=True)
@@ -56,14 +55,14 @@ class User(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
-    
+
     # A/B Testing relationships
     created_ab_tests: Mapped[List["AbTest"]] = relationship(
         "AbTest",
         back_populates="creator",
         cascade="all, delete-orphan",
         lazy="select",
-        foreign_keys="AbTest.created_by"
+        foreign_keys="AbTest.created_by",
     )
     ab_test_assignments: Mapped[List["AbTestAssignment"]] = relationship(
         "AbTestAssignment",
@@ -71,28 +70,28 @@ class User(Base):
         cascade="all, delete-orphan",
         lazy="select",
     )
-    
+
     def is_account_locked(self) -> bool:
         """Check if the account is currently locked."""
         if not self.locked_until:
             return False
         return datetime.utcnow() < self.locked_until
-    
+
     def is_account_deactivated(self) -> bool:
         """Check if the account is deactivated."""
         return self.deactivated_at is not None
-    
+
     def can_login(self) -> bool:
         """Check if the user can log in (active, verified, not locked, not deactivated)."""
         return (
-            self.is_active and 
-            self.is_verified and 
-            not self.is_account_locked() and 
-            not self.is_account_deactivated()
+            self.is_active
+            and self.is_verified
+            and not self.is_account_locked()
+            and not self.is_account_deactivated()
         )
-    
+
     def should_be_deleted(self) -> bool:
         """Check if the account should be deleted based on data retention policy."""
         if not self.data_retention_until:
             return False
-        return datetime.utcnow() >= self.data_retention_until 
+        return datetime.utcnow() >= self.data_retention_until

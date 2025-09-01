@@ -123,10 +123,10 @@ export class VerifyEmail extends LoadingMixin(ErrorMixin(LitElement)) {
     try {
       this.loading = true;
       this.error = '';
-      
+
       await authService.verifyEmail(this.token);
       this.verificationSuccess = true;
-      
+
       // Clear the URL parameters
       window.history.replaceState({}, '', '/verify-email');
     } catch (error) {
@@ -145,7 +145,7 @@ export class VerifyEmail extends LoadingMixin(ErrorMixin(LitElement)) {
     try {
       this.loading = true;
       this.error = '';
-      
+
       await authService.resendVerification(this.email);
       this.verificationSent = true;
     } catch (error) {
@@ -206,7 +206,7 @@ export class VerifyEmail extends LoadingMixin(ErrorMixin(LitElement)) {
         <span class="material-icons icon">mail</span>
         <div class="title">Verify Your Email</div>
         <div class="message">
-          ${this.token ? 
+          ${this.token ?
             'The verification link appears to be invalid or has expired. Please request a new verification link.' :
             'Enter your email address below and we\'ll send you a verification link.'}
         </div>
@@ -223,14 +223,14 @@ export class VerifyEmail extends LoadingMixin(ErrorMixin(LitElement)) {
             placeholder="Enter your email address"
             ?disabled=${this.loading}
           >
-          <button 
+          <button
             class="primary"
             @click=${this.resendVerification}
             ?disabled=${this.loading}
           >
             Send Verification Link
           </button>
-          <button 
+          <button
             class="secondary"
             @click=${() => window.location.href = '/login'}
           >
@@ -242,4 +242,4 @@ export class VerifyEmail extends LoadingMixin(ErrorMixin(LitElement)) {
   }
 }
 
-customElements.define('verify-email', VerifyEmail); 
+customElements.define('verify-email', VerifyEmail);

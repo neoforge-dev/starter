@@ -1,6 +1,6 @@
 /**
  * Comprehensive Authentication Flow Integration Tests
- * 
+ *
  * These tests verify the complete authentication flows between frontend and backend:
  * - Login flow with real HTTP requests and JWT tokens
  * - Registration flow with email verification
@@ -23,10 +23,10 @@ describe('Authentication Flow Integration Tests', () => {
     // Setup test environment
     authTestUtils.setup();
     mockBackend.reset();
-    
+
     // Create fresh auth service instance for each test
     authService = new AuthService();
-    
+
     // Create DOM container
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -35,7 +35,7 @@ describe('Authentication Flow Integration Tests', () => {
     global.fetch = vi.fn().mockImplementation(async (url, options = {}) => {
       const path = url.replace(/^.*\/api/, '');
       const method = options.method || 'GET';
-      
+
       // Route requests to appropriate mock backend methods
       if (method === 'POST' && path === '/auth/login') {
         const { email, password } = JSON.parse(options.body);
@@ -60,7 +60,7 @@ describe('Authentication Flow Integration Tests', () => {
         const { email } = JSON.parse(options.body);
         return mockBackend.mockResendVerification(email);
       }
-      
+
       // Default 404 response
       return {
         ok: false,
@@ -92,16 +92,16 @@ describe('Authentication Flow Integration Tests', () => {
       expect(result.full_name).toBe('Test User');
       expect(authService.isAuthenticated()).toBe(true);
       expect(authService.getUser()).toEqual(result);
-      
+
       // Verify token is stored in localStorage
       const storedToken = authTestUtils.mockLocalStorage.getItem('auth_token');
       expect(storedToken).toBeTruthy();
       expect(typeof storedToken).toBe('string');
-      
+
       // Verify token has correct structure (JWT format)
       const tokenParts = storedToken.split('.');
       expect(tokenParts).toHaveLength(3);
-      
+
       // Verify token payload
       const payload = JSON.parse(atob(tokenParts[1]));
       expect(payload.sub).toBe(result.id);
@@ -115,7 +115,7 @@ describe('Authentication Flow Integration Tests', () => {
       // Act & Assert
       await expect(authService.login(invalidCredentials.email, invalidCredentials.password))
         .rejects.toThrow('Incorrect email or password');
-      
+
       expect(authService.isAuthenticated()).toBe(false);
       expect(authService.getUser()).toBeNull();
       expect(authTestUtils.mockLocalStorage.getItem('auth_token')).toBeNull();
@@ -128,7 +128,7 @@ describe('Authentication Flow Integration Tests', () => {
       // Act & Assert
       await expect(authService.login(nonExistentUser.email, nonExistentUser.password))
         .rejects.toThrow('Incorrect email or password');
-      
+
       expect(authService.isAuthenticated()).toBe(false);
     });
 
@@ -140,7 +140,7 @@ describe('Authentication Flow Integration Tests', () => {
       // Act - Make requests up to rate limit
       await authService.login(credentials.email, credentials.password);
       await authService.login(credentials.email, credentials.password);
-      
+
       // Third request should be rate limited
       await expect(authService.login(credentials.email, credentials.password))
         .rejects.toThrow('Too many login attempts');
@@ -149,18 +149,18 @@ describe('Authentication Flow Integration Tests', () => {
     it('should integrate with form components for complete user flow', async () => {
       // This test focuses on the auth service integration without depending on actual components
       // since component testing is handled in separate test files
-      
+
       // Arrange
       const credentials = { email: 'test@example.com', password: 'password123' };
       let authStateChanges = [];
-      
+
       const unsubscribe = authService.addListener((user) => {
         authStateChanges.push(user);
       });
 
       // Act - Login through auth service (simulating component integration)
       const user = await authService.login(credentials.email, credentials.password);
-      
+
       // Wait for async operations
       await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -169,11 +169,11 @@ describe('Authentication Flow Integration Tests', () => {
       expect(user.email).toBe(credentials.email);
       expect(authService.isAuthenticated()).toBe(true);
       expect(authService.getUser().email).toBe(credentials.email);
-      
+
       // Verify state change notifications
       expect(authStateChanges.length).toBeGreaterThan(0);
       expect(authStateChanges[authStateChanges.length - 1]).toEqual(user);
-      
+
       // Cleanup
       unsubscribe();
     });
@@ -190,8 +190,8 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Act
       const result = await authService.signup(
-        newUserData.email, 
-        newUserData.password, 
+        newUserData.email,
+        newUserData.password,
         { full_name: newUserData.full_name }
       );
 
@@ -202,7 +202,7 @@ describe('Authentication Flow Integration Tests', () => {
       expect(result.user.full_name).toBe(newUserData.full_name);
       expect(result.access_token).toBeTruthy();
       expect(result.token_type).toBe('bearer');
-      
+
       // New users should start unverified
       expect(result.user.is_verified).toBe(false);
       expect(result.user.is_active).toBe(true);
@@ -234,8 +234,8 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Act
       const result = await authService.signup(
-        newUserData.email, 
-        newUserData.password, 
+        newUserData.email,
+        newUserData.password,
         { full_name: newUserData.full_name }
       );
 
@@ -244,7 +244,7 @@ describe('Authentication Flow Integration Tests', () => {
       expect(result.message).toContain('Registration successful');
       expect(result.user.email).toBe(newUserData.email);
       expect(result.user.full_name).toBe(newUserData.full_name);
-      
+
       // Check that the API was called with correct parameters
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/auth/signup'),
@@ -263,7 +263,7 @@ describe('Authentication Flow Integration Tests', () => {
     it('should validate existing token on initialization', async () => {
       // Arrange - Create authenticated session
       const { user } = authTestUtils.createAuthenticatedSession();
-      
+
       // Create new auth service after token is set
       authService = new AuthService();
 
@@ -283,7 +283,7 @@ describe('Authentication Flow Integration Tests', () => {
       const user = { id: 1, email: 'test@example.com' };
       const expiredToken = authTestUtils.createExpiredJWT(user);
       authTestUtils.mockLocalStorage.setItem('auth_token', expiredToken);
-      
+
       // Create new auth service after token is set
       authService = new AuthService();
 
@@ -299,7 +299,7 @@ describe('Authentication Flow Integration Tests', () => {
     it('should handle malformed token during validation', async () => {
       // Arrange - Set malformed token
       authTestUtils.mockLocalStorage.setItem('auth_token', 'invalid.token.format');
-      
+
       // Create new auth service after token is set
       authService = new AuthService();
 
@@ -321,16 +321,16 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Act 1 - Request password reset
       await authService.resetPassword(email);
-      
+
       // Simulate getting reset token (in real scenario, user gets this via email)
       const resetToken = 'mock_reset_token_12345';
-      
+
       // Act 2 - Confirm password reset
       const resetResult = await authService.confirmPasswordReset(resetToken, newPassword);
 
       // Assert
       expect(resetResult).toBeUndefined(); // Method doesn't return value on success
-      
+
       // Verify API calls were made
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/auth/reset-password'),
@@ -348,7 +348,7 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Act - First request should succeed
       await authService.resetPassword(email);
-      
+
       // Second request should be rate limited
       await expect(authService.resetPassword(email))
         .rejects.toThrow('Too many password reset requests');
@@ -382,13 +382,13 @@ describe('Authentication Flow Integration Tests', () => {
     it('should handle resend verification with rate limiting', async () => {
       // Arrange
       const email = 'unverified@example.com';
-      
+
       // Act - First request
       await authService.resendVerification(email);
-      
+
       // Enable rate limiting for subsequent requests
       mockBackend.configure({ rateLimitThreshold: 1 });
-      
+
       // Second request should be rate limited
       await expect(authService.resendVerification(email))
         .rejects.toThrow('Too many verification requests');
@@ -399,7 +399,7 @@ describe('Authentication Flow Integration Tests', () => {
     it('should handle complete logout flow with cleanup', async () => {
       // Arrange - Create authenticated session
       authTestUtils.createAuthenticatedSession();
-      
+
       // Create new auth service after token is set
       authService = new AuthService();
       await authService.initialize();
@@ -413,7 +413,7 @@ describe('Authentication Flow Integration Tests', () => {
       expect(authService.getUser()).toBeNull();
       expect(authService.getToken()).toBeNull();
       expect(authTestUtils.mockLocalStorage.getItem('auth_token')).toBeNull();
-      
+
       // Verify logout API call was made
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/auth/logout'),
@@ -426,13 +426,13 @@ describe('Authentication Flow Integration Tests', () => {
     it('should handle logout even when API call fails', async () => {
       // Arrange
       authTestUtils.createAuthenticatedSession();
-      
+
       // Create new auth service after token is set
       authService = new AuthService();
       await authService.initialize();
-      
+
       // Mock logout API to fail
-      global.fetch.mockImplementationOnce(() => 
+      global.fetch.mockImplementationOnce(() =>
         Promise.resolve({
           ok: false,
           status: 500,
@@ -458,7 +458,7 @@ describe('Authentication Flow Integration Tests', () => {
       // Act & Assert
       await expect(authService.login('test@example.com', 'password123'))
         .rejects.toThrow('Network Error');
-      
+
       expect(authService.isAuthenticated()).toBe(false);
     });
 
@@ -494,19 +494,19 @@ describe('Authentication Flow Integration Tests', () => {
       expect(authService.isAuthenticated()).toBe(true);
       expect(authService.getUser()).toEqual(user);
       expect(authService.getToken()).toBeTruthy();
-      
+
       // Update profile should maintain auth state
       const updatedData = { full_name: 'Updated Name' };
-      
+
       // Mock successful profile update
       global.fetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => ({ user: { ...user, ...updatedData } })
       });
-      
+
       await authService.updateProfile(updatedData);
-      
+
       expect(authService.isAuthenticated()).toBe(true);
       expect(authService.getUser().full_name).toBe('Updated Name');
     });
@@ -520,19 +520,19 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Act - Login should trigger state change
       await authService.login('test@example.com', 'password123');
-      
+
       // Wait a bit for async operations
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       // Logout should trigger another state change
       await authService.logout();
-      
+
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Assert
       expect(stateChanges.length).toBeGreaterThanOrEqual(2);
       expect(stateChanges[stateChanges.length - 1]).toBeNull(); // Final state should be null (logged out)
-      
+
       // Cleanup
       unsubscribe();
     });
@@ -542,7 +542,7 @@ describe('Authentication Flow Integration Tests', () => {
     it('should handle authentication state changes across multiple listeners', async () => {
       // This test verifies that authentication state changes are properly
       // broadcasted to multiple listeners (simulating multiple components)
-      
+
       // Arrange
       const listener1Events = [];
       const listener2Events = [];
@@ -554,28 +554,28 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Act - Login should notify all listeners
       await authService.login('test@example.com', 'password123');
-      
+
       // Wait for async operations
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       // Logout should also notify all listeners
       await authService.logout();
-      
+
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Assert
       expect(authService.isAuthenticated()).toBe(false);
-      
+
       // All listeners should have received events
       expect(listener1Events.length).toBeGreaterThanOrEqual(2);
       expect(listener2Events.length).toBeGreaterThanOrEqual(2);
       expect(listener3Events.length).toBeGreaterThanOrEqual(2);
-      
+
       // Final state should be null (logged out) for all listeners
       expect(listener1Events[listener1Events.length - 1]).toBeNull();
       expect(listener2Events[listener2Events.length - 1]).toBeNull();
       expect(listener3Events[listener3Events.length - 1]).toBeNull();
-      
+
       // Cleanup
       unsubscribe1();
       unsubscribe2();

@@ -3,29 +3,28 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from sqlalchemy import and_, desc, func, or_, select, text, update
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-
 from app.crud.base import CRUDBase
 from app.models.content_suggestion import (
+    ContentAnalysisJob,
+    ContentCategory,
     ContentItem,
     ContentSuggestion,
     ContentSuggestionFeedback,
-    ContentAnalysisJob,
-    ContentType,
-    ContentCategory,
-    SuggestionType,
     ContentSuggestionStatus,
+    ContentType,
+    SuggestionType,
 )
 from app.schemas.content_suggestion import (
+    ContentAnalysisJobCreate,
     ContentItemCreate,
     ContentItemUpdate,
     ContentSuggestionCreate,
-    ContentSuggestionUpdate,
     ContentSuggestionFeedbackCreate,
-    ContentAnalysisJobCreate,
+    ContentSuggestionUpdate,
 )
+from sqlalchemy import and_, desc, func, or_, select, text, update
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 logger = logging.getLogger(__name__)
 
@@ -53,12 +52,12 @@ class CRUDContentItem(CRUDBase[ContentItem, ContentItemCreate, ContentItemUpdate
     ) -> List[ContentItem]:
         """Get content items by category."""
         query = select(ContentItem).where(ContentItem.category == category)
-        
+
         if active_only:
             query = query.where(ContentItem.is_active == True)
-        
+
         query = query.offset(skip).limit(limit).order_by(desc(ContentItem.created_at))
-        
+
         result = await db.execute(query)
         return result.scalars().all()
 
@@ -73,12 +72,12 @@ class CRUDContentItem(CRUDBase[ContentItem, ContentItemCreate, ContentItemUpdate
     ) -> List[ContentItem]:
         """Get content items by type."""
         query = select(ContentItem).where(ContentItem.content_type == content_type)
-        
+
         if active_only:
             query = query.where(ContentItem.is_active == True)
-        
+
         query = query.offset(skip).limit(limit).order_by(desc(ContentItem.created_at))
-        
+
         result = await db.execute(query)
         return result.scalars().all()
 
@@ -101,29 +100,29 @@ class CRUDContentItem(CRUDBase[ContentItem, ContentItemCreate, ContentItemUpdate
                 ContentItem.description.ilike(f"%{search_query}%"),
             )
         )
-        
+
         # Apply filters
         if categories:
             query = query.where(ContentItem.category.in_(categories))
-        
+
         if content_types:
             query = query.where(ContentItem.content_type.in_(content_types))
-        
+
         if min_quality_score is not None:
             query = query.where(ContentItem.quality_score >= min_quality_score)
-        
+
         # Active content only
         query = query.where(ContentItem.is_active == True)
-        
+
         # Order by relevance and quality
         query = query.order_by(
             desc(ContentItem.quality_score),
             desc(ContentItem.engagement_rate),
-            desc(ContentItem.created_at)
+            desc(ContentItem.created_at),
         )
-        
+
         query = query.offset(skip).limit(limit)
-        
+
         result = await db.execute(query)
         return result.scalars().all()
 
@@ -138,7 +137,7 @@ class CRUDContentItem(CRUDBase[ContentItem, ContentItemCreate, ContentItemUpdate
     ) -> List[ContentItem]:
         """Get trending content based on recent engagement."""
         since_time = datetime.utcnow() - timedelta(hours=time_window_hours)
-        
+
         query = select(ContentItem).where(
             and_(
                 ContentItem.is_active == True,
@@ -146,17 +145,17 @@ class CRUDContentItem(CRUDBase[ContentItem, ContentItemCreate, ContentItemUpdate
                 ContentItem.engagement_rate >= min_engagement_rate,
             )
         )
-        
+
         if categories:
             query = query.where(ContentItem.category.in_(categories))
-        
+
         # Order by engagement metrics
         query = query.order_by(
             desc(ContentItem.engagement_rate),
             desc(ContentItem.view_count),
-            desc(ContentItem.click_count)
+            desc(ContentItem.click_count),
         ).limit(limit)
-        
+
         result = await db.execute(query)
         return result.scalars().all()
 
@@ -181,21 +180,27 @@ class CRUDContentItem(CRUDBase[ContentItem, ContentItemCreate, ContentItemUpdate
                 updated_at=datetime.utcnow(),
             )
         )
-        
+
         await db.execute(update_stmt)
-        
+
         # Recalculate engagement rate
         content_item = await self.get_by_content_id(db, content_id=content_id)
         if content_item:
-            total_interactions = content_item.view_count + content_item.click_count + content_item.share_count
-            engagement_rate = (content_item.click_count + content_item.share_count) / max(content_item.view_count, 1)
-            
+            total_interactions = (
+                content_item.view_count
+                + content_item.click_count
+                + content_item.share_count
+            )
+            engagement_rate = (
+                content_item.click_count + content_item.share_count
+            ) / max(content_item.view_count, 1)
+
             await db.execute(
                 update(ContentItem)
                 .where(ContentItem.content_id == content_id)
                 .values(engagement_rate=engagement_rate)
             )
-        
+
         await db.commit()
         return await self.get_by_content_id(db, content_id=content_id)
 
@@ -216,7 +221,7 @@ class CRUDContentItem(CRUDBase[ContentItem, ContentItemCreate, ContentItemUpdate
             "analyzed_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
         }
-        
+
         if quality_score is not None:
             update_data["quality_score"] = quality_score
         if relevance_score is not None:
@@ -229,14 +234,14 @@ class CRUDContentItem(CRUDBase[ContentItem, ContentItemCreate, ContentItemUpdate
             update_data["ai_analysis"] = ai_analysis
         if optimization_suggestions is not None:
             update_data["optimization_suggestions"] = optimization_suggestions
-        
+
         await db.execute(
             update(ContentItem)
             .where(ContentItem.content_id == content_id)
             .values(**update_data)
         )
         await db.commit()
-        
+
         return await self.get_by_content_id(db, content_id=content_id)
 
     async def get_content_needing_analysis(
@@ -248,22 +253,29 @@ class CRUDContentItem(CRUDBase[ContentItem, ContentItemCreate, ContentItemUpdate
     ) -> List[ContentItem]:
         """Get content items that need AI analysis."""
         cutoff_time = datetime.utcnow() - timedelta(hours=analysis_age_hours)
-        
-        query = select(ContentItem).where(
-            and_(
-                ContentItem.is_active == True,
-                or_(
-                    ContentItem.analyzed_at.is_(None),
-                    ContentItem.analyzed_at < cutoff_time,
+
+        query = (
+            select(ContentItem)
+            .where(
+                and_(
+                    ContentItem.is_active == True,
+                    or_(
+                        ContentItem.analyzed_at.is_(None),
+                        ContentItem.analyzed_at < cutoff_time,
+                    ),
                 )
             )
-        ).order_by(desc(ContentItem.created_at)).limit(limit)
-        
+            .order_by(desc(ContentItem.created_at))
+            .limit(limit)
+        )
+
         result = await db.execute(query)
         return result.scalars().all()
 
 
-class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate, ContentSuggestionUpdate]):
+class CRUDContentSuggestion(
+    CRUDBase[ContentSuggestion, ContentSuggestionCreate, ContentSuggestionUpdate]
+):
     """CRUD operations for content suggestions."""
 
     async def get_by_suggestion_id(
@@ -290,18 +302,20 @@ class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate,
         limit: int = 100,
     ) -> List[ContentSuggestion]:
         """Get content suggestions for a user with filters."""
-        query = select(ContentSuggestion).options(
-            selectinload(ContentSuggestion.content_item)
-        ).where(ContentSuggestion.user_id == user_id)
-        
+        query = (
+            select(ContentSuggestion)
+            .options(selectinload(ContentSuggestion.content_item))
+            .where(ContentSuggestion.user_id == user_id)
+        )
+
         # Filter by suggestion types
         if suggestion_types:
             query = query.where(ContentSuggestion.suggestion_type.in_(suggestion_types))
-        
+
         # Filter by status
         if statuses:
             query = query.where(ContentSuggestion.status.in_(statuses))
-        
+
         # Exclude expired unless requested
         if not include_expired:
             now = datetime.utcnow()
@@ -311,21 +325,21 @@ class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate,
                     ContentSuggestion.expires_at > now,
                 )
             )
-        
+
         # Minimum confidence filter
         if min_confidence > 0.0:
             query = query.where(ContentSuggestion.confidence_score >= min_confidence)
-        
+
         # Order by priority and relevance
         query = query.order_by(
             desc(ContentSuggestion.priority_score),
             desc(ContentSuggestion.relevance_score),
             desc(ContentSuggestion.confidence_score),
-            desc(ContentSuggestion.created_at)
+            desc(ContentSuggestion.created_at),
         )
-        
+
         query = query.offset(skip).limit(limit)
-        
+
         result = await db.execute(query)
         return result.scalars().all()
 
@@ -343,18 +357,22 @@ class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate,
                     ContentSuggestion.user_id == obj_in.user_id,
                     ContentSuggestion.content_id == obj_in.content_id,
                     ContentSuggestion.suggestion_type == obj_in.suggestion_type,
-                    ContentSuggestion.status.in_([
-                        ContentSuggestionStatus.ACTIVE,
-                        ContentSuggestionStatus.SHOWN,
-                    ])
+                    ContentSuggestion.status.in_(
+                        [
+                            ContentSuggestionStatus.ACTIVE,
+                            ContentSuggestionStatus.SHOWN,
+                        ]
+                    ),
                 )
             )
         )
-        
+
         if existing.scalar_one_or_none():
-            logger.warning(f"Duplicate suggestion avoided for user {obj_in.user_id}, content {obj_in.content_id}")
+            logger.warning(
+                f"Duplicate suggestion avoided for user {obj_in.user_id}, content {obj_in.content_id}"
+            )
             return existing.scalar_one()
-        
+
         # Create new suggestion
         return await self.create(db, obj_in=obj_in)
 
@@ -368,19 +386,21 @@ class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate,
         """Create multiple suggestions in batches with error handling."""
         created_suggestions = []
         errors = []
-        
+
         for i in range(0, len(suggestions), batch_size):
-            batch = suggestions[i:i + batch_size]
-            
+            batch = suggestions[i : i + batch_size]
+
             for suggestion_data in batch:
                 try:
-                    suggestion = await self.create_suggestion(db, obj_in=suggestion_data)
+                    suggestion = await self.create_suggestion(
+                        db, obj_in=suggestion_data
+                    )
                     created_suggestions.append(suggestion)
                 except Exception as e:
                     error_msg = f"Failed to create suggestion for user {suggestion_data.user_id}: {str(e)}"
                     logger.error(error_msg)
                     errors.append(error_msg)
-            
+
             # Commit batch
             try:
                 await db.commit()
@@ -389,7 +409,7 @@ class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate,
                 error_msg = f"Failed to commit batch {i//batch_size + 1}: {str(e)}"
                 logger.error(error_msg)
                 errors.append(error_msg)
-        
+
         return created_suggestions, errors
 
     async def update_engagement(
@@ -404,48 +424,58 @@ class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate,
         """Update suggestion engagement metrics."""
         now = datetime.utcnow()
         update_data = {"updated_at": now}
-        
+
         # Update based on action
         if action == "shown":
-            update_data.update({
-                "impression_count": ContentSuggestion.impression_count + 1,
-                "last_shown_at": now,
-            })
+            update_data.update(
+                {
+                    "impression_count": ContentSuggestion.impression_count + 1,
+                    "last_shown_at": now,
+                }
+            )
             # Set first_shown_at if not set
-            suggestion = await self.get_by_suggestion_id(db, suggestion_id=suggestion_id)
+            suggestion = await self.get_by_suggestion_id(
+                db, suggestion_id=suggestion_id
+            )
             if suggestion and not suggestion.first_shown_at:
                 update_data["first_shown_at"] = now
                 update_data["status"] = ContentSuggestionStatus.SHOWN
-        
+
         elif action == "clicked":
-            update_data.update({
-                "click_count": ContentSuggestion.click_count + 1,
-                "clicked_at": now,
-                "status": ContentSuggestionStatus.CLICKED,
-            })
-        
+            update_data.update(
+                {
+                    "click_count": ContentSuggestion.click_count + 1,
+                    "clicked_at": now,
+                    "status": ContentSuggestionStatus.CLICKED,
+                }
+            )
+
         elif action == "dismissed":
-            update_data.update({
-                "dismissed_at": now,
-                "status": ContentSuggestionStatus.DISMISSED,
-            })
-        
+            update_data.update(
+                {
+                    "dismissed_at": now,
+                    "status": ContentSuggestionStatus.DISMISSED,
+                }
+            )
+
         elif action == "converted":
-            update_data["status"] = ContentSuggestionStatus.EXPIRED  # Mark as successful
-        
+            update_data[
+                "status"
+            ] = ContentSuggestionStatus.EXPIRED  # Mark as successful
+
         # Apply additional increments
         if increment_impressions:
             update_data["impression_count"] = ContentSuggestion.impression_count + 1
         if increment_clicks:
             update_data["click_count"] = ContentSuggestion.click_count + 1
-        
+
         await db.execute(
             update(ContentSuggestion)
             .where(ContentSuggestion.suggestion_id == suggestion_id)
             .values(**update_data)
         )
         await db.commit()
-        
+
         return await self.get_by_suggestion_id(db, suggestion_id=suggestion_id)
 
     async def expire_old_suggestions(
@@ -457,17 +487,19 @@ class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate,
     ) -> int:
         """Expire old suggestions."""
         cutoff_date = datetime.utcnow() - timedelta(days=max_age_days)
-        
+
         # Update expired suggestions
         result = await db.execute(
             update(ContentSuggestion)
             .where(
                 and_(
                     ContentSuggestion.created_at < cutoff_date,
-                    ContentSuggestion.status.in_([
-                        ContentSuggestionStatus.ACTIVE,
-                        ContentSuggestionStatus.SHOWN,
-                    ])
+                    ContentSuggestion.status.in_(
+                        [
+                            ContentSuggestionStatus.ACTIVE,
+                            ContentSuggestionStatus.SHOWN,
+                        ]
+                    ),
                 )
             )
             .values(
@@ -475,7 +507,7 @@ class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate,
                 updated_at=datetime.utcnow(),
             )
         )
-        
+
         await db.commit()
         return result.rowcount
 
@@ -490,7 +522,7 @@ class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate,
     ) -> Dict[str, Any]:
         """Get analytics for content suggestions."""
         base_query = select(ContentSuggestion)
-        
+
         # Apply filters
         filters = []
         if user_id:
@@ -501,63 +533,72 @@ class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate,
             filters.append(ContentSuggestion.created_at >= start_date)
         if end_date:
             filters.append(ContentSuggestion.created_at <= end_date)
-        
+
         if filters:
             base_query = base_query.where(and_(*filters))
-        
+
         # Total suggestions
         total_result = await db.execute(
             select(func.count(ContentSuggestion.id)).select_from(base_query.subquery())
         )
         total_suggestions = total_result.scalar() or 0
-        
+
         # Active suggestions
         active_result = await db.execute(
-            base_query.where(ContentSuggestion.status == ContentSuggestionStatus.ACTIVE)
-            .with_only_columns(func.count(ContentSuggestion.id))
+            base_query.where(
+                ContentSuggestion.status == ContentSuggestionStatus.ACTIVE
+            ).with_only_columns(func.count(ContentSuggestion.id))
         )
         active_suggestions = active_result.scalar() or 0
-        
+
         # Engagement metrics
         engagement_result = await db.execute(
-            base_query.with_only_columns([
-                func.sum(ContentSuggestion.impression_count),
-                func.sum(ContentSuggestion.click_count),
-                func.avg(ContentSuggestion.confidence_score),
-                func.avg(ContentSuggestion.relevance_score),
-            ])
+            base_query.with_only_columns(
+                [
+                    func.sum(ContentSuggestion.impression_count),
+                    func.sum(ContentSuggestion.click_count),
+                    func.avg(ContentSuggestion.confidence_score),
+                    func.avg(ContentSuggestion.relevance_score),
+                ]
+            )
         )
         engagement_data = engagement_result.first()
-        
+
         total_impressions = engagement_data[0] or 0
         total_clicks = engagement_data[1] or 0
         avg_confidence = float(engagement_data[2] or 0.0)
         avg_relevance = float(engagement_data[3] or 0.0)
-        
+
         # Calculate CTR
         avg_ctr = total_clicks / max(total_impressions, 1)
-        
+
         # Top performing types
         type_performance = await db.execute(
-            base_query
-            .with_only_columns([
-                ContentSuggestion.suggestion_type,
-                func.count(ContentSuggestion.id).label("count"),
-                func.avg(ContentSuggestion.click_count / func.greatest(ContentSuggestion.impression_count, 1)).label("avg_ctr"),
-            ])
+            base_query.with_only_columns(
+                [
+                    ContentSuggestion.suggestion_type,
+                    func.count(ContentSuggestion.id).label("count"),
+                    func.avg(
+                        ContentSuggestion.click_count
+                        / func.greatest(ContentSuggestion.impression_count, 1)
+                    ).label("avg_ctr"),
+                ]
+            )
             .group_by(ContentSuggestion.suggestion_type)
             .order_by(desc("avg_ctr"))
             .limit(5)
         )
-        
+
         top_types = []
         for row in type_performance:
-            top_types.append({
-                "suggestion_type": row[0],
-                "count": row[1],
-                "avg_ctr": float(row[2] or 0.0),
-            })
-        
+            top_types.append(
+                {
+                    "suggestion_type": row[0],
+                    "count": row[1],
+                    "avg_ctr": float(row[2] or 0.0),
+                }
+            )
+
         return {
             "total_suggestions": total_suggestions,
             "active_suggestions": active_suggestions,
@@ -570,7 +611,9 @@ class CRUDContentSuggestion(CRUDBase[ContentSuggestion, ContentSuggestionCreate,
         }
 
 
-class CRUDContentSuggestionFeedback(CRUDBase[ContentSuggestionFeedback, ContentSuggestionFeedbackCreate, None]):
+class CRUDContentSuggestionFeedback(
+    CRUDBase[ContentSuggestionFeedback, ContentSuggestionFeedbackCreate, None]
+):
     """CRUD operations for content suggestion feedback."""
 
     async def create_feedback(
@@ -605,7 +648,9 @@ class CRUDContentSuggestionFeedback(CRUDBase[ContentSuggestionFeedback, ContentS
         return result.scalars().all()
 
 
-class CRUDContentAnalysisJob(CRUDBase[ContentAnalysisJob, ContentAnalysisJobCreate, None]):
+class CRUDContentAnalysisJob(
+    CRUDBase[ContentAnalysisJob, ContentAnalysisJobCreate, None]
+):
     """CRUD operations for content analysis jobs."""
 
     async def get_by_job_id(
@@ -653,13 +698,13 @@ class CRUDContentAnalysisJob(CRUDBase[ContentAnalysisJob, ContentAnalysisJobCrea
     ) -> Optional[ContentAnalysisJob]:
         """Update analysis job status and results."""
         update_data = {"status": status}
-        
+
         if status == "running" and not await self._job_has_started(db, job_id):
             update_data["started_at"] = datetime.utcnow()
-        
+
         if status in ["completed", "failed"]:
             update_data["completed_at"] = datetime.utcnow()
-        
+
         if progress is not None:
             update_data["progress"] = progress
         if results is not None:
@@ -674,21 +719,22 @@ class CRUDContentAnalysisJob(CRUDBase[ContentAnalysisJob, ContentAnalysisJobCrea
             update_data["tokens_used"] = tokens_used
         if cost_usd is not None:
             update_data["cost_usd"] = cost_usd
-        
+
         await db.execute(
             update(ContentAnalysisJob)
             .where(ContentAnalysisJob.job_id == job_id)
             .values(**update_data)
         )
         await db.commit()
-        
+
         return await self.get_by_job_id(db, job_id=job_id)
 
     async def _job_has_started(self, db: AsyncSession, job_id: str) -> bool:
         """Check if job has started_at timestamp."""
         result = await db.execute(
-            select(ContentAnalysisJob.started_at)
-            .where(ContentAnalysisJob.job_id == job_id)
+            select(ContentAnalysisJob.started_at).where(
+                ContentAnalysisJob.job_id == job_id
+            )
         )
         started_at = result.scalar_one_or_none()
         return started_at is not None
@@ -701,15 +747,17 @@ class CRUDContentAnalysisJob(CRUDBase[ContentAnalysisJob, ContentAnalysisJobCrea
         limit: int = 100,
     ) -> List[ContentAnalysisJob]:
         """Get pending analysis jobs."""
-        query = select(ContentAnalysisJob).where(
-            ContentAnalysisJob.status == "pending"
-        ).order_by(ContentAnalysisJob.created_at)
-        
+        query = (
+            select(ContentAnalysisJob)
+            .where(ContentAnalysisJob.status == "pending")
+            .order_by(ContentAnalysisJob.created_at)
+        )
+
         if job_type:
             query = query.where(ContentAnalysisJob.job_type == job_type)
-        
+
         query = query.limit(limit)
-        
+
         result = await db.execute(query)
         return result.scalars().all()
 

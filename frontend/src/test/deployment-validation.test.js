@@ -1,6 +1,6 @@
 /**
  * Deployment Validation Tests
- * 
+ *
  * Tests for the comprehensive deployment validation system
  */
 
@@ -38,7 +38,7 @@ describe('Deployment Validation System', () => {
       // Mock successful fetch responses for all connectivity checks
       fetch.mockImplementation((url, options) => {
         const method = options?.method || 'GET';
-        
+
         if (method === 'HEAD' || method === 'GET') {
           return Promise.resolve({
             ok: true,
@@ -51,7 +51,7 @@ describe('Deployment Validation System', () => {
             ])
           });
         }
-        
+
         return Promise.resolve({
           ok: true,
           status: 200
@@ -65,7 +65,7 @@ describe('Deployment Validation System', () => {
       };
 
       const result = await deploymentValidator.validateConnectivity(config);
-      
+
       expect(result.status).toBe('passed');
       expect(result.checks.httpResponse.passed).toBe(true);
       expect(result.checks.httpResponse.status).toBe(200);
@@ -82,7 +82,7 @@ describe('Deployment Validation System', () => {
       };
 
       const result = await deploymentValidator.validateConnectivity(config);
-      
+
       expect(result.status).toBe('failed');
       expect(result.checks.httpResponse.passed).toBe(false);
       expect(result.checks.httpResponse.error).toBe('Network error');
@@ -110,7 +110,7 @@ describe('Deployment Validation System', () => {
         });
 
       const result = await deploymentValidator.validatePlatform(config);
-      
+
       expect(result.status).toBe('passed');
       expect(result.passed).toBe(3);
       expect(result.total).toBe(3);
@@ -121,13 +121,13 @@ describe('Deployment Validation System', () => {
       const unsubscribe = deploymentValidator.subscribe(listener);
 
       deploymentValidator.notifyListeners('test-event', { data: 'test' });
-      
+
       expect(listener).toHaveBeenCalledWith('test-event', { data: 'test' });
-      
+
       // Test unsubscribe
       unsubscribe();
       deploymentValidator.notifyListeners('test-event', { data: 'test2' });
-      
+
       expect(listener).toHaveBeenCalledTimes(1);
     });
   });
@@ -135,7 +135,7 @@ describe('Deployment Validation System', () => {
   describe('Platform Validators', () => {
     it('should have validators for all supported platforms', () => {
       const supportedPlatforms = ['vercel', 'netlify', 'github-pages', 'firebase'];
-      
+
       supportedPlatforms.forEach(platform => {
         const validator = platformValidators.getValidator(platform);
         expect(validator).toBeDefined();
@@ -175,7 +175,7 @@ describe('Deployment Validation System', () => {
       };
 
       const result = await platformValidators.validatePlatform('vercel', config);
-      
+
       expect(result.status).toBe('passed');
       expect(result.checks.vercelHeaders.passed).toBe(true);
     });
@@ -184,7 +184,7 @@ describe('Deployment Validation System', () => {
   describe('Health Check Templates', () => {
     it('should provide templates for different application types', () => {
       const types = ['frontend-only', 'fullstack', 'api-only', 'static-site'];
-      
+
       types.forEach(type => {
         const template = healthCheckTemplates.getTemplate(type);
         expect(template).toBeDefined();
@@ -201,7 +201,7 @@ describe('Deployment Validation System', () => {
       };
 
       const healthSystem = healthCheckTemplates.generateHealthCheckSystem(appConfig);
-      
+
       expect(healthSystem.files).toBeInstanceOf(Array);
       expect(healthSystem.endpoints).toBeInstanceOf(Array);
       expect(healthSystem.monitoring).toBeDefined();
@@ -221,7 +221,7 @@ describe('Deployment Validation System', () => {
       };
 
       const html = healthCheckTemplates.generateFrontendHealthCheck(appConfig);
-      
+
       expect(html).toContain('<!DOCTYPE html>');
       expect(html).toContain('Health Check');
       expect(html).toContain('checkDOMReady');
@@ -238,7 +238,7 @@ describe('Deployment Validation System', () => {
 
       const config = healthCheckTemplates.generateMonitoringConfig(template, appConfig);
       const configObj = JSON.parse(config);
-      
+
       expect(configObj.service).toBe('Test App');
       expect(configObj.endpoints).toBeInstanceOf(Array);
       expect(configObj.thresholds).toBeDefined();
@@ -251,7 +251,7 @@ describe('Deployment Validation System', () => {
       // Mock all required fetch calls
       fetch.mockImplementation((url, options) => {
         const method = options?.method || 'GET';
-        
+
         if (method === 'HEAD') {
           return Promise.resolve({
             ok: true,
@@ -263,7 +263,7 @@ describe('Deployment Validation System', () => {
             ])
           });
         }
-        
+
         if (url.includes('/api/health') || url.includes('/health')) {
           return Promise.resolve({
             ok: true,
@@ -271,7 +271,7 @@ describe('Deployment Validation System', () => {
             json: () => Promise.resolve({ status: 'healthy' })
           });
         }
-        
+
         return Promise.resolve({
           ok: true,
           status: 200,
@@ -294,7 +294,7 @@ describe('Deployment Validation System', () => {
       };
 
       const validationResult = await deploymentValidator.validateDeployment(deploymentConfig);
-      
+
       expect(validationResult.status).toBe('passed');
       expect(validationResult.validationId).toMatch(/^validation_\d+_[a-z0-9]+$/);
       expect(validationResult.phases).toBeDefined();
@@ -317,7 +317,7 @@ describe('Deployment Validation System', () => {
       };
 
       const validationResult = await deploymentValidator.validateDeployment(deploymentConfig);
-      
+
       expect(validationResult.status).toBe('error');
       expect(validationResult.error).toBeDefined();
     });
@@ -341,7 +341,7 @@ describe('Deployment Validation System', () => {
         duration: 5000,
         phases: {
           connectivity: { status: 'passed' },
-          platform: { status: 'passed' },  
+          platform: { status: 'passed' },
           health: { status: 'passed' },
           performance: { status: 'failed' },
           security: { status: 'failed' }
@@ -349,7 +349,7 @@ describe('Deployment Validation System', () => {
       };
 
       const summary = deploymentValidator.generateValidationSummary(results);
-      
+
       expect(summary.overallStatus).toBe('warning');
       expect(summary.totalDuration).toBe(5000);
       expect(summary.issues).toContain('performance validation failed');

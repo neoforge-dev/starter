@@ -41,11 +41,11 @@ check_http_endpoint() {
     local url=$2
     local expected_status=${3:-200}
     local timeout=${4:-$TIMEOUT}
-    
+
     log DEBUG "Checking $name: $url"
-    
+
     local response=$(curl -s -o /dev/null -w "%{http_code}" -m "$timeout" "$url" 2>/dev/null || echo "000")
-    
+
     if [[ "$response" == "$expected_status" ]]; then
         log INFO "✅ $name: Healthy (HTTP $response)"
         HEALTH_STATUS+=("$name:HEALTHY")
@@ -62,22 +62,22 @@ check_http_endpoint() {
 check_docker_service() {
     local service=$1
     local compose_file=${2:-$COMPOSE_FILE}
-    
+
     log DEBUG "Checking Docker service: $service"
-    
+
     # Check if service is running
     local running=$(docker compose -f "$compose_file" ps --format json | jq -r ".[] | select(.Service == \"$service\") | .State" 2>/dev/null || echo "unknown")
-    
+
     if [[ "$running" != "running" ]]; then
         log ERROR "❌ $service: Not running (State: $running)"
         HEALTH_STATUS+=("$service:DOWN")
         OVERALL_HEALTHY=false
         return 1
     fi
-    
+
     # Check health status if available
     local health=$(docker compose -f "$compose_file" ps --format json | jq -r ".[] | select(.Service == \"$service\") | .Health" 2>/dev/null || echo "unknown")
-    
+
     case $health in
         "healthy")
             log INFO "✅ $service: Healthy"
@@ -106,9 +106,9 @@ check_docker_service() {
 # Function to check database connectivity
 check_database() {
     log DEBUG "Checking database connectivity"
-    
+
     local db_check=$(docker compose -f "$COMPOSE_FILE" exec -T db pg_isready -U postgres 2>/dev/null || echo "failed")
-    
+
     if [[ "$db_check" == *"accepting connections"* ]]; then
         log INFO "✅ Database: Connection healthy"
         HEALTH_STATUS+=("database:HEALTHY")
@@ -124,9 +124,9 @@ check_database() {
 # Function to check Redis connectivity
 check_redis() {
     log DEBUG "Checking Redis connectivity"
-    
+
     local redis_check=$(docker compose -f "$COMPOSE_FILE" exec -T cache redis-cli ping 2>/dev/null || echo "failed")
-    
+
     if [[ "$redis_check" == "PONG" ]]; then
         log INFO "✅ Redis: Connection healthy"
         HEALTH_STATUS+=("redis:HEALTHY")
@@ -142,9 +142,9 @@ check_redis() {
 # Function to check disk space
 check_disk_space() {
     log DEBUG "Checking disk space"
-    
+
     local disk_usage=$(df / | awk 'NR==2{print $5}' | sed 's/%//')
-    
+
     if [[ $disk_usage -lt 80 ]]; then
         log INFO "✅ Disk Space: ${disk_usage}% used"
         HEALTH_STATUS+=("disk:HEALTHY")
@@ -164,9 +164,9 @@ check_disk_space() {
 # Function to check memory usage
 check_memory_usage() {
     log DEBUG "Checking memory usage"
-    
+
     local memory_usage=$(free | awk '/^Mem:/{printf("%.0f", $3/$2*100)}')
-    
+
     if [[ $memory_usage -lt 85 ]]; then
         log INFO "✅ Memory: ${memory_usage}% used"
         HEALTH_STATUS+=("memory:HEALTHY")
@@ -186,11 +186,11 @@ check_memory_usage() {
 # Function to check load average
 check_load_average() {
     log DEBUG "Checking system load"
-    
+
     local load_1min=$(uptime | awk -F'load average:' '{print $2}' | awk '{print $1}' | sed 's/,//')
     local cpu_count=$(nproc)
     local load_percentage=$(echo "$load_1min * 100 / $cpu_count" | bc -l | awk '{printf "%.0f", $0}')
-    
+
     if [[ $load_percentage -lt 80 ]]; then
         log INFO "✅ Load Average: ${load_1min} (${load_percentage}% of ${cpu_count} cores)"
         HEALTH_STATUS+=("load:HEALTHY")
@@ -210,10 +210,10 @@ check_load_average() {
 # Function to check container resource usage
 check_container_resources() {
     log DEBUG "Checking container resource usage"
-    
+
     local high_memory_containers=$(docker stats --no-stream --format "table {{.Container}}\t{{.MemPerc}}" | awk 'NR>1 && $2+0 > 90 {print $1}')
     local high_cpu_containers=$(docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}" | awk 'NR>1 && $2+0 > 90 {print $1}')
-    
+
     if [[ -z "$high_memory_containers" && -z "$high_cpu_containers" ]]; then
         log INFO "✅ Container Resources: All containers within limits"
         HEALTH_STATUS+=("containers:HEALTHY")
@@ -239,7 +239,7 @@ generate_health_report() {
     echo "=================================="
     echo "Timestamp: $(date)"
     echo ""
-    
+
     # Service Status Summary
     echo "SERVICE STATUS:"
     echo "---------------"
@@ -257,7 +257,7 @@ generate_health_report() {
                 ;;
         esac
     done
-    
+
     echo ""
     echo "OVERALL STATUS:"
     echo "---------------"
@@ -279,26 +279,26 @@ generate_health_report() {
 # Main health check function
 main() {
     log INFO "Starting NeoForge health check"
-    
+
     # Check if Docker Compose file exists
     if [[ ! -f "$COMPOSE_FILE" ]]; then
         log ERROR "Docker Compose file not found: $COMPOSE_FILE"
         exit 1
     fi
-    
+
     # System-level checks
     check_disk_space || true
     check_memory_usage || true
     check_load_average || true
-    
+
     # Docker service checks
     check_docker_service "db" || true
     check_docker_service "cache" || true
     check_docker_service "traefik" || true
-    
+
     # Check active slot services
     local active_slot=$(docker compose -f "$COMPOSE_FILE" ps --format json | jq -r '.[] | select(.Service | startswith("api-")) | select(.State == "running") | .Service' | head -1 | sed 's/api-//')
-    
+
     if [[ -n "$active_slot" ]]; then
         log INFO "Active deployment slot: $active_slot"
         check_docker_service "api-${active_slot}" || true
@@ -306,21 +306,21 @@ main() {
     else
         log WARN "No active deployment slot detected"
     fi
-    
+
     # Database and cache connectivity
     check_database || true
     check_redis || true
-    
+
     # Container resource usage
     check_container_resources || true
-    
+
     # HTTP endpoint checks
     check_http_endpoint "Frontend Health" "http://localhost:80/health" 200 || true
     check_http_endpoint "API Health" "http://localhost:8080/health" 200 || true
-    
+
     # Generate final report
     generate_health_report
-    
+
     # Exit with appropriate code
     if [[ "$OVERALL_HEALTHY" == "true" ]]; then
         exit 0

@@ -44,6 +44,7 @@ async def test_auth_sessions_list_and_revoke(client: AsyncClient):
     assert found is not None
     assert found["revoked_at"] is not None
 
+
 @pytest.mark.asyncio
 async def test_auth_sessions_revoke_others_keeps_selected(client: AsyncClient):
     # Register and login twice to create two sessions

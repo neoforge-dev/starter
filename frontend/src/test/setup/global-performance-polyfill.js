@@ -91,7 +91,7 @@ applyPolyfill();
 // Export the polyfill for explicit use
 export default applyPolyfill;
 
-// Move function to program root to fix ESLint no-inner-declarations  
+// Move function to program root to fix ESLint no-inner-declarations
 let originalRequire;
 
 function patchedRequire(id) {
@@ -122,7 +122,7 @@ function patchedRequire(id) {
 // Monkey patch require to ensure the polyfill is available in dynamically loaded modules
 if (typeof require === "function" && typeof module !== "undefined") {
   originalRequire = require;
-  
+
   // Note: Global require modification disabled to comply with ESLint no-global-assign
 
   // Copy all properties from the original require

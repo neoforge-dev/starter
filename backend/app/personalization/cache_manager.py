@@ -4,8 +4,9 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from app.core.redis import get_redis
 from app.schemas.personalization import PersonalizationConfig
+
+from app.core.redis import get_redis
 
 logger = logging.getLogger(__name__)
 
@@ -33,17 +34,15 @@ class PersonalizationCacheManager:
         return f"{self.key_prefix}:" + ":".join(str(part) for part in parts)
 
     async def get_user_config(
-        self,
-        user_id: int,
-        context: str
+        self, user_id: int, context: str
     ) -> Optional[PersonalizationConfig]:
         """
         Get cached personalization configuration for user.
-        
+
         Args:
             user_id: User ID
             context: Personalization context
-            
+
         Returns:
             PersonalizationConfig if cached, None otherwise
         """
@@ -54,12 +53,14 @@ class PersonalizationCacheManager:
 
             cache_key = self._make_key("config", str(user_id), context)
             cached_data = await redis.get(cache_key)
-            
+
             if cached_data:
                 config_dict = json.loads(cached_data)
-                
+
                 # Check if cache is still valid
-                cache_expires_at = datetime.fromisoformat(config_dict["cache_expires_at"])
+                cache_expires_at = datetime.fromisoformat(
+                    config_dict["cache_expires_at"]
+                )
                 if datetime.utcnow() < cache_expires_at:
                     logger.debug(f"Cache hit for user {user_id}, context {context}")
                     return PersonalizationConfig(**config_dict)
@@ -67,9 +68,9 @@ class PersonalizationCacheManager:
                     # Cache expired, remove it
                     await redis.delete(cache_key)
                     logger.debug(f"Cache expired for user {user_id}, context {context}")
-            
+
             return None
-            
+
         except Exception as e:
             logger.warning(f"Error retrieving cached config for user {user_id}: {e}")
             return None
@@ -79,17 +80,17 @@ class PersonalizationCacheManager:
         user_id: int,
         context: str,
         config: PersonalizationConfig,
-        ttl_seconds: int = None
+        ttl_seconds: int = None,
     ) -> bool:
         """
         Cache personalization configuration for user.
-        
+
         Args:
             user_id: User ID
             context: Personalization context
             config: Configuration to cache
             ttl_seconds: Cache TTL in seconds
-            
+
         Returns:
             True if cached successfully, False otherwise
         """
@@ -100,41 +101,41 @@ class PersonalizationCacheManager:
 
             ttl = ttl_seconds or self.default_ttl
             cache_key = self._make_key("config", str(user_id), context)
-            
+
             # Serialize configuration
             config_dict = config.model_dump()
             # Ensure datetime objects are serializable
             for key, value in config_dict.items():
                 if isinstance(value, datetime):
                     config_dict[key] = value.isoformat()
-            
+
             cached_data = json.dumps(config_dict)
-            
+
             # Cache with TTL
             await redis.setex(cache_key, ttl, cached_data)
-            
+
             # Track cache statistics
             await self._track_cache_write(user_id, context)
-            
-            logger.debug(f"Cached config for user {user_id}, context {context}, TTL {ttl}s")
+
+            logger.debug(
+                f"Cached config for user {user_id}, context {context}, TTL {ttl}s"
+            )
             return True
-            
+
         except Exception as e:
             logger.warning(f"Error caching config for user {user_id}: {e}")
             return False
 
     async def invalidate_user_cache(
-        self,
-        user_id: int,
-        contexts: Optional[List[str]] = None
+        self, user_id: int, contexts: Optional[List[str]] = None
     ) -> bool:
         """
         Invalidate cached configurations for a user.
-        
+
         Args:
             user_id: User ID
             contexts: Specific contexts to invalidate, or None for all
-            
+
         Returns:
             True if invalidated successfully
         """
@@ -147,35 +148,36 @@ class PersonalizationCacheManager:
                 # Invalidate specific contexts
                 keys_to_delete = []
                 for context in contexts:
-                    keys_to_delete.append(self._make_key("config", str(user_id), context))
+                    keys_to_delete.append(
+                        self._make_key("config", str(user_id), context)
+                    )
             else:
                 # Invalidate all contexts for user
                 pattern = self._make_key("config", str(user_id), "*")
                 keys_to_delete = await redis.keys(pattern)
-            
+
             if keys_to_delete:
                 await redis.delete(*keys_to_delete)
-                logger.info(f"Invalidated {len(keys_to_delete)} cache entries for user {user_id}")
-            
+                logger.info(
+                    f"Invalidated {len(keys_to_delete)} cache entries for user {user_id}"
+                )
+
             # Track cache invalidation
             await self._track_cache_invalidation(user_id, len(keys_to_delete))
-            
+
             return True
-            
+
         except Exception as e:
             logger.warning(f"Error invalidating cache for user {user_id}: {e}")
             return False
 
-    async def get_rule_cache(
-        self,
-        rule_id: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_rule_cache(self, rule_id: str) -> Optional[Dict[str, Any]]:
         """
         Get cached rule data.
-        
+
         Args:
             rule_id: Rule identifier
-            
+
         Returns:
             Cached rule data or None
         """
@@ -186,12 +188,12 @@ class PersonalizationCacheManager:
 
             cache_key = self._make_key("rule", rule_id)
             cached_data = await redis.get(cache_key)
-            
+
             if cached_data:
                 return json.loads(cached_data)
-            
+
             return None
-            
+
         except Exception as e:
             logger.warning(f"Error retrieving cached rule {rule_id}: {e}")
             return None
@@ -200,16 +202,16 @@ class PersonalizationCacheManager:
         self,
         rule_id: str,
         rule_data: Dict[str, Any],
-        ttl_seconds: int = 3600  # 1 hour default for rules
+        ttl_seconds: int = 3600,  # 1 hour default for rules
     ) -> bool:
         """
         Cache rule data.
-        
+
         Args:
             rule_id: Rule identifier
             rule_data: Rule data to cache
             ttl_seconds: Cache TTL in seconds
-            
+
         Returns:
             True if cached successfully
         """
@@ -220,26 +222,23 @@ class PersonalizationCacheManager:
 
             cache_key = self._make_key("rule", rule_id)
             cached_data = json.dumps(rule_data)
-            
+
             await redis.setex(cache_key, ttl_seconds, cached_data)
-            
+
             logger.debug(f"Cached rule data for {rule_id}, TTL {ttl_seconds}s")
             return True
-            
+
         except Exception as e:
             logger.warning(f"Error caching rule {rule_id}: {e}")
             return False
 
-    async def invalidate_rule_cache(
-        self,
-        rule_id: str
-    ) -> bool:
+    async def invalidate_rule_cache(self, rule_id: str) -> bool:
         """
         Invalidate cached rule data.
-        
+
         Args:
             rule_id: Rule identifier
-            
+
         Returns:
             True if invalidated successfully
         """
@@ -250,24 +249,21 @@ class PersonalizationCacheManager:
 
             cache_key = self._make_key("rule", rule_id)
             await redis.delete(cache_key)
-            
+
             logger.debug(f"Invalidated rule cache for {rule_id}")
             return True
-            
+
         except Exception as e:
             logger.warning(f"Error invalidating rule cache {rule_id}: {e}")
             return False
 
-    async def get_segment_cache(
-        self,
-        segment: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_segment_cache(self, segment: str) -> Optional[Dict[str, Any]]:
         """
         Get cached segment analysis data.
-        
+
         Args:
             segment: User segment
-            
+
         Returns:
             Cached segment data or None
         """
@@ -278,12 +274,12 @@ class PersonalizationCacheManager:
 
             cache_key = self._make_key("segment", segment)
             cached_data = await redis.get(cache_key)
-            
+
             if cached_data:
                 return json.loads(cached_data)
-            
+
             return None
-            
+
         except Exception as e:
             logger.warning(f"Error retrieving cached segment {segment}: {e}")
             return None
@@ -292,16 +288,16 @@ class PersonalizationCacheManager:
         self,
         segment: str,
         segment_data: Dict[str, Any],
-        ttl_seconds: int = 1800  # 30 minutes default for segments
+        ttl_seconds: int = 1800,  # 30 minutes default for segments
     ) -> bool:
         """
         Cache segment analysis data.
-        
+
         Args:
             segment: User segment
             segment_data: Segment data to cache
             ttl_seconds: Cache TTL in seconds
-            
+
         Returns:
             True if cached successfully
         """
@@ -312,26 +308,23 @@ class PersonalizationCacheManager:
 
             cache_key = self._make_key("segment", segment)
             cached_data = json.dumps(segment_data)
-            
+
             await redis.setex(cache_key, ttl_seconds, cached_data)
-            
+
             logger.debug(f"Cached segment data for {segment}, TTL {ttl_seconds}s")
             return True
-            
+
         except Exception as e:
             logger.warning(f"Error caching segment {segment}: {e}")
             return False
 
-    async def get_user_profile_cache(
-        self,
-        user_id: int
-    ) -> Optional[Dict[str, Any]]:
+    async def get_user_profile_cache(self, user_id: int) -> Optional[Dict[str, Any]]:
         """
         Get cached user profile data.
-        
+
         Args:
             user_id: User ID
-            
+
         Returns:
             Cached profile data or None
         """
@@ -342,12 +335,12 @@ class PersonalizationCacheManager:
 
             cache_key = self._make_key("profile", str(user_id))
             cached_data = await redis.get(cache_key)
-            
+
             if cached_data:
                 return json.loads(cached_data)
-            
+
             return None
-            
+
         except Exception as e:
             logger.warning(f"Error retrieving cached profile for user {user_id}: {e}")
             return None
@@ -356,16 +349,16 @@ class PersonalizationCacheManager:
         self,
         user_id: int,
         profile_data: Dict[str, Any],
-        ttl_seconds: int = 600  # 10 minutes default for profiles
+        ttl_seconds: int = 600,  # 10 minutes default for profiles
     ) -> bool:
         """
         Cache user profile data.
-        
+
         Args:
             user_id: User ID
             profile_data: Profile data to cache
             ttl_seconds: Cache TTL in seconds
-            
+
         Returns:
             True if cached successfully
         """
@@ -375,7 +368,7 @@ class PersonalizationCacheManager:
                 return False
 
             cache_key = self._make_key("profile", str(user_id))
-            
+
             # Serialize profile data
             serializable_data = {}
             for key, value in profile_data.items():
@@ -383,28 +376,25 @@ class PersonalizationCacheManager:
                     serializable_data[key] = value.isoformat()
                 else:
                     serializable_data[key] = value
-            
+
             cached_data = json.dumps(serializable_data)
-            
+
             await redis.setex(cache_key, ttl_seconds, cached_data)
-            
+
             logger.debug(f"Cached profile for user {user_id}, TTL {ttl_seconds}s")
             return True
-            
+
         except Exception as e:
             logger.warning(f"Error caching profile for user {user_id}: {e}")
             return False
 
-    async def get_analytics_cache(
-        self,
-        cache_key: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_analytics_cache(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """
         Get cached analytics data.
-        
+
         Args:
             cache_key: Analytics cache key
-            
+
         Returns:
             Cached analytics data or None
         """
@@ -415,12 +405,12 @@ class PersonalizationCacheManager:
 
             full_key = self._make_key("analytics", cache_key)
             cached_data = await redis.get(full_key)
-            
+
             if cached_data:
                 return json.loads(cached_data)
-            
+
             return None
-            
+
         except Exception as e:
             logger.warning(f"Error retrieving cached analytics {cache_key}: {e}")
             return None
@@ -429,16 +419,16 @@ class PersonalizationCacheManager:
         self,
         cache_key: str,
         analytics_data: Dict[str, Any],
-        ttl_seconds: int = 900  # 15 minutes default for analytics
+        ttl_seconds: int = 900,  # 15 minutes default for analytics
     ) -> bool:
         """
         Cache analytics data.
-        
+
         Args:
             cache_key: Analytics cache key
             analytics_data: Analytics data to cache
             ttl_seconds: Cache TTL in seconds
-            
+
         Returns:
             True if cached successfully
         """
@@ -448,7 +438,7 @@ class PersonalizationCacheManager:
                 return False
 
             full_key = self._make_key("analytics", cache_key)
-            
+
             # Serialize analytics data
             serializable_data = {}
             for key, value in analytics_data.items():
@@ -456,14 +446,14 @@ class PersonalizationCacheManager:
                     serializable_data[key] = value.isoformat()
                 else:
                     serializable_data[key] = value
-            
+
             cached_data = json.dumps(serializable_data)
-            
+
             await redis.setex(full_key, ttl_seconds, cached_data)
-            
+
             logger.debug(f"Cached analytics data for {cache_key}, TTL {ttl_seconds}s")
             return True
-            
+
         except Exception as e:
             logger.warning(f"Error caching analytics {cache_key}: {e}")
             return False
@@ -471,7 +461,7 @@ class PersonalizationCacheManager:
     async def flush_all_cache(self) -> bool:
         """
         Flush all personalization cache data.
-        
+
         Returns:
             True if flushed successfully
         """
@@ -482,13 +472,15 @@ class PersonalizationCacheManager:
 
             pattern = self._make_key("*")
             keys_to_delete = await redis.keys(pattern)
-            
+
             if keys_to_delete:
                 await redis.delete(*keys_to_delete)
-                logger.info(f"Flushed {len(keys_to_delete)} personalization cache entries")
-            
+                logger.info(
+                    f"Flushed {len(keys_to_delete)} personalization cache entries"
+                )
+
             return True
-            
+
         except Exception as e:
             logger.error(f"Error flushing personalization cache: {e}")
             return False
@@ -496,7 +488,7 @@ class PersonalizationCacheManager:
     async def get_cache_stats(self) -> Dict[str, Any]:
         """
         Get cache performance statistics.
-        
+
         Returns:
             Dict containing cache statistics
         """
@@ -510,23 +502,29 @@ class PersonalizationCacheManager:
             miss_key = self._make_key("stats", "misses")
             write_key = self._make_key("stats", "writes")
             invalidate_key = self._make_key("stats", "invalidations")
-            
+
             hits = await redis.get(hit_key) or "0"
             misses = await redis.get(miss_key) or "0"
             writes = await redis.get(write_key) or "0"
             invalidations = await redis.get(invalidate_key) or "0"
-            
+
             total_requests = int(hits) + int(misses)
             hit_rate = (int(hits) / total_requests * 100) if total_requests > 0 else 0
-            
+
             # Get cache size
             pattern = self._make_key("*")
             all_keys = await redis.keys(pattern)
-            cache_size = len([key for key in all_keys if not key.endswith(":stats:hits") 
-                             and not key.endswith(":stats:misses") 
-                             and not key.endswith(":stats:writes")
-                             and not key.endswith(":stats:invalidations")])
-            
+            cache_size = len(
+                [
+                    key
+                    for key in all_keys
+                    if not key.endswith(":stats:hits")
+                    and not key.endswith(":stats:misses")
+                    and not key.endswith(":stats:writes")
+                    and not key.endswith(":stats:invalidations")
+                ]
+            )
+
             return {
                 "cache_hits": int(hits),
                 "cache_misses": int(misses),
@@ -534,9 +532,9 @@ class PersonalizationCacheManager:
                 "cache_invalidations": int(invalidations),
                 "hit_rate_percent": round(hit_rate, 2),
                 "total_cached_items": cache_size,
-                "total_requests": total_requests
+                "total_requests": total_requests,
             }
-            
+
         except Exception as e:
             logger.error(f"Error getting cache stats: {e}")
             return {"error": str(e)}

@@ -104,7 +104,7 @@ export class NeoButton extends LitElement {
 
   render() {
     return html`
-      <button 
+      <button
         class=${this.variant || 'primary'}
         ?disabled=${this.disabled}
         @click=${this._handleClick}
@@ -140,7 +140,7 @@ describe('neo-button', () => {
     const el = await fixture(html`
       <neo-button>Click me</neo-button>
     `);
-    
+
     expect(el.variant).to.equal('primary');
     expect(el.shadowRoot.querySelector('button'))
       .to.have.class('primary');
@@ -175,7 +175,7 @@ npm run deploy
 - Safari (latest 2 versions): ✅
 - Mobile browsers: ✅
 
-> Note: We use native ES modules and web components. For older browsers, 
+> Note: We use native ES modules and web components. For older browsers,
 > consider using the build process which includes necessary polyfills.
 
 ## 📈 Performance
@@ -216,4 +216,4 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed guidelines.
 
 ## 📝 License
 
-MIT License - see [LICENSE](../LICENSE) for details 
+MIT License - see [LICENSE](../LICENSE) for details

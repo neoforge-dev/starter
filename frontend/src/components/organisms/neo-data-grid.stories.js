@@ -10,16 +10,16 @@ const sampleEmployees = [
 ];
 
 const employeeColumns = [
-  { 
-    field: 'id', 
-    header: 'ID', 
-    width: '80px', 
+  {
+    field: 'id',
+    header: 'ID',
+    width: '80px',
     type: 'number',
-    readonly: true 
+    readonly: true
   },
-  { 
-    field: 'name', 
-    header: 'Full Name', 
+  {
+    field: 'name',
+    header: 'Full Name',
     width: '180px',
     validate: (value) => {
       if (!value || value.length < 2) {
@@ -28,9 +28,9 @@ const employeeColumns = [
       return { valid: true };
     }
   },
-  { 
-    field: 'role', 
-    header: 'Role', 
+  {
+    field: 'role',
+    header: 'Role',
     width: '120px',
     type: 'select',
     options: [
@@ -40,9 +40,9 @@ const employeeColumns = [
       { value: 'Analyst', label: 'Business Analyst' }
     ]
   },
-  { 
-    field: 'department', 
-    header: 'Department', 
+  {
+    field: 'department',
+    header: 'Department',
     width: '130px',
     type: 'select',
     options: [
@@ -52,23 +52,23 @@ const employeeColumns = [
       { value: 'Sales', label: 'Sales' }
     ]
   },
-  { 
-    field: 'salary', 
-    header: 'Salary', 
+  {
+    field: 'salary',
+    header: 'Salary',
     width: '120px',
     type: 'number',
     render: (value) => `$${value?.toLocaleString()}`
   },
-  { 
-    field: 'active', 
-    header: 'Active', 
+  {
+    field: 'active',
+    header: 'Active',
     width: '80px',
     type: 'checkbox',
     render: (value) => value ? '✅' : '❌'
   },
-  { 
-    field: 'startDate', 
-    header: 'Start Date', 
+  {
+    field: 'startDate',
+    header: 'Start Date',
     width: '120px',
     type: 'date'
   }
@@ -84,9 +84,9 @@ const projectData = [
 const projectColumns = [
   { field: 'id', header: 'Project ID', width: '100px' },
   { field: 'name', header: 'Project Name', width: '180px' },
-  { 
-    field: 'status', 
-    header: 'Status', 
+  {
+    field: 'status',
+    header: 'Status',
     width: '120px',
     type: 'select',
     options: [
@@ -105,9 +105,9 @@ const projectColumns = [
       return `<span style="color: ${colors[value]}; font-weight: 600;">● ${value}</span>`;
     }
   },
-  { 
-    field: 'priority', 
-    header: 'Priority', 
+  {
+    field: 'priority',
+    header: 'Priority',
     width: '100px',
     type: 'select',
     options: [
@@ -117,9 +117,9 @@ const projectColumns = [
       { value: 'Critical', label: 'Critical' }
     ]
   },
-  { 
-    field: 'progress', 
-    header: 'Progress', 
+  {
+    field: 'progress',
+    header: 'Progress',
     width: '100px',
     type: 'number',
     render: (value) => `
@@ -313,14 +313,14 @@ export const ValidationShowcase = {
       { id: 2, name: 'Valid Name', email: 'valid@email.com', age: 25, score: 85 }
     ],
     columns: [
-      { 
-        field: 'id', 
-        header: 'ID', 
-        type: 'number', 
-        readonly: true 
+      {
+        field: 'id',
+        header: 'ID',
+        type: 'number',
+        readonly: true
       },
-      { 
-        field: 'name', 
+      {
+        field: 'name',
         header: 'Name',
         validate: (value) => {
           if (!value || value.length < 2) {
@@ -329,8 +329,8 @@ export const ValidationShowcase = {
           return { valid: true };
         }
       },
-      { 
-        field: 'email', 
+      {
+        field: 'email',
         header: 'Email',
         validate: (value) => {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -340,9 +340,9 @@ export const ValidationShowcase = {
           return { valid: true };
         }
       },
-      { 
-        field: 'age', 
-        header: 'Age', 
+      {
+        field: 'age',
+        header: 'Age',
         type: 'number',
         validate: (value) => {
           if (value < 0 || value > 120) {
@@ -351,9 +351,9 @@ export const ValidationShowcase = {
           return { valid: true };
         }
       },
-      { 
-        field: 'score', 
-        header: 'Score', 
+      {
+        field: 'score',
+        header: 'Score',
         type: 'number',
         validate: (value) => {
           if (value < 0 || value > 100) {
@@ -383,36 +383,36 @@ export const InteractiveExample = {
   },
   play: async ({ canvasElement }) => {
     const grid = canvasElement.querySelector('neo-data-grid');
-    
+
     // Add comprehensive event listeners
     grid.addEventListener('cell-edit-start', (e) => {
       console.log('Cell edit started:', e.detail);
     });
-    
+
     grid.addEventListener('cell-value-change', (e) => {
       console.log('Cell value changed:', e.detail);
     });
-    
+
     grid.addEventListener('cell-save-success', (e) => {
       console.log('Cell saved successfully:', e.detail);
     });
-    
+
     grid.addEventListener('cell-save-error', (e) => {
       console.log('Cell save failed:', e.detail);
     });
-    
+
     grid.addEventListener('row-selection-change', (e) => {
       console.log('Row selection changed:', e.detail);
     });
-    
+
     grid.addEventListener('row-add', (e) => {
       console.log('Row added:', e.detail);
     });
-    
+
     grid.addEventListener('row-delete', (e) => {
       console.log('Row deleted:', e.detail);
     });
-    
+
     grid.addEventListener('real-time-update', (e) => {
       console.log('Real-time update:', e.detail);
     });

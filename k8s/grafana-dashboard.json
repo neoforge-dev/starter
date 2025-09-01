@@ -1,0 +1,495 @@
+{
+  "dashboard": {
+    "title": "NeoForge Production Overview",
+    "tags": ["neoforge", "production", "monitoring"],
+    "timezone": "UTC",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "title": "System Health Overview",
+        "type": "stat",
+        "gridPos": {
+          "h": 3,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "up{job=\"kubernetes-pods\", namespace=\"neoforge\"}",
+            "legendFormat": "Pods Up",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "API Performance",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 3
+        },
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{service=\"api\", status!=\"5..\"}[5m]) / rate(http_requests_total{service=\"api\"}[5m])",
+            "legendFormat": "Success Rate",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{service=\"api\"}[5m]))",
+            "legendFormat": "95th Percentile Latency",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(http_requests_total{service=\"api\"}[5m])",
+            "legendFormat": "Request Rate",
+            "refId": "C"
+          }
+        ]
+      },
+      {
+        "title": "Resource Usage",
+        "type": "bargauge",
+        "gridPos": {
+          "h": 6,
+          "w": 6,
+          "x": 12,
+          "y": 3
+        },
+        "targets": [
+          {
+            "expr": "(container_memory_usage_bytes{pod=~\"api-.*\", namespace=\"neoforge\"} / container_spec_memory_limit_bytes{pod=~\"api-.*\", namespace=\"neoforge\"}) * 100",
+            "legendFormat": "{{ pod }} Memory",
+            "refId": "A"
+          },
+          {
+            "expr": "(rate(container_cpu_usage_seconds_total{pod=~\"api-.*\", namespace=\"neoforge\"}[5m]) / container_spec_cpu_limit_cores{pod=~\"api-.*\", namespace=\"neoforge\"}) * 100",
+            "legendFormat": "{{ pod }} CPU",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "max": 100,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 70
+                },
+                {
+                  "color": "red",
+                  "value": 90
+                }
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "title": "Database Performance",
+        "type": "graph",
+        "gridPos": {
+          "h": 6,
+          "w": 6,
+          "x": 18,
+          "y": 3
+        },
+        "targets": [
+          {
+            "expr": "postgres_connections_active",
+            "legendFormat": "Active Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(postgres_queries_total[5m])",
+            "legendFormat": "Query Rate",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "title": "Error Rates by Service",
+        "type": "bargauge",
+        "gridPos": {
+          "h": 6,
+          "w": 6,
+          "x": 12,
+          "y": 9
+        },
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) * 100",
+            "legendFormat": "{{ service }} Error Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "max": 100,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 1
+                },
+                {
+                  "color": "red",
+                  "value": 5
+                }
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "title": "Cache Performance",
+        "type": "stat",
+        "gridPos": {
+          "h": 3,
+          "w": 3,
+          "x": 18,
+          "y": 9
+        },
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes / redis_memory_max_bytes * 100",
+            "legendFormat": "Memory Usage",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 70
+                },
+                {
+                  "color": "red",
+                  "value": 90
+                }
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "title": "Pod Restarts",
+        "type": "stat",
+        "gridPos": {
+          "h": 3,
+          "w": 3,
+          "x": 21,
+          "y": 9
+        },
+        "targets": [
+          {
+            "expr": "rate(kube_pod_container_status_restarts_total{namespace=\"neoforge\"}[1h])",
+            "legendFormat": "Restarts",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Backup Status",
+        "type": "stat",
+        "gridPos": {
+          "h": 3,
+          "w": 3,
+          "x": 18,
+          "y": 12
+        },
+        "targets": [
+          {
+            "expr": "time() - velero_backup_last_successful_timestamp",
+            "legendFormat": "Hours Since Last Backup",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 7200
+                },
+                {
+                  "color": "red",
+                  "value": 14400
+                }
+              ]
+            },
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "title": "Security Events",
+        "type": "stat",
+        "gridPos": {
+          "h": 3,
+          "w": 3,
+          "x": 21,
+          "y": 12
+        },
+        "targets": [
+          {
+            "expr": "rate(security_events_total[1h])",
+            "legendFormat": "Security Events",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 1
+                },
+                {
+                  "color": "red",
+                  "value": 5
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Application Logs",
+        "type": "logs",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 15
+        },
+        "targets": [
+          {
+            "expr": "{namespace=\"neoforge\", container=~\"api|frontend\"} | json | level = \"error\"",
+            "legendFormat": "",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Alert Status",
+        "type": "alertlist",
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 12,
+          "y": 15
+        },
+        "options": {
+          "alertListOptions": {
+            "showOptions": {
+              "alertName": true,
+              "alertInstance": true,
+              "alertValue": true,
+              "alertDescription": true,
+              "alertLabels": true
+            }
+          }
+        }
+      },
+      {
+        "title": "Service Dependencies",
+        "type": "nodeGraph",
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 18,
+          "y": 15
+        },
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{ service }} → {{ destination_service }}",
+            "refId": "A"
+          }
+        ]
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "target": {
+            "limit": 100,
+            "matchAny": false,
+            "tags": [],
+            "type": "dashboard"
+          },
+          "type": "dashboard"
+        }
+      ]
+    },
+    "links": [
+      {
+        "icon": "external link",
+        "tags": [],
+        "targetBlank": true,
+        "title": "NeoForge Documentation",
+        "type": "link",
+        "url": "https://docs.neoforge.dev"
+      },
+      {
+        "icon": "external link",
+        "tags": [],
+        "targetBlank": true,
+        "title": "GitHub Repository",
+        "type": "link",
+        "url": "https://github.com/neoforge/neoforge"
+      }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 36,
+    "style": "dark",
+    "tags": ["neoforge", "production", "monitoring"],
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "selected": false,
+            "text": "neoforge",
+            "value": "neoforge"
+          },
+          "datasource": "Prometheus",
+          "definition": "label_values(namespace)",
+          "hide": 0,
+          "includeAll": false,
+          "label": "Namespace",
+          "multi": false,
+          "name": "namespace",
+          "options": [],
+          "query": "label_values(namespace)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        }
+      ]
+    },
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ],
+      "time_options": [
+        "5m",
+        "15m",
+        "1h",
+        "6h",
+        "12h",
+        "24h",
+        "2d",
+        "7d",
+        "30d"
+      ]
+    },
+    "timezone": "UTC",
+    "title": "NeoForge Production Overview",
+    "uid": "neoforge-production-overview",
+    "version": 1
+  }
+}

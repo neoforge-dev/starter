@@ -25,7 +25,7 @@ class OfflineStorageService {
     try {
       this.db = await this._openDatabase();
       Logger.info('Offline storage initialized');
-      
+
       // Process any pending sync operations
       if (this.isOnline) {
         await this.syncPendingActions();
@@ -55,7 +55,7 @@ class OfflineStorageService {
     try {
       const tx = this.db.transaction(['cache'], 'readwrite');
       const store = tx.objectStore('cache');
-      
+
       const item = {
         key,
         data,
@@ -133,7 +133,7 @@ class OfflineStorageService {
     try {
       const tx = this.db.transaction(['offline_actions'], 'readwrite');
       const store = tx.objectStore('offline_actions');
-      
+
       const queuedAction = {
         id: Date.now() + Math.random(),
         ...action,
@@ -219,7 +219,7 @@ class OfflineStorageService {
         if (response.ok) {
           await this.removeCompletedAction(action.id);
           Logger.info(`Successfully synced action: ${action.id}`);
-          
+
           // Dispatch custom event for successful sync
           window.dispatchEvent(new CustomEvent('offline-action-synced', {
             detail: { action, response }
@@ -300,19 +300,19 @@ class OfflineStorageService {
   _openDatabase() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
-      
+
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
-      
+
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
-        
+
         // Create cache store
         if (!db.objectStoreNames.contains('cache')) {
           const cacheStore = db.createObjectStore('cache', { keyPath: 'key' });
           cacheStore.createIndex('timestamp', 'timestamp');
         }
-        
+
         // Create offline actions store
         if (!db.objectStoreNames.contains('offline_actions')) {
           const actionsStore = db.createObjectStore('offline_actions', { keyPath: 'id' });

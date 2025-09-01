@@ -1,6 +1,6 @@
 /**
  * Usage Examples
- * 
+ *
  * Provides real-world usage scenarios for NeoForge components.
  * Critical for developers to understand practical applications.
  */
@@ -121,12 +121,12 @@ class UserManagementDashboard {
             <h3>Total Users</h3>
             <div class="stat-value">\${this.users.length}</div>
           </neo-card>
-          
+
           <neo-card class="stat-card">
             <h3>Active Users</h3>
             <div class="stat-value">\${this.getActiveUsersCount()}</div>
           </neo-card>
-          
+
           <neo-card class="stat-card">
             <h3>New This Month</h3>
             <div class="stat-value">\${this.getNewUsersThisMonth()}</div>
@@ -134,7 +134,7 @@ class UserManagementDashboard {
         </div>
 
         <!-- Users Table -->
-        <neo-table 
+        <neo-table
           id="users-table"
           data='\${JSON.stringify(this.users)}'
           columns='\${JSON.stringify(this.getTableColumns())}'
@@ -147,7 +147,7 @@ class UserManagementDashboard {
 
       <!-- User Form Modal -->
       <neo-modal id="user-modal" title="User Details">
-        <neo-form-builder 
+        <neo-form-builder
           id="user-form"
           fields='\${JSON.stringify(this.getFormFields())}'>
         </neo-form-builder>
@@ -163,9 +163,9 @@ class UserManagementDashboard {
       { key: 'role', label: 'Role', sortable: true },
       { key: 'status', label: 'Status', sortable: true },
       { key: 'created', label: 'Created', sortable: true },
-      { 
-        key: 'actions', 
-        label: 'Actions', 
+      {
+        key: 'actions',
+        label: 'Actions',
         render: (user) => \`
           <neo-button size="small" onclick="userDashboard.editUser(\${user.id})">
             Edit
@@ -182,19 +182,19 @@ class UserManagementDashboard {
     return [
       { type: 'text', name: 'name', label: 'Full Name', required: true },
       { type: 'email', name: 'email', label: 'Email Address', required: true },
-      { 
-        type: 'select', 
-        name: 'role', 
-        label: 'Role', 
+      {
+        type: 'select',
+        name: 'role',
+        label: 'Role',
         options: ['Admin', 'User', 'Manager'],
-        required: true 
+        required: true
       },
-      { 
-        type: 'select', 
-        name: 'status', 
-        label: 'Status', 
+      {
+        type: 'select',
+        name: 'status',
+        label: 'Status',
         options: ['Active', 'Inactive', 'Pending'],
-        required: true 
+        required: true
       },
       { type: 'textarea', name: 'notes', label: 'Notes', rows: 3 }
     ];
@@ -230,7 +230,7 @@ class UserManagementDashboard {
   openUserModal(user = null) {
     const modal = document.getElementById('user-modal');
     const form = document.getElementById('user-form');
-    
+
     if (user) {
       form.setValues(user);
       modal.setAttribute('title', 'Edit User');
@@ -238,13 +238,13 @@ class UserManagementDashboard {
       form.reset();
       modal.setAttribute('title', 'Add New User');
     }
-    
+
     modal.show();
   }
 
   handleFormSubmit(event) {
     const formData = event.detail.data;
-    
+
     if (this.currentUser) {
       // Update existing user
       Object.assign(this.currentUser, formData);
@@ -257,7 +257,7 @@ class UserManagementDashboard {
       };
       this.users.push(newUser);
     }
-    
+
     this.saveUsers();
     this.refreshTable();
     document.getElementById('user-modal').hide();
@@ -289,7 +289,7 @@ class UserManagementDashboard {
 
   getNewUsersThisMonth() {
     const thisMonth = new Date().getMonth();
-    return this.users.filter(user => 
+    return this.users.filter(user =>
       new Date(user.created).getMonth() === thisMonth
     ).length;
   }
@@ -378,15 +378,15 @@ class ProductCatalog {
     container.innerHTML = \`
       <div class="catalog-header">
         <h1>Product Catalog</h1>
-        <neo-search 
-          id="product-search" 
+        <neo-search
+          id="product-search"
           placeholder="Search products..."
           debounce="300">
         </neo-search>
       </div>
 
       <div class="catalog-filters">
-        <neo-select 
+        <neo-select
           id="category-filter"
           label="Category"
           value="\${this.filters.category}">
@@ -396,7 +396,7 @@ class ProductCatalog {
           <option value="books">Books</option>
         </neo-select>
 
-        <neo-select 
+        <neo-select
           id="price-filter"
           label="Price Range"
           value="\${this.filters.priceRange}">
@@ -407,7 +407,7 @@ class ProductCatalog {
           <option value="100+">$100+</option>
         </neo-select>
 
-        <neo-select 
+        <neo-select
           id="sort-filter"
           label="Sort By"
           value="\${this.filters.sortBy}">
@@ -422,7 +422,7 @@ class ProductCatalog {
         \${this.renderProducts()}
       </div>
 
-      <neo-pagination 
+      <neo-pagination
         id="catalog-pagination"
         total="\${this.getFilteredProducts().length}"
         page-size="\${this.pageSize}"
@@ -541,7 +541,7 @@ class BlogCMS {
       </div>
 
       <div class="cms-content">
-        <neo-table 
+        <neo-table
           id="posts-table"
           data='\${JSON.stringify(this.posts)}'
           columns='\${JSON.stringify(this.getPostsColumns())}'
@@ -556,27 +556,27 @@ class BlogCMS {
             <label for="post-title">Title</label>
             <input type="text" id="post-title" name="title" required>
           </div>
-          
+
           <div class="form-field">
             <label for="post-slug">Slug</label>
             <input type="text" id="post-slug" name="slug" required>
           </div>
-          
+
           <div class="form-field">
             <label for="post-excerpt">Excerpt</label>
             <textarea id="post-excerpt" name="excerpt" rows="3"></textarea>
           </div>
-          
+
           <div class="form-field">
             <label for="post-content">Content</label>
             <rich-text-editor id="post-content" name="content"></rich-text-editor>
           </div>
-          
+
           <div class="form-field">
             <label for="post-featured-image">Featured Image</label>
             <file-upload id="post-featured-image" name="featuredImage" accept="image/*"></file-upload>
           </div>
-          
+
           <div class="form-actions">
             <neo-button type="submit" variant="primary">Save Post</neo-button>
             <neo-button type="button" id="cancel-btn">Cancel</neo-button>
@@ -593,8 +593,8 @@ class BlogCMS {
       { key: 'author', label: 'Author', sortable: true },
       { key: 'created', label: 'Created', sortable: true },
       { key: 'modified', label: 'Modified', sortable: true },
-      { 
-        key: 'actions', 
+      {
+        key: 'actions',
         label: 'Actions',
         render: (post) => \`
           <neo-button size="small" onclick="blogCMS.editPost(\${post.id})">Edit</neo-button>
@@ -652,13 +652,13 @@ class FinancialDashboard {
       <div class="dashboard-header">
         <h1>Financial Dashboard</h1>
         <div class="dashboard-filters">
-          <date-picker 
+          <date-picker
             id="date-range-picker"
             range="true"
             value="\${this.getDateRange()}">
           </date-picker>
-          
-          <neo-filter 
+
+          <neo-filter
             id="account-filter"
             options='\${JSON.stringify(this.getAccountOptions())}'
             value="\${this.filters.account}">
@@ -673,16 +673,16 @@ class FinancialDashboard {
       <div class="dashboard-charts">
         <div class="chart-container">
           <h3>Revenue Trend</h3>
-          <chart-component 
+          <chart-component
             type="line"
             data='\${JSON.stringify(this.getRevenueData())}'
             height="300">
           </chart-component>
         </div>
-        
+
         <div class="chart-container">
           <h3>Expense Breakdown</h3>
-          <chart-component 
+          <chart-component
             type="pie"
             data='\${JSON.stringify(this.getExpenseData())}'
             height="300">
@@ -692,7 +692,7 @@ class FinancialDashboard {
 
       <div class="dashboard-table">
         <h3>Recent Transactions</h3>
-        <neo-data-grid 
+        <neo-data-grid
           id="transactions-grid"
           data='\${JSON.stringify(this.getTransactionsData())}'
           columns='\${JSON.stringify(this.getTransactionColumns())}'
@@ -756,7 +756,7 @@ class SupportPortal {
       </div>
 
       <div class="portal-content">
-        <neo-table 
+        <neo-table
           id="tickets-table"
           data='\${JSON.stringify(this.tickets)}'
           columns='\${JSON.stringify(this.getTicketColumns())}'
@@ -766,7 +766,7 @@ class SupportPortal {
       </div>
 
       <neo-modal id="ticket-modal" title="Ticket Details" size="large">
-        <neo-form-builder 
+        <neo-form-builder
           id="ticket-form"
           fields='\${JSON.stringify(this.getTicketFields())}'>
         </neo-form-builder>
@@ -779,22 +779,22 @@ class SupportPortal {
       { key: 'id', label: 'Ticket #', sortable: true },
       { key: 'subject', label: 'Subject', sortable: true },
       { key: 'customer', label: 'Customer', sortable: true },
-      { 
-        key: 'status', 
-        label: 'Status', 
+      {
+        key: 'status',
+        label: 'Status',
         sortable: true,
         render: (ticket) => \`<status-badge status="\${ticket.status}">\${ticket.status}</status-badge>\`
       },
-      { 
-        key: 'priority', 
-        label: 'Priority', 
+      {
+        key: 'priority',
+        label: 'Priority',
         sortable: true,
         render: (ticket) => \`<priority-selector value="\${ticket.priority}" readonly></priority-selector>\`
       },
       { key: 'assignee', label: 'Assignee', sortable: true },
       { key: 'created', label: 'Created', sortable: true },
-      { 
-        key: 'actions', 
+      {
+        key: 'actions',
         label: 'Actions',
         render: (ticket) => \`
           <neo-button size="small" onclick="supportPortal.viewTicket(\${ticket.id})">View</neo-button>

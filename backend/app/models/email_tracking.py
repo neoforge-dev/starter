@@ -1,16 +1,18 @@
 """Email tracking models."""
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Optional
 
-from sqlalchemy import Column, DateTime, Enum as SQLEnum, ForeignKey, Integer, String, JSON
-from sqlalchemy.orm import relationship
-
 from app.db.base_class import Base
+from sqlalchemy import JSON, Column, DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 
 
 class EmailStatus(str, Enum):
     """Email status enumeration."""
+
     QUEUED = "queued"
     SENT = "sent"
     DELIVERED = "delivered"
@@ -23,6 +25,7 @@ class EmailStatus(str, Enum):
 
 class EmailTracking(Base):
     """Email tracking model."""
+
     __tablename__ = "email_tracking"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -38,27 +41,46 @@ class EmailTracking(Base):
     failed_at = Column(DateTime(timezone=True), nullable=True)
     error_message = Column(String, nullable=True)
     tracking_metadata = Column(JSON, nullable=True)  # Additional tracking data
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
 
     # Relationships
-    events = relationship("EmailEvent", back_populates="email", cascade="all, delete-orphan")
+    events = relationship(
+        "EmailEvent", back_populates="email", cascade="all, delete-orphan"
+    )
 
 
 class EmailEvent(Base):
     """Email event model for detailed tracking."""
+
     __tablename__ = "email_events"
 
     id = Column(Integer, primary_key=True, index=True)
     email_id = Column(Integer, ForeignKey("email_tracking.id"), nullable=False)
     event_type = Column(SQLEnum(EmailStatus), nullable=False)
-    occurred_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    occurred_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
     user_agent = Column(String, nullable=True)
     ip_address = Column(String, nullable=True)
     location = Column(String, nullable=True)
     event_metadata = Column(JSON, nullable=True)  # Additional event data
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
 
     # Relationships
-    email = relationship("EmailTracking", back_populates="events") 
+    email = relationship("EmailTracking", back_populates="events")

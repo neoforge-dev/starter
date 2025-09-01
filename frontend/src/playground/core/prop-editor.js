@@ -1,6 +1,6 @@
 /**
  * Prop Editor - Interactive property editor for components
- * 
+ *
  * Creates interactive controls for component properties based on argTypes
  */
 import { html, css, LitElement } from 'lit';
@@ -15,11 +15,11 @@ export class PropEditor extends LitElement {
       padding: 16px;
       margin: 16px 0;
     }
-    
+
     .prop-group {
       margin-bottom: 16px;
     }
-    
+
     .prop-label {
       display: block;
       font-weight: 500;
@@ -27,13 +27,13 @@ export class PropEditor extends LitElement {
       font-size: 14px;
       color: #495057;
     }
-    
+
     .prop-description {
       font-size: 12px;
       color: #6c757d;
       margin-bottom: 8px;
     }
-    
+
     .prop-control {
       width: 100%;
       padding: 8px 12px;
@@ -41,18 +41,18 @@ export class PropEditor extends LitElement {
       border-radius: 4px;
       font-size: 14px;
     }
-    
+
     .prop-control:focus {
       outline: none;
       border-color: #80bdff;
       box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
     }
-    
+
     .checkbox-control {
       width: auto;
       margin-right: 8px;
     }
-    
+
     .reset-button {
       background: #6c757d;
       color: white;
@@ -63,7 +63,7 @@ export class PropEditor extends LitElement {
       font-size: 12px;
       margin-top: 16px;
     }
-    
+
     .reset-button:hover {
       background: #5a6268;
     }
@@ -91,7 +91,7 @@ export class PropEditor extends LitElement {
    */
   createControls(argTypes) {
     const controls = {};
-    
+
     Object.entries(argTypes).forEach(([propName, config]) => {
       controls[propName] = {
         type: config.control?.type || 'text',
@@ -101,7 +101,7 @@ export class PropEditor extends LitElement {
         ...config.control
       };
     });
-    
+
     return controls;
   }
 
@@ -114,12 +114,12 @@ export class PropEditor extends LitElement {
     const newValues = { ...this.values };
     newValues[propName] = value;
     this.values = newValues;
-    
+
     // Update the target component directly if available
     if (this.targetComponent && this.targetComponent[propName] !== undefined) {
       this.targetComponent[propName] = value;
     }
-    
+
     // Dispatch change event with new values
     this.dispatchEvent(new CustomEvent('prop-change', {
       detail: {
@@ -143,7 +143,7 @@ export class PropEditor extends LitElement {
         defaultValues[propName] = defaultValue;
       }
     });
-    
+
     this.values = defaultValues;
     this.dispatchEvent(new CustomEvent('props-reset', {
       detail: { values: defaultValues },
@@ -156,26 +156,26 @@ export class PropEditor extends LitElement {
    */
   renderControl(propName, config) {
     const currentValue = this.values[propName] || config.defaultValue;
-    
+
     switch (config.control?.type || 'text') {
       case 'select':
         return html`
-          <select 
-            class="prop-control" 
+          <select
+            class="prop-control"
             @change="${(e) => this.onPropChange(propName, e.target.value)}"
             .value="${currentValue}"
           >
-            ${(config.options || config.control.options || []).map(option => 
+            ${(config.options || config.control.options || []).map(option =>
               html`<option value="${option}" ?selected="${option === currentValue}">${option}</option>`
             )}
           </select>
         `;
-      
+
       case 'boolean':
         return html`
           <label>
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               class="prop-control checkbox-control"
               ?checked="${currentValue}"
               @change="${(e) => this.onPropChange(propName, e.target.checked)}"
@@ -183,21 +183,21 @@ export class PropEditor extends LitElement {
             ${config.description || propName}
           </label>
         `;
-      
+
       case 'color':
         return html`
-          <input 
-            type="color" 
+          <input
+            type="color"
             class="prop-control"
             .value="${currentValue || '#000000'}"
             @input="${(e) => this.onPropChange(propName, e.target.value)}"
           />
         `;
-      
+
       case 'number':
         return html`
-          <input 
-            type="number" 
+          <input
+            type="number"
             class="prop-control"
             .value="${currentValue || 0}"
             min="${config.min || 0}"
@@ -206,11 +206,11 @@ export class PropEditor extends LitElement {
             @input="${(e) => this.onPropChange(propName, Number(e.target.value))}"
           />
         `;
-      
+
       case 'range':
         return html`
-          <input 
-            type="range" 
+          <input
+            type="range"
             class="prop-control"
             .value="${currentValue || config.min || 0}"
             min="${config.min || 0}"
@@ -220,12 +220,12 @@ export class PropEditor extends LitElement {
           />
           <span>${currentValue}</span>
         `;
-      
+
       case 'text':
       default:
         return html`
-          <input 
-            type="text" 
+          <input
+            type="text"
             class="prop-control"
             .value="${currentValue || ''}"
             placeholder="${config.placeholder || `Enter ${propName}`}"
@@ -251,7 +251,7 @@ export class PropEditor extends LitElement {
           ${this.renderControl(propName, config)}
         </div>
       `)}
-      
+
       <button class="reset-button" @click="${this.resetToDefaults}">
         Reset to Defaults
       </button>

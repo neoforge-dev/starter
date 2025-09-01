@@ -48,7 +48,7 @@ export async function runAxeTest(element, options = {}) {
     const results = await axeCore.run(element, {
       tags: ['wcag2a', 'wcag2aa']
     });
-    
+
     return {
       violations: results.violations,
       passes: results.passes,
@@ -80,13 +80,13 @@ export function generateViolationReport(violations) {
   }
 
   let report = `❌ Found ${violations.length} accessibility violation(s):\n\n`;
-  
+
   violations.forEach((violation, index) => {
     report += `${index + 1}. ${violation.help}\n`;
     report += `   Impact: ${violation.impact}\n`;
     report += `   WCAG: ${violation.tags.filter(tag => tag.includes('wcag')).join(', ')}\n`;
     report += `   Elements affected: ${violation.nodes.length}\n`;
-    
+
     // Show first few affected elements
     violation.nodes.slice(0, 3).forEach(node => {
       report += `   - ${node.target.join(' > ')}\n`;
@@ -94,11 +94,11 @@ export function generateViolationReport(violations) {
         report += `     Issue: ${node.failureSummary}\n`;
       }
     });
-    
+
     if (violation.nodes.length > 3) {
       report += `   ... and ${violation.nodes.length - 3} more elements\n`;
     }
-    
+
     report += `   Learn more: ${violation.helpUrl}\n\n`;
   });
 
@@ -113,19 +113,19 @@ export function generateViolationReport(violations) {
 export function checkTouchTargets(element) {
   const violations = [];
   const minSize = 44; // WCAG AA requirement
-  
+
   const interactiveElements = element.querySelectorAll(
     'button, a, input, select, textarea, [role="button"], [role="link"], [tabindex="0"]'
   );
-  
+
   interactiveElements.forEach(el => {
     const rect = el.getBoundingClientRect();
     const computedStyle = window.getComputedStyle(el);
-    
+
     // Check actual size including padding
     const width = rect.width;
     const height = rect.height;
-    
+
     if (width < minSize || height < minSize) {
       violations.push({
         element: el,
@@ -136,7 +136,7 @@ export function checkTouchTargets(element) {
       });
     }
   });
-  
+
   return violations;
 }
 
@@ -148,19 +148,19 @@ export function checkTouchTargets(element) {
 export function checkColorContrast(element) {
   const violations = [];
   const textElements = element.querySelectorAll('*');
-  
+
   textElements.forEach(el => {
     const text = el.textContent?.trim();
     if (!text || el.children.length > 0) return; // Skip empty or container elements
-    
+
     const computedStyle = window.getComputedStyle(el);
     const color = computedStyle.color;
     const backgroundColor = computedStyle.backgroundColor;
-    
+
     // Simple contrast check (in a real implementation, you'd use a proper contrast calculation)
     if (color && backgroundColor && color !== backgroundColor) {
       const contrastRatio = calculateContrastRatio(color, backgroundColor);
-      
+
       if (contrastRatio < 4.5) { // WCAG AA requirement
         violations.push({
           element: el,
@@ -173,7 +173,7 @@ export function checkColorContrast(element) {
       }
     }
   });
-  
+
   return violations;
 }
 
@@ -184,15 +184,15 @@ export function checkColorContrast(element) {
  */
 export function checkKeyboardNavigation(element) {
   const violations = [];
-  
+
   const interactiveElements = element.querySelectorAll(
     'button, a, input, select, textarea, [role="button"], [role="link"]'
   );
-  
+
   interactiveElements.forEach(el => {
     const tabIndex = el.getAttribute('tabindex');
     const isNativelyFocusable = ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName);
-    
+
     // Check if element is focusable
     if (!isNativelyFocusable && (tabIndex === null || parseInt(tabIndex) < 0)) {
       violations.push({
@@ -201,11 +201,11 @@ export function checkKeyboardNavigation(element) {
         message: 'Interactive element not keyboard accessible (missing tabindex or negative tabindex)'
       });
     }
-    
+
     // Check for keyboard event handlers
     const hasKeyboardHandler = el.onkeydown || el.onkeyup || el.onkeypress ||
       el.getAttribute('onkeydown') || el.getAttribute('onkeyup') || el.getAttribute('onkeypress');
-    
+
     if (el.onclick && !hasKeyboardHandler && !isNativelyFocusable) {
       violations.push({
         element: el,
@@ -214,7 +214,7 @@ export function checkKeyboardNavigation(element) {
       });
     }
   });
-  
+
   return violations;
 }
 
@@ -229,7 +229,7 @@ export async function testComponentAccessibility(element, options = {}) {
   const touchTargetViolations = checkTouchTargets(element);
   const colorContrastViolations = checkColorContrast(element);
   const keyboardViolations = checkKeyboardNavigation(element);
-  
+
   const allViolations = [
     ...axeResults.violations,
     ...touchTargetViolations.map(v => ({
@@ -254,7 +254,7 @@ export async function testComponentAccessibility(element, options = {}) {
       nodes: [{ target: [v.selector] }]
     }))
   ];
-  
+
   return {
     ...axeResults,
     violations: allViolations,
@@ -292,7 +292,7 @@ function calculateContrastRatio(color1, color2) {
  */
 export function saveAccessibilityReport(results, filename = 'accessibilityReport.html') {
   const report = generateHTMLReport(results);
-  
+
   // In a browser environment, we can't directly write files
   // This would be handled by the test runner in a real implementation
   console.log('Accessibility Report:', report);
@@ -319,7 +319,7 @@ function generateHTMLReport(results) {
         <p>Passed Tests: ${results.summary?.passCount || 0}</p>
         <p>WCAG Level: ${results.wcagLevel || 'AA'}</p>
       </div>
-      
+
       ${results.violations?.length > 0 ? `
         <h2>Violations</h2>
         ${results.violations.map(v => `

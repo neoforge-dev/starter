@@ -252,33 +252,33 @@ export class NeoHeading extends BaseComponent {
    */
   _getClasses() {
     const classes = ["heading"];
-    
+
     // Visual level styling (unless size override is provided)
     if (!this.size) {
       classes.push(`level-${this._getVisualLevel()}`);
     }
-    
+
     // Size override
     if (this.size) {
       classes.push(`size-${this.size}`);
     }
-    
+
     // Weight
     if (this.weight) {
       classes.push(`weight-${this.weight}`);
     }
-    
+
     // Color
     classes.push(`color-${this.color}`);
-    
+
     // Alignment
     classes.push(`align-${this.align}`);
-    
+
     // Truncation
     if (this.truncate) {
       classes.push("truncate");
     }
-    
+
     return classes.join(" ");
   }
 
@@ -288,10 +288,10 @@ export class NeoHeading extends BaseComponent {
   _renderHeading() {
     const tag = this._getSemanticTag();
     const classes = this._getClasses();
-    
+
     // Create the heading element dynamically
     // const _headingTemplate = `<${tag} class="${classes}"><slot></slot></${tag}>`;
-    
+
     // Use unsafeHTML for dynamic tag creation
     return html`${this._createHeadingElement(tag, classes)}`;
   }

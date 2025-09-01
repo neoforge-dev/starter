@@ -333,7 +333,7 @@ export class NeoTable extends LitElement {
         const aVal = a[this.sortField];
         const bVal = b[this.sortField];
         const direction = this.sortDirection === "asc" ? 1 : -1;
-        
+
         if (aVal < bVal) return -direction;
         if (aVal > bVal) return direction;
         return 0;
@@ -419,7 +419,7 @@ export class NeoTable extends LitElement {
     if (format === 'csv') {
       // CSV export
       const headers = this.columns.map(col => col.header).join(',');
-      const rows = data.map(row => 
+      const rows = data.map(row =>
         this.columns.map(col => `"${row[col.field] || ''}"`).join(',')
       ).join('\n');
       content = headers + '\n' + rows;
@@ -459,14 +459,14 @@ export class NeoTable extends LitElement {
               @input=${(e) => this._handleGlobalFilter(e.target.value)}
             />
             ${this.exportable ? html`
-              <button 
+              <button
                 class="export-btn"
                 @click=${() => this._exportData('csv')}
                 title="Export as CSV"
               >
                 Export CSV
               </button>
-              <button 
+              <button
                 class="export-btn"
                 @click=${() => this._exportData('json')}
                 title="Export as JSON"
@@ -479,7 +479,7 @@ export class NeoTable extends LitElement {
 
         <div class="table-wrapper ${this.loading ? 'loading-overlay' : ''}">
           ${this.loading ? html`<div class="loading-spinner"></div>` : ''}
-          
+
           ${hasData ? html`
             <table>
               <thead>
@@ -495,7 +495,7 @@ export class NeoTable extends LitElement {
                     </th>
                   ` : ''}
                   ${this.columns.map(col => html`
-                    <th 
+                    <th
                       class="sortable ${this.sortField === col.field ? 'sorted-' + this.sortDirection : ''}"
                       @click=${() => this._handleSort(col.field)}
                       style=${col.width ? `width: ${col.width}` : ''}
@@ -552,8 +552,8 @@ export class NeoTable extends LitElement {
         ${hasData && this.totalPages > 1 ? html`
           <div class="pagination">
             <div class="pagination-info">
-              Showing ${(this.currentPage - 1) * this.pageSize + 1} to 
-              ${Math.min(this.currentPage * this.pageSize, this.sortedData.length)} 
+              Showing ${(this.currentPage - 1) * this.pageSize + 1} to
+              ${Math.min(this.currentPage * this.pageSize, this.sortedData.length)}
               of ${this.sortedData.length} entries
             </div>
             <div class="pagination-controls">

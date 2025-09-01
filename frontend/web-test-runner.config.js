@@ -64,30 +64,30 @@ const devConfig = {
             length: 0,
             key: () => null
           };
-          
+
           window.fetch = async () => ({ ok: true, json: async () => ({}) });
-          window.matchMedia = () => ({ 
-            matches: false, 
-            addListener: () => {}, 
+          window.matchMedia = () => ({
+            matches: false,
+            addListener: () => {},
             removeListener: () => {},
             addEventListener: () => {},
-            removeEventListener: () => {} 
+            removeEventListener: () => {}
           });
-          
-          window.ResizeObserver = class { 
-            observe() {} 
-            unobserve() {} 
-            disconnect() {} 
+
+          window.ResizeObserver = class {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
           };
-          
+
           window.IntersectionObserver = class {
             observe() {}
             unobserve() {}
             disconnect() {}
           };
-          
+
           window.process = { env: { NODE_ENV: 'test' } };
-          
+
           // Disable animations
           document.head.appendChild(Object.assign(document.createElement('style'), {
             textContent: '* { transition: none !important; animation: none !important; }'

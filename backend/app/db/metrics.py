@@ -1,17 +1,18 @@
 """Database metrics module."""
-from typing import Dict, Any
+from typing import Any, Dict
 
 import structlog
+from app.db.session import engine
 from sqlalchemy import event
 from sqlalchemy.pool import NullPool
 
-from app.db.session import engine
 from app.core.metrics import get_metrics
 
 logger = structlog.get_logger()
 
 # Initialize metrics
 metrics = get_metrics()
+
 
 def get_pool_stats() -> Dict[str, Any]:
     """Get current database pool statistics."""
@@ -84,4 +85,4 @@ def on_checkin(dbapi_con, con_record):
 # Register event listeners for our specific engine instance
 if not isinstance(engine.sync_engine.pool, NullPool):
     event.listen(engine.sync_engine.pool, "checkout", on_checkout)
-    event.listen(engine.sync_engine.pool, "checkin", on_checkin) 
+    event.listen(engine.sync_engine.pool, "checkin", on_checkin)

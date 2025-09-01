@@ -1,6 +1,6 @@
 /**
  * Deployment Validation UI Component
- * 
+ *
  * Provides real-time visual feedback for deployment validation process
  * with step-by-step progress, detailed results, and actionable feedback.
  */
@@ -519,7 +519,7 @@ export class DeploymentValidationUI extends LitElement {
       <div class="validation-header">
         <h2>Deployment Validation</h2>
         <div class="subtitle">
-          ${this.deploymentConfig.url 
+          ${this.deploymentConfig.url
             ? html`Validating deployment at <code class="url-display">${this.deploymentConfig.url}</code>`
             : 'Checking deployment health and configuration'
           }
@@ -608,7 +608,7 @@ export class DeploymentValidationUI extends LitElement {
 
     return html`
       <div class="phase ${status}">
-        <div class="phase-header collapsible ${isCollapsed ? 'collapsed' : ''}" 
+        <div class="phase-header collapsible ${isCollapsed ? 'collapsed' : ''}"
              @click="${() => this.togglePhase(phase.key)}">
           <div class="phase-title">
             <div class="phase-icon ${status}">
@@ -620,14 +620,14 @@ export class DeploymentValidationUI extends LitElement {
             ${this.getPhaseStatusText(status)}
           </div>
         </div>
-        
+
         <div class="collapsible-content ${isCollapsed ? 'collapsed' : ''}">
           <div class="phase-details">
             ${phase.description}
           </div>
-          
+
           ${phaseResult ? this.renderPhaseResults(phaseResult) : ''}
-          
+
           ${status === 'running' ? this.renderLoadingSpinner() : ''}
         </div>
       </div>
@@ -705,7 +705,7 @@ export class DeploymentValidationUI extends LitElement {
 
         ${summary?.recommendations?.length ? this.renderRecommendations(summary.recommendations) : ''}
         ${summary?.nextSteps?.length ? this.renderNextSteps(summary.nextSteps) : ''}
-        
+
         <div class="actions">
           <button class="action-button" @click="${this.rerunValidation}">
             Run Validation Again
@@ -830,17 +830,17 @@ export class DeploymentValidationUI extends LitElement {
 
   getOverallScore() {
     if (!this.results?.phases) return '0%';
-    
+
     const phases = Object.values(this.results.phases);
     const passed = phases.filter(p => p.status === 'passed').length;
     const total = phases.length;
-    
+
     return `${Math.round((passed / total) * 100)}%`;
   }
 
   getPassedChecks() {
     if (!this.results?.phases) return 0;
-    
+
     return Object.values(this.results.phases)
       .reduce((total, phase) => {
         if (phase.checks) {
@@ -852,7 +852,7 @@ export class DeploymentValidationUI extends LitElement {
 
   getFailedChecks() {
     if (!this.results?.phases) return 0;
-    
+
     return Object.values(this.results.phases)
       .reduce((total, phase) => {
         if (phase.checks) {

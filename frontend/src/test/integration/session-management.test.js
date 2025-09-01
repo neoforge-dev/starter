@@ -1,6 +1,6 @@
 /**
  * Session Management Integration Tests
- * 
+ *
  * These tests verify user session persistence and management across browser state changes:
  * - Session persistence across page refreshes
  * - Authentication state recovery after browser restart
@@ -23,22 +23,22 @@ describe('Session Management Integration Tests', () => {
   beforeEach(() => {
     // Store original localStorage
     originalLocalStorage = global.localStorage;
-    
+
     // Setup test environment first
     authTestUtils.setup();
     mockBackend.reset();
-    
+
     // Create new auth service instance after mocks are set up
     // The AuthService constructor accesses localStorage, so mocks must be ready
     authService = new AuthService();
-    
+
     // Mock storage event for cross-tab communication
     mockStorageEvent = new Event('storage');
   });
 
   afterEach(() => {
     authTestUtils.cleanup();
-    
+
     // Restore original localStorage
     if (originalLocalStorage) {
       global.localStorage = originalLocalStorage;
@@ -65,7 +65,7 @@ describe('Session Management Integration Tests', () => {
 
       // Create a new auth service after localStorage is populated
       const newAuthService = new AuthService();
-      
+
       // Act - Initialize auth service (simulating page refresh)
       await newAuthService.initialize();
 
@@ -73,7 +73,7 @@ describe('Session Management Integration Tests', () => {
       expect(newAuthService.isAuthenticated()).toBe(true);
       expect(newAuthService.getUser()).toEqual(user);
       expect(newAuthService.getToken()).toBe(token);
-      
+
       // Verify token validation was called
       expect(global.fetch).toHaveBeenCalledWith(
         '/api/auth/validate',
@@ -98,7 +98,7 @@ describe('Session Management Integration Tests', () => {
 
       // Create a new auth service with the invalid token
       const newAuthService = new AuthService();
-      
+
       // Act
       await newAuthService.initialize();
 
@@ -112,13 +112,13 @@ describe('Session Management Integration Tests', () => {
     it('should handle network failure during token validation', async () => {
       // Arrange
       authTestUtils.createAuthenticatedSession();
-      
+
       // Mock network failure
       global.fetch = vi.fn().mockRejectedValue(new Error('Network Error'));
 
       // Create new auth service with the token
       const newAuthService = new AuthService();
-      
+
       // Act
       await newAuthService.initialize();
 
@@ -131,7 +131,7 @@ describe('Session Management Integration Tests', () => {
     it('should maintain session state across multiple page interactions', async () => {
       // Arrange
       const credentials = { email: 'test@example.com', password: 'password123' };
-      
+
       // Mock login response
       global.fetch = vi.fn().mockImplementation(async (url) => {
         if (url.includes('/auth/login')) {
@@ -182,7 +182,7 @@ describe('Session Management Integration Tests', () => {
 
       // Create new auth service with expired token
       const newAuthService = new AuthService();
-      
+
       // Act
       await newAuthService.initialize();
 
@@ -196,7 +196,7 @@ describe('Session Management Integration Tests', () => {
       // Arrange - Start with valid session
       authTestUtils.createAuthenticatedSession();
       await authService.initialize();
-      
+
       // Mock API call that returns 401 (expired token)
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
@@ -219,7 +219,7 @@ describe('Session Management Integration Tests', () => {
     it('should handle token near expiration warning', async () => {
       // This test would verify behavior when token is close to expiration
       // In a real implementation, you might want to refresh the token before it expires
-      
+
       // Arrange - Create token that expires in 5 minutes
       const user = { id: 1, email: 'test@example.com' };
       const soonToExpireToken = authTestUtils.createMockJWT(user, 300); // 5 minutes
@@ -234,7 +234,7 @@ describe('Session Management Integration Tests', () => {
 
       // Create new auth service with soon-to-expire token
       const newAuthService = new AuthService();
-      
+
       // Act
       await newAuthService.initialize();
 
@@ -288,7 +288,7 @@ describe('Session Management Integration Tests', () => {
     it('should synchronize logout state across browser tabs', async () => {
       // Arrange - Both tabs start authenticated
       const { user } = authTestUtils.createAuthenticatedSession();
-      
+
       const authService1 = new AuthService();
       const authService2 = new AuthService();
 
@@ -330,15 +330,15 @@ describe('Session Management Integration Tests', () => {
 
     it('should handle conflicting sessions between tabs', async () => {
       // This test simulates a scenario where one tab has a newer token than another
-      
+
       // Arrange - Start with old token
       const oldToken = authTestUtils.createMockJWT({ id: 1, email: 'test@example.com' }, 3600);
       authTestUtils.mockLocalStorage.setItem('auth_token', oldToken);
-      
+
       // Tab 2 gets a new token (simulating login refresh)
       const newToken = authTestUtils.createMockJWT({ id: 1, email: 'test@example.com' }, 7200);
       authTestUtils.mockLocalStorage.setItem('auth_token', newToken);
-      
+
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
@@ -348,7 +348,7 @@ describe('Session Management Integration Tests', () => {
       // Create auth services after token is set
       const authService1 = new AuthService();
       const authService2 = new AuthService();
-      
+
       // Initialize both services
       await authService1.initialize();
       await authService2.initialize();
@@ -363,10 +363,10 @@ describe('Session Management Integration Tests', () => {
     it('should clear sensitive data from storage on logout', async () => {
       // Arrange
       const { user } = authTestUtils.createAuthenticatedSession();
-      
+
       // Create new auth service and simulate initialization
       const testAuthService = new AuthService();
-      
+
       global.fetch = vi.fn()
         .mockResolvedValueOnce({
           ok: true,
@@ -378,9 +378,9 @@ describe('Session Management Integration Tests', () => {
           status: 200,
           json: async () => ({ message: 'Logged out' })
         });
-        
+
       await testAuthService.initialize();
-      
+
       // Verify initial state
       expect(authTestUtils.mockLocalStorage.getItem('auth_token')).toBeTruthy();
       expect(testAuthService.isAuthenticated()).toBe(true);
@@ -426,7 +426,7 @@ describe('Session Management Integration Tests', () => {
         // If login fails due to storage, that's acceptable behavior
         expect(error.message).toContain('QuotaExceededError');
       }
-      
+
       // Restore original setItem
       authTestUtils.mockLocalStorage.setItem = originalSetItem;
     });
@@ -441,10 +441,10 @@ describe('Session Management Integration Tests', () => {
         status: 401,
         json: async () => ({ detail: 'Invalid token' })
       });
-      
+
       // Create auth service with corrupted token
       const testAuthService = new AuthService();
-      
+
       // Act
       await testAuthService.initialize();
 
@@ -457,7 +457,7 @@ describe('Session Management Integration Tests', () => {
     it('should handle localStorage being unavailable (private browsing)', async () => {
       // This test needs to be handled carefully due to the way AuthService constructor works
       // For now, we'll verify that the service can handle a missing localStorage gracefully
-      
+
       // Create a mock localStorage that throws errors
       const faultyStorage = {
         getItem: () => { throw new Error('Storage not available'); },
@@ -465,11 +465,11 @@ describe('Session Management Integration Tests', () => {
         removeItem: () => { throw new Error('Storage not available'); },
         clear: () => { throw new Error('Storage not available'); }
       };
-      
+
       // Override global localStorage temporarily
       const originalLocalStorage = global.localStorage;
       global.localStorage = faultyStorage;
-      
+
       try {
         // Act & Assert - Should handle storage errors gracefully
         const tempAuthService = new AuthService();
@@ -491,9 +491,9 @@ describe('Session Management Integration Tests', () => {
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
-          json: async () => ({ 
-            user: { id: 1, email: 'test@example.com', full_name: 'Test User' }, 
-            token: 'token1' 
+          json: async () => ({
+            user: { id: 1, email: 'test@example.com', full_name: 'Test User' },
+            token: 'token1'
           })
         })
         .mockResolvedValueOnce({
@@ -504,9 +504,9 @@ describe('Session Management Integration Tests', () => {
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
-          json: async () => ({ 
-            user: { id: 1, email: 'test@example.com', full_name: 'Test User' }, 
-            token: 'token2' 
+          json: async () => ({
+            user: { id: 1, email: 'test@example.com', full_name: 'Test User' },
+            token: 'token2'
           })
         });
 
@@ -514,10 +514,10 @@ describe('Session Management Integration Tests', () => {
         // Act - Rapid login/logout/login
         await authService.login('test@example.com', 'password123');
         expect(authService.isAuthenticated()).toBe(true);
-        
+
         await authService.logout();
         expect(authService.isAuthenticated()).toBe(false);
-        
+
         await authService.login('test@example.com', 'password123');
         expect(authService.isAuthenticated()).toBe(true);
 
@@ -532,14 +532,14 @@ describe('Session Management Integration Tests', () => {
     it('should handle session recovery after browser crash simulation', async () => {
       // Arrange - Create session and "crash" (reinitialize service)
       authTestUtils.createAuthenticatedSession();
-      
+
       // Act - Create new service instance (simulating browser restart)
       const recoveredAuthService = new AuthService();
-      
+
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        json: async () => ({ 
+        json: async () => ({
           user: { id: 1, email: 'test@example.com', full_name: 'Test User' }
         })
       });
@@ -553,7 +553,7 @@ describe('Session Management Integration Tests', () => {
 
     it('should handle concurrent authentication attempts', async () => {
       // This tests what happens if multiple login attempts happen simultaneously
-      
+
       // Arrange
       let callCount = 0;
       global.fetch = vi.fn().mockImplementation(async () => {
@@ -562,9 +562,9 @@ describe('Session Management Integration Tests', () => {
         return {
           ok: true,
           status: 200,
-          json: async () => ({ 
-            user: { id: 1, email: 'test@example.com' }, 
-            token: `token_${callCount}` 
+          json: async () => ({
+            user: { id: 1, email: 'test@example.com' },
+            token: `token_${callCount}`
           })
         };
       });
@@ -582,14 +582,14 @@ describe('Session Management Integration Tests', () => {
       results.forEach(result => {
         expect(result.status).toBe('fulfilled');
       });
-      
+
       expect(authService.isAuthenticated()).toBe(true);
       expect(authService.getUser().email).toBe('test@example.com');
     });
 
     it('should handle storage events from external changes', async () => {
       // Simulate another application or browser extension modifying localStorage
-      
+
       // Arrange - Simulate external storage change
       const externalToken = authTestUtils.createMockJWT({ id: 1, email: 'external@example.com' });
       authTestUtils.mockLocalStorage.setItem('auth_token', externalToken);
@@ -598,7 +598,7 @@ describe('Session Management Integration Tests', () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        json: async () => ({ 
+        json: async () => ({
           user: { id: 1, email: 'external@example.com' }
         })
       });

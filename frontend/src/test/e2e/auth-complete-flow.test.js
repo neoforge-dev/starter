@@ -37,7 +37,7 @@ test.describe('Authentication Complete Flow', () => {
     // For now, we'll verify the verification page exists and can be accessed
     const verificationUrl = `/verify-email?token=test-token-${timestamp}`;
     await page.goto(verificationUrl);
-    
+
     // Check if verification page loads (even if token is invalid for test)
     await expect(page.locator('h1, h2, .title')).toContainText(/verify|confirmation/i);
 
@@ -106,7 +106,7 @@ test.describe('Authentication Complete Flow', () => {
   test('authentication guards protect routes correctly', async ({ page }) => {
     // 1. Attempt to access protected route while unauthenticated
     await page.goto('/dashboard');
-    
+
     // 2. Verify redirect to login page
     await expect(page).toHaveURL(/.*\/(login|auth)/, { timeout: 5000 });
 
@@ -141,7 +141,7 @@ test.describe('Authentication Complete Flow', () => {
     await page.fill('[data-testid="login-email"], input[type="email"]', 'nonexistent@example.com');
     await page.fill('[data-testid="login-password"], input[type="password"]', 'wrongpassword');
     await page.click('[data-testid="login-button"], button[type="submit"]');
-    
+
     // Should show error message for invalid credentials
     await expect(page.locator('.error, .error-message, [data-testid="error"]')).toBeVisible({
       timeout: 10000
@@ -160,7 +160,7 @@ test.describe('Authentication Complete Flow', () => {
     await page.fill('[data-testid="email-input"], input[type="email"]', 'test@example.com');
     await page.fill('[data-testid="password-input"], input[type="password"]:first-of-type', 'password123');
     await page.fill('[data-testid="confirm-password-input"], input[type="password"]:last-of-type', 'different123');
-    
+
     await page.click('[data-testid="register-button"], button[type="submit"]');
     await expect(page.locator('.error')).toContainText(/password.*match|confirm.*password/i);
 

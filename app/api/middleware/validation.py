@@ -1,14 +1,16 @@
+import logging
+import time
+from typing import Callable, Optional
+
+from app.config import settings
+from app.utils.metrics import get_metrics
 from fastapi import Request, Response
 from fastapi.middleware.base import BaseHTTPMiddleware
-from fastapi.types import ASGIApp
-from typing import Callable, Optional
-import time
-from app.utils.metrics import get_metrics
-from app.config import settings
 from fastapi.responses import JSONResponse
-import logging
+from fastapi.types import ASGIApp
 
 logger = logging.getLogger(__name__)
+
 
 class RequestValidationMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: ASGIApp):
@@ -37,13 +39,13 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             if endpoint in self.public_endpoints:
                 response = await call_next(request)
                 duration = time.time() - start_time
-                
+
                 # Record metrics
                 self.metrics["http_request_duration_seconds"].labels(
                     method=method,
                     endpoint=endpoint,
                 ).observe(duration)
-                
+
                 self.metrics["http_requests"].labels(
                     method=method,
                     endpoint=endpoint,
@@ -55,18 +57,20 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             # Skip validation for endpoints that require authentication
             # Let FastAPI's authentication handle these cases
             if endpoint.startswith(settings.api_v1_str) and (
-                not request.headers.get("Authorization") or  # No auth token
-                request.headers.get("Authorization", "").startswith("Bearer ")  # Has auth token
+                not request.headers.get("Authorization")
+                or request.headers.get("Authorization", "").startswith(  # No auth token
+                    "Bearer "
+                )  # Has auth token
             ):
                 response = await call_next(request)
                 duration = time.time() - start_time
-                
+
                 # Record metrics
                 self.metrics["http_request_duration_seconds"].labels(
                     method=method,
                     endpoint=endpoint,
                 ).observe(duration)
-                
+
                 self.metrics["http_requests"].labels(
                     method=method,
                     endpoint=endpoint,
@@ -141,4 +145,4 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 
     async def _validate_header(self, request: Request):
         # Implementation of _validate_header method
-        pass 
+        pass

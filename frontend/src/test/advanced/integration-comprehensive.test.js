@@ -1,6 +1,6 @@
 /**
  * Comprehensive Integration Testing Suite
- * 
+ *
  * End-to-end workflow validation for all playground components
  * Covers component interactions, state management, event handling, theme switching
  */
@@ -85,7 +85,7 @@ class IntegrationTestUtils {
         }, {})
       }))
     };
-    
+
     this.stateSnapshots.push(snapshot);
     return snapshot;
   }
@@ -100,12 +100,12 @@ class IntegrationTestUtils {
 
     // Component-specific state extraction
     if (component.tagName.toLowerCase().includes('modal')) {
-      state.open = component.hasAttribute('open') || 
+      state.open = component.hasAttribute('open') ||
                   component.getAttribute('aria-hidden') === 'false';
     }
 
     if (component.tagName.toLowerCase().includes('tab')) {
-      state.selected = component.hasAttribute('selected') || 
+      state.selected = component.hasAttribute('selected') ||
                      component.getAttribute('aria-selected') === 'true';
     }
 
@@ -114,7 +114,7 @@ class IntegrationTestUtils {
 
   async simulateUserInteraction(component, interaction) {
     const startTime = performance.now();
-    
+
     try {
       switch (interaction.type) {
         case 'click':
@@ -152,17 +152,17 @@ class IntegrationTestUtils {
       if (component.updateComplete) {
         await component.updateComplete;
       }
-      
+
       // Wait for any animations or transitions
       await aTimeout(50);
-      
+
       const endTime = performance.now();
       this.performanceMetrics.push({
         interaction: interaction.type,
         component: component.tagName,
         duration: endTime - startTime
       });
-      
+
       return true;
     } catch (error) {
       console.error(`Interaction failed:`, error);
@@ -172,7 +172,7 @@ class IntegrationTestUtils {
 
   async waitForComponentUpdate(component, timeout = 1000) {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       if (component.updateComplete) {
         await component.updateComplete;
@@ -180,14 +180,14 @@ class IntegrationTestUtils {
       }
       await aTimeout(10);
     }
-    
+
     return false;
   }
 
   validateWorkflow(workflowSteps, actualEvents) {
     const expectedSteps = workflowSteps.map(step => step.event);
     const actualSteps = actualEvents.map(event => event.event);
-    
+
     return {
       completed: expectedSteps.every(step => actualSteps.includes(step)),
       missing: expectedSteps.filter(step => !actualSteps.includes(step)),
@@ -198,13 +198,13 @@ class IntegrationTestUtils {
 
   validateSequence(expected, actual) {
     let expectedIndex = 0;
-    
+
     for (const step of actual) {
       if (step === expected[expectedIndex]) {
         expectedIndex++;
       }
     }
-    
+
     return expectedIndex === expected.length;
   }
 
@@ -212,10 +212,10 @@ class IntegrationTestUtils {
     return {
       totalEvents: this.eventLog.length,
       stateSnapshots: this.stateSnapshots.length,
-      averageInteractionTime: this.performanceMetrics.length > 0 
+      averageInteractionTime: this.performanceMetrics.length > 0
         ? this.performanceMetrics.reduce((acc, metric) => acc + metric.duration, 0) / this.performanceMetrics.length
         : 0,
-      slowestInteraction: this.performanceMetrics.length > 0 
+      slowestInteraction: this.performanceMetrics.length > 0
         ? Math.max(...this.performanceMetrics.map(m => m.duration))
         : 0,
       eventLog: this.eventLog.slice(-10), // Last 10 events
@@ -253,7 +253,7 @@ describe("Comprehensive Integration Testing Suite", () => {
 
   // Playground system integration tests
   describe("Playground System Integration", () => {
-    
+
     beforeEach(async () => {
       playground = await fixture(html`
         <div id="playground-simulation" class="playground-container">
@@ -273,25 +273,25 @@ describe("Comprehensive Integration Testing Suite", () => {
               </div>
             </div>
           </aside>
-          
+
           <main class="playground-content">
             <div class="toolbar">
               <button id="props-toggle">Properties</button>
               <button id="code-toggle">Code</button>
               <button id="theme-toggle">Theme</button>
             </div>
-            
+
             <div id="component-preview" class="preview-area">
               <!-- Component will be rendered here -->
             </div>
-            
+
             <div id="properties-panel" class="panel" style="display: none;">
               <h3>Properties</h3>
               <div class="property-controls">
                 <!-- Property controls will be added dynamically -->
               </div>
             </div>
-            
+
             <div id="code-panel" class="panel" style="display: none;">
               <h3>Generated Code</h3>
               <pre><code id="generated-code"></code></pre>
@@ -303,56 +303,56 @@ describe("Comprehensive Integration Testing Suite", () => {
 
     test("component selection workflow", async () => {
       testUtils.logEvent('test-start', 'playground', { workflow: 'component-selection' });
-      
+
       const componentItems = playground.querySelectorAll('.component-item');
       const previewArea = playground.querySelector('#component-preview');
-      
+
       expect(componentItems.length).toBeGreaterThan(0);
       expect(previewArea).toBeTruthy();
-      
+
       // Simulate selecting a component
       const buttonComponent = playground.querySelector('[data-component="button"]');
       expect(buttonComponent).toBeTruthy();
-      
+
       const interactionSuccess = await testUtils.simulateUserInteraction(buttonComponent, { type: 'click' });
       expect(interactionSuccess).toBe(true);
-      
-      testUtils.logEvent('component-selected', 'button', { 
+
+      testUtils.logEvent('component-selected', 'button', {
         category: 'atoms',
         method: 'click'
       });
-      
+
       // Simulate component rendering in preview
       previewArea.innerHTML = '<neo-button id="preview-button">Preview Button</neo-button>';
       const previewButton = previewArea.querySelector('#preview-button');
-      
+
       if (previewButton) {
         testUtils.captureStateSnapshot([previewButton]);
-        testUtils.logEvent('component-rendered', 'button', { 
+        testUtils.logEvent('component-rendered', 'button', {
           preview: true,
           state: testUtils.extractComponentState(previewButton)
         });
       }
-      
+
       expect(previewArea.children.length).toBe(1);
     });
 
     test("properties panel interaction workflow", async () => {
       testUtils.logEvent('test-start', 'playground', { workflow: 'properties-interaction' });
-      
+
       // Set up initial component
       const previewArea = playground.querySelector('#component-preview');
       previewArea.innerHTML = '<neo-button id="target-button">Original Text</neo-button>';
-      
+
       const propertiesPanel = playground.querySelector('#properties-panel');
       const propsToggle = playground.querySelector('#props-toggle');
-      
+
       // Open properties panel
       await testUtils.simulateUserInteraction(propsToggle, { type: 'click' });
       propertiesPanel.style.display = 'block';
-      
+
       testUtils.logEvent('panel-opened', 'properties', { visible: true });
-      
+
       // Simulate adding property controls
       const propertyControls = playground.querySelector('.property-controls');
       propertyControls.innerHTML = `
@@ -372,30 +372,30 @@ describe("Comprehensive Integration Testing Suite", () => {
           <input type="checkbox" id="button-disabled">
         </div>
       `;
-      
+
       const textInput = propertyControls.querySelector('#button-text');
       const variantSelect = propertyControls.querySelector('#button-variant');
       const disabledCheckbox = propertyControls.querySelector('#button-disabled');
-      
+
       // Test property changes
-      await testUtils.simulateUserInteraction(textInput, { 
-        type: 'input', 
-        value: 'Updated Button Text' 
+      await testUtils.simulateUserInteraction(textInput, {
+        type: 'input',
+        value: 'Updated Button Text'
       });
-      
-      await testUtils.simulateUserInteraction(variantSelect, { 
-        type: 'change', 
-        value: 'secondary' 
+
+      await testUtils.simulateUserInteraction(variantSelect, {
+        type: 'change',
+        value: 'secondary'
       });
-      
+
       await testUtils.simulateUserInteraction(disabledCheckbox, { type: 'click' });
-      
+
       testUtils.logEvent('properties-changed', 'button', {
         text: textInput.value,
         variant: variantSelect.value,
         disabled: disabledCheckbox.checked
       });
-      
+
       // Verify property changes reflected in component
       const targetButton = previewArea.querySelector('#target-button');
       if (targetButton) {
@@ -404,10 +404,10 @@ describe("Comprehensive Integration Testing Suite", () => {
         if (disabledCheckbox.checked) {
           targetButton.setAttribute('disabled', '');
         }
-        
+
         const finalState = testUtils.extractComponentState(targetButton);
         testUtils.logEvent('component-updated', 'button', { state: finalState });
-        
+
         expect(targetButton.textContent).toBe('Updated Button Text');
         expect(targetButton.getAttribute('variant')).toBe('secondary');
         expect(targetButton.hasAttribute('disabled')).toBe(true);
@@ -416,34 +416,34 @@ describe("Comprehensive Integration Testing Suite", () => {
 
     test("theme switching workflow", async () => {
       testUtils.logEvent('test-start', 'playground', { workflow: 'theme-switching' });
-      
+
       const themeToggle = playground.querySelector('#theme-toggle');
       const playgroundContainer = playground.querySelector('.playground-container');
-      
+
       // Initial theme state
       const initialTheme = playgroundContainer.getAttribute('data-theme') || 'light';
       testUtils.captureStateSnapshot([playgroundContainer]);
-      
+
       // Switch theme
       await testUtils.simulateUserInteraction(themeToggle, { type: 'click' });
-      
+
       const newTheme = initialTheme === 'light' ? 'dark' : 'light';
       playgroundContainer.setAttribute('data-theme', newTheme);
-      
-      testUtils.logEvent('theme-changed', 'playground', { 
-        from: initialTheme, 
-        to: newTheme 
+
+      testUtils.logEvent('theme-changed', 'playground', {
+        from: initialTheme,
+        to: newTheme
       });
-      
+
       // Verify theme applied to all components
       const allComponents = playground.querySelectorAll('[class*="neo-"]');
       allComponents.forEach(component => {
         component.setAttribute('data-theme', newTheme);
         testUtils.logEvent('component-themed', component.tagName, { theme: newTheme });
       });
-      
+
       expect(playgroundContainer.getAttribute('data-theme')).toBe(newTheme);
-      
+
       // Test theme persistence simulation
       localStorage.setItem('playground-theme', newTheme);
       expect(localStorage.getItem('playground-theme')).toBe(newTheme);
@@ -451,31 +451,31 @@ describe("Comprehensive Integration Testing Suite", () => {
 
     test("code generation workflow", async () => {
       testUtils.logEvent('test-start', 'playground', { workflow: 'code-generation' });
-      
+
       const codeToggle = playground.querySelector('#code-toggle');
       const codePanel = playground.querySelector('#code-panel');
       const generatedCode = playground.querySelector('#generated-code');
-      
+
       // Set up component for code generation
       const previewArea = playground.querySelector('#component-preview');
       previewArea.innerHTML = '<neo-button variant="primary" disabled>Generated Button</neo-button>';
-      
+
       // Open code panel
       await testUtils.simulateUserInteraction(codeToggle, { type: 'click' });
       codePanel.style.display = 'block';
-      
+
       // Simulate code generation
       const component = previewArea.querySelector('neo-button');
       if (component) {
         const generatedHTML = this.generateComponentCode(component);
         generatedCode.textContent = generatedHTML;
-        
-        testUtils.logEvent('code-generated', 'button', { 
+
+        testUtils.logEvent('code-generated', 'button', {
           html: generatedHTML,
           attributes: Array.from(component.attributes).length
         });
       }
-      
+
       expect(generatedCode.textContent).toBeTruthy();
       expect(generatedCode.textContent).toContain('neo-button');
     });
@@ -484,23 +484,23 @@ describe("Comprehensive Integration Testing Suite", () => {
       const attributes = Array.from(component.attributes)
         .map(attr => `${attr.name}="${attr.value}"`)
         .join(' ');
-      
+
       return `<${component.tagName.toLowerCase()}${attributes ? ' ' + attributes : ''}>${component.textContent}</${component.tagName.toLowerCase()}>`;
     }
   });
 
   // Complex component interaction workflows
   describe("Complex Component Interaction Workflows", () => {
-    
+
     test("form completion with validation workflow", async () => {
       const formWorkflow = await fixture(html`
         <div class="form-workflow">
           <neo-form id="test-form" role="form" aria-label="Test Form">
             <div class="form-field">
               <label for="username">Username</label>
-              <neo-text-input 
-                id="username" 
-                name="username" 
+              <neo-text-input
+                id="username"
+                name="username"
                 required
                 aria-describedby="username-error">
               </neo-text-input>
@@ -508,13 +508,13 @@ describe("Comprehensive Integration Testing Suite", () => {
                 Username is required
               </neo-alert>
             </div>
-            
+
             <div class="form-field">
               <label for="email">Email</label>
-              <neo-text-input 
-                id="email" 
-                name="email" 
-                type="email" 
+              <neo-text-input
+                id="email"
+                name="email"
+                type="email"
                 required
                 aria-describedby="email-error">
               </neo-text-input>
@@ -522,11 +522,11 @@ describe("Comprehensive Integration Testing Suite", () => {
                 Valid email is required
               </neo-alert>
             </div>
-            
+
             <div class="form-field">
-              <neo-checkbox 
-                id="agree-terms" 
-                name="agreeTerms" 
+              <neo-checkbox
+                id="agree-terms"
+                name="agreeTerms"
                 required
                 aria-describedby="terms-error">
                 I agree to the terms
@@ -535,13 +535,13 @@ describe("Comprehensive Integration Testing Suite", () => {
                 You must agree to terms
               </neo-alert>
             </div>
-            
+
             <div class="form-actions">
               <neo-button type="submit" id="submit-btn">Submit</neo-button>
               <neo-button type="reset" variant="secondary" id="reset-btn">Reset</neo-button>
             </div>
           </neo-form>
-          
+
           <neo-toast id="success-toast" type="success" style="display: none;">
             Form submitted successfully!
           </neo-toast>
@@ -554,62 +554,62 @@ describe("Comprehensive Integration Testing Suite", () => {
       const emailInput = formWorkflow.querySelector('#email');
       const agreeCheckbox = formWorkflow.querySelector('#agree-terms');
       const submitButton = formWorkflow.querySelector('#submit-btn');
-      
+
       // Test form validation workflow
-      
+
       // Step 1: Try submitting empty form
       await testUtils.simulateUserInteraction(submitButton, { type: 'click' });
-      
+
       // Simulate validation errors
       const usernameError = formWorkflow.querySelector('#username-error');
       const emailError = formWorkflow.querySelector('#email-error');
       const termsError = formWorkflow.querySelector('#terms-error');
-      
+
       usernameError.style.display = 'block';
       emailError.style.display = 'block';
       termsError.style.display = 'block';
-      
-      testUtils.logEvent('validation-failed', 'form', { 
-        errors: ['username', 'email', 'terms'] 
+
+      testUtils.logEvent('validation-failed', 'form', {
+        errors: ['username', 'email', 'terms']
       });
-      
+
       // Step 2: Fill form fields
-      await testUtils.simulateUserInteraction(usernameInput, { 
-        type: 'input', 
-        value: 'testuser' 
+      await testUtils.simulateUserInteraction(usernameInput, {
+        type: 'input',
+        value: 'testuser'
       });
       usernameError.style.display = 'none';
-      
-      await testUtils.simulateUserInteraction(emailInput, { 
-        type: 'input', 
-        value: 'test@example.com' 
+
+      await testUtils.simulateUserInteraction(emailInput, {
+        type: 'input',
+        value: 'test@example.com'
       });
       emailError.style.display = 'none';
-      
+
       await testUtils.simulateUserInteraction(agreeCheckbox, { type: 'click' });
       termsError.style.display = 'none';
-      
+
       testUtils.logEvent('form-completed', 'form', {
         username: usernameInput.value,
         email: emailInput.value,
         agreed: agreeCheckbox.checked
       });
-      
+
       // Step 3: Submit valid form
       await testUtils.simulateUserInteraction(submitButton, { type: 'click' });
-      
+
       const successToast = formWorkflow.querySelector('#success-toast');
       successToast.style.display = 'block';
-      
+
       testUtils.logEvent('form-submitted', 'form', { success: true });
-      
+
       // Verify workflow completion
       const workflowSteps = [
         { event: 'validation-failed' },
         { event: 'form-completed' },
         { event: 'form-submitted' }
       ];
-      
+
       const workflowValidation = testUtils.validateWorkflow(workflowSteps, testUtils.eventLog);
       expect(workflowValidation.completed).toBe(true);
       expect(workflowValidation.sequence).toBe(true);
@@ -626,7 +626,7 @@ describe("Comprehensive Integration Testing Suite", () => {
               <option value="inactive">Inactive</option>
             </neo-select>
           </div>
-          
+
           <neo-data-table id="main-table" aria-label="User data table">
             <thead>
               <tr>
@@ -650,14 +650,14 @@ describe("Comprehensive Integration Testing Suite", () => {
               `)}
             </tbody>
           </neo-data-table>
-          
-          <neo-pagination 
-            id="table-pagination" 
-            total="100" 
-            current="1" 
+
+          <neo-pagination
+            id="table-pagination"
+            total="100"
+            current="1"
             page-size="10">
           </neo-pagination>
-          
+
           <neo-modal id="edit-modal" style="display: none;">
             <div class="modal-content">
               <h3>Edit User</h3>
@@ -684,13 +684,13 @@ describe("Comprehensive Integration Testing Suite", () => {
       const editModal = tableWorkflow.querySelector('#edit-modal');
 
       // Test search functionality
-      await testUtils.simulateUserInteraction(searchInput, { 
-        type: 'input', 
-        value: 'User 1' 
+      await testUtils.simulateUserInteraction(searchInput, {
+        type: 'input',
+        value: 'User 1'
       });
-      
+
       testUtils.logEvent('search-performed', 'table', { query: 'User 1' });
-      
+
       // Simulate filtering table rows
       const allRows = table.querySelectorAll('tbody tr');
       allRows.forEach((row, index) => {
@@ -699,56 +699,56 @@ describe("Comprehensive Integration Testing Suite", () => {
       });
 
       // Test filter functionality
-      await testUtils.simulateUserInteraction(filterSelect, { 
-        type: 'change', 
-        value: 'active' 
+      await testUtils.simulateUserInteraction(filterSelect, {
+        type: 'change',
+        value: 'active'
       });
-      
+
       testUtils.logEvent('filter-applied', 'table', { filter: 'active' });
-      
+
       // Test sorting
       const nameHeader = table.querySelector('[data-sortable="name"]');
       await testUtils.simulateUserInteraction(nameHeader, { type: 'click' });
-      
+
       testUtils.logEvent('sort-applied', 'table', { column: 'name', direction: 'asc' });
-      
+
       // Test row action (edit)
       const editButton = table.querySelector('[data-action="edit"]');
       await testUtils.simulateUserInteraction(editButton, { type: 'click' });
-      
+
       editModal.style.display = 'block';
       editModal.setAttribute('aria-hidden', 'false');
-      
+
       testUtils.logEvent('modal-opened', 'edit', { userId: editButton.getAttribute('data-id') });
-      
+
       // Test modal interaction
       const editName = editModal.querySelector('#edit-name');
       const saveButton = editModal.querySelector('#save-btn');
       const cancelButton = editModal.querySelector('#cancel-btn');
-      
-      await testUtils.simulateUserInteraction(editName, { 
-        type: 'input', 
-        value: 'Updated User Name' 
+
+      await testUtils.simulateUserInteraction(editName, {
+        type: 'input',
+        value: 'Updated User Name'
       });
-      
+
       await testUtils.simulateUserInteraction(saveButton, { type: 'click' });
-      
+
       editModal.style.display = 'none';
       editModal.setAttribute('aria-hidden', 'true');
-      
-      testUtils.logEvent('user-updated', 'table', { 
+
+      testUtils.logEvent('user-updated', 'table', {
         name: editName.value,
-        action: 'save' 
+        action: 'save'
       });
-      
+
       // Test pagination
       await testUtils.simulateUserInteraction(pagination, { type: 'click' });
       testUtils.logEvent('page-changed', 'pagination', { page: 2 });
-      
+
       // Verify complex workflow
       const expectedEvents = ['search-performed', 'filter-applied', 'sort-applied', 'modal-opened', 'user-updated'];
       const actualEvents = testUtils.eventLog.map(log => log.event);
-      
+
       expectedEvents.forEach(expectedEvent => {
         expect(actualEvents).toContain(expectedEvent);
       });
@@ -763,14 +763,14 @@ describe("Comprehensive Integration Testing Suite", () => {
               <neo-breadcrumb href="/products">Products</neo-breadcrumb>
               <neo-breadcrumb current>Category</neo-breadcrumb>
             </neo-breadcrumbs>
-            
+
             <neo-tabs id="main-tabs" role="tablist">
               <neo-tab role="tab" aria-controls="overview-panel" data-target="overview">Overview</neo-tab>
               <neo-tab role="tab" aria-controls="details-panel" data-target="details">Details</neo-tab>
               <neo-tab role="tab" aria-controls="reviews-panel" data-target="reviews">Reviews</neo-tab>
             </neo-tabs>
           </nav>
-          
+
           <main class="content-area">
             <div id="overview-panel" role="tabpanel" class="tab-content active">
               <h2>Overview Content</h2>
@@ -779,7 +779,7 @@ describe("Comprehensive Integration Testing Suite", () => {
                 <neo-button data-navigate="details">View Details</neo-button>
               </neo-card>
             </div>
-            
+
             <div id="details-panel" role="tabpanel" class="tab-content" style="display: none;">
               <h2>Details Content</h2>
               <neo-card>
@@ -787,7 +787,7 @@ describe("Comprehensive Integration Testing Suite", () => {
                 <neo-button data-navigate="reviews">View Reviews</neo-button>
               </neo-card>
             </div>
-            
+
             <div id="reviews-panel" role="tabpanel" class="tab-content" style="display: none;">
               <h2>Reviews Content</h2>
               <neo-card>
@@ -814,7 +814,7 @@ describe("Comprehensive Integration Testing Suite", () => {
         tab.setAttribute('aria-selected', 'false');
         tab.classList.remove('active');
       });
-      
+
       tabPanels.forEach(panel => {
         panel.style.display = 'none';
         panel.setAttribute('aria-hidden', 'true');
@@ -822,7 +822,7 @@ describe("Comprehensive Integration Testing Suite", () => {
 
       detailsTab.setAttribute('aria-selected', 'true');
       detailsTab.classList.add('active');
-      
+
       const detailsPanel = navigationWorkflow.querySelector('#details-panel');
       detailsPanel.style.display = 'block';
       detailsPanel.setAttribute('aria-hidden', 'false');
@@ -841,7 +841,7 @@ describe("Comprehensive Integration Testing Suite", () => {
         tab.setAttribute('aria-selected', 'false');
         tab.classList.remove('active');
       });
-      
+
       tabPanels.forEach(panel => {
         panel.style.display = 'none';
         panel.setAttribute('aria-hidden', 'true');
@@ -852,9 +852,9 @@ describe("Comprehensive Integration Testing Suite", () => {
       reviewsPanel.style.display = 'block';
       reviewsPanel.setAttribute('aria-hidden', 'false');
 
-      testUtils.logEvent('programmatic-navigation', 'navigation', { 
-        from: 'details', 
-        to: 'reviews' 
+      testUtils.logEvent('programmatic-navigation', 'navigation', {
+        from: 'details',
+        to: 'reviews'
       });
 
       // Test breadcrumb navigation
@@ -877,7 +877,7 @@ describe("Comprehensive Integration Testing Suite", () => {
 
   // System-wide integration tests
   describe("System-Wide Integration", () => {
-    
+
     test("state management synchronization", async () => {
       const systemState = await fixture(html`
         <div class="system-state-test">
@@ -885,7 +885,7 @@ describe("Comprehensive Integration Testing Suite", () => {
             <neo-button id="theme-btn" data-action="toggle-theme">Toggle Theme</neo-button>
             <neo-button id="size-btn" data-action="toggle-size">Toggle Size</neo-button>
           </div>
-          
+
           <div class="component-group-2">
             <neo-card id="test-card" class="theme-light size-normal">
               <p>Synchronized component</p>
@@ -894,7 +894,7 @@ describe("Comprehensive Integration Testing Suite", () => {
               <p>Another synchronized component</p>
             </neo-modal>
           </div>
-          
+
           <div class="state-display">
             <neo-badge id="theme-indicator">Light</neo-badge>
             <neo-badge id="size-indicator">Normal</neo-badge>
@@ -918,16 +918,16 @@ describe("Comprehensive Integration Testing Suite", () => {
       await testUtils.simulateUserInteraction(themeButton, { type: 'click' });
 
       currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-      
+
       // Update all components with new theme
       [card, modal].forEach(component => {
         component.classList.remove('theme-light', 'theme-dark');
         component.classList.add(`theme-${currentTheme}`);
       });
-      
+
       themeIndicator.textContent = currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1);
 
-      testUtils.logEvent('theme-synchronized', 'system', { 
+      testUtils.logEvent('theme-synchronized', 'system', {
         theme: currentTheme,
         affectedComponents: 2
       });
@@ -936,15 +936,15 @@ describe("Comprehensive Integration Testing Suite", () => {
       await testUtils.simulateUserInteraction(sizeButton, { type: 'click' });
 
       currentSize = currentSize === 'normal' ? 'large' : 'normal';
-      
+
       [card, modal].forEach(component => {
         component.classList.remove('size-normal', 'size-large');
         component.classList.add(`size-${currentSize}`);
       });
-      
+
       sizeIndicator.textContent = currentSize.charAt(0).toUpperCase() + currentSize.slice(1);
 
-      testUtils.logEvent('size-synchronized', 'system', { 
+      testUtils.logEvent('size-synchronized', 'system', {
         size: currentSize,
         affectedComponents: 2
       });
@@ -967,11 +967,11 @@ describe("Comprehensive Integration Testing Suite", () => {
               <p>This component might fail</p>
             </neo-card>
           </div>
-          
+
           <neo-alert id="error-alert" type="error" style="display: none;" role="alert">
             An error occurred. Please try again.
           </neo-alert>
-          
+
           <neo-button id="recovery-btn" style="display: none;">
             Recover Component
           </neo-button>
@@ -991,11 +991,11 @@ describe("Comprehensive Integration Testing Suite", () => {
       // Simulate component error
       errorProneComponent.style.display = 'none';
       errorProneComponent.setAttribute('data-error', 'Component failed to render');
-      
+
       errorAlert.style.display = 'block';
       recoveryButton.style.display = 'block';
 
-      testUtils.logEvent('error-occurred', 'system', { 
+      testUtils.logEvent('error-occurred', 'system', {
         component: 'error-prone-component',
         error: 'Component failed to render'
       });
@@ -1005,11 +1005,11 @@ describe("Comprehensive Integration Testing Suite", () => {
 
       errorProneComponent.style.display = 'block';
       errorProneComponent.removeAttribute('data-error');
-      
+
       errorAlert.style.display = 'none';
       recoveryButton.style.display = 'none';
 
-      testUtils.logEvent('error-recovered', 'system', { 
+      testUtils.logEvent('error-recovered', 'system', {
         component: 'error-prone-component',
         method: 'manual-recovery'
       });
@@ -1024,10 +1024,10 @@ describe("Comprehensive Integration Testing Suite", () => {
       testUtils.logEvent('test-start', 'system', { workflow: 'performance-load' });
 
       const performanceStart = performance.now();
-      
+
       // Create multiple components simultaneously
       const componentPromises = [];
-      
+
       for (let i = 0; i < 20; i++) {
         const componentPromise = fixture(html`
           <div class="load-test-component" id="comp-${i}">

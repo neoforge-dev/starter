@@ -7,24 +7,36 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:lit/recommended',
   ],
   plugins: [
+    '@typescript-eslint',
     'lit',
-    // TODO: Fix component-registry plugin module compatibility
-    // 'component-registry',
+    'component-registry',
   ],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
+    project: './tsconfig.json',
   },
   rules: {
-    // General JavaScript rules
+    // General JavaScript/TypeScript rules
     'no-console': 'warn',
     'no-debugger': 'warn',
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     'prefer-const': 'error',
     'no-var': 'error',
-    
+
+    // TypeScript specific rules
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'warn',
+    '@typescript-eslint/prefer-optional-chain': 'error',
+    '@typescript-eslint/prefer-nullish-coalescing': 'error',
+
     // Lit element specific rules
     'lit/no-legacy-template-syntax': 'error',
     'lit/no-template-bind': 'error',
@@ -32,22 +44,25 @@ module.exports = {
     'lit/no-useless-template-literals': 'error',
     'lit/attribute-value-entities': 'error',
     'lit/binding-positions': 'error',
-    // TODO: Fix SVG templates and re-enable
     'lit/no-invalid-html': 'warn',
     'lit/no-value-attribute': 'warn',
-    
-    // Component registry rules
-    // TODO: Re-enable when plugin module compatibility is fixed
+
+    // Component registry rules - temporarily disabled
     // 'component-registry/no-duplicate-components': 'warn',
   },
   overrides: [
     {
-      // TypeScript files - temporarily skip strict parsing to get CI working
+      // TypeScript files - enhanced configuration
       files: ['**/*.ts', '**/*.tsx'],
+      parserOptions: {
+        project: './tsconfig.json',
+      },
       rules: {
-        // Disable problematic rules for TypeScript files temporarily
-        'no-unused-vars': 'off',
-        'no-undef': 'off',
+        // TypeScript specific overrides
+        '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+        '@typescript-eslint/no-explicit-any': 'warn',
+        '@typescript-eslint/prefer-optional-chain': 'error',
+        '@typescript-eslint/prefer-nullish-coalescing': 'error',
       },
     },
     {
@@ -108,9 +123,6 @@ module.exports = {
     'patches/',
     'scripts/eslint-plugin-component-registry/',
     'src/playground/**/*',
-    'src/stories/**/*',
-    // TODO: Fix TypeScript parsing and re-enable
-    '**/*.ts',
-    '**/*.tsx'
+    'src/stories/**/*'
   ],
 };

@@ -8,7 +8,7 @@ Comprehensive audit of all documentation files in the NeoForge starter kit to id
 
 ### **Root Level Documentation (18 files)**
 - `ADOPTION_BLOCKER_ANALYSIS.md` - Marketing/adoption strategy
-- `CHANGELOG.md` - Version history 
+- `CHANGELOG.md` - Version history
 - `CLAUDE.md` - **PRIMARY**: Main development guide and architecture
 - `CODE_OF_CONDUCT.md` - Community standards
 - `COMMUNITY_MARKETING_STRATEGY.md` - Marketing strategy

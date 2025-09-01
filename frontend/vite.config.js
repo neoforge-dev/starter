@@ -112,24 +112,52 @@ export default defineConfig({
             if (id.includes('@open-wc')) return 'vendor-testing';
             return 'vendor';
           }
-          
-          // Split by component type for better caching
-          if (id.includes('/atoms/')) return 'components-atoms';
-          if (id.includes('/molecules/')) return 'components-molecules';
-          if (id.includes('/organisms/')) return 'components-organisms';
-          if (id.includes('/pages/')) return 'pages';
-          if (id.includes('/services/')) return 'services';
-          if (id.includes('/utils/')) return 'utils';
-          
-          // Analytics components as separate chunk
-          if (id.includes('/analytics/')) return 'analytics';
-          
-          // Critical components that should be in main bundle
-          if (id.includes('/components/base/') || 
-              id.includes('main.js') || 
-              id.includes('app.js')) {
-            return undefined; // Include in main bundle
+
+          // Core app components - keep minimal in main bundle
+          if (id.includes('main.js') ||
+              id.includes('app.js') ||
+              id.includes('router.js') ||
+              id.includes('/components/header.js') ||
+              id.includes('/components/footer.js') ||
+              id.includes('/components/core/pwa-prompt.js')) {
+            return 'app-core';
           }
+
+          // Critical base components
+          if (id.includes('/components/base/') ||
+              id.includes('base-component.js') ||
+              id.includes('base-page-component.js')) {
+            return 'app-base';
+          }
+
+          // Services - split into smaller chunks
+          if (id.includes('/services/')) {
+            if (id.includes('auth.js') || id.includes('auth.ts')) return 'services-auth';
+            if (id.includes('api.js') || id.includes('api.ts')) return 'services-api';
+            if (id.includes('pwa.js') || id.includes('offline')) return 'services-pwa';
+            if (id.includes('analytics.js') || id.includes('performance-monitor.js')) return 'services-analytics';
+            return 'services-other';
+          }
+
+          // Utils - keep small utilities together
+          if (id.includes('/utils/')) return 'utils';
+
+          // Component categories - more granular splitting
+          if (id.includes('/components/')) {
+            if (id.includes('/atoms/')) return 'components-atoms';
+            if (id.includes('/molecules/')) return 'components-molecules';
+            if (id.includes('/organisms/')) return 'components-organisms';
+            if (id.includes('/pages/')) return 'components-pages';
+            if (id.includes('/analytics/')) return 'components-analytics';
+            if (id.includes('/interaction/')) return 'components-interaction';
+            if (id.includes('/data/')) return 'components-data';
+            if (id.includes('/error/')) return 'components-error';
+            if (id.includes('/performance/')) return 'components-performance';
+            return 'components-other';
+          }
+
+          // Everything else goes to main bundle (should be minimal)
+          return undefined;
         },
         // Optimize chunk generation for faster builds
         generatedCode: {
@@ -150,8 +178,8 @@ export default defineConfig({
           return false;
         },
         manualPureFunctions: [
-          "console.log", 
-          "console.warn", 
+          "console.log",
+          "console.warn",
           "console.info",
           "console.debug",
           "performance.mark",

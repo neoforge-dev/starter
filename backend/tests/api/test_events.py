@@ -1,19 +1,24 @@
 """Test event tracking API endpoints."""
-import pytest
-from datetime import datetime, timedelta
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, List
 import json
+from datetime import datetime, timedelta
+from typing import Dict, List
+from unittest.mock import AsyncMock, Mock, patch
 
-from app import crud
+import pytest
 from app.models.event import Event
 from app.schemas.event import (
-    EventCreate, EventType, EventSource, EventAnalyticsQuery,
-    EventAnonymizationRequest, EventDataExportRequest
+    EventAnalyticsQuery,
+    EventAnonymizationRequest,
+    EventCreate,
+    EventDataExportRequest,
+    EventSource,
+    EventType,
 )
-from app.core.config import get_settings, Settings
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app import crud
+from app.core.config import Settings, get_settings
 from tests.factories import UserFactory
 
 pytestmark = pytest.mark.asyncio
@@ -30,7 +35,7 @@ async def sample_event_data() -> Dict:
         "properties": {
             "element_id": "submit_button",
             "element_text": "Submit Form",
-            "form_data": {"field1": "value1"}
+            "form_data": {"field1": "value1"},
         },
         "value": 1.0,
     }
@@ -46,22 +51,22 @@ async def sample_events_bulk() -> Dict:
                 "event_name": "page_view",
                 "source": "web",
                 "page_url": "https://example.com/home",
-                "properties": {"referrer": "google.com"}
+                "properties": {"referrer": "google.com"},
             },
             {
                 "event_type": "performance",
                 "event_name": "api_response_time",
                 "source": "api",
                 "properties": {"endpoint": "/api/v1/users", "response_time": 150},
-                "value": 150.0
+                "value": 150.0,
             },
             {
                 "event_type": "business",
                 "event_name": "conversion",
                 "source": "web",
                 "properties": {"conversion_type": "signup", "revenue": 0},
-                "value": 0.0
-            }
+                "value": 0.0,
+            },
         ]
     }
 
@@ -70,19 +75,19 @@ class TestEventTracking:
     """Test event tracking endpoints."""
 
     async def test_track_single_event_authenticated(
-        self, 
+        self,
         client: AsyncClient,
         db: AsyncSession,
         normal_user_token_headers: Dict,
         sample_event_data: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test tracking single event with authentication."""
         # Mock Redis for background processing
-        with patch('app.api.v1.endpoints.events.get_redis') as mock_redis:
+        with patch("app.api.v1.endpoints.events.get_redis") as mock_redis:
             mock_redis_client = AsyncMock()
             mock_redis.return_value = mock_redis_client
-            
+
             response = await client.post(
                 f"{test_settings.api_v1_str}/events/track",
                 json=sample_event_data,
@@ -91,7 +96,7 @@ class TestEventTracking:
 
             assert response.status_code == 201
             data = response.json()
-            
+
             assert data["event_type"] == "interaction"
             assert data["event_name"] == "button_click"
             assert data["source"] == "web"
@@ -104,13 +109,13 @@ class TestEventTracking:
 
     async def test_track_single_event_anonymous(
         self,
-        client: AsyncClient, 
+        client: AsyncClient,
         db: AsyncSession,
         sample_event_data: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test tracking single event without authentication (anonymous)."""
-        with patch('app.api.v1.endpoints.events.get_redis') as mock_redis:
+        with patch("app.api.v1.endpoints.events.get_redis") as mock_redis:
             mock_redis_client = AsyncMock()
             mock_redis.return_value = mock_redis_client
 
@@ -121,7 +126,7 @@ class TestEventTracking:
 
             assert response.status_code == 201
             data = response.json()
-            
+
             assert data["event_type"] == "interaction"
             assert data["event_name"] == "button_click"
             assert data["user_id"] is None  # Anonymous event
@@ -133,10 +138,10 @@ class TestEventTracking:
         db: AsyncSession,
         normal_user_token_headers: Dict,
         sample_events_bulk: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test bulk event tracking."""
-        with patch('app.api.v1.endpoints.events.get_redis') as mock_redis:
+        with patch("app.api.v1.endpoints.events.get_redis") as mock_redis:
             mock_redis_client = AsyncMock()
             mock_redis.return_value = mock_redis_client
 
@@ -148,12 +153,12 @@ class TestEventTracking:
 
             assert response.status_code == 201
             data = response.json()
-            
+
             assert len(data) == 3
             assert data[0]["event_type"] == "interaction"
             assert data[1]["event_type"] == "performance"
             assert data[2]["event_type"] == "business"
-            
+
             # All events should have the same user_id
             user_ids = [event["user_id"] for event in data]
             assert len(set(user_ids)) == 1  # All same user_id
@@ -163,7 +168,7 @@ class TestEventTracking:
         client: AsyncClient,
         db: AsyncSession,
         normal_user_token_headers: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test bulk event tracking with limit exceeded."""
         # Create payload with 101 events (over the limit)
@@ -192,11 +197,11 @@ class TestEventTracking:
         db: AsyncSession,
         normal_user_token_headers: Dict,
         sample_event_data: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test retrieving user events."""
         # First, create some events
-        with patch('app.api.v1.endpoints.events.get_redis') as mock_redis:
+        with patch("app.api.v1.endpoints.events.get_redis") as mock_redis:
             mock_redis_client = AsyncMock()
             mock_redis.return_value = mock_redis_client
 
@@ -204,7 +209,7 @@ class TestEventTracking:
             for i in range(3):
                 event_data = sample_event_data.copy()
                 event_data["event_name"] = f"test_event_{i}"
-                
+
                 await client.post(
                     f"{test_settings.api_v1_str}/events/track",
                     json=event_data,
@@ -213,9 +218,11 @@ class TestEventTracking:
 
         # Get current user ID from token
         from jose import jwt
+
         from app.core.config import get_settings
+
         settings = get_settings()
-        
+
         # Extract token from headers
         token = normal_user_token_headers["Authorization"].replace("Bearer ", "")
         secret_value = settings.secret_key.get_secret_value()
@@ -230,7 +237,7 @@ class TestEventTracking:
 
         assert response.status_code == 200
         data = response.json()
-        
+
         assert len(data) >= 3
         assert all(event["user_id"] == user_id for event in data)
 
@@ -239,7 +246,7 @@ class TestEventTracking:
         client: AsyncClient,
         db: AsyncSession,
         normal_user_token_headers: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test that users cannot access other users' events."""
         response = await client.get(
@@ -255,11 +262,11 @@ class TestEventTracking:
         db: AsyncSession,
         normal_user_token_headers: Dict,
         sample_event_data: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test retrieving specific event by ID."""
         # Create an event first
-        with patch('app.api.v1.endpoints.events.get_redis') as mock_redis:
+        with patch("app.api.v1.endpoints.events.get_redis") as mock_redis:
             mock_redis_client = AsyncMock()
             mock_redis.return_value = mock_redis_client
 
@@ -268,7 +275,7 @@ class TestEventTracking:
                 json=sample_event_data,
                 headers=normal_user_token_headers,
             )
-            
+
             created_event = create_response.json()
             event_id = created_event["event_id"]
 
@@ -288,7 +295,7 @@ class TestEventTracking:
         client: AsyncClient,
         db: AsyncSession,
         normal_user_token_headers: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test retrieving non-existent event."""
         response = await client.get(
@@ -303,7 +310,7 @@ class TestEventTracking:
         client: AsyncClient,
         db: AsyncSession,
         superuser_token_headers: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test retrieving event counts by type."""
         response = await client.get(
@@ -320,10 +327,10 @@ class TestEventTracking:
         client: AsyncClient,
         db: AsyncSession,
         superuser_token_headers: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test event analytics with query parameters."""
-        with patch('app.api.v1.endpoints.events.get_redis') as mock_redis:
+        with patch("app.api.v1.endpoints.events.get_redis") as mock_redis:
             mock_redis_client = AsyncMock()
             mock_redis_client.get.return_value = None  # No cached results
             mock_redis.return_value = mock_redis_client
@@ -343,7 +350,7 @@ class TestEventTracking:
 
             assert response.status_code == 200
             data = response.json()
-            
+
             assert "results" in data
             assert "total_count" in data
             assert "query_time_ms" in data
@@ -354,10 +361,7 @@ class TestEventValidation:
     """Test event validation and schema enforcement."""
 
     async def test_invalid_event_type(
-        self,
-        client: AsyncClient,
-        db: AsyncSession,
-        test_settings: Settings
+        self, client: AsyncClient, db: AsyncSession, test_settings: Settings
     ):
         """Test event creation with invalid event type."""
         invalid_event = {
@@ -373,13 +377,10 @@ class TestEventValidation:
         assert response.status_code == 422  # Validation error
 
     async def test_event_name_normalization(
-        self,
-        client: AsyncClient,
-        db: AsyncSession,
-        test_settings: Settings
+        self, client: AsyncClient, db: AsyncSession, test_settings: Settings
     ):
         """Test event name normalization to snake_case."""
-        with patch('app.api.v1.endpoints.events.get_redis') as mock_redis:
+        with patch("app.api.v1.endpoints.events.get_redis") as mock_redis:
             mock_redis_client = AsyncMock()
             mock_redis.return_value = mock_redis_client
 
@@ -399,15 +400,10 @@ class TestEventValidation:
             assert data["event_name"] == "button_click_event"
 
     async def test_properties_size_limit(
-        self,
-        client: AsyncClient,
-        db: AsyncSession,
-        test_settings: Settings
+        self, client: AsyncClient, db: AsyncSession, test_settings: Settings
     ):
         """Test event properties size validation."""
-        large_properties = {
-            "large_field": "x" * 15000  # Larger than 10KB limit
-        }
+        large_properties = {"large_field": "x" * 15000}  # Larger than 10KB limit
 
         event_data = {
             "event_type": "interaction",
@@ -423,10 +419,7 @@ class TestEventValidation:
         assert response.status_code == 422  # Validation error
 
     async def test_pii_field_rejection(
-        self,
-        client: AsyncClient,
-        db: AsyncSession,
-        test_settings: Settings
+        self, client: AsyncClient, db: AsyncSession, test_settings: Settings
     ):
         """Test rejection of PII fields in properties."""
         event_data = {
@@ -434,8 +427,8 @@ class TestEventValidation:
             "event_name": "test_event",
             "properties": {
                 "password": "secret123",  # PII field
-                "regular_field": "value"
-            }
+                "regular_field": "value",
+            },
         }
 
         response = await client.post(
@@ -455,11 +448,11 @@ class TestEventPrivacy:
         db: AsyncSession,
         normal_user_token_headers: Dict,
         sample_event_data: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test GDPR-compliant event export for user."""
         # Create some events first
-        with patch('app.api.v1.endpoints.events.get_redis') as mock_redis:
+        with patch("app.api.v1.endpoints.events.get_redis") as mock_redis:
             mock_redis_client = AsyncMock()
             mock_redis.return_value = mock_redis_client
 
@@ -471,19 +464,18 @@ class TestEventPrivacy:
 
         # Get current user ID
         from jose import jwt
+
         from app.core.config import get_settings
+
         settings = get_settings()
-        
+
         token = normal_user_token_headers["Authorization"].replace("Bearer ", "")
         secret_value = settings.secret_key.get_secret_value()
         payload = jwt.decode(token, secret_value, algorithms=[settings.algorithm])
         user_id = int(payload["sub"])
 
         # Export user events
-        export_request = {
-            "user_id": user_id,
-            "format": "json"
-        }
+        export_request = {"user_id": user_id, "format": "json"}
 
         response = await client.post(
             f"{test_settings.api_v1_str}/events/export",
@@ -501,13 +493,10 @@ class TestEventPrivacy:
         client: AsyncClient,
         db: AsyncSession,
         normal_user_token_headers: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test that event anonymization requires admin privileges."""
-        anonymize_request = {
-            "user_ids": [1],
-            "dry_run": True
-        }
+        anonymize_request = {"user_ids": [1], "dry_run": True}
 
         response = await client.post(
             f"{test_settings.api_v1_str}/events/anonymize",
@@ -522,7 +511,7 @@ class TestEventPrivacy:
         client: AsyncClient,
         db: AsyncSession,
         normal_user_token_headers: Dict,
-        test_settings: Settings
+        test_settings: Settings,
     ):
         """Test that cleanup requires admin privileges."""
         response = await client.delete(
@@ -555,7 +544,7 @@ class TestEventCRUD:
     async def test_bulk_event_creation(self, db: AsyncSession):
         """Test bulk event creation performance."""
         from app.schemas.event import EventCreateBulk
-        
+
         events = [
             EventCreate(
                 event_type=EventType.INTERACTION,
@@ -564,12 +553,10 @@ class TestEventCRUD:
             )
             for i in range(10)
         ]
-        
+
         bulk_create = EventCreateBulk(events=events)
-        
-        created_events = await crud.event.create_bulk(
-            db, obj_in=bulk_create, user_id=1
-        )
+
+        created_events = await crud.event.create_bulk(db, obj_in=bulk_create, user_id=1)
 
         assert len(created_events) == 10
         assert all(event.user_id == 1 for event in created_events)
@@ -606,7 +593,7 @@ class TestEventCRUD:
             event_type=EventType.INTERACTION,
             event_name="test_event",
             source=EventSource.WEB,
-            properties={"user_action": "click", "element_id": "button1"}
+            properties={"user_action": "click", "element_id": "button1"},
         )
 
         event = await crud.event.create(
@@ -614,10 +601,7 @@ class TestEventCRUD:
         )
 
         # Test anonymization
-        request = EventAnonymizationRequest(
-            user_ids=[1],
-            dry_run=False
-        )
+        request = EventAnonymizationRequest(user_ids=[1], dry_run=False)
 
         anonymized_count = await crud.event.anonymize_user_events(db, request=request)
 
@@ -639,12 +623,10 @@ class TestEventCRUD:
         )
 
         event = await crud.event.create(db, obj_in=event_create)
-        
+
         # Manually set retention date to past
         past_date = datetime.utcnow() - timedelta(days=1)
-        await crud.event.update(
-            db, db_obj=event, obj_in={"retention_date": past_date}
-        )
+        await crud.event.update(db, db_obj=event, obj_in={"retention_date": past_date})
 
         # Run cleanup
         deleted_count = await crud.event.delete_expired_events(db, batch_size=10)

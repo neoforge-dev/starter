@@ -1,6 +1,6 @@
 /**
  * One-Click Deployment Integration
- * 
+ *
  * Direct deployment to Vercel/Netlify/GitHub Pages from the playground.
  * The missing piece that transforms demo into deployable applications.
  */
@@ -16,7 +16,7 @@ export class OneClickDeployment {
    */
   async deployApplication(deploymentConfig) {
     this.validateDeploymentConfig(deploymentConfig);
-    
+
     const platform = this.platforms[deploymentConfig.platform];
     if (!platform) {
       throw new Error(`Unsupported platform: ${deploymentConfig.platform}`);
@@ -29,10 +29,10 @@ export class OneClickDeployment {
 
       // Platform-specific deployment
       const result = await this.deployToPlatform(deploymentConfig, platform, deploymentId);
-      
+
       // Update deployment status
       this.trackDeploymentSuccess(deploymentId, result);
-      
+
       return {
         success: true,
         deploymentId,
@@ -78,7 +78,7 @@ export class OneClickDeployment {
    */
   async deployToVercel(config, deploymentId) {
     const startTime = Date.now();
-    
+
     // Create deployment configuration
     const vercelConfig = {
       name: config.appName.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
@@ -102,10 +102,10 @@ export class OneClickDeployment {
 
     // Deploy using Vercel API
     const deployment = await this.callVercelAPI(vercelConfig, config.tokens?.vercel);
-    
+
     // Monitor deployment progress
     const finalStatus = await this.monitorVercelDeployment(deployment.id, config.tokens?.vercel);
-    
+
     return {
       url: `https://${deployment.url}`,
       deploymentUrl: `https://vercel.com/${config.vercelTeam || 'user'}/${deployment.name}`,
@@ -120,7 +120,7 @@ export class OneClickDeployment {
    */
   async deployToNetlify(config, deploymentId) {
     const startTime = Date.now();
-    
+
     // Create site configuration
     const netlifyConfig = {
       name: config.appName.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
@@ -138,13 +138,13 @@ export class OneClickDeployment {
 
     // Create site
     const site = await this.createNetlifySite(netlifyConfig, config.tokens?.netlify);
-    
+
     // Deploy files
     const deployment = await this.deployToNetlifySite(site.id, config, config.tokens?.netlify);
-    
+
     // Monitor deployment
     const finalStatus = await this.monitorNetlifyDeployment(deployment.id, config.tokens?.netlify);
-    
+
     return {
       url: finalStatus.deploy_url,
       deploymentUrl: `https://app.netlify.com/sites/${site.name}/deploys`,
@@ -159,26 +159,26 @@ export class OneClickDeployment {
    */
   async deployToGitHubPages(config, deploymentId) {
     const startTime = Date.now();
-    
+
     if (!config.repository) {
       throw new Error('GitHub repository required for GitHub Pages deployment');
     }
 
     // Create GitHub Actions workflow for Pages
     const workflow = this.generateGitHubPagesWorkflow(config);
-    
+
     // Commit workflow file to repository
     await this.commitWorkflowToRepo(config.repository, workflow, config.tokens?.github);
-    
+
     // Trigger workflow
     const workflowRun = await this.triggerGitHubWorkflow(config.repository, config.tokens?.github);
-    
+
     // Monitor workflow execution
     const result = await this.monitorGitHubWorkflow(workflowRun.id, config.repository, config.tokens?.github);
-    
+
     const repoName = config.repository.split('/')[1];
     const username = config.repository.split('/')[0];
-    
+
     return {
       url: `https://${username}.github.io/${repoName}/`,
       deploymentUrl: `https://github.com/${config.repository}/actions`,
@@ -193,7 +193,7 @@ export class OneClickDeployment {
    */
   async deployToFirebase(config, deploymentId) {
     const startTime = Date.now();
-    
+
     // Create Firebase project configuration
     const firebaseConfig = {
       hosting: {
@@ -221,7 +221,7 @@ export class OneClickDeployment {
 
     // Deploy using Firebase CLI API
     const deployment = await this.deployToFirebaseHosting(config, firebaseConfig);
-    
+
     return {
       url: `https://${config.firebaseProjectId}.web.app/`,
       deploymentUrl: `https://console.firebase.google.com/project/${config.firebaseProjectId}/hosting/main`,
@@ -236,12 +236,12 @@ export class OneClickDeployment {
    */
   async prepareFilesForVercel(config) {
     const files = {};
-    
+
     // Add generated application files
     config.generatedApp.files.forEach(file => {
       files[file.path] = { file: file.content };
     });
-    
+
     // Add platform-specific files
     files['vercel.json'] = {
       file: JSON.stringify({
@@ -259,7 +259,7 @@ export class OneClickDeployment {
         env: config.environmentVariables || {}
       }, null, 2)
     };
-    
+
     return files;
   }
 
@@ -306,7 +306,7 @@ export class OneClickDeployment {
     });
 
     const oauthUrl = `https://vercel.com/oauth/authorize?${params.toString()}`;
-    
+
     return {
       requiresAuth: true,
       authUrl: oauthUrl,
@@ -323,28 +323,28 @@ export class OneClickDeployment {
    */
   async monitorVercelDeployment(deploymentId, token, maxWaitTime = 300000) {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < maxWaitTime) {
       const response = await fetch(`https://api.vercel.com/v13/deployments/${deploymentId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (response.ok) {
         const deployment = await response.json();
-        
+
         if (deployment.readyState === 'READY') {
           return deployment;
         } else if (deployment.readyState === 'ERROR') {
           throw new Error(`Deployment failed: ${deployment.error?.message || 'Unknown error'}`);
         }
       }
-      
+
       // Wait 5 seconds before next check
       await new Promise(resolve => setTimeout(resolve, 5000));
     }
-    
+
     throw new Error('Deployment timeout - please check Vercel dashboard');
   }
 
@@ -435,7 +435,7 @@ jobs:
   validateDeploymentConfig(config) {
     const required = ['platform', 'appName', 'generatedApp'];
     const missing = required.filter(field => !config[field]);
-    
+
     if (missing.length > 0) {
       throw new Error(`Missing required fields: ${missing.join(', ')}`);
     }
@@ -593,7 +593,7 @@ jobs:
     // Determine error category
     const errorMessage = error.message.toLowerCase();
     let category = 'general';
-    
+
     if (errorMessage.includes('auth') || errorMessage.includes('token') || errorMessage.includes('permission')) {
       category = 'authentication';
     } else if (errorMessage.includes('build') || errorMessage.includes('compile')) {

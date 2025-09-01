@@ -89,7 +89,7 @@ async function loadPolyfills() {
 if (isSafari()) {
   // Fix for Safari's shadow DOM issues
   import('./safari-shadow-dom-fix.js');
-  
+
   // Fix for Safari's CSS Grid implementation
   import('./safari-grid-fix.js');
 }
@@ -207,13 +207,13 @@ test('component renders consistently across browsers', async ({ page }) => {
 // feature-detection.test.js
 test('polyfills are loaded when needed', async ({ page }) => {
   await page.goto('/');
-  
+
   const features = await page.evaluate(() => ({
     containerQueries: CSS.supports('(container-type: inline-size)'),
     subgrid: CSS.supports('(display: subgrid)'),
     viewTransitions: 'startViewTransition' in document,
   }));
-  
+
   expect(features.containerQueries).toBe(true);
   expect(features.subgrid).toBe(true);
   expect(features.viewTransitions).toBe(true);
@@ -253,4 +253,4 @@ test('polyfills are loaded when needed', async ({ page }) => {
 2. Test new features in beta channels
 3. Update polyfills and fallbacks
 4. Update documentation
-5. Release updates 
+5. Release updates

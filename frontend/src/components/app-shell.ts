@@ -157,11 +157,11 @@ export class AppShell extends LitElement {
         .nav-links {
           gap: 1rem;
         }
-        
+
         .nav-links a {
           font-size: 0.875rem;
         }
-        
+
         main {
           padding: 1rem;
         }
@@ -210,7 +210,7 @@ export class AppShell extends LitElement {
     super.connectedCallback();
     window.addEventListener("auth-changed", this._handleAuthChange as EventListener);
     window.addEventListener("theme-changed", this._handleThemeChange as EventListener);
-    
+
     // Initialize auth service
     authService.initialize();
   }
@@ -261,7 +261,7 @@ export class AppShell extends LitElement {
   override render(): TemplateResult {
     return html`
       <a href="#main" class="skip-link">Skip to main content</a>
-      
+
       <header role="banner">
         <nav role="navigation" aria-label="Main navigation">
           <a
@@ -297,7 +297,7 @@ export class AppShell extends LitElement {
             ${this.isAuthenticated
               ? html`
                   <div class="user-menu">
-                    <button 
+                    <button
                       class="user-button"
                       aria-label="User menu"
                       aria-expanded="false"
@@ -325,8 +325,8 @@ export class AppShell extends LitElement {
                         role="menuitem"
                         >Settings</a
                       >
-                      <a 
-                        href="#" 
+                      <a
+                        href="#"
                         @click=${(e: Event) => {
                           e.preventDefault();
                           this._handleLogout();

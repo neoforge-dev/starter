@@ -1,8 +1,9 @@
 """StatusEvent model."""
 from datetime import datetime
+
+from app.db.base_class import Base
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
-from app.db.base_class import Base
 
 
 class StatusEvent(Base):

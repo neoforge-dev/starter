@@ -23,10 +23,10 @@ describe('Authentication Integration Tests', () => {
     // Create a test container
     container = document.createElement('div');
     document.body.appendChild(container);
-    
+
     // Reset mocks
     vi.clearAllMocks();
-    
+
     // Mock localStorage
     global.localStorage = {
       getItem: vi.fn(),
@@ -47,7 +47,7 @@ describe('Authentication Integration Tests', () => {
       // Arrange
       const loginForm = document.createElement('login-form');
       container.appendChild(loginForm);
-      
+
       // Wait for component to be fully rendered
       await loginForm.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 100)); // Additional wait for DOM rendering
@@ -63,16 +63,16 @@ describe('Authentication Integration Tests', () => {
       // Act - Get inputs after component is fully rendered
       const emailInput = loginForm.shadowRoot?.querySelector('[data-testid="login-email"]');
       const passwordInput = loginForm.shadowRoot?.querySelector('[data-testid="login-password"]');
-      
+
       expect(emailInput).toBeTruthy();
       expect(passwordInput).toBeTruthy();
-      
+
       emailInput.value = 'test@example.com';
       passwordInput.value = 'password123';
 
       // Trigger form submission
       await loginForm._handleSubmit(new Event('submit'));
-      
+
       // Assert
       expect(authService.login).toHaveBeenCalledWith('test@example.com', 'password123');
       expect(loginSuccessEvent).toBeTruthy();
@@ -99,7 +99,7 @@ describe('Authentication Integration Tests', () => {
       // Assert - Form should require email and password
       const emailInput = loginForm.shadowRoot.querySelector('[data-testid="login-email"]');
       const passwordInput = loginForm.shadowRoot.querySelector('[data-testid="login-password"]');
-      
+
       expect(emailInput.hasAttribute('required')).toBe(true);
       expect(passwordInput.hasAttribute('required')).toBe(true);
     });
@@ -108,7 +108,7 @@ describe('Authentication Integration Tests', () => {
       // Arrange
       const loginForm = document.createElement('login-form');
       container.appendChild(loginForm);
-      
+
       // Wait for component to be fully rendered
       await loginForm.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -131,7 +131,7 @@ describe('Authentication Integration Tests', () => {
       passwordInput.value = 'wrongpassword';
 
       await loginForm._handleSubmit(new Event('submit'));
-      
+
       // Assert
       expect(authService.login).toHaveBeenCalledWith('test@example.com', 'wrongpassword');
       // expect(loginErrorEvent).toBeTruthy();
@@ -148,7 +148,7 @@ describe('Authentication Integration Tests', () => {
       // Arrange
       const loginForm = document.createElement('login-form');
       container.appendChild(loginForm);
-      
+
       // Wait for component to be fully rendered
       await loginForm.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -175,12 +175,12 @@ describe('Authentication Integration Tests', () => {
 
       // Start the login process but don't await it yet
       const submitPromise = loginForm._handleSubmit(new Event('submit'));
-      
+
       // Check loading state immediately after submitting
       await loginForm.updateComplete;
       expect(submitButton.disabled).toBe(true);
       expect(loginForm.isLoading).toBe(true);
-      
+
       // Resolve login
       resolveLogin({ id: 1, email: 'test@example.com' });
       await submitPromise; // Now wait for submit to complete
@@ -197,9 +197,9 @@ describe('Authentication Integration Tests', () => {
       container.appendChild(signupForm);
       await signupForm.updateComplete;
 
-      authService.signup.mockResolvedValue({ 
-        success: true, 
-        message: 'Registration successful' 
+      authService.signup.mockResolvedValue({
+        success: true,
+        message: 'Registration successful'
       });
 
       // Act
@@ -210,13 +210,13 @@ describe('Authentication Integration Tests', () => {
 
       nameInput.value = 'Test User';
       nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-      
+
       emailInput.value = 'test@example.com';
       emailInput.dispatchEvent(new Event('input', { bubbles: true }));
-      
+
       passwordInput.value = 'password123';
       passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-      
+
       confirmPasswordInput.value = 'password123';
       confirmPasswordInput.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -229,7 +229,7 @@ describe('Authentication Integration Tests', () => {
       expect(authService.signup).toHaveBeenCalledWith('test@example.com', 'password123', {
         name: 'Test User'
       });
-      
+
       // Should show success message
       expect(signupForm.signupComplete).toBe(true);
     });
@@ -248,13 +248,13 @@ describe('Authentication Integration Tests', () => {
 
       nameInput.value = 'Test User';
       nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-      
+
       emailInput.value = 'test@example.com';
       emailInput.dispatchEvent(new Event('input', { bubbles: true }));
-      
+
       passwordInput.value = 'password123';
       passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-      
+
       confirmPasswordInput.value = 'different123';
       confirmPasswordInput.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -266,7 +266,7 @@ describe('Authentication Integration Tests', () => {
       // Assert
       expect(authService.signup).not.toHaveBeenCalled();
       expect(signupForm.error).toBe('Passwords do not match');
-      
+
       // Check error message is displayed
       const errorMessage = signupForm.shadowRoot.querySelector('[data-testid="error"]');
       expect(errorMessage).toBeTruthy();
@@ -304,13 +304,13 @@ describe('Authentication Integration Tests', () => {
 
       nameInput.value = 'Test User';
       nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-      
+
       emailInput.value = 'test@example.com';
       emailInput.dispatchEvent(new Event('input', { bubbles: true }));
-      
+
       passwordInput.value = '123'; // Too short
       passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-      
+
       confirmPasswordInput.value = '123';
       confirmPasswordInput.dispatchEvent(new Event('input', { bubbles: true }));
 

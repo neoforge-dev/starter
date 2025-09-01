@@ -3,10 +3,10 @@ import { test, expect } from '@playwright/test';
 
 /**
  * Visual Regression Tests for NeoForge Web Components
- * 
+ *
  * This test suite captures screenshots of all 33 components in various states
  * and compares them against baseline images to detect visual regressions.
- * 
+ *
  * Test Structure:
  * - Each component is tested in isolation
  * - Multiple states are tested (default, hover, active, disabled, error)
@@ -47,10 +47,10 @@ const testStates = {
 test.beforeEach(async ({ page }) => {
   // Navigate to playground
   await page.goto('/playground/advanced-playground.html');
-  
+
   // Wait for playground to load
   await page.waitForSelector('[data-component-playground]', { timeout: 30000 });
-  
+
   // Disable animations for consistent screenshots
   await page.addStyleTag({
     content: `
@@ -62,7 +62,7 @@ test.beforeEach(async ({ page }) => {
       }
     `
   });
-  
+
   // Wait for fonts to load
   await page.evaluate(() => document.fonts.ready);
 });
@@ -70,77 +70,77 @@ test.beforeEach(async ({ page }) => {
 // Test each component category
 Object.entries(componentRegistry).forEach(([category, components]) => {
   test.describe(`${category.charAt(0).toUpperCase() + category.slice(1)} Components`, () => {
-    
+
     components.forEach(componentName => {
       test.describe(componentName, () => {
-        
+
         // Test component in default state
         test(`${componentName} - default state`, async ({ page }) => {
           await selectComponent(page, componentName);
           await waitForComponentRender(page, componentName);
-          
+
           const componentArea = page.locator('[data-component-area]');
           await expect(componentArea).toHaveScreenshot(`${componentName}-default.png`);
         });
-        
+
         // Test interactive states for applicable components
         if (isInteractiveComponent(componentName)) {
           Object.entries(testStates).forEach(([stateName, stateConfig]) => {
             if (stateName === 'default') return;
-            
+
             test(`${componentName} - ${stateName} state`, async ({ page }) => {
               await selectComponent(page, componentName);
               await waitForComponentRender(page, componentName);
-              
+
               if (stateConfig.hover) {
                 await page.locator('[data-component-area] [data-testid], [data-component-area] button, [data-component-area] input').first().hover();
               }
-              
+
               if (stateConfig.focus) {
                 await page.locator('[data-component-area] [data-testid], [data-component-area] button, [data-component-area] input').first().focus();
               }
-              
+
               if (stateConfig.disabled) {
                 await setComponentProperty(page, 'disabled', true);
               }
-              
+
               if (stateConfig.error) {
                 await setComponentProperty(page, 'error', true);
               }
-              
+
               if (stateConfig.loading) {
                 await setComponentProperty(page, 'loading', true);
               }
-              
+
               // Wait for state change to apply
               await page.waitForTimeout(100);
-              
+
               const componentArea = page.locator('[data-component-area]');
               await expect(componentArea).toHaveScreenshot(`${componentName}-${stateName}.png`);
             });
           });
         }
-        
+
         // Test component with different props/configurations
         test(`${componentName} - with props`, async ({ page }) => {
           await selectComponent(page, componentName);
           await waitForComponentRender(page, componentName);
-          
+
           // Apply common props based on component type
           await applyTestProps(page, componentName);
-          
+
           const componentArea = page.locator('[data-component-area]');
           await expect(componentArea).toHaveScreenshot(`${componentName}-with-props.png`);
         });
-        
+
         // Test responsive behavior on mobile
         test(`${componentName} - mobile responsive`, async ({ page }) => {
           // Switch to mobile viewport
           await page.setViewportSize({ width: 375, height: 667 });
-          
+
           await selectComponent(page, componentName);
           await waitForComponentRender(page, componentName);
-          
+
           const componentArea = page.locator('[data-component-area]');
           await expect(componentArea).toHaveScreenshot(`${componentName}-mobile.png`);
         });
@@ -153,14 +153,14 @@ Object.entries(componentRegistry).forEach(([category, components]) => {
 test.describe('Theme Variations', () => {
   const themes = ['light', 'dark', 'auto'];
   const sampleComponents = ['button', 'form', 'data-table', 'dashboard-page'];
-  
+
   themes.forEach(theme => {
     sampleComponents.forEach(componentName => {
       test(`${componentName} - ${theme} theme`, async ({ page }) => {
         // Set theme before loading component
         await page.goto(`/playground/advanced-playground.html?theme=${theme}`);
         await page.waitForSelector('[data-component-playground]');
-        
+
         // Apply theme styles
         if (theme === 'dark') {
           await page.addStyleTag({
@@ -174,10 +174,10 @@ test.describe('Theme Variations', () => {
             `
           });
         }
-        
+
         await selectComponent(page, componentName);
         await waitForComponentRender(page, componentName);
-        
+
         const componentArea = page.locator('[data-component-area]');
         await expect(componentArea).toHaveScreenshot(`${componentName}-${theme}-theme.png`);
       });
@@ -188,11 +188,11 @@ test.describe('Theme Variations', () => {
 // Test accessibility variations
 test.describe('Accessibility Variations', () => {
   const a11yComponents = ['button', 'form', 'input', 'tabs', 'data-table'];
-  
+
   a11yComponents.forEach(componentName => {
     test(`${componentName} - high contrast`, async ({ page }) => {
       await page.goto('/playground/advanced-playground.html');
-      
+
       // Apply high contrast theme
       await page.addStyleTag({
         content: `
@@ -207,17 +207,17 @@ test.describe('Accessibility Variations', () => {
           }
         `
       });
-      
+
       await selectComponent(page, componentName);
       await waitForComponentRender(page, componentName);
-      
+
       const componentArea = page.locator('[data-component-area]');
       await expect(componentArea).toHaveScreenshot(`${componentName}-high-contrast.png`);
     });
-    
+
     test(`${componentName} - large text`, async ({ page }) => {
       await page.goto('/playground/advanced-playground.html');
-      
+
       // Apply large text styles
       await page.addStyleTag({
         content: `
@@ -227,10 +227,10 @@ test.describe('Accessibility Variations', () => {
           }
         `
       });
-      
+
       await selectComponent(page, componentName);
       await waitForComponentRender(page, componentName);
-      
+
       const componentArea = page.locator('[data-component-area]');
       await expect(componentArea).toHaveScreenshot(`${componentName}-large-text.png`);
     });
@@ -242,14 +242,14 @@ async function selectComponent(page, componentName) {
   // Use smart search to find and select component
   const searchInput = page.locator('[data-search-input]');
   await searchInput.fill(componentName);
-  
+
   // Wait for search results
   await page.waitForTimeout(500);
-  
+
   // Click on the first matching component
   const componentOption = page.locator(`[data-component-option="${componentName}"]`).first();
   await componentOption.click();
-  
+
   // Wait for component to be selected
   await page.waitForTimeout(1000);
 }
@@ -257,7 +257,7 @@ async function selectComponent(page, componentName) {
 async function waitForComponentRender(page, componentName) {
   // Wait for component to be rendered in the preview area
   await page.waitForSelector('[data-component-area]', { timeout: 10000 });
-  
+
   // Wait for specific component element if it has a standard tag pattern
   const componentSelector = getComponentSelector(componentName);
   if (componentSelector) {
@@ -266,7 +266,7 @@ async function waitForComponentRender(page, componentName) {
       console.log(`Could not find specific selector for ${componentName}, using generic wait`);
     });
   }
-  
+
   // Wait for any loading states to complete
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(500);
@@ -275,7 +275,7 @@ async function waitForComponentRender(page, componentName) {
 async function setComponentProperty(page, property, value) {
   // Use the property editor in the playground
   const propertyInput = page.locator(`[data-property="${property}"]`);
-  
+
   if (await propertyInput.count() > 0) {
     if (typeof value === 'boolean') {
       if (value) {
@@ -296,7 +296,7 @@ async function applyTestProps(page, componentName) {
     'input': { placeholder: 'Test input', value: 'Sample text' },
     'badge': { text: 'New', variant: 'success' },
     'spinner': { size: 'medium', message: 'Loading...' },
-    'data-table': { 
+    'data-table': {
       data: JSON.stringify([
         { id: 1, name: 'John Doe', email: 'john@example.com' },
         { id: 2, name: 'Jane Smith', email: 'jane@example.com' }
@@ -304,7 +304,7 @@ async function applyTestProps(page, componentName) {
     },
     'form': { title: 'Test Form', submitText: 'Submit Test' }
   };
-  
+
   const props = propSets[componentName];
   if (props) {
     for (const [key, value] of Object.entries(props)) {
@@ -336,6 +336,6 @@ function getComponentSelector(componentName) {
     'modal': '[role="dialog"]',
     'spinner': '.spinner, [role="status"]'
   };
-  
+
   return selectorMap[componentName] || `[data-component="${componentName}"]`;
 }

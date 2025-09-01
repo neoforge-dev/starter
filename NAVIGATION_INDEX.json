@@ -12,7 +12,7 @@
     "getting_started": {
       "description": "Project setup and onboarding",
       "canonical": "docs/getting-started/index.md",
-      "quick_reference": "docs/getting-started.md", 
+      "quick_reference": "docs/getting-started.md",
       "troubleshooting": "docs/getting-started/troubleshooting.md",
       "priority": 1,
       "status": "production_ready"
@@ -39,7 +39,7 @@
     "testing": {
       "description": "Testing guides organized by scope",
       "backend": "backend/TESTING.md",
-      "frontend": "frontend/src/test/TESTING.md", 
+      "frontend": "frontend/src/test/TESTING.md",
       "web_components": "frontend/src/test/WEB_COMPONENT_TESTING.md",
       "priority": 4,
       "status": "production_ready"
@@ -71,7 +71,7 @@
   "quick_commands": {
     "setup": "make setup && make dev",
     "test_all": "make test",
-    "test_backend": "make test-backend", 
+    "test_backend": "make test-backend",
     "test_frontend": "make test-frontend",
     "development": "make dev",
     "health_check": "make health",
@@ -89,7 +89,7 @@
   "common_workflows": {
     "new_developer_onboarding": [
       "docs/README.md",
-      "docs/getting-started/index.md", 
+      "docs/getting-started/index.md",
       "docs/development/index.md"
     ],
     "feature_development": [
@@ -129,7 +129,7 @@
       "key_files": ["README.md", "TESTING.md"]
     },
     "frontend/": {
-      "description": "Frontend documentation", 
+      "description": "Frontend documentation",
       "key_files": [
         "README.md",
         "src/test/TESTING.md",
@@ -146,7 +146,7 @@
     "broken_links_fixed": 15,
     "duplicate_files_removed": [
       "frontend/docs/getting-started.md",
-      "frontend/public/docs/getting-started.md", 
+      "frontend/public/docs/getting-started.md",
       "backend/tests/README.md",
       "frontend/docs/TESTING.md",
       "frontend/public/docs/architecture.md"
@@ -154,13 +154,13 @@
     "files_archived": [
       "TECHNICAL_DEBT_BACKLOG.md",
       "COMPONENT_DUPLICATION_ANALYSIS.md",
-      "COMPREHENSIVE_TECHNICAL_DEBT_ANALYSIS.md", 
+      "COMPREHENSIVE_TECHNICAL_DEBT_ANALYSIS.md",
       "TECHNICAL_DEBT_STRATEGIC_PLAN.md"
     ],
     "new_files_created": [
       "docs/development/index.md",
       "docs/architecture/index.md",
-      "docs/operations/index.md", 
+      "docs/operations/index.md",
       "docs/getting-started/troubleshooting.md",
       "docs/reference/configuration.md",
       "NAVIGATION_INDEX.md",

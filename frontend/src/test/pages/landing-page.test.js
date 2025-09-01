@@ -12,7 +12,7 @@ describe("Landing Page", () => {
     // Create the landing-page element
     element = document.createElement('landing-page');
     container.appendChild(element);
-    
+
     // Wait for component to be fully rendered
     await element.updateComplete;
   });

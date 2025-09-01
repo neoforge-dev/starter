@@ -38,16 +38,16 @@ const applyPerformancePolyfill = (target) => {
 // Override the require function to intercept the Vitest worker module
 module.require = function(id) {
   const exports = originalRequire.apply(this, arguments);
-  
+
   // If this is the Vitest worker module, patch it
   if (id === VITEST_WORKER_PATH || id.includes(VITEST_WORKER_PATH)) {
     console.log('Intercepted Vitest worker module, applying performance polyfill');
-    
+
     // Apply the polyfill to global objects
     if (typeof global !== 'undefined') applyPerformancePolyfill(global);
     if (typeof globalThis !== 'undefined') applyPerformancePolyfill(globalThis);
     if (typeof self !== 'undefined') applyPerformancePolyfill(self);
-    
+
     // Add a global error handler to catch any issues with performance.now
     if (typeof process !== 'undefined') {
       process.on('uncaughtException', (err) => {
@@ -60,7 +60,7 @@ module.require = function(id) {
       });
     }
   }
-  
+
   return exports;
 };
 
@@ -75,7 +75,7 @@ function verifyPatch() {
     } else {
       console.log('Performance API is available');
     }
-    
+
     // Test if performance.now works
     const time = performance.now();
     console.log(`Performance.now() = ${time}`);
@@ -96,4 +96,4 @@ console.log('Vitest worker patch installed (CommonJS version)');
 module.exports = {
   verifyPatch,
   applyPerformancePolyfill
-}; 
+};

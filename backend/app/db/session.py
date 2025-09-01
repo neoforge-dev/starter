@@ -1,12 +1,13 @@
 """Database session module."""
-from typing import AsyncGenerator, Dict, Any
+from typing import Any, AsyncGenerator, Dict
 
+from app.db.base_class import Base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import AsyncAdaptedQueuePool, NullPool
 
 from app.core.config import Settings, get_settings
-from app.db.base_class import Base
+
 
 def get_engine_args(settings: Settings) -> Dict[str, Any]:
     """Get database engine arguments based on environment."""
@@ -35,23 +36,28 @@ def get_engine_args(settings: Settings) -> Dict[str, Any]:
 
     # Use a small pool for testing to enable pool metrics
     if settings.testing:
-        common_args.update({
-            "poolclass": AsyncAdaptedQueuePool,
-            "pool_size": 5,
-            "max_overflow": 2,
-            "pool_timeout": 5,
-            "pool_recycle": 300,
-        })
+        common_args.update(
+            {
+                "poolclass": AsyncAdaptedQueuePool,
+                "pool_size": 5,
+                "max_overflow": 2,
+                "pool_timeout": 5,
+                "pool_recycle": 300,
+            }
+        )
     else:
-        common_args.update({
-            "poolclass": AsyncAdaptedQueuePool,
-            "pool_size": 20,
-            "max_overflow": 10,
-            "pool_timeout": 30,
-            "pool_recycle": 1800,
-        })
+        common_args.update(
+            {
+                "poolclass": AsyncAdaptedQueuePool,
+                "pool_size": 20,
+                "max_overflow": 10,
+                "pool_timeout": 30,
+                "pool_recycle": 1800,
+            }
+        )
 
     return common_args
+
 
 # Get settings instance once
 current_settings = get_settings()
@@ -82,10 +88,10 @@ async def init_db() -> None:
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Get database session.
-    
+
     This function provides a database session with optimized connection pooling.
     The session is automatically closed when the request is complete.
-    
+
     Yields:
         Database session with optimized connection pooling
     """
@@ -93,4 +99,4 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         try:
             yield session
         finally:
-            await session.close() 
+            await session.close()

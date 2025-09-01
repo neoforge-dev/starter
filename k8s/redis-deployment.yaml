@@ -142,7 +142,7 @@ spec:
           readOnlyRootFilesystem: false
           runAsNonRoot: true
           runAsUser: 999
-      
+
       # Redis Exporter for Prometheus monitoring
       - name: redis-exporter
         image: oliver006/redis_exporter:v1.56.0
@@ -173,13 +173,13 @@ spec:
             - ALL
           readOnlyRootFilesystem: true
           runAsNonRoot: true
-      
+
       volumes:
       - name: redis-config
         configMap:
           name: redis-config
           defaultMode: 0644
-      
+
       # Node affinity for performance
       affinity:
         nodeAffinity:
@@ -200,7 +200,7 @@ spec:
                   operator: In
                   values: ["redis"]
               topologyKey: kubernetes.io/hostname
-  
+
   volumeClaimTemplates:
   - metadata:
       name: redis-storage

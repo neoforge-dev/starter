@@ -12,13 +12,13 @@ export class Store extends EventTarget {
     this.middleware = [];
     this._subscribers = new Set();
     this._devtools = null;
-    
+
     // Initialize state with deep copy to prevent mutations
     this._state = this._deepFreeze(this._cloneDeep(initialState));
-    
+
     // Set up development tools integration
     this._setupDevtools();
-    
+
     // Initialize persistence
     this._persistenceConfig = null;
     this._initialized = false;
@@ -34,14 +34,14 @@ export class Store extends EventTarget {
    */
   async initialize(config = {}) {
     if (this._initialized) return;
-    
+
     this._persistenceConfig = config;
-    
+
     // Load persisted state if configured
     if (config.persist) {
       await this._loadPersistedState(config.persist);
     }
-    
+
     this._initialized = true;
     Logger.info('Store initialized');
   }
@@ -53,8 +53,8 @@ export class Store extends EventTarget {
    * @returns {Promise} - Promise that resolves when action is complete
    */
   async dispatch(action, payload) {
-    const actionObj = typeof action === 'string' 
-      ? { type: action, payload } 
+    const actionObj = typeof action === 'string'
+      ? { type: action, payload }
       : action;
 
     try {
@@ -81,7 +81,7 @@ export class Store extends EventTarget {
 
       // Execute action
       const result = this.actions[type](this._state, actionPayload);
-      
+
       // Handle async actions
       if (result instanceof Promise) {
         await result;
@@ -135,8 +135,8 @@ export class Store extends EventTarget {
 
     // Immediately call with current state if requested
     if (options.immediate) {
-      const selectedState = subscriber.selector 
-        ? subscriber.selector(this._state) 
+      const selectedState = subscriber.selector
+        ? subscriber.selector(this._state)
         : this._state;
       callback(selectedState, null);
     }
@@ -206,11 +206,11 @@ export class Store extends EventTarget {
   _notifyStateChange(actionType, payload, prevState) {
     this._subscribers.forEach(subscriber => {
       try {
-        const prevSelectedState = subscriber.selector 
-          ? subscriber.selector(prevState) 
+        const prevSelectedState = subscriber.selector
+          ? subscriber.selector(prevState)
           : prevState;
-        const newSelectedState = subscriber.selector 
-          ? subscriber.selector(this._state) 
+        const newSelectedState = subscriber.selector
+          ? subscriber.selector(this._state)
           : this._state;
 
         // Only notify if selected state actually changed
@@ -253,13 +253,13 @@ export class Store extends EventTarget {
 
   _deepFreeze(obj) {
     if (typeof obj !== 'object' || obj === null) return obj;
-    
+
     Object.getOwnPropertyNames(obj).forEach(prop => {
       if (obj[prop] !== null && typeof obj[prop] === 'object') {
         this._deepFreeze(obj[prop]);
       }
     });
-    
+
     return Object.freeze(obj);
   }
 
@@ -275,18 +275,18 @@ export class Store extends EventTarget {
   async _loadPersistedState(persistConfig) {
     try {
       const { key = 'neoforge-state', whitelist = [], blacklist = [] } = persistConfig;
-      
+
       const persistedState = await pwaService.getOfflineData(key);
       if (persistedState) {
         // Filter state based on whitelist/blacklist
         const filteredState = this._filterPersistedState(persistedState, whitelist, blacklist);
-        
+
         // Merge with current state
         this._state = this._deepFreeze({
           ...this._state,
           ...filteredState
         });
-        
+
         Logger.info('Loaded persisted state');
       }
     } catch (error) {
@@ -299,10 +299,10 @@ export class Store extends EventTarget {
 
     try {
       const { key = 'neoforge-state', whitelist = [], blacklist = [] } = this._persistenceConfig.persist;
-      
+
       // Filter state for persistence
       const stateToSave = this._filterPersistedState(this._state, whitelist, blacklist);
-      
+
       await pwaService.storeOfflineData(key, stateToSave);
       Logger.debug('State persisted');
     } catch (error) {
@@ -450,29 +450,29 @@ export const store = new Store({
   // User state
   user: null,
   isAuthenticated: false,
-  
+
   // UI state
   theme: localStorage.getItem('theme') || 'light',
   loading: false,
   error: null,
   notifications: [],
-  
+
   // Navigation state
   currentRoute: '/',
   routeParams: {},
-  
+
   // Application state
   online: navigator.onLine,
   pwaInstalled: false,
   updateAvailable: false,
-  
+
   // Data cache
   cache: {
     projects: null,
     analytics: null,
     lastUpdated: null
   },
-  
+
   // Settings
   settings: {
     language: 'en',
@@ -488,31 +488,31 @@ store.addActions({
     state.user = user;
     state.isAuthenticated = !!user;
   },
-  
+
   LOGOUT: (state) => {
     state.user = null;
     state.isAuthenticated = false;
   },
-  
+
   // UI actions
   SET_THEME: (state, theme) => {
     state.theme = theme;
     localStorage.setItem('theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
   },
-  
+
   SET_LOADING: (state, loading) => {
     state.loading = loading;
   },
-  
+
   SET_ERROR: (state, error) => {
     state.error = error;
   },
-  
+
   CLEAR_ERROR: (state) => {
     state.error = null;
   },
-  
+
   // Notification actions
   ADD_NOTIFICATION: (state, notification) => {
     const id = Date.now().toString();
@@ -522,40 +522,40 @@ store.addActions({
       ...notification
     });
   },
-  
+
   REMOVE_NOTIFICATION: (state, id) => {
     state.notifications = state.notifications.filter(n => n.id !== id);
   },
-  
+
   CLEAR_NOTIFICATIONS: (state) => {
     state.notifications = [];
   },
-  
+
   // Navigation actions
   SET_ROUTE: (state, { route, params = {} }) => {
     state.currentRoute = route;
     state.routeParams = params;
   },
-  
+
   // App state actions
   SET_ONLINE: (state, online) => {
     state.online = online;
   },
-  
+
   SET_PWA_INSTALLED: (state, installed) => {
     state.pwaInstalled = installed;
   },
-  
+
   SET_UPDATE_AVAILABLE: (state, available) => {
     state.updateAvailable = available;
   },
-  
+
   // Cache actions
   SET_CACHE_DATA: (state, { key, data }) => {
     state.cache[key] = data;
     state.cache.lastUpdated = Date.now();
   },
-  
+
   CLEAR_CACHE: (state) => {
     state.cache = {
       projects: null,
@@ -563,7 +563,7 @@ store.addActions({
       lastUpdated: null
     };
   },
-  
+
   // Settings actions
   UPDATE_SETTINGS: (state, settings) => {
     state.settings = { ...state.settings, ...settings };

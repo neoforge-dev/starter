@@ -62,7 +62,7 @@ Use this component to separate content sections, create visual breaks in layouts
 
 const Template = ({ content, ...args }) => {
   return `
-    <neo-divider 
+    <neo-divider
       ${args.orientation ? `orientation="${args.orientation}"` : ""}
       ${args.variant ? `variant="${args.variant}"` : ""}
       ${args.size ? `size="${args.size}"` : ""}
@@ -90,12 +90,12 @@ export const Variants = () => {
         <h4 style="margin-bottom: 1rem;">Solid</h4>
         <neo-divider variant="solid"></neo-divider>
       </div>
-      
+
       <div>
         <h4 style="margin-bottom: 1rem;">Dashed</h4>
         <neo-divider variant="dashed"></neo-divider>
       </div>
-      
+
       <div>
         <h4 style="margin-bottom: 1rem;">Dotted</h4>
         <neo-divider variant="dotted"></neo-divider>
@@ -119,12 +119,12 @@ export const Sizes = () => {
         <h4 style="margin-bottom: 1rem;">Thin (1px)</h4>
         <neo-divider size="thin"></neo-divider>
       </div>
-      
+
       <div>
         <h4 style="margin-bottom: 1rem;">Medium (2px)</h4>
         <neo-divider size="medium"></neo-divider>
       </div>
-      
+
       <div>
         <h4 style="margin-bottom: 1rem;">Thick (4px)</h4>
         <neo-divider size="thick"></neo-divider>
@@ -148,17 +148,17 @@ export const Colors = () => {
         <h4 style="margin-bottom: 1rem;">Default</h4>
         <neo-divider color="default"></neo-divider>
       </div>
-      
+
       <div>
         <h4 style="margin-bottom: 1rem;">Muted</h4>
         <neo-divider color="muted"></neo-divider>
       </div>
-      
+
       <div>
         <h4 style="margin-bottom: 1rem;">Primary</h4>
         <neo-divider color="primary"></neo-divider>
       </div>
-      
+
       <div>
         <h4 style="margin-bottom: 1rem;">Secondary</h4>
         <neo-divider color="secondary"></neo-divider>
@@ -183,13 +183,13 @@ export const WithContent = () => {
         <neo-divider>or</neo-divider>
         <p>Content below the divider</p>
       </div>
-      
+
       <div>
         <p>Another section</p>
         <neo-divider color="primary">AND</neo-divider>
         <p>More content here</p>
       </div>
-      
+
       <div>
         <p>Login options</p>
         <neo-divider variant="dashed" color="muted">Continue with</neo-divider>
@@ -251,19 +251,19 @@ export const SpacingOptions = () => {
   return `
     <div style="padding: 1rem;">
       <p>Content before</p>
-      
+
       <neo-divider spacing="none">No spacing</neo-divider>
       <p>Immediately after</p>
-      
+
       <neo-divider spacing="sm">Small spacing</neo-divider>
       <p>After small spacing</p>
-      
+
       <neo-divider spacing="md">Medium spacing</neo-divider>
       <p>After medium spacing</p>
-      
+
       <neo-divider spacing="lg">Large spacing</neo-divider>
       <p>After large spacing</p>
-      
+
       <neo-divider spacing="xl">Extra large spacing</neo-divider>
       <p>After extra large spacing</p>
     </div>
@@ -282,15 +282,15 @@ export const FormSeparation = () => {
   return `
     <div style="max-width: 400px; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem;">
       <h3 style="margin: 0 0 1rem 0;">Sign Up</h3>
-      
+
       <form style="display: flex; flex-direction: column; gap: 1rem;">
         <input type="email" placeholder="Email" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;" />
         <input type="password" placeholder="Password" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;" />
         <button type="submit" style="padding: 0.75rem; background: #3b82f6; color: white; border: none; border-radius: 0.375rem;">Sign Up</button>
       </form>
-      
+
       <neo-divider spacing="lg" color="muted">or</neo-divider>
-      
+
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
         <button style="padding: 0.75rem; background: #4285f4; color: white; border: none; border-radius: 0.375rem;">Continue with Google</button>
         <button style="padding: 0.75rem; background: #1877f2; color: white; border: none; border-radius: 0.375rem;">Continue with Facebook</button>

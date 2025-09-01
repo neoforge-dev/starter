@@ -22,7 +22,7 @@ export const designTokens = {
       primary: { value: '#2563eb', fallback: '#3b82f6', type: 'color' },
       secondary: { value: '#4f46e5', fallback: '#6366f1', type: 'color' },
       accent: { value: '#0ea5e9', fallback: '#38bdf8', type: 'color' },
-      
+
       // Primary variations
       primary50: { value: '#eff6ff', fallback: '#f0f9ff', type: 'color' },
       primary100: { value: '#dbeafe', fallback: '#e0f2fe', type: 'color' },
@@ -64,17 +64,17 @@ export const designTokens = {
   // Typography system
   typography: {
     fontFamilies: {
-      primary: { 
+      primary: {
         value: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
         fallback: 'Arial, sans-serif',
         type: 'typography'
       },
-      secondary: { 
+      secondary: {
         value: 'Georgia, "Times New Roman", serif',
         fallback: 'serif',
         type: 'typography'
       },
-      mono: { 
+      mono: {
         value: '"SF Mono", "Monaco", "Cascadia Code", monospace',
         fallback: 'monospace',
         type: 'typography'
@@ -246,7 +246,7 @@ export function validateToken(token, type) {
 export function getTokenValue(tokenPath, fallback = null) {
   const pathParts = tokenPath.split('.');
   let current = designTokens;
-  
+
   for (const part of pathParts) {
     current = current[part];
     if (!current) {
@@ -254,7 +254,7 @@ export function getTokenValue(tokenPath, fallback = null) {
       return fallback;
     }
   }
-  
+
   return current.value || fallback || current.fallback;
 }
 
@@ -263,11 +263,11 @@ export function getTokenValue(tokenPath, fallback = null) {
  */
 export function generateCSSCustomProperties(tokens = designTokens, prefix = '--') {
   const properties = {};
-  
+
   function traverse(obj, path = '') {
     for (const [key, value] of Object.entries(obj)) {
       const currentPath = path ? `${path}-${key}` : key;
-      
+
       if (value && typeof value === 'object' && value.value !== undefined) {
         // This is a token with value and type
         properties[`${prefix}${currentPath}`] = value.value;
@@ -281,7 +281,7 @@ export function generateCSSCustomProperties(tokens = designTokens, prefix = '--'
       }
     }
   }
-  
+
   traverse(tokens);
   return properties;
 }
@@ -292,11 +292,11 @@ export function generateCSSCustomProperties(tokens = designTokens, prefix = '--'
 export function applyTokensToStylesheet(tokens = designTokens, selector = ':root') {
   const properties = generateCSSCustomProperties(tokens);
   let css = `${selector} {\n`;
-  
+
   for (const [property, value] of Object.entries(properties)) {
     css += `  ${property}: ${value};\n`;
   }
-  
+
   css += '}\n';
   return css;
 }
@@ -307,7 +307,7 @@ export function applyTokensToStylesheet(tokens = designTokens, selector = ':root
 export function updateToken(tokenPath, newValue) {
   const cssProperty = `--${tokenPath.replace(/\./g, '-')}`;
   document.documentElement.style.setProperty(cssProperty, newValue);
-  
+
   // Dispatch custom event for token updates
   window.dispatchEvent(new CustomEvent('design-token-updated', {
     detail: { path: tokenPath, value: newValue, cssProperty }
@@ -319,14 +319,14 @@ export function updateToken(tokenPath, newValue) {
  */
 export function batchUpdateTokens(updates) {
   const root = document.documentElement;
-  
+
   // Use requestAnimationFrame for smooth updates
   requestAnimationFrame(() => {
     for (const [tokenPath, newValue] of Object.entries(updates)) {
       const cssProperty = `--${tokenPath.replace(/\./g, '-')}`;
       root.style.setProperty(cssProperty, newValue);
     }
-    
+
     // Dispatch batch update event
     window.dispatchEvent(new CustomEvent('design-tokens-batch-updated', {
       detail: { updates }
@@ -357,12 +357,12 @@ export const TokenExporter = {
   toSCSS(tokens = designTokens, prefix = '$') {
     const properties = generateCSSCustomProperties(tokens, '');
     let scss = '';
-    
+
     for (const [property, value] of Object.entries(properties)) {
       const scssVar = property.replace(/^--/, prefix).replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
       scss += `${scssVar}: ${value};\n`;
     }
-    
+
     return scss;
   },
 
@@ -370,7 +370,7 @@ export const TokenExporter = {
   toFigmaTokens(tokens = designTokens) {
     function convertToFigmaFormat(obj, path = '') {
       const figmaTokens = {};
-      
+
       for (const [key, value] of Object.entries(obj)) {
         if (value && typeof value === 'object' && value.value !== undefined) {
           figmaTokens[key] = {
@@ -382,10 +382,10 @@ export const TokenExporter = {
           figmaTokens[key] = convertToFigmaFormat(value, path ? `${path}.${key}` : key);
         }
       }
-      
+
       return figmaTokens;
     }
-    
+
     return JSON.stringify(convertToFigmaFormat(tokens), null, 2);
   }
 };

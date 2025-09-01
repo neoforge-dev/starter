@@ -28,7 +28,7 @@ import { html, css } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.
 // import { html, css } from "lit";
 ```
 
-**Impact**: 
+**Impact**:
 - Storybook configuration missing (.storybook/ directory not found)
 - Story files can't execute properly
 - Component isolation testing impossible
@@ -201,7 +201,7 @@ const template = html`
       <div class="variant-demo">
         <h3>${variant}</h3>
         <neo-button variant="${variant}">${label}</neo-button>
-        
+
         <!-- State variations -->
         <neo-button variant="${variant}" disabled>${label} (Disabled)</neo-button>
         <neo-button variant="${variant}" loading>${label} (Loading)</neo-button>

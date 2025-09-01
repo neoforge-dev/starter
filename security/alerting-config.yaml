@@ -21,10 +21,10 @@ stringData:
       smtp_auth_username: 'neoforge-security@company.com'
       smtp_auth_password: '${SMTP_PASSWORD}'
       smtp_auth_identity: 'neoforge-security@company.com'
-      
+
       # Slack webhook URL (optional)
       slack_api_url: '${SLACK_WEBHOOK_URL}'
-      
+
       # PagerDuty integration key (optional)
       pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
 
@@ -39,7 +39,7 @@ stringData:
       group_interval: 10s
       repeat_interval: 12h
       receiver: 'default-receiver'
-      
+
       # Security-specific routing
       routes:
       - match:
@@ -47,19 +47,19 @@ stringData:
         receiver: 'security-team'
         group_wait: 0s
         repeat_interval: 1h
-        
+
       - match:
           severity: critical
         receiver: 'critical-alerts'
         group_wait: 0s
         repeat_interval: 30m
-        
+
       - match_re:
           alertname: '.*Vulnerability.*'
         receiver: 'vulnerability-alerts'
         group_wait: 5m
         repeat_interval: 6h
-        
+
       - match_re:
           alertname: '.*Policy.*'
         receiver: 'compliance-alerts'
@@ -99,19 +99,19 @@ stringData:
         subject: '[SECURITY] NeoForge Security Alert: {{ .GroupLabels.alertname }}'
         body: |
           🚨 SECURITY ALERT 🚨
-          
+
           {{ range .Alerts }}
           Alert: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
           Severity: {{ .Labels.severity }}
           Component: {{ .Labels.component }}
           Time: {{ .StartsAt }}
-          
+
           {{ if .Annotations.runbook_url }}
           Runbook: {{ .Annotations.runbook_url }}
           {{ end }}
           {{ end }}
-          
+
           Please investigate immediately.
         html: |
           <div style="background-color: #ffebee; border: 1px solid #f44336; border-radius: 4px; padding: 16px;">
@@ -130,7 +130,7 @@ stringData:
             {{ end }}
             <p style="color: #d32f2f; font-weight: bold;">Please investigate immediately.</p>
           </div>
-      
+
       slack_configs:
       - api_url: '${SLACK_WEBHOOK_URL}'
         channel: '#security-alerts'
@@ -138,12 +138,12 @@ stringData:
         text: |
           {{ range .Alerts }}
           *{{ .Annotations.summary }}*
-          
+
           *Description:* {{ .Annotations.description }}
           *Severity:* {{ .Labels.severity }}
           *Component:* {{ .Labels.component }}
           *Time:* {{ .StartsAt }}
-          
+
           {{ if .Annotations.runbook_url }}
           <{{ .Annotations.runbook_url }}|View Runbook>
           {{ end }}
@@ -155,7 +155,7 @@ stringData:
       email_configs:
       - to: 'critical-alerts@company.com'
         subject: '[CRITICAL] NeoForge Platform: {{ .GroupLabels.alertname }}'
-      
+
       pagerduty_configs:
       - routing_key: '${PAGERDUTY_INTEGRATION_KEY}'
         description: '{{ .GroupLabels.alertname }}: {{ .Annotations.summary }}'
@@ -173,7 +173,7 @@ stringData:
         subject: '[VULNERABILITY] NeoForge: {{ .GroupLabels.alertname }}'
         body: |
           Vulnerability Alert Details:
-          
+
           {{ range .Alerts }}
           Summary: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
@@ -181,7 +181,7 @@ stringData:
           CVSS Score: {{ .Labels.cvss_score }}
           Component: {{ .Labels.component }}
           Severity: {{ .Labels.severity }}
-          
+
           {{ if .Annotations.runbook_url }}
           Remediation Guide: {{ .Annotations.runbook_url }}
           {{ end }}
@@ -193,14 +193,14 @@ stringData:
         subject: '[COMPLIANCE] NeoForge Policy Violation: {{ .GroupLabels.alertname }}'
         body: |
           Policy Compliance Alert:
-          
+
           {{ range .Alerts }}
           Policy: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
           Framework: {{ .Labels.framework }}
           Namespace: {{ .Labels.namespace }}
           Resource: {{ .Labels.resource }}
-          
+
           {{ if .Annotations.runbook_url }}
           Compliance Guide: {{ .Annotations.runbook_url }}
           {{ end }}
@@ -213,7 +213,7 @@ stringData:
       target_match:
         severity: 'warning'
       equal: ['alertname', 'component', 'instance']
-      
+
     - source_match:
         alertname: 'NodeDown'
       target_match_re:

@@ -3,10 +3,11 @@
 Note: Keep payload minimal and avoid storing PII. Intended for non-production
 or report-only mode to observe potential violations safely.
 """
+from typing import Any, Dict
+
+import structlog
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
-from typing import Any, Dict
-import structlog
 
 logger = structlog.get_logger()
 router = APIRouter()
@@ -14,6 +15,7 @@ router = APIRouter()
 
 class CSPReport(BaseModel):
     """Minimal CSP report schema (relaxed to accept various UA formats)."""
+
     csp_report: Dict[str, Any] | None = None
 
 

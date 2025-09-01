@@ -1,18 +1,18 @@
 /**
  * Comprehensive Performance Testing Framework
- * 
+ *
  * Advanced performance benchmarks for all 33 playground components
  * Covers rendering, memory usage, bundle size, loading times, interaction responsiveness
  */
 import { test, expect, describe, beforeAll, afterAll } from "vitest";
 import { fixture, html } from "@open-wc/testing";
 
-// Performance thresholds - Adjusted for CI environment stability 
+// Performance thresholds - Adjusted for CI environment stability
 const PERFORMANCE_THRESHOLDS = {
   RENDER: {
     SINGLE_COMPONENT: 25, // Increased from 16.67ms for CI overhead
     BATCH_RENDER: 100, // Increased from 50ms for CI environment
-    COMPLEX_COMPONENT: 50, // Increased from 33.33ms for CI stability 
+    COMPLEX_COMPONENT: 50, // Increased from 33.33ms for CI stability
     INITIAL_PAINT: 200, // Increased from 100ms for CI variability
     TIME_TO_INTERACTIVE: 400 // Increased from 200ms for CI environment
   },
@@ -126,10 +126,10 @@ class PerformanceProfiler {
 
       for (let i = 0; i < iterations; i++) {
         const measurement = this.startMeasurement(`render-${i}`);
-        
+
         const component = await componentFactory();
         await component.updateComplete;
-        
+
         const result = this.endMeasurement(`render-${i}`);
         renderTimes.push(result.duration);
         memoryDeltas.push(result.memoryDelta);
@@ -162,12 +162,12 @@ class PerformanceProfiler {
   measureInteractionPerformance(component, interaction) {
     return new Promise((resolve) => {
       const measurement = this.startMeasurement('interaction');
-      
+
       const startTime = performance.now();
       interaction().then(() => {
         const endTime = performance.now();
         const result = this.endMeasurement('interaction');
-        
+
         resolve({
           responseTime: endTime - startTime,
           totalDuration: result.duration,
@@ -183,7 +183,7 @@ class PerformanceProfiler {
     const baseSize = 2048; // 2KB base size
     const complexityMultiplier = componentName.includes('neo-') ? 2 : 1;
     const typeMultiplier = componentName.includes('table') || componentName.includes('form') ? 3 : 1;
-    
+
     return baseSize * complexityMultiplier * typeMultiplier;
   }
 
@@ -198,7 +198,7 @@ class PerformanceProfiler {
       const observer = new PerformanceObserver((list) => {
         callback(list.getEntries());
       });
-      
+
       observer.observe({ entryTypes: ['measure', 'navigation', 'paint'] });
       return observer;
     }
@@ -211,11 +211,11 @@ const profiler = new PerformanceProfiler();
 
 // Performance tests for all component categories
 describe("Comprehensive Performance Testing Framework", () => {
-  
+
   beforeAll(async () => {
     // Initialize performance monitoring
     profiler.memoryBaseline = profiler.getMemoryUsage();
-    
+
     // Set up performance observers
     profiler.setupPerformanceObserver((entries) => {
       // Log performance entries for analysis
@@ -230,7 +230,7 @@ describe("Comprehensive Performance Testing Framework", () => {
 
   // Atom components performance tests
   describe("Atom Components Performance", () => {
-    
+
     describe("Lightweight Atoms Performance", () => {
       COMPONENT_PERFORMANCE_PROFILES.atoms.lightweight.forEach(componentName => {
         test(`${componentName} - render performance`, async () => {
@@ -243,7 +243,7 @@ describe("Comprehensive Performance Testing Framework", () => {
           };
 
           const stats = await profiler.measureRenderPerformance(componentFactory, 100);
-          
+
           expect(stats.avg).toBeLessThan(PERFORMANCE_THRESHOLDS.RENDER.SINGLE_COMPONENT);
           expect(stats.p95).toBeLessThan(PERFORMANCE_THRESHOLDS.RENDER.SINGLE_COMPONENT * 2);
           expect(stats.memoryAvg).toBeLessThan(PERFORMANCE_THRESHOLDS.MEMORY.SINGLE_COMPONENT);
@@ -329,7 +329,7 @@ describe("Comprehensive Performance Testing Framework", () => {
           };
 
           const stats = await profiler.measureRenderPerformance(componentFactory, 50);
-          
+
           expect(stats.avg).toBeLessThan(PERFORMANCE_THRESHOLDS.RENDER.COMPLEX_COMPONENT);
           expect(stats.p95).toBeLessThan(PERFORMANCE_THRESHOLDS.RENDER.COMPLEX_COMPONENT * 2);
         });
@@ -376,7 +376,7 @@ describe("Comprehensive Performance Testing Framework", () => {
 
   // Molecule components performance tests
   describe("Molecule Components Performance", () => {
-    
+
     describe("Complex Molecules Performance", () => {
       COMPONENT_PERFORMANCE_PROFILES.molecules.complex.forEach(componentName => {
         test(`${componentName} - advanced interaction performance`, async () => {
@@ -443,7 +443,7 @@ describe("Comprehensive Performance Testing Framework", () => {
 
   // Organism components performance tests
   describe("Organism Components Performance", () => {
-    
+
     describe("Complex Organisms Performance", () => {
       COMPONENT_PERFORMANCE_PROFILES.organisms.complex.forEach(componentName => {
         test(`${componentName} - large dataset rendering`, async () => {
@@ -485,7 +485,7 @@ describe("Comprehensive Performance Testing Framework", () => {
           };
 
           const stats = await profiler.measureRenderPerformance(largeDatasetFactory, 10);
-          
+
           // More lenient thresholds for complex organisms
           expect(stats.avg).toBeLessThan(PERFORMANCE_THRESHOLDS.RENDER.BATCH_RENDER * 2);
           expect(stats.memoryMax).toBeLessThan(PERFORMANCE_THRESHOLDS.MEMORY.SINGLE_COMPONENT * 10);
@@ -493,30 +493,30 @@ describe("Comprehensive Performance Testing Framework", () => {
 
         test(`${componentName} - progressive loading performance`, async () => {
           const measurement = profiler.startMeasurement('progressive-load');
-          
+
           let component;
           try {
             component = await fixture(html`<neo-${componentName} class="loading"></neo-${componentName}>`);
           } catch (error) {
             component = await fixture(html`<div class="neo-${componentName} loading">Loading...</div>`);
           }
-          
+
           profiler.markPoint('progressive-load', 'initial-render');
 
           // Simulate progressive content loading
           await new Promise(resolve => setTimeout(resolve, 50));
-          
+
           if (component.classList) {
             component.classList.remove('loading');
             component.classList.add('loaded');
           }
-          
+
           if (component.updateComplete) {
             await component.updateComplete;
           }
-          
+
           const result = profiler.endMeasurement('progressive-load');
-          
+
           expect(result.duration).toBeLessThan(PERFORMANCE_THRESHOLDS.RENDER.TIME_TO_INTERACTIVE);
         });
 
@@ -565,7 +565,7 @@ describe("Comprehensive Performance Testing Framework", () => {
 
   // Cross-component performance tests
   describe("Cross-Component Performance Integration", () => {
-    
+
     test("multi-component page performance", async () => {
       const complexPageFactory = async () => {
         return await fixture(html`
@@ -607,7 +607,7 @@ describe("Comprehensive Performance Testing Framework", () => {
       };
 
       const stats = await profiler.measureRenderPerformance(complexPageFactory, 5);
-      
+
       // More generous thresholds for complex pages
       expect(stats.avg).toBeLessThan(PERFORMANCE_THRESHOLDS.RENDER.TIME_TO_INTERACTIVE * 2);
       expect(stats.memoryMax).toBeLessThan(PERFORMANCE_THRESHOLDS.MEMORY.SINGLE_COMPONENT * 20);
@@ -635,24 +635,24 @@ describe("Comprehensive Performance Testing Framework", () => {
         const input1 = interactiveContainer.querySelector('#input1');
         const input2 = interactiveContainer.querySelector('#input2');
         const select = interactiveContainer.querySelector('#select1');
-        
+
         if (input1) {
           input1.focus();
           input1.value = 'test value 1';
           input1.dispatchEvent(new Event('input'));
         }
-        
+
         if (input2) {
           input2.focus();
           input2.value = 'test value 2';
           input2.dispatchEvent(new Event('input'));
         }
-        
+
         if (select) {
           select.value = 'Option 2';
           select.dispatchEvent(new Event('change'));
         }
-        
+
         await new Promise(resolve => setTimeout(resolve, 10)); // Allow all events to process
       });
 
@@ -672,7 +672,7 @@ describe("Comprehensive Performance Testing Framework", () => {
       const themeChangePerformance = await profiler.measureInteractionPerformance(themedComponents, async () => {
         themedComponents.classList.remove('theme-light');
         themedComponents.classList.add('theme-dark');
-        
+
         // Allow CSS recalculation and repaint
         await new Promise(resolve => setTimeout(resolve, 50));
       });
@@ -683,7 +683,7 @@ describe("Comprehensive Performance Testing Framework", () => {
 
   // Performance regression detection
   describe("Performance Regression Detection", () => {
-    
+
     test("benchmark all components for regression detection", async () => {
       const allComponents = [
         ...COMPONENT_PERFORMANCE_PROFILES.atoms.lightweight,
@@ -724,7 +724,7 @@ describe("Comprehensive Performance Testing Framework", () => {
 
   // Visual performance metrics
   describe("Visual Performance Metrics", () => {
-    
+
     test("layout shift measurement", async () => {
       const component = await fixture(html`
         <div style="width: 300px; height: 200px;">
@@ -745,17 +745,17 @@ describe("Comprehensive Performance Testing Framework", () => {
       }
 
       const finalRect = component.getBoundingClientRect();
-      
+
       // Calculate layout shift
       const layoutShift = Math.abs(finalRect.height - initialRect.height);
-      
+
       // Expect minimal layout shift (less than 20px)
       expect(layoutShift).toBeLessThan(20);
     });
 
     test("paint timing optimization", async () => {
       const paintMeasurement = profiler.startMeasurement('paint-timing');
-      
+
       const component = await fixture(html`
         <neo-card style="background: linear-gradient(45deg, #ff6b6b, #4ecdc4); padding: 20px;">
           <h2>Complex Visual Component</h2>

@@ -181,4 +181,4 @@ TypeError: performance.now is not a function
 
 The Performance API polyfill ensures that all tests have access to a consistent and reliable Performance API, regardless of the environment they run in. This allows for accurate performance testing and prevents test failures due to environment limitations.
 
-This implementation represents a comprehensive solution that addresses both the immediate test failures and provides long-term stability for performance-dependent code across all JavaScript environments. 
+This implementation represents a comprehensive solution that addresses both the immediate test failures and provides long-term stability for performance-dependent code across all JavaScript environments.

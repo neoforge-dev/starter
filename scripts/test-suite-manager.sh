@@ -56,35 +56,35 @@ show_usage() {
 
 check_requirements() {
     log BLUE "🔍 Checking requirements..."
-    
+
     # Check if we're in the correct directory
     if [[ ! -f "$PROJECT_ROOT/docker-compose.yml" ]]; then
         log RED "❌ Not in NeoForge project root directory"
         exit 1
     fi
-    
+
     # Check Node.js and npm
     if ! command -v node &> /dev/null; then
         log RED "❌ Node.js not found"
         exit 1
     fi
-    
+
     # Check Python
     if ! command -v python &> /dev/null; then
         log RED "❌ Python not found"
         exit 1
     fi
-    
+
     log GREEN "✓ Requirements check passed"
 }
 
 run_backend_tests() {
     local mode=$1
     local options=${2:-""}
-    
+
     log BLUE "🐍 Running backend tests ($mode mode)..."
     cd "$BACKEND_DIR"
-    
+
     case "$mode" in
         "fast"|"unit")
             ./scripts/test-fast.sh unit
@@ -106,17 +106,17 @@ run_backend_tests() {
             return 1
             ;;
     esac
-    
+
     log GREEN "✓ Backend tests completed"
 }
 
 run_frontend_tests() {
     local mode=$1
     local options=${2:-""}
-    
+
     log BLUE "🌐 Running frontend tests ($mode mode)..."
     cd "$FRONTEND_DIR"
-    
+
     case "$mode" in
         "fast"|"unit")
             node scripts/test-fast.js unit
@@ -141,29 +141,29 @@ run_frontend_tests() {
             return 1
             ;;
     esac
-    
+
     log GREEN "✓ Frontend tests completed"
 }
 
 run_parallel_tests() {
     local mode=$1
-    
+
     log PURPLE "⚡ Running parallel tests ($mode mode)..."
-    
+
     # Run backend and frontend tests in parallel
     run_backend_tests "$mode" &
     BACKEND_PID=$!
-    
+
     run_frontend_tests "$mode" &
     FRONTEND_PID=$!
-    
+
     # Wait for both to complete
     wait $BACKEND_PID
     BACKEND_RESULT=$?
-    
+
     wait $FRONTEND_PID
     FRONTEND_RESULT=$?
-    
+
     if [[ $BACKEND_RESULT -eq 0 && $FRONTEND_RESULT -eq 0 ]]; then
         log GREEN "✓ All parallel tests passed"
         return 0
@@ -178,16 +178,16 @@ show_metrics() {
     local duration=$((end_time - START_TIME))
     local minutes=$((duration / 60))
     local seconds=$((duration % 60))
-    
+
     log PURPLE "📊 Test Execution Metrics"
     log PURPLE "========================="
     log PURPLE "Total Duration: ${minutes}m ${seconds}s"
-    
+
     # Show test counts if possible
     if [[ -f "$BACKEND_DIR/test-results.json" ]]; then
         log PURPLE "Backend Tests: $(jq -r '.stats.tests' "$BACKEND_DIR/test-results.json" 2>/dev/null || echo "N/A")"
     fi
-    
+
     if [[ -f "$FRONTEND_DIR/test-results.json" ]]; then
         log PURPLE "Frontend Tests: $(jq -r '.numTotalTests' "$FRONTEND_DIR/test-results.json" 2>/dev/null || echo "N/A")"
     fi
@@ -200,7 +200,7 @@ main() {
     local parallel=false
     local verbose=false
     local bail_fast=false
-    
+
     # Parse options
     shift
     while [[ $# -gt 0 ]]; do
@@ -236,7 +236,7 @@ main() {
                 ;;
         esac
     done
-    
+
     # Show header
     log BLUE "🚀 NeoForge Test Suite Manager"
     log BLUE "==============================="
@@ -244,10 +244,10 @@ main() {
     if $parallel; then log BLUE "Mode: Parallel execution"; fi
     if $verbose; then log BLUE "Verbosity: Enhanced"; fi
     echo ""
-    
+
     # Check requirements
     check_requirements
-    
+
     case "$command" in
         "fast"|"unit")
             log YELLOW "Running fast unit tests (estimate: ~10-15 seconds)"
@@ -274,7 +274,7 @@ main() {
             exit 1
             ;;
     esac
-    
+
     # Execute tests based on options
     if $parallel && ! $backend_only && ! $frontend_only; then
         run_parallel_tests "$command"
@@ -291,7 +291,7 @@ main() {
             run_frontend_tests "$command"
         fi
     fi
-    
+
     # Show final results
     echo ""
     show_metrics

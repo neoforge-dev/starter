@@ -1,13 +1,13 @@
 /**
  * Application Integration Error Handling Tests
- * 
+ *
  * Tests critical error scenarios that would break production usage.
  * Focuses on the 20% of error conditions that cause 80% of developer issues.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 
 describe('Application Integration Error Handling', () => {
-  
+
   describe('AppTemplateGenerator Error Scenarios', () => {
     let generator;
 
@@ -38,10 +38,10 @@ describe('Application Integration Error Handling', () => {
       };
 
       const result = await generator.generateApp(emptyConfig);
-      
+
       expect(result.files).toBeDefined();
       expect(result.files.length).toBeGreaterThan(0);
-      
+
       // Should still generate basic app structure
       const componentImportFile = result.files.find(f => f.path === 'src/components/index.js');
       expect(componentImportFile).toBeDefined();
@@ -57,10 +57,10 @@ describe('Application Integration Error Handling', () => {
       };
 
       const result = await generator.generateApp(invalidNameConfig);
-      
+
       // Should still generate but sanitize the name in outputs
       expect(result.name).toBe('test-app-with-special-chars!@#$%');
-      
+
       const indexFile = result.files.find(f => f.path === 'index.html');
       expect(indexFile.content).toContain('<title>test-app-with-special-chars!@#$%</title>');
     });
@@ -95,7 +95,7 @@ describe('Application Integration Error Handling', () => {
       };
 
       const result = integrator.analyzeProject(unsupportedProject);
-      
+
       expect(result.compatibility).toBe('unsupported');
       expect(result.reason).toContain('flutter is not currently supported');
       expect(result.alternatives).toBeDefined();
@@ -145,7 +145,7 @@ describe('Application Integration Error Handling', () => {
 
       // Should handle gracefully, not crash
       const result = await validator.validateScenario(invalidScenario);
-      
+
       expect(result).toBeDefined();
       expect(result.passed).toBeDefined();
       expect(result.metrics).toBeDefined();
@@ -180,10 +180,10 @@ describe('Application Integration Error Handling', () => {
 
       // Should handle large datasets without crashing
       const result = await validator.validateScenario(extremeScenario);
-      
+
       expect(result).toBeDefined();
       expect(result.metrics.memoryUsed).toBeDefined();
-      
+
       // Memory usage should be reasonable even with large data
       if (typeof result.metrics.memoryUsed === 'number') {
         expect(result.metrics.memoryUsed).toBeLessThan(200 * 1024 * 1024); // Less than 200MB
@@ -233,11 +233,11 @@ describe('Application Integration Error Handling', () => {
 
     it('should provide optimization tips for all platforms', () => {
       const guides = examples.getGuides();
-      
+
       guides.forEach(guide => {
         const tips = examples.getOptimizationTips(guide.platform);
         expect(Array.isArray(tips)).toBe(true);
-        
+
         const security = examples.getSecurityConsiderations(guide.platform);
         expect(Array.isArray(security)).toBe(true);
       });
@@ -298,7 +298,7 @@ describe('Application Integration Error Handling', () => {
       try {
         const { AppTemplateGenerator } = await import('../../playground/tools/app-template-generator.js');
         const { PerformanceValidator } = await import('../../playground/tools/performance-validator.js');
-        
+
         const generator = new AppTemplateGenerator();
         const validator = new PerformanceValidator();
 
@@ -330,7 +330,7 @@ describe('Application Integration Error Handling', () => {
 
         // Workflow should complete without throwing
         expect(performanceResult.scenario).toContain('neo-table');
-        
+
       } catch (error) {
         // If any step fails, it should be a controlled failure with meaningful message
         expect(error.message).toBeDefined();
@@ -369,7 +369,7 @@ describe('Application Integration Error Handling', () => {
     it('should handle environments without performance API', async () => {
       // Temporarily remove performance API to simulate older browsers
       const originalPerformance = global.performance;
-      
+
       // Mock performance API with minimal implementation
       global.performance = {
         now: () => Date.now(),
@@ -395,7 +395,7 @@ describe('Application Integration Error Handling', () => {
         const result = await validator.validateScenario(scenario);
         expect(result).toBeDefined();
         expect(result.metrics.memoryUsed).toBe('unknown');
-        
+
       } finally {
         // Restore performance API
         global.performance = originalPerformance;
@@ -433,7 +433,7 @@ describe('Application Integration Error Handling', () => {
       };
 
       const result = await validator.validateScenario(scenario);
-      
+
       // Should handle data generation and JSON serialization without errors
       expect(result).toBeDefined();
       expect(result.metrics).toBeDefined();

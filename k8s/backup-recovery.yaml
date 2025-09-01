@@ -1,0 +1,553 @@
+# NeoForge Automated Backup and Disaster Recovery System
+# Comprehensive backup strategy with automated recovery
+
+---
+# Velero Configuration for Disaster Recovery
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: default
+  namespace: velero
+  labels:
+    app.kubernetes.io/name: velero-backup-location
+    app.kubernetes.io/instance: neoforge-backup
+    app.kubernetes.io/component: backup-storage
+    app.kubernetes.io/part-of: neoforge
+spec:
+  provider: aws
+  objectStorage:
+    bucket: neoforge-backups-${ENVIRONMENT}
+    prefix: velero
+  config:
+    region: us-east-1
+    s3ForcePathStyle: false
+    s3Url: ""
+
+---
+# VolumeSnapshotLocation for Persistent Volumes
+apiVersion: velero.io/v1
+kind: VolumeSnapshotLocation
+metadata:
+  name: default
+  namespace: velero
+  labels:
+    app.kubernetes.io/name: velero-volume-snapshots
+    app.kubernetes.io/instance: neoforge-backup
+    app.kubernetes.io/component: volume-snapshots
+    app.kubernetes.io/part-of: neoforge
+spec:
+  provider: aws
+  config:
+    region: us-east-1
+
+---
+# Scheduled Backups
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: neoforge-daily-backup
+  namespace: velero
+  labels:
+    app.kubernetes.io/name: neoforge-daily-backup
+    app.kubernetes.io/instance: neoforge-backup
+    app.kubernetes.io/component: scheduled-backups
+    app.kubernetes.io/part-of: neoforge
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM UTC
+  template:
+    includedNamespaces:
+    - neoforge
+    - neoforge-monitoring
+    includedResources:
+    - '*'
+    excludedResources:
+    - events
+    - events.events.k8s.io
+    - backups.velero.io
+    - restores.velero.io
+    - resticrepositories.velero.io
+    storageLocation: default
+    volumeSnapshotLocations:
+    - default
+    ttl: 720h0m0s  # 30 days retention
+
+---
+# Database Backup CronJob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: postgres-backup
+    app.kubernetes.io/instance: neoforge-backup
+    app.kubernetes.io/component: database-backup
+    app.kubernetes.io/part-of: neoforge
+spec:
+  schedule: "0 */6 * * *"  # Every 6 hours
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: neoforge-service-account
+          containers:
+          - name: postgres-backup
+            image: postgres:15
+            command:
+            - /bin/bash
+            - -c
+            - |
+              BACKUP_FILE="/backup/neoforge-$(date +%Y%m%d-%H%M%S).sql.gz"
+              pg_dump -h postgres -U postgres neoforge | gzip > "$BACKUP_FILE"
+
+              # Upload to S3
+              aws s3 cp "$BACKUP_FILE" "s3://neoforge-backups-${ENVIRONMENT}/database/"
+
+              # Keep only last 7 days of local backups
+              find /backup -name "*.sql.gz" -mtime +7 -delete
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: aws-secret-access-key
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            volumeMounts:
+            - name: backup-volume
+              mountPath: /backup
+            - name: aws-credentials
+              mountPath: /root/.aws
+              readOnly: true
+          volumes:
+          - name: backup-volume
+            persistentVolumeClaim:
+              claimName: backup-pvc
+          - name: aws-credentials
+            secret:
+              secretName: backup-credentials
+              items:
+              - key: credentials
+                path: credentials
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+
+---
+# Redis Backup CronJob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: redis-backup
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: redis-backup
+    app.kubernetes.io/instance: neoforge-backup
+    app.kubernetes.io/component: cache-backup
+    app.kubernetes.io/part-of: neoforge
+spec:
+  schedule: "0 */12 * * *"  # Every 12 hours
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: neoforge-service-account
+          containers:
+          - name: redis-backup
+            image: redis:7-alpine
+            command:
+            - /bin/sh
+            - -c
+            - |
+              BACKUP_FILE="/backup/redis-$(date +%Y%m%d-%H%M%S).rdb"
+              redis-cli -h redis --rdb "$BACKUP_FILE"
+
+              # Upload to S3
+              aws s3 cp "$BACKUP_FILE" "s3://neoforge-backups-${ENVIRONMENT}/redis/"
+
+              # Keep only last 3 days of local backups
+              find /backup -name "*.rdb" -mtime +3 -delete
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: aws-secret-access-key
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_PASSWORD
+            volumeMounts:
+            - name: backup-volume
+              mountPath: /backup
+            - name: aws-credentials
+              mountPath: /root/.aws
+              readOnly: true
+          volumes:
+          - name: backup-volume
+            persistentVolumeClaim:
+              claimName: backup-pvc
+          - name: aws-credentials
+            secret:
+              secretName: backup-credentials
+              items:
+              - key: credentials
+                path: credentials
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+
+---
+# Backup Validation CronJob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-validation
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: backup-validation
+    app.kubernetes.io/instance: neoforge-backup
+    app.kubernetes.io/component: backup-validation
+    app.kubernetes.io/part-of: neoforge
+spec:
+  schedule: "0 6 * * *"  # Daily at 6 AM UTC
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: neoforge-service-account
+          containers:
+          - name: backup-validation
+            image: amazonlinux:2
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Check if latest database backup exists and is recent
+              LATEST_DB_BACKUP=$(aws s3api list-objects-v2 \
+                --bucket "neoforge-backups-${ENVIRONMENT}" \
+                --prefix "database/" \
+                --query 'sort_by(Contents, &LastModified)[-1].Key' \
+                --output text)
+
+              if [[ -z "$LATEST_DB_BACKUP" ]]; then
+                echo "ERROR: No database backup found"
+                exit 1
+              fi
+
+              # Check backup age (should be less than 24 hours)
+              BACKUP_AGE=$(aws s3api head-object \
+                --bucket "neoforge-backups-${ENVIRONMENT}" \
+                --key "$LATEST_DB_BACKUP" \
+                --query 'LastModified' \
+                --output text)
+
+              BACKUP_SECONDS=$(( $(date +%s) - $(date -d "$BACKUP_AGE" +%s) ))
+              BACKUP_HOURS=$(( BACKUP_SECONDS / 3600 ))
+
+              if [[ $BACKUP_HOURS -gt 24 ]]; then
+                echo "ERROR: Latest database backup is $BACKUP_HOURS hours old"
+                exit 1
+              fi
+
+              echo "✅ Database backup validation passed"
+              echo "✅ Latest backup: $LATEST_DB_BACKUP"
+              echo "✅ Backup age: $BACKUP_HOURS hours"
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: aws-secret-access-key
+            - name: AWS_DEFAULT_REGION
+              value: us-east-1
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+
+---
+# Disaster Recovery Plan ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: disaster-recovery-plan
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: disaster-recovery-plan
+    app.kubernetes.io/instance: neoforge-backup
+    app.kubernetes.io/component: disaster-recovery
+    app.kubernetes.io/part-of: neoforge
+data:
+  recovery-procedures.md: |
+    # NeoForge Disaster Recovery Procedures
+
+    ## Overview
+    This document outlines procedures for recovering NeoForge in various disaster scenarios.
+
+    ## Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO)
+
+    | Component | RTO | RPO | Description |
+    |-----------|-----|-----|-------------|
+    | Database | 4 hours | 6 hours | PostgreSQL with streaming replication |
+    | Application | 1 hour | 15 minutes | Kubernetes rolling deployment |
+    | Cache | 30 minutes | 12 hours | Redis with persistence |
+    | Monitoring | 2 hours | 1 hour | Prometheus with remote storage |
+
+    ## Recovery Scenarios
+
+    ### Scenario 1: Complete Cluster Failure
+    1. Provision new Kubernetes cluster
+    2. Restore from latest Velero backup
+    3. Restore database from latest backup
+    4. Update DNS records
+    5. Verify application functionality
+
+    ### Scenario 2: Database Corruption
+    1. Stop application traffic
+    2. Restore database from backup
+    3. Verify data integrity
+    4. Restart application services
+    5. Monitor for issues
+
+    ### Scenario 3: Application Deployment Failure
+    1. Rollback to previous deployment
+    2. Investigate root cause
+    3. Fix issues in development
+    4. Deploy fixed version
+
+    ## Recovery Commands
+
+    ### Full Cluster Recovery
+    ```bash
+    # Restore from Velero backup
+    velero restore create --from-backup neoforge-daily-backup-20241201
+
+    # Restore database
+    kubectl apply -f k8s/postgres-deployment.yaml
+    # Wait for PostgreSQL to be ready
+    # Restore from latest backup
+    ```
+
+    ### Database Only Recovery
+    ```bash
+    # Stop application
+    kubectl scale deployment api --replicas=0
+    kubectl scale deployment frontend --replicas=0
+
+    # Restore database
+    pg_restore -h postgres -U postgres -d neoforge /backup/latest.sql
+
+    # Restart application
+    kubectl scale deployment api --replicas=3
+    kubectl scale deployment frontend --replicas=2
+    ```
+
+    ### Application Rollback
+    ```bash
+    # Rollback to previous version
+    kubectl rollout undo deployment/api
+    kubectl rollout undo deployment/frontend
+    ```
+
+    ## Monitoring Recovery Progress
+
+    ### Key Metrics to Monitor
+    - Pod readiness and status
+    - Database connection count
+    - API response times
+    - Error rates
+    - User session count
+
+    ### Health Checks
+    - Kubernetes API server health
+    - Database connectivity
+    - Application health endpoints
+    - Load balancer health
+
+    ## Communication Plan
+
+    ### Internal Communication
+    - Slack channel: #incidents
+    - Email distribution list: devops@neoforge.dev
+    - Status page updates
+
+    ### External Communication
+    - Customer status page
+    - Email notifications for enterprise customers
+    - Social media updates
+
+    ## Testing Recovery Procedures
+
+    ### Monthly Recovery Drills
+    1. Schedule maintenance window
+    2. Document current state
+    3. Execute recovery procedures
+    4. Verify functionality
+    5. Update documentation
+
+    ### Quarterly Full Disaster Recovery Test
+    1. Create isolated test environment
+    2. Execute complete recovery scenario
+    3. Validate all systems
+    4. Document lessons learned
+    5. Update procedures
+
+---
+# Backup Storage PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: backup-pvc
+    app.kubernetes.io/instance: neoforge-backup
+    app.kubernetes.io/component: backup-storage
+    app.kubernetes.io/part-of: neoforge
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+
+---
+# Backup Credentials Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backup-credentials
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: backup-credentials
+    app.kubernetes.io/instance: neoforge-backup
+    app.kubernetes.io/component: backup-credentials
+    app.kubernetes.io/part-of: neoforge
+type: Opaque
+data:
+  aws-access-key-id: <base64-encoded-access-key>
+  aws-secret-access-key: <base64-encoded-secret-key>
+  credentials: <base64-encoded-aws-credentials-file>
+
+---
+# Backup Retention Policy ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-retention-policy
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: backup-retention-policy
+    app.kubernetes.io/instance: neoforge-backup
+    app.kubernetes.io/component: backup-policy
+    app.kubernetes.io/part-of: neoforge
+data:
+  policy.json: |
+    {
+      "retention": {
+        "daily": {
+          "count": 7,
+          "age": "7d"
+        },
+        "weekly": {
+          "count": 4,
+          "age": "30d"
+        },
+        "monthly": {
+          "count": 12,
+          "age": "365d"
+        }
+      },
+      "cleanup_schedule": "0 3 * * *",
+      "notification": {
+        "slack": "#backups",
+        "email": "backups@neoforge.dev"
+      }
+    }
+
+---
+# Backup Cleanup CronJob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-cleanup
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: backup-cleanup
+    app.kubernetes.io/instance: neoforge-backup
+    app.kubernetes.io/component: backup-cleanup
+    app.kubernetes.io/part-of: neoforge
+spec:
+  schedule: "0 3 * * *"  # Daily at 3 AM UTC
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: neoforge-service-account
+          containers:
+          - name: backup-cleanup
+            image: amazonlinux:2
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Clean up old database backups (keep last 7 days)
+              aws s3api list-objects-v2 \
+                --bucket "neoforge-backups-${ENVIRONMENT}" \
+                --prefix "database/" \
+                --query 'Contents[?LastModified<`'"$(date -d '7 days ago' +%Y-%m-%d)"'`].Key' \
+                --output text | \
+              xargs -I {} aws s3 rm "s3://neoforge-backups-${ENVIRONMENT}/{}"
+
+              # Clean up old Redis backups (keep last 3 days)
+              aws s3api list-objects-v2 \
+                --bucket "neoforge-backups-${ENVIRONMENT}" \
+                --prefix "redis/" \
+                --query 'Contents[?LastModified<`'"$(date -d '3 days ago' +%Y-%m-%d)"'`].Key' \
+                --output text | \
+              xargs -I {} aws s3 rm "s3://neoforge-backups-${ENVIRONMENT}/{}"
+
+              # Clean up old Velero backups (keep last 30 days)
+              velero backup delete --older-than 30d --confirm
+
+              echo "✅ Backup cleanup completed"
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backup-credentials
+                  key: aws-secret-access-key
+            - name: AWS_DEFAULT_REGION
+              value: us-east-1
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000

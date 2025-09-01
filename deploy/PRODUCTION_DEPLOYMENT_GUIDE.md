@@ -261,7 +261,7 @@ echo "0 2 * * * /home/deploy/scripts/backup-db.sh" | crontab -
 Key alerts configured in `deploy/prometheus/rules/alerts.yml`:
 
 - High CPU usage (>80% for 5 minutes)
-- High memory usage (>90% for 2 minutes)  
+- High memory usage (>90% for 2 minutes)
 - API response time >500ms
 - Database connection issues
 - Disk space <10% free
@@ -350,14 +350,14 @@ docker-compose -f deploy/docker-compose.blue-green.yml \
 ```sql
 -- Find missing indexes
 SELECT schemaname, tablename, attname, n_distinct, correlation
-FROM pg_stats 
-WHERE schemaname = 'public' 
+FROM pg_stats
+WHERE schemaname = 'public'
 ORDER BY n_distinct DESC;
 
 -- Analyze slow queries
 SELECT query, total_time, calls, mean_time
-FROM pg_stat_statements 
-ORDER BY total_time DESC 
+FROM pg_stat_statements
+ORDER BY total_time DESC
 LIMIT 10;
 ```
 
@@ -374,7 +374,7 @@ LIMIT 10;
 
 2. **Application Caching:**
    - API response caching
-   - Database query caching  
+   - Database query caching
    - Static asset caching
 
 ### Frontend Optimization
@@ -542,7 +542,7 @@ sudo ufw allow from <trusted-ip> to any port 9090  # Prometheus
 ### Scaling Triggers
 
 - CPU usage >80% for 10 minutes: Scale up
-- Memory usage >90% for 5 minutes: Scale up  
+- Memory usage >90% for 5 minutes: Scale up
 - Response time >500ms: Investigate/scale
 - Cost >$15/month: Review and optimize
 
@@ -579,6 +579,6 @@ For support, check:
 
 ---
 
-**Last Updated**: 2025-08-14  
-**Version**: 1.0  
+**Last Updated**: 2025-08-14
+**Version**: 1.0
 **Maintained By**: NeoForge DevOps Team

@@ -347,7 +347,7 @@ class MemoryLeakDetector {
     // This is a simplified check. In reality, we'd need to use the Chrome DevTools Protocol
     // or a similar tool to get accurate reference counting
     return (
-      Object.prototype.hasOwnProperty.call(obj, "__references__") || 
+      Object.prototype.hasOwnProperty.call(obj, "__references__") ||
       Object.prototype.hasOwnProperty.call(obj, "_listeners")
     );
   }

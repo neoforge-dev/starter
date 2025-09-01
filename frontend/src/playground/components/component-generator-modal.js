@@ -1,6 +1,6 @@
 /**
  * Component Generator Modal - Interactive UI for component generation
- * 
+ *
  * Provides a user-friendly interface for creating new Web Components
  */
 
@@ -531,7 +531,7 @@ export class ComponentGeneratorModal extends LitElement {
 
     try {
       this.generationResult = await componentGenerator.generateComponent(this.config);
-      
+
       if (this.generationResult.success) {
         this.currentStep = 4;
         this.dispatchEvent(new CustomEvent('component-generated', {
@@ -560,7 +560,7 @@ export class ComponentGeneratorModal extends LitElement {
     return html`
       <div class="steps-indicator">
         ${steps.map(step => html`
-          <div 
+          <div
             class="step-indicator ${step.number === this.currentStep ? 'active' : ''} ${step.number < this.currentStep ? 'completed' : ''}"
             @click="${() => this.goToStep(step.number)}"
           >
@@ -575,12 +575,12 @@ export class ComponentGeneratorModal extends LitElement {
     return html`
       <div class="step-content">
         <h3>Basic Component Information</h3>
-        
+
         <div class="form-group">
           <label class="form-label">Component Name *</label>
-          <input 
-            type="text" 
-            class="form-input" 
+          <input
+            type="text"
+            class="form-input"
             placeholder="e.g., custom-button, data-card, user-profile"
             .value="${this.config.name}"
             @input="${(e) => this.updateConfig('name', e.target.value)}"
@@ -590,7 +590,7 @@ export class ComponentGeneratorModal extends LitElement {
 
         <div class="form-group">
           <label class="form-label">Category *</label>
-          <select 
+          <select
             class="form-select"
             .value="${this.config.category}"
             @change="${(e) => this.updateConfig('category', e.target.value)}"
@@ -603,7 +603,7 @@ export class ComponentGeneratorModal extends LitElement {
 
         <div class="form-group">
           <label class="form-label">Description *</label>
-          <textarea 
+          <textarea
             class="form-textarea"
             placeholder="Brief description of what this component does..."
             .value="${this.config.description}"
@@ -613,8 +613,8 @@ export class ComponentGeneratorModal extends LitElement {
 
         <div class="form-group">
           <div class="checkbox-group">
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               id="has-slots"
               ?checked="${this.config.hasSlots}"
               @change="${(e) => this.updateConfig('hasSlots', e.target.checked)}"
@@ -626,8 +626,8 @@ export class ComponentGeneratorModal extends LitElement {
 
         <div class="form-group">
           <div class="checkbox-group">
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               id="has-events"
               ?checked="${this.config.hasEvents}"
               @change="${(e) => this.updateConfig('hasEvents', e.target.checked)}"
@@ -645,20 +645,20 @@ export class ComponentGeneratorModal extends LitElement {
       <div class="step-content">
         <h3>Component Properties</h3>
         <p>Define custom properties for your component. Common properties for your category will be added automatically.</p>
-        
+
         <div class="properties-list">
           ${this.config.properties.map((prop, index) => html`
             <div class="property-item">
               <div class="property-field">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Property name"
                   .value="${prop.name}"
                   @input="${(e) => this.updateProperty(index, 'name', e.target.value)}"
                 />
               </div>
               <div class="property-field">
-                <select 
+                <select
                   .value="${prop.type}"
                   @change="${(e) => this.updateProperty(index, 'type', e.target.value)}"
                 >
@@ -670,22 +670,22 @@ export class ComponentGeneratorModal extends LitElement {
                 </select>
               </div>
               <div class="property-field">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Description"
                   .value="${prop.description}"
                   @input="${(e) => this.updateProperty(index, 'description', e.target.value)}"
                 />
               </div>
               <div class="property-field">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Default value"
                   .value="${prop.defaultValue}"
                   @input="${(e) => this.updateProperty(index, 'defaultValue', e.target.value)}"
                 />
               </div>
-              <button 
+              <button
                 class="remove-property"
                 @click="${() => this.removeProperty(index)}"
               >
@@ -726,7 +726,7 @@ export class ComponentGeneratorModal extends LitElement {
     return html`
       <div class="step-content">
         <h3>Component Preview</h3>
-        
+
         <div class="preview-section">
           <div class="preview-title">Component Details</div>
           <div class="preview-item">
@@ -780,7 +780,7 @@ export class ComponentGeneratorModal extends LitElement {
           <div class="success-message">
             <h3>✅ Component Generated Successfully!</h3>
             <p>${this.generationResult.message}</p>
-            
+
             <div style="margin-top: 1rem;">
               <strong>Next Steps:</strong>
               <ol style="margin: 0.5rem 0; padding-left: 1.5rem;">
@@ -815,7 +815,7 @@ export class ComponentGeneratorModal extends LitElement {
       <div class="step-content">
         <h3>Ready to Generate</h3>
         <p>Click the button below to generate your component files.</p>
-        
+
         ${this.errors.map(error => html`
           <div class="error-message">${error}</div>
         `)}
@@ -828,15 +828,15 @@ export class ComponentGeneratorModal extends LitElement {
       case 1:
         return html`
           <button class="btn btn-secondary" @click="${this.close}">Cancel</button>
-          <button 
-            class="btn btn-primary" 
+          <button
+            class="btn btn-primary"
             @click="${this.nextStep}"
             ?disabled="${!this.config.name || !this.config.description}"
           >
             Next: Properties
           </button>
         `;
-      
+
       case 2:
         return html`
           <button class="btn btn-secondary" @click="${this.prevStep}">Back</button>
@@ -844,19 +844,19 @@ export class ComponentGeneratorModal extends LitElement {
             Next: Preview
           </button>
         `;
-      
+
       case 3:
         return html`
           <button class="btn btn-secondary" @click="${this.prevStep}">Back</button>
-          <button 
-            class="btn btn-success" 
+          <button
+            class="btn btn-success"
             @click="${this.generateComponent}"
             ?disabled="${!this.preview?.success || this.isGenerating}"
           >
             ${this.isGenerating ? html`<span class="loading-spinner"></span> Generating...` : 'Generate Component'}
           </button>
         `;
-      
+
       case 4:
         return html`
           <button class="btn btn-secondary" @click="${this.close}">Close</button>

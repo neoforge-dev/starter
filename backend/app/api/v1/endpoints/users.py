@@ -1,15 +1,15 @@
 """User endpoints."""
 from typing import Annotated, Any, List
 
+from app.models.item import Item as ItemModel
+from app.schemas.item import Item
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models
 from app.api import deps
-from app.schemas.user import UserResponse, UserCreate, UserUpdate
-from app.schemas.item import Item
-from app.models.item import Item as ItemModel
 
 router = APIRouter()
 
@@ -60,7 +60,7 @@ async def create_user(
     current_user: Annotated[models.User, Depends(deps.get_current_active_superuser)],
 ) -> Any:
     """Create new user.
-    
+
     Requires superuser privileges.
     """
     # Check if current user is superuser (already handled by dependency)
@@ -69,7 +69,7 @@ async def create_user(
     #         status_code=status.HTTP_403_FORBIDDEN,
     #         detail="Not enough permissions",
     #     )
-    
+
     # Check if email already exists
     user = await crud.user.get_by_email(db, email=user_in.email)
     if user:
@@ -121,11 +121,9 @@ async def read_user_items(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
+
     # Explicitly query items for the user
-    result = await db.execute(
-        select(ItemModel).where(ItemModel.owner_id == user_id)
-    )
+    result = await db.execute(select(ItemModel).where(ItemModel.owner_id == user_id))
     return list(result.scalars().all())
 
 
@@ -161,4 +159,4 @@ async def delete_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    await crud.user.remove(db, id=user_id) 
+    await crud.user.remove(db, id=user_id)

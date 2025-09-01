@@ -1,9 +1,9 @@
-import pytest
 from datetime import datetime, timedelta
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user_session import UserSession
+import pytest
 from app.crud.user_session import user_session as user_session_crud
+from app.models.user_session import UserSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio
@@ -39,6 +39,7 @@ async def test_prune_expired_and_revoked(db: AsyncSession):
 
     # Verify only active remains
     from sqlalchemy import select
+
     res = await db.execute(select(UserSession))
     rows = list(res.scalars().all())
     assert len(rows) == 1

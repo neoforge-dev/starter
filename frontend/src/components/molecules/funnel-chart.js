@@ -289,16 +289,16 @@ export class FunnelChart extends LitElement {
         .funnel-container {
           padding: 0.5rem;
         }
-        
+
         .step-content {
           padding: 0 0.5rem;
         }
-        
+
         .step-metrics {
           flex-direction: column;
           gap: 0.25rem;
         }
-        
+
         .summary-stats {
           grid-template-columns: repeat(2, 1fr);
         }
@@ -322,7 +322,7 @@ export class FunnelChart extends LitElement {
     ];
     this.selectedSegment = null;
     this.animationEnabled = true;
-    
+
     this.tooltip = null;
     this.resizeObserver = null;
   }
@@ -351,7 +351,7 @@ export class FunnelChart extends LitElement {
 
   async loadFunnelData() {
     this.loading = true;
-    
+
     try {
       // Define default funnel steps if not provided
       if (this.steps.length === 0) {
@@ -367,7 +367,7 @@ export class FunnelChart extends LitElement {
       // Fetch analytics data for funnel steps
       const funnelData = await this.fetchFunnelAnalytics();
       this.processData(funnelData);
-      
+
     } catch (error) {
       console.error('[FunnelChart] Error loading funnel data:', error);
     } finally {
@@ -378,7 +378,7 @@ export class FunnelChart extends LitElement {
   async fetchFunnelAnalytics() {
     const endDate = new Date();
     const startDate = new Date();
-    
+
     // Calculate start date based on time range
     switch (this.timeRange) {
       case '1d':
@@ -409,17 +409,17 @@ export class FunnelChart extends LitElement {
   processData(analyticsData) {
     const processedData = [];
     let previousCount = null;
-    
+
     this.steps.forEach((step, index) => {
       // Find matching events for this step
       const matchingEvents = this.findMatchingEvents(analyticsData.results, step);
       const stepCount = matchingEvents.reduce((sum, event) => sum + event.count, 0);
       const uniqueSessionCount = matchingEvents.reduce((sum, event) => sum + (event.metrics.count_distinct_sessions || 0), 0);
-      
+
       // Calculate conversion rate and drop-off
       const conversionRate = previousCount ? (stepCount / previousCount) * 100 : 100;
       const dropoffRate = previousCount ? ((previousCount - stepCount) / previousCount) * 100 : 0;
-      
+
       const stepData = {
         ...step,
         index,
@@ -430,11 +430,11 @@ export class FunnelChart extends LitElement {
         color: this.colorScheme[index % this.colorScheme.length],
         width: this.calculateStepWidth(stepCount, processedData[0]?.count || stepCount),
       };
-      
+
       processedData.push(stepData);
       previousCount = stepCount;
     });
-    
+
     this.data = processedData;
   }
 
@@ -444,24 +444,24 @@ export class FunnelChart extends LitElement {
       if (step.event_type && event.dimensions.event_type !== step.event_type) {
         return false;
       }
-      
+
       // Match by page path
       if (step.path && !event.dimensions.page_path?.includes(step.path)) {
         return false;
       }
-      
+
       // Match by element or other criteria
       if (step.element) {
         const eventData = event.dimensions.data || {};
         return eventData.element && JSON.stringify(eventData.element).includes(step.element);
       }
-      
+
       // Match by conversion type
       if (step.conversion_type) {
         const eventData = event.dimensions.data || {};
         return eventData.conversionType === step.conversion_type;
       }
-      
+
       return true;
     });
   }
@@ -472,9 +472,9 @@ export class FunnelChart extends LitElement {
 
   handleStepClick(step, event) {
     if (!this.interactive) return;
-    
+
     this.selectedSegment = this.selectedSegment === step ? null : step;
-    
+
     this.dispatchEvent(new CustomEvent('step-selected', {
       detail: {
         step,
@@ -487,7 +487,7 @@ export class FunnelChart extends LitElement {
 
   handleStepMouseEnter(step, event) {
     if (!this.showTooltips) return;
-    
+
     this.showTooltip(step, event);
   }
 
@@ -497,17 +497,17 @@ export class FunnelChart extends LitElement {
 
   showTooltip(step, event) {
     const tooltipContent = this.renderTooltipContent(step);
-    
+
     // Create or update tooltip
     if (!this.tooltip) {
       this.tooltip = document.createElement('div');
       this.tooltip.className = 'tooltip';
       document.body.appendChild(this.tooltip);
     }
-    
+
     this.tooltip.innerHTML = tooltipContent;
     this.tooltip.classList.add('visible');
-    
+
     // Position tooltip
     const rect = event.target.getBoundingClientRect();
     this.tooltip.style.left = `${rect.left + rect.width / 2}px`;
@@ -523,7 +523,7 @@ export class FunnelChart extends LitElement {
 
   renderTooltipContent(step) {
     const avgSessionValue = step.count > 0 ? (step.uniqueSessions / step.count * 100).toFixed(1) : 0;
-    
+
     return `
       <div class="tooltip-title">${step.name}</div>
       <div class="tooltip-content">
@@ -563,21 +563,21 @@ export class FunnelChart extends LitElement {
 
   generateStepInsights(step) {
     const insights = [];
-    
+
     if (step.dropoffRate > 50) {
       insights.push({
         type: 'warning',
         message: `High drop-off rate of ${step.dropoffRate.toFixed(1)}% indicates a potential bottleneck.`,
       });
     }
-    
+
     if (step.conversionRate > 80) {
       insights.push({
         type: 'success',
         message: `Excellent conversion rate of ${step.conversionRate.toFixed(1)}%.`,
       });
     }
-    
+
     const sessionToEventRatio = step.count > 0 ? step.uniqueSessions / step.count : 0;
     if (sessionToEventRatio < 0.5) {
       insights.push({
@@ -585,23 +585,23 @@ export class FunnelChart extends LitElement {
         message: 'Users are performing this action multiple times per session.',
       });
     }
-    
+
     return insights;
   }
 
   generateStepRecommendations(step) {
     const recommendations = [];
-    
+
     if (step.dropoffRate > 30) {
       recommendations.push('Consider A/B testing this step to improve conversion');
       recommendations.push('Review user feedback and usability testing for this stage');
     }
-    
+
     if (step.conversionRate < 20) {
       recommendations.push('Simplify the user experience for this step');
       recommendations.push('Add progress indicators to reduce abandonment');
     }
-    
+
     return recommendations;
   }
 
@@ -619,15 +619,15 @@ export class FunnelChart extends LitElement {
       --step-color: ${step.color};
       --target-width: ${step.width}%;
     `;
-    
+
     return html`
-      <div 
+      <div
         class="funnel-step ${isSelected ? 'selected' : ''}"
         @click=${(e) => this.handleStepClick(step, e)}
         @mouseenter=${(e) => this.handleStepMouseEnter(step, e)}
         @mouseleave=${() => this.handleStepMouseLeave()}
       >
-        <div 
+        <div
           class="step-bar ${this.animationEnabled ? 'animated' : ''}"
           style=${stepStyle}
         >
@@ -638,12 +638,12 @@ export class FunnelChart extends LitElement {
               <div class="step-percentage">${step.conversionRate.toFixed(1)}%</div>
             </div>
           </div>
-          
+
           ${this.showDropoffRates && step.dropoffRate > 0 ? html`
             <div class="dropoff-rate">-${step.dropoffRate.toFixed(1)}%</div>
           ` : ''}
         </div>
-        
+
         ${step.dropoffRate > 25 ? html`
           <div class="dropoff-indicator"></div>
         ` : ''}
@@ -653,12 +653,12 @@ export class FunnelChart extends LitElement {
 
   renderSummaryStats() {
     if (this.data.length === 0) return '';
-    
+
     const totalUsers = this.data[0]?.count || 0;
     const completedUsers = this.data[this.data.length - 1]?.count || 0;
     const overallConversion = totalUsers > 0 ? (completedUsers / totalUsers) * 100 : 0;
     const avgDropoff = this.data.reduce((sum, step) => sum + step.dropoffRate, 0) / this.data.length;
-    
+
     return html`
       <div class="summary-stats">
         <div class="stat-item">
@@ -709,13 +709,13 @@ export class FunnelChart extends LitElement {
         <div class="funnel-header">
           <h3 class="funnel-title">Conversion Funnel</h3>
           <div class="funnel-controls">
-            <button 
+            <button
               class="toggle-button ${this.showDropoffRates ? 'active' : ''}"
               @click=${this.toggleDropoffRates}
             >
               Drop-off Rates
             </button>
-            <button 
+            <button
               class="toggle-button ${this.showTooltips ? 'active' : ''}"
               @click=${this.toggleTooltips}
             >

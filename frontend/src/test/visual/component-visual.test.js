@@ -1,6 +1,6 @@
 /**
  * Comprehensive Component Visual Regression Tests
- * 
+ *
  * Tests visual consistency for all 22 working playground components
  * using Playwright to capture and compare screenshots.
  */
@@ -10,12 +10,12 @@ import { compareScreenshot, waitForWebComponents, waitForAnimations, hideDynamic
 // Component definitions based on the working playground components
 const WORKING_COMPONENTS = {
   atoms: [
-    'button', 'text-input', 'icon', 'badge', 'checkbox', 
-    'link', 'spinner', 'progress-bar', 'radio', 'select', 
+    'button', 'text-input', 'icon', 'badge', 'checkbox',
+    'link', 'spinner', 'progress-bar', 'radio', 'select',
     'tooltip', 'dropdown', 'input'
   ],
   molecules: [
-    'alert', 'card', 'modal', 'toast', 'tabs', 
+    'alert', 'card', 'modal', 'toast', 'tabs',
     'breadcrumbs', 'phone-input', 'date-picker', 'language-selector'
   ]
 };
@@ -24,10 +24,10 @@ test.describe('Component Visual Regression Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Set consistent viewport for visual tests
     await page.setViewportSize({ width: 1280, height: 720 });
-    
+
     // Navigate to playground
     await page.goto('/playground.html');
-    
+
     // Wait for playground to initialize
     await page.waitForSelector('#component-showcase', { timeout: 10000 });
     await waitForAnimations(page);
@@ -41,7 +41,7 @@ test.describe('Component Visual Regression Tests', () => {
     });
   }
 
-  // Test all molecules components  
+  // Test all molecules components
   for (const componentName of WORKING_COMPONENTS.molecules) {
     test(`molecule: ${componentName} - visual consistency`, async ({ page }) => {
       await testComponentVisuals(page, 'molecules', componentName);
@@ -52,7 +52,7 @@ test.describe('Component Visual Regression Tests', () => {
     // Test the overall playground interface
     await page.waitForSelector('#component-tree');
     await waitForAnimations(page);
-    
+
     await compareScreenshot(page, 'playground-interface', {
       fullPage: true,
       maxDiffPixels: 200
@@ -99,7 +99,7 @@ async function testComponentVisuals(page, category, name) {
   } catch (error) {
     // If component fails to load, create a placeholder test
     console.warn(`Visual test failed for ${category}/${name}: ${error.message}`);
-    
+
     // Take a screenshot of the error state for debugging
     await compareScreenshot(page, `${category}-${name}-error`, {
       maxDiffPixels: 500 // Allow more variance for error states
@@ -115,7 +115,7 @@ async function testComponentVisuals(page, category, name) {
  */
 async function testComponentStates(page, category, name) {
   const interactiveComponent = page.locator('#live-interactive-component');
-  
+
   if (await interactiveComponent.count() === 0) {
     return; // No interactive component to test
   }
@@ -211,10 +211,10 @@ test.describe('Responsive Visual Tests', () => {
     test(`playground UI - ${viewport.name} responsive`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       await page.goto('/playground.html');
-      
+
       await page.waitForSelector('#component-showcase', { timeout: 10000 });
       await waitForAnimations(page);
-      
+
       await compareScreenshot(page, `playground-${viewport.name}`, {
         fullPage: true,
         maxDiffPixels: 300 // Allow more variance for responsive layouts
@@ -227,20 +227,20 @@ test.describe('Component State Combinations', () => {
   test('button - comprehensive state matrix', async ({ page }) => {
     await page.goto('/playground.html');
     await page.waitForSelector('#component-showcase');
-    
+
     // Load button component
     await page.evaluate(() => {
       return window.playgroundApp?.loadComponent('atoms', 'button');
     });
-    
+
     await page.waitForSelector('#live-interactive-component');
-    
+
     // Create a comprehensive test page with all button states
     await page.evaluate(() => {
       const container = document.createElement('div');
       container.id = 'state-matrix';
       container.style.cssText = 'display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 2rem; background: white;';
-      
+
       const states = [
         { variant: 'primary', size: 'sm', props: {}, label: 'Primary Small' },
         { variant: 'primary', size: 'md', props: {}, label: 'Primary Medium' },
@@ -249,26 +249,26 @@ test.describe('Component State Combinations', () => {
         { variant: 'primary', size: 'md', props: { disabled: true }, label: 'Disabled' },
         { variant: 'primary', size: 'md', props: { loading: true }, label: 'Loading' }
       ];
-      
+
       states.forEach(state => {
         const button = document.createElement('neo-button');
         button.variant = state.variant;
         button.size = state.size;
         button.textContent = state.label;
-        
+
         Object.entries(state.props).forEach(([key, value]) => {
           button[key] = value;
         });
-        
+
         container.appendChild(button);
       });
-      
+
       document.body.appendChild(container);
     });
-    
+
     await waitForWebComponents(page, ['neo-button']);
     await waitForAnimations(page);
-    
+
     const stateMatrix = page.locator('#state-matrix');
     await compareScreenshot(stateMatrix, 'button-state-matrix');
   });

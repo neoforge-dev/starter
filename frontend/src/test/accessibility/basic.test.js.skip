@@ -47,4 +47,4 @@ test.describe("Basic Accessibility Tests", () => {
   });
 
   // Additional tests would be here...
-}); 
+});

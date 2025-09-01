@@ -19,21 +19,21 @@ async def create_database() -> None:
         database="postgres",
         host="db",
     )
-    
+
     try:
         # Check if database exists
         result = await conn.fetchrow(
             "SELECT 1 FROM pg_database WHERE datname = $1",
             "test",
         )
-        
+
         if not result:
             # Create database
             await conn.execute("CREATE DATABASE test")
             print("Test database created successfully")
         else:
             print("Test database already exists")
-            
+
     finally:
         await conn.close()
 
@@ -47,7 +47,7 @@ async def drop_database() -> None:
         database="postgres",
         host="db",
     )
-    
+
     try:
         # Terminate all connections to the test database
         await conn.execute("""
@@ -56,11 +56,11 @@ async def drop_database() -> None:
             WHERE pg_stat_activity.datname = 'test'
             AND pid <> pg_backend_pid()
         """)
-        
+
         # Drop database
         await conn.execute("DROP DATABASE IF EXISTS test")
         print("Test database dropped successfully")
-            
+
     finally:
         await conn.close()
 
@@ -70,10 +70,10 @@ async def create_tables() -> None:
     current_settings = get_settings()
     # Create async engine for test database
     engine = create_async_engine(current_settings.database_url_for_env)
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-    
+
     await engine.dispose()
     print("Tables created successfully")
 
@@ -83,9 +83,9 @@ async def main() -> None:
     if len(sys.argv) < 2:
         print("Usage: python create_test_db.py [create|drop]")
         sys.exit(1)
-    
+
     command = sys.argv[1]
-    
+
     if command == "create":
         await create_database()
         await create_tables()
@@ -97,4 +97,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())

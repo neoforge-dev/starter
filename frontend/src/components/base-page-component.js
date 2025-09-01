@@ -5,7 +5,7 @@ import { baseStyles } from "./styles/base.js";
 /**
  * Base page component that provides common functionality for all page components
  * Extends BaseComponent for lifecycle management and adds page-specific features.
- * 
+ *
  * Features:
  * - Standard page layout and container
  * - Loading state management
@@ -242,7 +242,7 @@ export class BasePageComponent extends BaseComponent {
    */
   validateRequired(fields) {
     const errors = [];
-    
+
     Object.entries(fields).forEach(([key, value]) => {
       if (!value || (typeof value === "string" && !value.trim())) {
         errors.push(`${key} is required`);
@@ -259,7 +259,7 @@ export class BasePageComponent extends BaseComponent {
     try {
       this.setLoading(true);
       this.clearError();
-      
+
       const result = await operation();
       return result;
     } catch (error) {
@@ -276,11 +276,11 @@ export class BasePageComponent extends BaseComponent {
    */
   getContainerClasses() {
     let classes = "page-container";
-    
+
     if (this.containerClass) {
       classes += ` ${this.containerClass}`;
     }
-    
+
     return classes;
   }
 
@@ -320,7 +320,7 @@ export class BasePageComponent extends BaseComponent {
    */
   renderPageHeader(title = this.pageTitle, subtitle = "") {
     if (!title && !subtitle) return "";
-    
+
     return html`
       <div class="page-header">
         ${title ? html`<h1 class="page-title">${title}</h1>` : ""}
@@ -344,11 +344,11 @@ export class BasePageComponent extends BaseComponent {
     return html`
       <div class="${this.getContainerClasses()}" style=${this.maxWidth ? `max-width: ${this.maxWidth}` : ""}>
         ${this.renderPageHeader()}
-        
+
         ${this.loading ? this.renderLoading() : ""}
-        
+
         ${this.error ? this.renderError(this.error, true) : ""}
-        
+
         ${!this.loading && !this.error ? this.renderContent() : ""}
       </div>
     `;

@@ -14,11 +14,11 @@ data:
   test-log-ingestion.sh: |
     #!/bin/bash
     set -e
-    
+
     echo "=== Testing Log Ingestion Performance ==="
     ELASTICSEARCH_URL="http://elasticsearch:9200"
     TEST_INDEX="test-logs-$(date +%s)"
-    
+
     # Create test index
     curl -X PUT "${ELASTICSEARCH_URL}/${TEST_INDEX}" \
         -H "Content-Type: application/json" \
@@ -28,11 +28,11 @@ data:
                 "number_of_replicas": 0
             }
         }'
-    
+
     # Generate test logs
     echo "Generating test log entries..."
     START_TIME=$(date +%s)
-    
+
     for i in $(seq 1 1000); do
         TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
         DOC="{
@@ -43,22 +43,22 @@ data:
             \"service_name\": \"test-service\",
             \"environment\": \"test\"
         }"
-        
+
         curl -s -X POST "${ELASTICSEARCH_URL}/${TEST_INDEX}/_doc" \
             -H "Content-Type: application/json" \
             -d "$DOC" > /dev/null
     done
-    
+
     END_TIME=$(date +%s)
     DURATION=$((END_TIME - START_TIME))
-    
+
     echo "Ingested 1000 log entries in ${DURATION} seconds"
     echo "Rate: $((1000 / DURATION)) logs/second"
-    
+
     # Test search performance
     echo "Testing search performance..."
     SEARCH_START=$(date +%s%3N)
-    
+
     SEARCH_RESULT=$(curl -s "${ELASTICSEARCH_URL}/${TEST_INDEX}/_search" \
         -H "Content-Type: application/json" \
         -d '{
@@ -69,36 +69,36 @@ data:
             },
             "size": 10
         }')
-    
+
     SEARCH_END=$(date +%s%3N)
     SEARCH_DURATION=$((SEARCH_END - SEARCH_START))
-    
+
     HIT_COUNT=$(echo "$SEARCH_RESULT" | jq -r '.hits.total.value')
     echo "Search completed in ${SEARCH_DURATION}ms, found ${HIT_COUNT} results"
-    
+
     # Cleanup test index
     curl -X DELETE "${ELASTICSEARCH_URL}/${TEST_INDEX}"
-    
+
     # Performance assertions
     if [ $DURATION -gt 60 ]; then
         echo "FAIL: Log ingestion took too long (${DURATION}s > 60s)"
         exit 1
     fi
-    
+
     if [ $SEARCH_DURATION -gt 1000 ]; then
         echo "FAIL: Search took too long (${SEARCH_DURATION}ms > 1000ms)"
         exit 1
     fi
-    
+
     echo "PASS: Log ingestion performance test completed successfully"
-  
+
   test-alerting.sh: |
     #!/bin/bash
     set -e
-    
+
     echo "=== Testing Alerting System ==="
     ELASTICSEARCH_URL="http://elasticsearch:9200"
-    
+
     # Generate security alert test
     echo "Generating security alert test..."
     for i in $(seq 1 6); do
@@ -114,16 +114,16 @@ data:
             \"failure_reason\": \"Invalid password\",
             \"service_name\": \"neoforge-api\"
         }"
-        
+
         curl -s -X POST "${ELASTICSEARCH_URL}/neoforge-logs/_doc" \
             -H "Content-Type: application/json" \
             -d "$DOC" > /dev/null
-        
+
         sleep 1
     done
-    
+
     echo "Generated 6 security events to trigger alerting threshold"
-    
+
     # Generate performance alert test
     echo "Generating performance alert test..."
     for i in $(seq 1 20); do
@@ -138,27 +138,27 @@ data:
             \"status_code\": 200,
             \"service_name\": \"neoforge-api\"
         }"
-        
+
         curl -s -X POST "${ELASTICSEARCH_URL}/neoforge-logs/_doc" \
             -H "Content-Type: application/json" \
             -d "$DOC" > /dev/null
     done
-    
+
     echo "Generated high response time events to trigger performance alert"
     echo "Check ElastAlert logs for alert notifications"
-  
+
   test-log-retention.sh: |
     #!/bin/bash
     set -e
-    
+
     echo "=== Testing Log Retention Policies ==="
     ELASTICSEARCH_URL="http://elasticsearch:9200"
-    
+
     # Check ILM policies
     echo "Checking Index Lifecycle Management policies..."
-    
+
     POLICIES=$(curl -s "${ELASTICSEARCH_URL}/_ilm/policy" | jq -r 'keys[]')
-    
+
     for policy in application-logs-policy security-logs-policy performance-logs-policy system-logs-policy; do
         if echo "$POLICIES" | grep -q "$policy"; then
             echo "✓ ILM Policy '$policy' exists"
@@ -167,12 +167,12 @@ data:
             exit 1
         fi
     done
-    
+
     # Check index templates
     echo "Checking index templates..."
-    
+
     TEMPLATES=$(curl -s "${ELASTICSEARCH_URL}/_index_template" | jq -r '.index_templates[].name')
-    
+
     for template in neoforge-logs-template neoforge-security-template; do
         if echo "$TEMPLATES" | grep -q "$template"; then
             echo "✓ Index template '$template' exists"
@@ -181,63 +181,63 @@ data:
             exit 1
         fi
     done
-    
+
     echo "PASS: Log retention policies configured correctly"
-  
+
   test-security.sh: |
     #!/bin/bash
     set -e
-    
+
     echo "=== Testing Security Configuration ==="
-    
+
     # Test unauthorized access
     echo "Testing unauthorized access protection..."
-    
+
     # This should fail without authentication
     HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://elasticsearch:9200/_cluster/health")
-    
+
     if [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; then
         echo "✓ Elasticsearch properly rejects unauthorized access"
     else
         echo "✗ Elasticsearch allows unauthorized access (HTTP $HTTP_CODE)"
         exit 1
     fi
-    
+
     # Test TLS configuration
     echo "Testing TLS configuration..."
-    
+
     # Check if TLS is configured for Fluent Bit
     if kubectl get configmap fluent-bit-config -o yaml | grep -q "tls.*On"; then
         echo "✓ Fluent Bit TLS configuration found"
     else
         echo "⚠ Fluent Bit TLS configuration not found"
     fi
-    
+
     # Test network policies
     echo "Testing network policies..."
-    
+
     NETWORK_POLICIES=$(kubectl get networkpolicy -o name 2>/dev/null || echo "")
-    
+
     if echo "$NETWORK_POLICIES" | grep -q "logging-isolation"; then
         echo "✓ Logging network isolation policy exists"
     else
         echo "✗ Logging network isolation policy missing"
         exit 1
     fi
-    
+
     echo "PASS: Security configuration validated"
-  
+
   test-correlation-ids.sh: |
     #!/bin/bash
     set -e
-    
+
     echo "=== Testing Correlation ID Tracking ==="
     ELASTICSEARCH_URL="http://elasticsearch:9200"
-    
+
     # Generate logs with correlation IDs
     CORRELATION_ID="test-correlation-$(date +%s)"
     echo "Testing with correlation ID: $CORRELATION_ID"
-    
+
     # Generate multiple related log entries
     for i in $(seq 1 5); do
         TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
@@ -250,20 +250,20 @@ data:
             \"user_id\": \"test-user-123\",
             \"service_name\": \"neoforge-api\"
         }"
-        
+
         curl -s -X POST "${ELASTICSEARCH_URL}/neoforge-logs/_doc" \
             -H "Content-Type: application/json" \
             -d "$DOC" > /dev/null
-        
+
         sleep 1
     done
-    
+
     # Wait for indexing
     sleep 5
-    
+
     # Search for correlated logs
     echo "Searching for correlated logs..."
-    
+
     SEARCH_RESULT=$(curl -s "${ELASTICSEARCH_URL}/neoforge-logs/_search" \
         -H "Content-Type: application/json" \
         -d "{
@@ -275,39 +275,39 @@ data:
             \"sort\": [{\"@timestamp\": {\"order\": \"asc\"}}],
             \"size\": 10
         }")
-    
+
     HIT_COUNT=$(echo "$SEARCH_RESULT" | jq -r '.hits.total.value')
-    
+
     if [ "$HIT_COUNT" -eq 5 ]; then
         echo "✓ Found all $HIT_COUNT correlated log entries"
     else
         echo "✗ Expected 5 correlated logs, found $HIT_COUNT"
         exit 1
     fi
-    
+
     # Test log sequence
     TIMESTAMPS=$(echo "$SEARCH_RESULT" | jq -r '.hits.hits[]._source["@timestamp"]')
     echo "Log sequence timestamps:"
     echo "$TIMESTAMPS"
-    
+
     echo "PASS: Correlation ID tracking test completed successfully"
-  
+
   performance-benchmark.sh: |
     #!/bin/bash
     set -e
-    
+
     echo "=== Performance Benchmark Test ==="
     ELASTICSEARCH_URL="http://elasticsearch:9200"
-    
+
     # Test concurrent log ingestion
     echo "Testing concurrent log ingestion..."
-    
+
     CONCURRENT_PROCESSES=5
     LOGS_PER_PROCESS=200
     TOTAL_LOGS=$((CONCURRENT_PROCESSES * LOGS_PER_PROCESS))
-    
+
     START_TIME=$(date +%s)
-    
+
     # Start background processes
     for proc in $(seq 1 $CONCURRENT_PROCESSES); do
         (
@@ -321,30 +321,30 @@ data:
                     \"process_id\": $proc,
                     \"service_name\": \"benchmark-test\"
                 }"
-                
+
                 curl -s -X POST "${ELASTICSEARCH_URL}/neoforge-logs/_doc" \
                     -H "Content-Type: application/json" \
                     -d "$DOC" > /dev/null
             done
         ) &
     done
-    
+
     # Wait for all processes to complete
     wait
-    
+
     END_TIME=$(date +%s)
     DURATION=$((END_TIME - START_TIME))
     RATE=$((TOTAL_LOGS / DURATION))
-    
+
     echo "Ingested $TOTAL_LOGS logs in ${DURATION}s"
     echo "Concurrent ingestion rate: ${RATE} logs/second"
-    
+
     # Performance assertions
     if [ $RATE -lt 100 ]; then
         echo "FAIL: Ingestion rate too low (${RATE} < 100 logs/second)"
         exit 1
     fi
-    
+
     echo "PASS: Performance benchmark completed successfully"
 ---
 # Test Job for comprehensive logging system validation
@@ -377,18 +377,18 @@ spec:
         - -c
         - |
           echo "Starting comprehensive logging system test..."
-          
+
           # Wait for services to be ready
           echo "Waiting for Elasticsearch to be ready..."
           while ! curl -s http://elasticsearch:9200/_cluster/health; do
             sleep 5
           done
-          
+
           echo "Waiting for Kibana to be ready..."
           while ! curl -s http://kibana:5601/api/status; do
             sleep 5
           done
-          
+
           # Run all test scripts
           /scripts/test-log-ingestion.sh
           /scripts/test-alerting.sh
@@ -396,7 +396,7 @@ spec:
           /scripts/test-security.sh
           /scripts/test-correlation-ids.sh
           /scripts/performance-benchmark.sh
-          
+
           echo "All logging system tests completed successfully!"
         volumeMounts:
         - name: test-scripts
@@ -437,42 +437,42 @@ metadata:
 data:
   health-check.sh: |
     #!/bin/bash
-    
+
     echo "=== Logging System Health Check ==="
-    
+
     # Check Elasticsearch health
     echo "Checking Elasticsearch cluster health..."
     ES_HEALTH=$(curl -s http://elasticsearch:9200/_cluster/health | jq -r '.status')
-    
+
     if [ "$ES_HEALTH" = "green" ] || [ "$ES_HEALTH" = "yellow" ]; then
         echo "✓ Elasticsearch cluster status: $ES_HEALTH"
     else
         echo "✗ Elasticsearch cluster unhealthy: $ES_HEALTH"
         exit 1
     fi
-    
+
     # Check Kibana health
     echo "Checking Kibana health..."
     KIBANA_STATUS=$(curl -s http://kibana:5601/api/status | jq -r '.status.overall.state')
-    
+
     if [ "$KIBANA_STATUS" = "green" ]; then
         echo "✓ Kibana status: $KIBANA_STATUS"
     else
         echo "✗ Kibana status: $KIBANA_STATUS"
         exit 1
     fi
-    
+
     # Check Fluent Bit metrics
     echo "Checking Fluent Bit metrics..."
     FB_METRICS=$(curl -s http://fluent-bit:2020/api/v1/metrics/prometheus)
-    
+
     if echo "$FB_METRICS" | grep -q "fluentbit_uptime"; then
         echo "✓ Fluent Bit metrics available"
     else
         echo "✗ Fluent Bit metrics unavailable"
         exit 1
     fi
-    
+
     # Check recent log ingestion
     echo "Checking recent log ingestion..."
     RECENT_LOGS=$(curl -s "http://elasticsearch:9200/neoforge-logs-*/_search" \
@@ -487,13 +487,13 @@ data:
             },
             "size": 0
         }' | jq -r '.hits.total.value')
-    
+
     if [ "$RECENT_LOGS" -gt 0 ]; then
         echo "✓ Recent logs found: $RECENT_LOGS entries in last 5 minutes"
     else
         echo "⚠ No recent logs found in last 5 minutes"
     fi
-    
+
     echo "=== Health Check Summary ==="
     echo "Elasticsearch: $ES_HEALTH"
     echo "Kibana: $KIBANA_STATUS"

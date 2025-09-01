@@ -81,4 +81,4 @@ When the plugin detects a potential duplicate, it will suggest checking the comp
 1. Always check the component registry before creating a new component
 2. Follow the naming conventions established in your project
 3. Use the plugin to catch potential duplicates early in the development process
-4. Keep your component registry up to date 
+4. Keep your component registry up to date

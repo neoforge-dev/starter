@@ -1,6 +1,6 @@
 /**
  * Advanced Test Suite Runner
- * 
+ *
  * Comprehensive test execution orchestrator for all testing categories
  * Includes test discovery, execution, reporting, and CI/CD integration
  */
@@ -19,7 +19,7 @@ class AdvancedTestRunner {
       coverage: true,
       ...options
     };
-    
+
     this.results = {
       summary: {
         totalTests: 0,
@@ -37,14 +37,14 @@ class AdvancedTestRunner {
       coverage: {},
       errors: []
     };
-    
+
     this.testFiles = new Map();
     this.executionOrder = [];
   }
 
   async initialize() {
     console.log('🚀 Initializing Advanced Test Suite Runner...');
-    
+
     // Validate configuration
     const validation = TestConfigManager.validateConfiguration();
     if (!validation.valid) {
@@ -53,25 +53,25 @@ class AdvancedTestRunner {
 
     // Discover test files
     await this.discoverTestFiles();
-    
+
     // Plan execution order
     this.planExecutionOrder();
-    
+
     console.log(`✅ Test runner initialized: ${this.testFiles.size} test files discovered`);
     return true;
   }
 
   async discoverTestFiles() {
     const testDir = resolve('src/test/advanced');
-    
+
     try {
       const files = await fs.readdir(testDir);
-      
+
       for (const file of files) {
         if (file.endsWith('.test.js')) {
           const category = this.categorizeTestFile(file);
           const filePath = join(testDir, file);
-          
+
           this.testFiles.set(file, {
             path: filePath,
             category,
@@ -81,9 +81,9 @@ class AdvancedTestRunner {
           });
         }
       }
-      
+
       console.log(`📋 Discovered test files:`, Array.from(this.testFiles.keys()));
-      
+
     } catch (error) {
       console.error('❌ Error discovering test files:', error.message);
       throw error;
@@ -104,14 +104,14 @@ class AdvancedTestRunner {
     this.executionOrder = Array.from(this.testFiles.entries())
       .sort(([, a], [, b]) => a.priority - b.priority)
       .map(([filename]) => filename);
-      
+
     console.log('📅 Execution order planned:', this.executionOrder);
   }
 
   async runAllTests() {
     console.log('\n🧪 Starting comprehensive test execution...');
     this.results.summary.startTime = new Date();
-    
+
     try {
       // Run tests based on execution strategy
       if (this.options.parallel) {
@@ -119,7 +119,7 @@ class AdvancedTestRunner {
       } else {
         await this.runTestsSequentially();
       }
-      
+
     } catch (error) {
       console.error('❌ Test execution failed:', error.message);
       this.results.errors.push({
@@ -128,39 +128,39 @@ class AdvancedTestRunner {
         timestamp: new Date()
       });
     }
-    
+
     this.results.summary.endTime = new Date();
     this.results.summary.duration = this.results.summary.endTime - this.results.summary.startTime;
-    
+
     if (this.options.generateReport) {
       await this.generateReport();
     }
-    
+
     return this.results;
   }
 
   async runTestsInParallel() {
     console.log('⚡ Running tests in parallel...');
-    
+
     // Group tests by execution requirements
-    const parallelTests = this.executionOrder.filter(filename => 
+    const parallelTests = this.executionOrder.filter(filename =>
       !this.testFiles.get(filename).sequential
     );
-    
-    const sequentialTests = this.executionOrder.filter(filename => 
+
+    const sequentialTests = this.executionOrder.filter(filename =>
       this.testFiles.get(filename).sequential
     );
-    
+
     // Run parallel tests first
     if (parallelTests.length > 0) {
-      const parallelPromises = parallelTests.map(filename => 
+      const parallelPromises = parallelTests.map(filename =>
         this.runSingleTest(filename)
       );
-      
+
       const parallelResults = await Promise.allSettled(parallelPromises);
       this.processParallelResults(parallelResults, parallelTests);
     }
-    
+
     // Run sequential tests
     for (const filename of sequentialTests) {
       await this.runSingleTest(filename);
@@ -169,10 +169,10 @@ class AdvancedTestRunner {
 
   async runTestsSequentially() {
     console.log('🔄 Running tests sequentially...');
-    
+
     for (const filename of this.executionOrder) {
       await this.runSingleTest(filename);
-      
+
       if (this.options.failFast && this.results.summary.failed > 0) {
         console.log('🛑 Fail-fast mode: Stopping execution due to test failure');
         break;
@@ -183,21 +183,21 @@ class AdvancedTestRunner {
   async runSingleTest(filename) {
     const testInfo = this.testFiles.get(filename);
     const startTime = Date.now();
-    
+
     console.log(`\n🧪 Running ${filename} (${testInfo.category})...`);
-    
+
     try {
       const result = await this.executeTest(testInfo);
       const duration = Date.now() - startTime;
-      
+
       this.processTestResult(filename, result, duration);
-      
+
       console.log(`✅ ${filename} completed in ${duration}ms`);
-      
+
     } catch (error) {
       const duration = Date.now() - startTime;
       this.processTestError(filename, error, duration);
-      
+
       console.log(`❌ ${filename} failed in ${duration}ms: ${error.message}`);
     }
   }
@@ -205,12 +205,12 @@ class AdvancedTestRunner {
   async executeTest(testInfo) {
     // This would integrate with your actual test runner (Vitest, Jest, etc.)
     // For demonstration, we'll simulate test execution
-    
+
     return new Promise((resolve, reject) => {
       // Simulate test execution
       const executionTime = Math.random() * 5000 + 1000; // 1-6 seconds
       const shouldFail = Math.random() < 0.1; // 10% failure rate for demo
-      
+
       setTimeout(() => {
         if (shouldFail) {
           reject(new Error(`Simulated test failure in ${testInfo.category}`));
@@ -244,13 +244,13 @@ class AdvancedTestRunner {
   processTestResult(filename, result, duration) {
     const testInfo = this.testFiles.get(filename);
     const category = testInfo.category;
-    
+
     // Update summary
     this.results.summary.totalTests += result.passed + result.failed + result.skipped;
     this.results.summary.passed += result.passed;
     this.results.summary.failed += result.failed;
     this.results.summary.skipped += result.skipped;
-    
+
     // Update category results
     if (!this.results.categories[category]) {
       this.results.categories[category] = {
@@ -262,7 +262,7 @@ class AdvancedTestRunner {
         files: []
       };
     }
-    
+
     const categoryResult = this.results.categories[category];
     categoryResult.totalTests += result.passed + result.failed + result.skipped;
     categoryResult.passed += result.passed;
@@ -270,17 +270,17 @@ class AdvancedTestRunner {
     categoryResult.skipped += result.skipped;
     categoryResult.duration += duration;
     categoryResult.files.push(filename);
-    
+
     // Store coverage data
     if (result.coverage) {
       this.results.coverage[filename] = result.coverage;
     }
-    
+
     // Store performance data
     if (result.performance) {
       this.results.performance[filename] = result.performance;
     }
-    
+
     // Store accessibility data
     if (result.accessibility) {
       this.results.accessibility[filename] = result.accessibility;
@@ -290,7 +290,7 @@ class AdvancedTestRunner {
   processTestError(filename, error, duration) {
     const testInfo = this.testFiles.get(filename);
     const category = testInfo.category;
-    
+
     this.results.errors.push({
       filename,
       category,
@@ -298,7 +298,7 @@ class AdvancedTestRunner {
       duration,
       timestamp: new Date()
     });
-    
+
     // Update category results for failed file
     if (!this.results.categories[category]) {
       this.results.categories[category] = {
@@ -323,7 +323,7 @@ class AdvancedTestRunner {
   processParallelResults(results, filenames) {
     results.forEach((result, index) => {
       const filename = filenames[index];
-      
+
       if (result.status === 'fulfilled') {
         this.processTestResult(filename, result.value, 0);
       } else {
@@ -334,7 +334,7 @@ class AdvancedTestRunner {
 
   async generateReport() {
     console.log('\n📊 Generating comprehensive test report...');
-    
+
     const report = {
       metadata: TEST_SUITE_METADATA,
       configuration: ADVANCED_TEST_CONFIG,
@@ -355,18 +355,18 @@ class AdvancedTestRunner {
       recommendations: this.generateRecommendations(),
       errors: this.results.errors
     };
-    
+
     // Save detailed report
     const reportPath = join('test-results', 'advanced-test-report.json');
     await this.ensureDir('test-results');
     await fs.writeFile(reportPath, JSON.stringify(report, null, 2));
-    
+
     // Generate HTML report
     await this.generateHTMLReport(report);
-    
+
     // Generate summary for CI/CD
     await this.generateCISummary(report);
-    
+
     console.log(`📋 Report saved to ${reportPath}`);
     return report;
   }
@@ -374,14 +374,14 @@ class AdvancedTestRunner {
   calculateOverallCoverage() {
     const coverageFiles = Object.values(this.results.coverage);
     if (coverageFiles.length === 0) return null;
-    
+
     const totals = coverageFiles.reduce((acc, coverage) => ({
       statements: acc.statements + coverage.statements,
       branches: acc.branches + coverage.branches,
       functions: acc.functions + coverage.functions,
       lines: acc.lines + coverage.lines
     }), { statements: 0, branches: 0, functions: 0, lines: 0 });
-    
+
     return {
       statements: totals.statements / coverageFiles.length,
       branches: totals.branches / coverageFiles.length,
@@ -393,14 +393,14 @@ class AdvancedTestRunner {
   analyzePerformanceResults() {
     const performanceFiles = Object.values(this.results.performance);
     if (performanceFiles.length === 0) return null;
-    
+
     const metrics = performanceFiles.reduce((acc, perf) => ({
       totalRenderTime: acc.totalRenderTime + perf.averageRenderTime,
       totalMemory: acc.totalMemory + perf.memoryUsage,
       totalInteractionTime: acc.totalInteractionTime + perf.interactionTime,
       count: acc.count + 1
     }), { totalRenderTime: 0, totalMemory: 0, totalInteractionTime: 0, count: 0 });
-    
+
     return {
       averageRenderTime: metrics.totalRenderTime / metrics.count,
       averageMemoryUsage: metrics.totalMemory / metrics.count,
@@ -416,15 +416,15 @@ class AdvancedTestRunner {
   analyzeAccessibilityResults() {
     const accessibilityFiles = Object.values(this.results.accessibility);
     if (accessibilityFiles.length === 0) return null;
-    
+
     const totals = accessibilityFiles.reduce((acc, a11y) => ({
       violations: acc.violations + a11y.violations,
       passes: acc.passes + a11y.passes,
       incomplete: acc.incomplete + a11y.incomplete
     }), { violations: 0, passes: 0, incomplete: 0 });
-    
+
     const total = totals.violations + totals.passes + totals.incomplete;
-    
+
     return {
       violationCount: totals.violations,
       passCount: totals.passes,
@@ -437,7 +437,7 @@ class AdvancedTestRunner {
   calculateQualityMetrics() {
     const { summary } = this.results;
     const total = summary.totalTests;
-    
+
     return {
       testSuccess: total > 0 ? (summary.passed / total) * 100 : 0,
       testCoverage: this.calculateOverallCoverage(),
@@ -451,15 +451,15 @@ class AdvancedTestRunner {
   calculateOverallQualityScore() {
     const { summary } = this.results;
     const total = summary.totalTests;
-    
+
     if (total === 0) return 0;
-    
+
     // Weighted quality score
     const testSuccessScore = (summary.passed / total) * 40; // 40% weight
     const coverageScore = (this.calculateOverallCoverage()?.statements || 0) * 0.3; // 30% weight
     const performanceScore = this.analyzePerformanceResults()?.thresholdsPassed ? 20 : 0; // 20% weight
     const accessibilityScore = this.analyzeAccessibilityResults()?.wcagCompliant ? 10 : 0; // 10% weight
-    
+
     return testSuccessScore + coverageScore + performanceScore + accessibilityScore;
   }
 
@@ -468,7 +468,7 @@ class AdvancedTestRunner {
     const coverage = this.calculateOverallCoverage();
     const performance = this.analyzePerformanceResults();
     const accessibility = this.analyzeAccessibilityResults();
-    
+
     // Coverage recommendations
     if (coverage && coverage.statements < ADVANCED_TEST_CONFIG.coverage.global.statements) {
       recommendations.push({
@@ -478,7 +478,7 @@ class AdvancedTestRunner {
         action: 'Add more unit tests to increase code coverage'
       });
     }
-    
+
     // Performance recommendations
     if (performance && !performance.thresholdsPassed.rendering) {
       recommendations.push({
@@ -488,7 +488,7 @@ class AdvancedTestRunner {
         action: 'Optimize component rendering performance'
       });
     }
-    
+
     // Accessibility recommendations
     if (accessibility && !accessibility.wcagCompliant) {
       recommendations.push({
@@ -498,7 +498,7 @@ class AdvancedTestRunner {
         action: 'Fix WCAG compliance issues in components'
       });
     }
-    
+
     // Test execution recommendations
     if (this.results.summary.duration > ADVANCED_TEST_CONFIG.execution.timeout) {
       recommendations.push({
@@ -508,7 +508,7 @@ class AdvancedTestRunner {
         action: 'Consider optimizing test execution or increasing parallelization'
       });
     }
-    
+
     return recommendations;
   }
 
@@ -658,7 +658,7 @@ class AdvancedTestRunner {
 
     const ciPath = join('test-results', 'ci-summary.json');
     await fs.writeFile(ciPath, JSON.stringify(ciSummary, null, 2));
-    
+
     console.log('🔄 CI/CD Summary:', ciSummary);
     return ciSummary;
   }
@@ -674,7 +674,7 @@ class AdvancedTestRunner {
   printSummary() {
     const { summary } = this.results;
     const total = summary.totalTests;
-    
+
     console.log('\n📊 TEST EXECUTION SUMMARY');
     console.log('=' .repeat(50));
     console.log(`Total Tests: ${total}`);
@@ -682,14 +682,14 @@ class AdvancedTestRunner {
     console.log(`❌ Failed: ${summary.failed} (${total > 0 ? ((summary.failed / total) * 100).toFixed(1) : 0}%)`);
     console.log(`⏭️  Skipped: ${summary.skipped} (${total > 0 ? ((summary.skipped / total) * 100).toFixed(1) : 0}%)`);
     console.log(`⏱️  Duration: ${(summary.duration / 1000).toFixed(2)}s`);
-    
+
     const coverage = this.calculateOverallCoverage();
     if (coverage) {
       console.log(`📈 Coverage: ${coverage.statements.toFixed(1)}% statements, ${coverage.branches.toFixed(1)}% branches`);
     }
-    
+
     console.log('=' .repeat(50));
-    
+
     if (summary.failed === 0) {
       console.log('🎉 All tests passed! Quality gates met.');
     } else {
@@ -710,16 +710,16 @@ async function main() {
   };
 
   const runner = new AdvancedTestRunner(options);
-  
+
   try {
     await runner.initialize();
     const results = await runner.runAllTests();
-    
+
     runner.printSummary();
-    
+
     // Exit with appropriate code for CI/CD
     process.exit(results.summary.failed === 0 ? 0 : 1);
-    
+
   } catch (error) {
     console.error('💥 Test runner failed:', error.message);
     process.exit(1);

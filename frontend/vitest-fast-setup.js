@@ -54,7 +54,7 @@ beforeEach(() => {
 afterEach(() => {
   // Quick cleanup for fast tests
   document.body.innerHTML = '';
-  
+
   // Clear any timers that might affect subsequent tests
   if (global.clearAllTimers) {
     global.clearAllTimers();

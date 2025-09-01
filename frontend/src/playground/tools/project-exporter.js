@@ -1,6 +1,6 @@
 /**
  * Project Exporter
- * 
+ *
  * Creates ZIP downloads with complete project structure and all dependencies.
  * The final step that transforms playground exploration into deployable applications.
  */
@@ -16,20 +16,20 @@ export class ProjectExporter {
    */
   async exportProject(exportConfig) {
     this.validateExportConfig(exportConfig);
-    
+
     try {
       // Prepare project structure
       const projectStructure = await this.prepareProjectStructure(exportConfig);
-      
+
       // Generate all files
       const allFiles = await this.generateAllFiles(projectStructure, exportConfig);
-      
+
       // Create package based on format
       const exportPackage = await this.createExportPackage(allFiles, exportConfig);
-      
+
       // Generate download metadata
       const metadata = this.generateExportMetadata(exportConfig, allFiles);
-      
+
       return {
         success: true,
         package: exportPackage,
@@ -58,7 +58,7 @@ export class ProjectExporter {
       dependencies: {},
       configuration: {}
     };
-    
+
     // Frontend structure
     if (exportConfig.includeFrontend !== false) {
       structure.directories.push(
@@ -72,7 +72,7 @@ export class ProjectExporter {
         'frontend/public'
       );
     }
-    
+
     // Backend structure
     if (exportConfig.includeBackend) {
       const backendType = exportConfig.backend || 'fastapi';
@@ -80,7 +80,7 @@ export class ProjectExporter {
         ...this.getBackendDirectories(backendType)
       );
     }
-    
+
     // Database structure
     if (exportConfig.includeDatabase) {
       structure.directories.push(
@@ -90,7 +90,7 @@ export class ProjectExporter {
         'database/backups'
       );
     }
-    
+
     // Documentation structure
     structure.directories.push(
       'docs',
@@ -98,7 +98,7 @@ export class ProjectExporter {
       'docs/deployment',
       'docs/development'
     );
-    
+
     // Configuration structure
     structure.directories.push(
       'config',
@@ -106,7 +106,7 @@ export class ProjectExporter {
       '.github',
       '.github/workflows'
     );
-    
+
     return structure;
   }
 
@@ -115,13 +115,13 @@ export class ProjectExporter {
    */
   async generateAllFiles(structure, exportConfig) {
     const files = new Map();
-    
+
     // Root files
     files.set('README.md', await this.generateProjectReadme(exportConfig));
     files.set('.gitignore', this.generateGitignore(exportConfig));
     files.set('LICENSE', this.generateLicense(exportConfig.license || 'MIT'));
     files.set('CHANGELOG.md', this.generateChangelog(exportConfig));
-    
+
     // Frontend files
     if (exportConfig.includeFrontend !== false) {
       const frontendFiles = await this.generateFrontendFiles(exportConfig);
@@ -129,7 +129,7 @@ export class ProjectExporter {
         files.set(`frontend/${path}`, content);
       });
     }
-    
+
     // Backend files
     if (exportConfig.includeBackend) {
       const backendFiles = await this.generateBackendFiles(exportConfig);
@@ -137,7 +137,7 @@ export class ProjectExporter {
         files.set(`backend/${path}`, content);
       });
     }
-    
+
     // Database files
     if (exportConfig.includeDatabase) {
       const databaseFiles = await this.generateDatabaseFiles(exportConfig);
@@ -145,25 +145,25 @@ export class ProjectExporter {
         files.set(`database/${path}`, content);
       });
     }
-    
+
     // Configuration files
     const configFiles = await this.generateConfigurationFiles(exportConfig);
     configFiles.forEach((content, path) => {
       files.set(path, content);
     });
-    
+
     // Documentation files
     const docFiles = await this.generateDocumentationFiles(exportConfig);
     docFiles.forEach((content, path) => {
       files.set(`docs/${path}`, content);
     });
-    
+
     // Scripts and utilities
     const scriptFiles = this.generateScriptFiles(exportConfig);
     scriptFiles.forEach((content, path) => {
       files.set(`scripts/${path}`, content);
     });
-    
+
     return files;
   }
 
@@ -172,7 +172,7 @@ export class ProjectExporter {
    */
   async createExportPackage(files, exportConfig) {
     const format = exportConfig.format || 'zip';
-    
+
     switch (format) {
       case 'zip':
         return await this.createZipPackage(files, exportConfig);
@@ -191,7 +191,7 @@ export class ProjectExporter {
   async createZipPackage(files, exportConfig) {
     // Check if JSZip is available, otherwise create a simple archive
     let zip;
-    
+
     try {
       // Try to use JSZip if available
       if (typeof JSZip !== 'undefined') {
@@ -204,19 +204,19 @@ export class ProjectExporter {
       console.warn('JSZip not available, using simple archive format');
       return this.createSimpleArchive(files, exportConfig);
     }
-    
+
     // Add all files to ZIP
     files.forEach((content, path) => {
       zip.file(path, content);
     });
-    
+
     // Generate ZIP blob
     const zipBlob = await zip.generateAsync({
       type: 'blob',
       compression: 'DEFLATE',
       compressionOptions: { level: 6 }
     });
-    
+
     return {
       type: 'blob',
       data: zipBlob,
@@ -245,7 +245,7 @@ export class ProjectExporter {
     });
 
     const blob = new Blob([archiveContent], { type: 'text/plain' });
-    
+
     return {
       type: 'blob',
       data: blob,
@@ -260,7 +260,7 @@ export class ProjectExporter {
    */
   async generateFrontendFiles(exportConfig) {
     const files = new Map();
-    
+
     // Package.json
     files.set('package.json', JSON.stringify({
       name: exportConfig.projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
@@ -277,16 +277,16 @@ export class ProjectExporter {
       dependencies: this.getFrontendDependencies(exportConfig),
       devDependencies: this.getFrontendDevDependencies(exportConfig)
     }, null, 2));
-    
+
     // Vite configuration
     files.set('vite.config.js', this.generateViteConfig(exportConfig));
-    
+
     // Index.html
     files.set('index.html', this.generateIndexHtml(exportConfig));
-    
+
     // Main app file
     files.set('src/app.js', await this.generateMainApp(exportConfig));
-    
+
     // Components
     if (exportConfig.components && exportConfig.components.length > 0) {
       const componentFiles = await this.generateComponentFiles(exportConfig.components);
@@ -294,16 +294,16 @@ export class ProjectExporter {
         files.set(`src/components/${path}`, content);
       });
     }
-    
+
     // Services
     files.set('src/services/api.js', this.generateApiService(exportConfig));
-    
+
     // Styles
     files.set('src/styles/main.css', this.generateMainCSS(exportConfig));
-    
+
     // Utils
     files.set('src/utils/helpers.js', this.generateUtilityHelpers());
-    
+
     return files;
   }
 
@@ -312,7 +312,7 @@ export class ProjectExporter {
    */
   async generateBackendFiles(exportConfig) {
     const backendType = exportConfig.backend || 'fastapi';
-    
+
     switch (backendType) {
       case 'fastapi':
         return await this.generateFastAPIFiles(exportConfig);
@@ -328,7 +328,7 @@ export class ProjectExporter {
    */
   async generateFastAPIFiles(exportConfig) {
     const files = new Map();
-    
+
     // Requirements.txt
     files.set('requirements.txt', [
       'fastapi==0.104.1',
@@ -344,25 +344,25 @@ export class ProjectExporter {
       exportConfig.features?.includes('redis') ? 'redis==5.0.1' : '',
       exportConfig.features?.includes('email') ? 'fastapi-mail==1.4.1' : '',
     ].filter(Boolean).join('\n'));
-    
+
     // Main application
     files.set('main.py', this.generateFastAPIMain(exportConfig));
-    
+
     // API routes
     files.set('app/api/v1/api.py', this.generateFastAPIRoutes(exportConfig));
-    
+
     // Models
     files.set('app/models/__init__.py', '');
     files.set('app/models/base.py', this.generateFastAPIModels(exportConfig));
-    
+
     // Database configuration
     files.set('app/core/database.py', this.generateFastAPIDatabase(exportConfig));
-    
+
     // Authentication
     if (exportConfig.features?.includes('auth')) {
       files.set('app/core/auth.py', this.generateFastAPIAuth());
     }
-    
+
     return files;
   }
 
@@ -371,22 +371,22 @@ export class ProjectExporter {
    */
   async generateDocumentationFiles(exportConfig) {
     const files = new Map();
-    
+
     // API documentation
     files.set('api/README.md', this.generateAPIDocumentation(exportConfig));
-    
+
     // Development guide
     files.set('development/SETUP.md', this.generateDevelopmentSetup(exportConfig));
-    
+
     // Deployment guide
     files.set('deployment/README.md', this.generateDeploymentGuide(exportConfig));
-    
+
     // Architecture documentation
     files.set('ARCHITECTURE.md', this.generateArchitectureDoc(exportConfig));
-    
+
     // Contributing guide
     files.set('CONTRIBUTING.md', this.generateContributingGuide(exportConfig));
-    
+
     return files;
   }
 
@@ -395,21 +395,21 @@ export class ProjectExporter {
    */
   generateScriptFiles(exportConfig) {
     const files = new Map();
-    
+
     // Setup script
     files.set('setup.sh', this.generateSetupScript(exportConfig));
-    
+
     // Development startup script
     files.set('dev.sh', this.generateDevScript(exportConfig));
-    
+
     // Build script
     files.set('build.sh', this.generateBuildScript(exportConfig));
-    
+
     // Database management script
     if (exportConfig.includeDatabase) {
       files.set('database.sh', this.generateDatabaseScript(exportConfig));
     }
-    
+
     return files;
   }
 
@@ -418,14 +418,14 @@ export class ProjectExporter {
    */
   async generateProjectReadme(exportConfig) {
     const setupTime = this.estimateSetupTime(exportConfig);
-    
+
     return `# ${exportConfig.projectName}
 
 ${exportConfig.description || 'Generated from NeoForge Playground'}
 
-**🚀 Generated from [NeoForge Playground](https://neoforge.dev/playground)**  
-**Template:** ${exportConfig.template}  
-**Generated:** ${new Date().toISOString().split('T')[0]}  
+**🚀 Generated from [NeoForge Playground](https://neoforge.dev/playground)**
+**Template:** ${exportConfig.template}
+**Generated:** ${new Date().toISOString().split('T')[0]}
 **Estimated Setup Time:** ${setupTime} minutes
 
 ## 📋 Project Overview
@@ -454,10 +454,10 @@ ${exportConfig.includeDatabase ? `- ${exportConfig.database || 'PostgreSQL'} (fo
    \`\`\`bash
    # If downloaded as ZIP, extract first
    cd ${exportConfig.projectName.toLowerCase()}
-   
+
    # Make scripts executable
    chmod +x scripts/*.sh
-   
+
    # Run setup script
    ./scripts/setup.sh
    \`\`\`
@@ -619,7 +619,7 @@ ${exportConfig.includeBackend ? `- **[FastAPI](https://fastapi.tiangolo.com)** -
 
 ---
 
-**Built with ❤️ using [NeoForge Playground](https://neoforge.dev/playground)**  
+**Built with ❤️ using [NeoForge Playground](https://neoforge.dev/playground)**
 *From component exploration to production deployment in ${setupTime} minutes.*
 
 ## 🆘 Support
@@ -668,12 +668,12 @@ For questions about NeoForge Playground, visit [neoforge.dev](https://neoforge.d
 
   estimateSetupTime(exportConfig) {
     let time = 5; // Base time
-    
+
     if (exportConfig.includeBackend) time += 5;
     if (exportConfig.includeDatabase) time += 3;
     if (exportConfig.features?.includes('auth')) time += 2;
     if (exportConfig.projectType === 'fullstack') time += 2;
-    
+
     return Math.min(time, 20); // Cap at 20 minutes
   }
 
@@ -698,11 +698,11 @@ For questions about NeoForge Playground, visit [neoforge.dev](https://neoforge.d
       'lit': '^3.0.0',
       '@lit/context': '^1.0.0'
     };
-    
+
     if (exportConfig.features?.includes('routing')) {
       deps['@vaadin/router'] = '^1.7.0';
     }
-    
+
     return deps;
   }
 
@@ -719,7 +719,7 @@ For questions about NeoForge Playground, visit [neoforge.dev](https://neoforge.d
     if (!config.projectName) {
       throw new Error('Project name is required');
     }
-    
+
     if (config.projectName.length > 100) {
       throw new Error('Project name too long (max 100 characters)');
     }
@@ -775,11 +775,11 @@ For questions about NeoForge Playground, visit [neoforge.dev](https://neoforge.d
       'Configure environment variables if needed',
       'Start the development server'
     ];
-    
+
     if (exportConfig.includeDatabase) {
       steps.splice(4, 0, 'Set up the database connection');
     }
-    
+
     return steps;
   }
 

@@ -4,7 +4,7 @@
 # Global configuration
 framework:
   - terraform
-  - kubernetes  
+  - kubernetes
   - dockerfile
   - docker_compose
   - github_actions
@@ -41,14 +41,14 @@ check:
     # Docker checks to skip (with justification)
     - CKV_DOCKER_2   # HEALTHCHECK not always required for init containers
     - CKV_DOCKER_3   # USER instruction may not be applicable for system containers
-    
-    # Kubernetes checks to skip (with justification)  
+
+    # Kubernetes checks to skip (with justification)
     - CKV_K8S_8      # Liveness probe not required for all workload types
     - CKV_K8S_9      # Readiness probe not required for all workload types
-    
+
     # Terraform checks to skip (environment-specific)
     - CKV_AWS_79     # Instance metadata service v1 may be required for legacy
-    
+
   # Run only specific checks (optional - comment out to run all)
   # check:
   #   - CKV_K8S_14   # Image pull policy
@@ -66,7 +66,7 @@ external_checks_dir:
 # File patterns to include
 include_paths:
   - "backend/Dockerfile"
-  - "frontend/Dockerfile" 
+  - "frontend/Dockerfile"
   - "docker-compose*.yml"
   - "k8s/*.yaml"
   - "k8s/*.yml"
@@ -140,7 +140,7 @@ custom_policy_config:
         - SYS_ADMIN
         - NET_ADMIN
         - SYS_MODULE
-        
+
     kubernetes_security:
       require_security_context: true
       require_resource_limits: true
@@ -149,7 +149,7 @@ custom_policy_config:
       disallow_host_network: true
       disallow_host_pid: true
       disallow_host_ipc: true
-      
+
     image_security:
       allowed_registries:
         - "ghcr.io/neoforge-dev/"
@@ -163,18 +163,18 @@ custom_policy_config:
         - "main"
         - "master"
         - "dev"
-        
+
     network_security:
       require_network_policies: true
       default_deny_ingress: true
       explicit_egress_rules: true
-      
+
     rbac_security:
       prevent_wildcard_permissions: true
       prevent_cluster_admin: true
       require_service_account: true
 
-# Severity mapping for custom policies  
+# Severity mapping for custom policies
 severity_levels:
   CKV_NEOFORGE_1: HIGH      # Container must run as non-root
   CKV_NEOFORGE_2: HIGH      # Container must have read-only root filesystem
@@ -197,13 +197,13 @@ compliance:
     - CKV_K8S_17  # Container should not use host network
     - CKV_K8S_18  # Container should not use host PID
     - CKV_K8S_19  # Container should not use host IPC
-    
+
   ISO27001:
     - CKV_K8S_20  # Container should not run as root
     - CKV_K8S_21  # Container should have read-only root filesystem
     - CKV_K8S_22  # Container should not allow privilege escalation
     - CKV_K8S_23  # Container runtime should be seccomp profile
-    
+
   NIST:
     - CKV_K8S_30  # Pod should have security context
     - CKV_K8S_31  # Container should have resource limits
@@ -216,30 +216,30 @@ integrations:
     enabled: true
     pr_comments: true
     fail_pr_on_high: true
-    
+
   slack:
     enabled: false
     webhook_url: ""
     channel: "#security-alerts"
-    
+
   email:
     enabled: false
     smtp_server: ""
     recipients: []
-    
+
   prometheus:
     enabled: true
     port: 8080
     path: /metrics
 
-# Reporting configuration  
+# Reporting configuration
 report:
   include_passed_checks: false
   include_skipped_checks: true
   include_resource_details: true
   include_severity: true
   include_bc_ids: true
-  
+
   format:
     json:
       enabled: true

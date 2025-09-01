@@ -260,16 +260,16 @@ export const ServiceForm = () => {
         footer: html`
           <div style="display: flex; justify-content: flex-end; gap: 8px;">
             <neo-button variant="secondary" @click=${async () => {
-              const confirmed = await modalService.confirm({ 
-                title: "Discard Changes?", 
+              const confirmed = await modalService.confirm({
+                title: "Discard Changes?",
                 message: "Are you sure you want to discard changes?",
-                confirmText: "Discard", 
-                size: "sm" 
-              }); 
-              if (confirmed) modalInstance?.close(); 
+                confirmText: "Discard",
+                size: "sm"
+              });
+              if (confirmed) modalInstance?.close();
             }}>Cancel</neo-button>
             <neo-button variant="primary" @click=${() => {
-              console.log("Saving form data..."); 
+              console.log("Saving form data...");
               modalInstance?.close();
             }}>Save Changes</neo-button>
           </div>

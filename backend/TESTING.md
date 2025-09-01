@@ -372,4 +372,4 @@ docker compose -f docker-compose.dev.yml run --rm test env | grep -E 'SECRET|DAT
 
 ---
 
-*For comprehensive testing setup details, see the sections above. For frontend testing, see `frontend/src/test/TESTING.md`.* 
+*For comprehensive testing setup details, see the sections above. For frontend testing, see `frontend/src/test/TESTING.md`.*

@@ -61,7 +61,7 @@ Use this component for settings, preferences, and other boolean controls where t
 
 const Template = (args) => {
   return `
-    <neo-switch 
+    <neo-switch
       ${args.checked ? "checked" : ""}
       ${args.disabled ? "disabled" : ""}
       ${args.label ? `label="${args.label}"` : ""}
@@ -160,18 +160,18 @@ export const SettingsPanel = () => {
   return `
     <div style="max-width: 400px; padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: 0.5rem;">
       <h3 style="margin: 0 0 1rem 0; font-size: 1.125rem; font-weight: 600;">Settings</h3>
-      
+
       <div style="display: flex; flex-direction: column; gap: 1rem;">
         <neo-switch label="Enable notifications" checked></neo-switch>
         <neo-switch label="Auto-save documents" checked></neo-switch>
         <neo-switch label="Dark mode"></neo-switch>
         <neo-switch label="Experimental features" disabled></neo-switch>
-        
+
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 0.5rem 0;">
-        
-        <neo-switch 
-          label="Privacy mode" 
-          on-label="Private" 
+
+        <neo-switch
+          label="Privacy mode"
+          on-label="Private"
           off-label="Public"
           size="lg"
         ></neo-switch>

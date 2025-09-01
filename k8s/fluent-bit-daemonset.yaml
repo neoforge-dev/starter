@@ -174,25 +174,25 @@ data:
                 record["correlation_id"] = correlation_id
             end
         end
-        
+
         -- Add structured fields for common log patterns
         if record["log"] then
             local level = record["log"]:match('"level":"([^"]*)"') or record["log"]:match('LEVEL=([A-Z]+)')
             if level then
                 record["log_level"] = level:upper()
             end
-            
+
             local user_id = record["log"]:match('"user_id":"([^"]*)"')
             if user_id then
                 record["user_id"] = user_id
             end
-            
+
             local request_id = record["log"]:match('"request_id":"([^"]*)"')
             if request_id then
                 record["request_id"] = request_id
             end
         end
-        
+
         return 2, timestamp, record
     end
 ---

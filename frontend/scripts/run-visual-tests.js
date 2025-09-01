@@ -2,7 +2,7 @@
 
 /**
  * Visual Testing Runner Script
- * 
+ *
  * Orchestrates visual testing workflow:
  * 1. Starts playground server
  * 2. Runs Playwright visual tests
@@ -39,28 +39,28 @@ class VisualTestRunner {
    */
   async run() {
     console.log('🎯 Starting Visual Testing Suite...\n');
-    
+
     const startTime = Date.now();
-    
+
     try {
       // Step 1: Check prerequisites
       await this.checkPrerequisites();
-      
+
       // Step 2: Start playground server
       await this.startPlaygroundServer();
-      
+
       // Step 3: Wait for server to be ready
       await this.waitForServer();
-      
+
       // Step 4: Run visual tests
       const testResults = await this.runVisualTests();
-      
+
       // Step 5: Generate report
       await this.generateReport(testResults);
-      
+
       // Step 6: Display summary
       this.displaySummary(testResults, Date.now() - startTime);
-      
+
     } catch (error) {
       console.error('❌ Visual testing failed:', error.message);
       process.exit(1);
@@ -74,7 +74,7 @@ class VisualTestRunner {
    */
   async checkPrerequisites() {
     console.log('📋 Checking prerequisites...');
-    
+
     // Check if Playwright is installed
     try {
       execSync('npx playwright --version', { stdio: 'pipe' });
@@ -82,14 +82,14 @@ class VisualTestRunner {
     } catch (error) {
       throw new Error('Playwright is not installed. Run: npm install');
     }
-    
+
     // Check if playground files exist
     const playgroundPath = path.join(projectRoot, 'playground.html');
     if (!fs.existsSync(playgroundPath)) {
       throw new Error('Playground HTML file not found. Run: npm run playground:build');
     }
     console.log('✅ Playground files found');
-    
+
     console.log('');
   }
 
@@ -98,15 +98,15 @@ class VisualTestRunner {
    */
   async startPlaygroundServer() {
     console.log('🚀 Starting playground server...');
-    
+
     return new Promise((resolve, reject) => {
       this.playgroundServer = spawn('npm', ['run', 'playground'], {
         cwd: projectRoot,
         stdio: ['ignore', 'pipe', 'pipe']
       });
-      
+
       let serverOutput = '';
-      
+
       this.playgroundServer.stdout.on('data', (data) => {
         serverOutput += data.toString();
         if (data.toString().includes('Local:')) {
@@ -114,15 +114,15 @@ class VisualTestRunner {
           resolve();
         }
       });
-      
+
       this.playgroundServer.stderr.on('data', (data) => {
         console.error('Server error:', data.toString());
       });
-      
+
       this.playgroundServer.on('error', (error) => {
         reject(new Error(`Failed to start server: ${error.message}`));
       });
-      
+
       // Timeout after 30 seconds
       setTimeout(() => {
         if (this.playgroundServer) {
@@ -137,10 +137,10 @@ class VisualTestRunner {
    */
   async waitForServer() {
     console.log('⏳ Waiting for server to be ready...');
-    
+
     const maxAttempts = 30;
     let attempts = 0;
-    
+
     while (attempts < maxAttempts) {
       try {
         const response = await fetch(this.serverUrl);
@@ -151,11 +151,11 @@ class VisualTestRunner {
       } catch (error) {
         // Server not ready yet
       }
-      
+
       attempts++;
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    
+
     throw new Error('Server did not become ready within timeout');
   }
 
@@ -164,17 +164,17 @@ class VisualTestRunner {
    */
   async runVisualTests() {
     console.log('📸 Running visual tests...\n');
-    
+
     try {
       const result = execSync(
         'npx playwright test --config=playwright.visual.config.js --reporter=json',
-        { 
+        {
           cwd: projectRoot,
           encoding: 'utf8',
           maxBuffer: 1024 * 1024 * 10 // 10MB buffer
         }
       );
-      
+
       return JSON.parse(result);
     } catch (error) {
       // Playwright returns non-zero exit code for failing tests
@@ -194,22 +194,22 @@ class VisualTestRunner {
    */
   async generateReport(testResults) {
     console.log('📊 Generating visual test report...');
-    
+
     const reportDir = path.join(projectRoot, 'test-results/visual-report');
-    
+
     // Ensure report directory exists
     if (!fs.existsSync(reportDir)) {
       fs.mkdirSync(reportDir, { recursive: true });
     }
-    
+
     // Generate HTML report
     const reportHtml = this.generateHtmlReport(testResults);
     fs.writeFileSync(path.join(reportDir, 'visual-test-report.html'), reportHtml);
-    
+
     // Generate JSON summary
     const summary = this.generateSummary(testResults);
     fs.writeFileSync(path.join(reportDir, 'summary.json'), JSON.stringify(summary, null, 2));
-    
+
     console.log('✅ Report generated in test-results/visual-report/\n');
   }
 
@@ -218,7 +218,7 @@ class VisualTestRunner {
    */
   generateHtmlReport(testResults) {
     const { stats, tests } = testResults;
-    
+
     return `
 <!DOCTYPE html>
 <html>
@@ -248,7 +248,7 @@ class VisualTestRunner {
         <h1>📸 Visual Testing Report</h1>
         <p>Generated on ${new Date().toLocaleString()}</p>
     </div>
-    
+
     <div class="stats">
         <div class="stat-card">
             <div class="stat-number">${stats?.expected || 0}</div>
@@ -267,7 +267,7 @@ class VisualTestRunner {
             <div>Skipped</div>
         </div>
     </div>
-    
+
     <div class="test-list">
         ${(tests || []).map(test => `
             <div class="test-item">
@@ -288,7 +288,7 @@ class VisualTestRunner {
    */
   generateSummary(testResults) {
     const { stats, tests } = testResults;
-    
+
     const components = {};
     (tests || []).forEach(test => {
       const match = test.title.match(/(atom|molecule): (\w+)/);
@@ -301,7 +301,7 @@ class VisualTestRunner {
         components[key][test.outcome || 'failed']++;
       }
     });
-    
+
     return {
       summary: {
         total: stats?.expected || 0,
@@ -320,7 +320,7 @@ class VisualTestRunner {
    */
   displaySummary(testResults, duration) {
     const { stats } = testResults;
-    
+
     console.log('📊 VISUAL TESTING SUMMARY');
     console.log('='.repeat(50));
     console.log(`Total Tests: ${stats?.expected || 0}`);
@@ -329,14 +329,14 @@ class VisualTestRunner {
     console.log(`⏸️  Skipped: ${stats?.skipped || 0}`);
     console.log(`⏱️  Duration: ${Math.round(duration / 1000)}s`);
     console.log('');
-    
+
     if (stats?.failed > 0) {
       console.log('❌ Some visual tests failed. Check the report for details.');
       console.log('   Report: test-results/visual-report/visual-test-report.html');
     } else {
       console.log('✅ All visual tests passed! Your components look great.');
     }
-    
+
     console.log('');
   }
 
@@ -345,17 +345,17 @@ class VisualTestRunner {
    */
   async cleanup() {
     console.log('🧹 Cleaning up...');
-    
+
     if (this.playgroundServer) {
       this.playgroundServer.kill('SIGTERM');
-      
+
       // Wait a bit for graceful shutdown
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       if (!this.playgroundServer.killed) {
         this.playgroundServer.kill('SIGKILL');
       }
-      
+
       console.log('✅ Server stopped');
     }
   }

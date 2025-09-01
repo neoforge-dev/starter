@@ -1,6 +1,6 @@
 /**
  * Deployment Workflow Integration
- * 
+ *
  * Integrates deployment validation and health monitoring with the existing
  * 4-step playground → production workflow.
  */
@@ -15,10 +15,10 @@ export class DeploymentWorkflowIntegration {
     this.deploymentValidator = new DeploymentValidator();
     this.healthCheckTemplates = new HealthCheckTemplates();
     this.monitoringIntegration = new MonitoringIntegration();
-    
+
     this.validationUI = null;
     this.currentValidation = null;
-    
+
     this.setupIntegration();
   }
 
@@ -28,16 +28,16 @@ export class DeploymentWorkflowIntegration {
   setupIntegration() {
     // Subscribe to deployment events
     this.deploymentValidator.subscribe(this.handleValidationEvent.bind(this));
-    
+
     // Add validation UI to the DOM
     this.setupValidationUI();
-    
+
     // Enhance existing deployment buttons
     this.enhanceDeploymentFlow();
-    
+
     // Add validation step to workflow
     this.addValidationStep();
-    
+
     console.log('🔗 Deployment workflow integration initialized');
   }
 
@@ -49,16 +49,16 @@ export class DeploymentWorkflowIntegration {
     import('../components/deployment-validation-ui.js').then(() => {
       this.validationUI = document.createElement('deployment-validation-ui');
       this.validationUI.style.display = 'none';
-      
+
       // Add event listeners
       this.validationUI.addEventListener('retry-validation', (e) => {
         this.validateDeployment(e.detail.deploymentConfig);
       });
-      
+
       this.validationUI.addEventListener('rerun-validation', (e) => {
         this.validateDeployment(e.detail.deploymentConfig);
       });
-      
+
       // Add to deployment section
       const deploymentSection = document.querySelector('#app-builder .workflow-step-content[data-step="4"]');
       if (deploymentSection) {
@@ -75,12 +75,12 @@ export class DeploymentWorkflowIntegration {
   enhanceDeploymentFlow() {
     // Override the selectDeploymentPlatform method to include validation
     const originalSelectDeploymentPlatform = this.playgroundApp.selectDeploymentPlatform.bind(this.playgroundApp);
-    
+
     this.playgroundApp.selectDeploymentPlatform = async (platform) => {
       try {
         // Call original deployment method
         const deploymentResult = await originalSelectDeploymentPlatform(platform);
-        
+
         // If deployment succeeded, validate it
         if (deploymentResult && deploymentResult.success && deploymentResult.url) {
           await this.validateDeployment({
@@ -92,7 +92,7 @@ export class DeploymentWorkflowIntegration {
             environment: 'production'
           });
         }
-        
+
         return deploymentResult;
       } catch (error) {
         console.error('Deployment failed:', error);
@@ -166,7 +166,7 @@ export class DeploymentWorkflowIntegration {
           </ul>
         </div>
       `;
-      
+
       deploymentOptions.insertBefore(validationSection, deploymentOptions.firstChild);
     }
   }
@@ -177,11 +177,11 @@ export class DeploymentWorkflowIntegration {
   async enhanceApplicationGeneration() {
     // Override the generateFullStackApp method
     const originalGenerateFullStackApp = this.playgroundApp.generateFullStackApp.bind(this.playgroundApp);
-    
+
     this.playgroundApp.generateFullStackApp = async () => {
       // Call original generation
       const result = await originalGenerateFullStackApp();
-      
+
       // Add health checks and monitoring if enabled
       if (this.shouldIncludeHealthChecks()) {
         result.files = {
@@ -189,7 +189,7 @@ export class DeploymentWorkflowIntegration {
           ...this.generateHealthCheckFiles()
         };
       }
-      
+
       if (this.shouldIncludeMonitoring()) {
         const monitoringFiles = this.generateMonitoringFiles();
         result.files = {
@@ -197,7 +197,7 @@ export class DeploymentWorkflowIntegration {
           ...monitoringFiles
         };
       }
-      
+
       return result;
     };
   }
@@ -215,24 +215,24 @@ export class DeploymentWorkflowIntegration {
       // Show validation UI
       this.showValidationUI();
       this.validationUI.startValidation(deploymentConfig);
-      
+
       // Run validation
       this.currentValidation = await this.deploymentValidator.validateDeployment(deploymentConfig);
-      
+
       // Update UI with results
       this.validationUI.completeValidation(this.currentValidation);
-      
+
       // Update workflow step indicator
       this.updateValidationIndicator(this.currentValidation.status);
-      
+
       // Show success notification
       this.playgroundApp.showNotification(
         this.currentValidation.status === 'passed' ? 'success' : 'warning',
         this.getValidationMessage(this.currentValidation)
       );
-      
+
       return this.currentValidation;
-      
+
     } catch (error) {
       console.error('Validation failed:', error);
       this.showValidationError(error.message);
@@ -250,16 +250,16 @@ export class DeploymentWorkflowIntegration {
       case 'validation:start':
         console.log('🔍 Validation started:', data.validationId);
         break;
-        
+
       case 'validation:progress':
         this.validationUI.updatePhase(data.phase);
         console.log(`📊 Validation progress: ${data.phase}`, data.result);
         break;
-        
+
       case 'validation:complete':
         console.log('✅ Validation complete:', data.results);
         break;
-        
+
       case 'validation:error':
         console.error('❌ Validation error:', data.error);
         this.showValidationError(data.error.error);
@@ -273,11 +273,11 @@ export class DeploymentWorkflowIntegration {
   showValidationUI() {
     if (this.validationUI) {
       this.validationUI.style.display = 'block';
-      
+
       // Scroll to validation UI
-      this.validationUI.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
+      this.validationUI.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
       });
     }
   }
@@ -290,7 +290,7 @@ export class DeploymentWorkflowIntegration {
       this.validationUI.showError(message);
       this.showValidationUI();
     }
-    
+
     this.playgroundApp.showNotification('error', `Validation failed: ${message}`);
   }
 
@@ -302,9 +302,9 @@ export class DeploymentWorkflowIntegration {
     if (indicator) {
       const icon = indicator.querySelector('.badge-icon');
       const text = indicator.querySelector('.badge-text');
-      
+
       indicator.style.display = 'flex';
-      
+
       if (status === 'passed') {
         indicator.className = 'validation-badge success';
         icon.textContent = '✓';
@@ -330,7 +330,7 @@ export class DeploymentWorkflowIntegration {
       warning: `Deployment validation completed with warnings. Your app is accessible but has some issues.`,
       failed: `Deployment validation failed. Please check the issues and redeploy.`
     };
-    
+
     return messages[results.status] || 'Validation completed.';
   }
 
@@ -344,15 +344,15 @@ export class DeploymentWorkflowIntegration {
       type: appType,
       version: '1.0.0'
     };
-    
+
     const healthSystem = this.healthCheckTemplates.generateHealthCheckSystem(appConfig);
     const files = {};
-    
+
     // Convert health check files to the format expected by the app generator
     healthSystem.files.forEach(file => {
       files[file.path] = file.content;
     });
-    
+
     return files;
   }
 
@@ -365,24 +365,24 @@ export class DeploymentWorkflowIntegration {
       type: this.getApplicationType(),
       version: '1.0.0'
     };
-    
+
     const deploymentResult = {
       platform: 'unknown',
       environment: 'production',
       url: 'https://your-app.com'
     };
-    
+
     const monitoringSetup = this.monitoringIntegration.generateMonitoringSetup(appConfig, deploymentResult);
     const files = {};
-    
+
     // Convert monitoring files to the format expected by the app generator
     monitoringSetup.files.forEach(file => {
       files[file.path] = file.content;
     });
-    
+
     // Add monitoring configuration
     files['monitoring/config.json'] = JSON.stringify(monitoringSetup.config, null, 2);
-    
+
     return files;
   }
 
@@ -392,19 +392,19 @@ export class DeploymentWorkflowIntegration {
   getApplicationType() {
     const template = this.playgroundApp.appBuilderState.selectedTemplate;
     const components = this.playgroundApp.appBuilderState.selectedComponents;
-    
+
     if (template === 'fullstack' || template === 'full-stack') {
       return 'fullstack';
     }
-    
+
     if (template === 'api' || template === 'backend') {
       return 'api-only';
     }
-    
+
     if (components.some(comp => comp.includes('api') || comp.includes('backend'))) {
       return 'fullstack';
     }
-    
+
     return 'frontend-only';
   }
 
@@ -437,7 +437,7 @@ export class DeploymentWorkflowIntegration {
    */
   enhanceExportWithValidationResults() {
     const originalExportProject = this.playgroundApp.exportToFile.bind(this.playgroundApp);
-    
+
     this.playgroundApp.exportToFile = () => {
       // Get current export data
       const exportData = {
@@ -449,11 +449,11 @@ export class DeploymentWorkflowIntegration {
           url: this.currentValidation.url
         } : null
       };
-      
+
       // Create and download export file
       const dataBlob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
-      
+
       const a = document.createElement('a');
       a.href = url;
       a.download = `${this.playgroundApp.appBuilderState.appConfiguration.appName}-with-validation.json`;
@@ -474,7 +474,7 @@ export class DeploymentWorkflowIntegration {
         message: 'Deployment not yet validated'
       };
     }
-    
+
     return {
       status: this.currentValidation.status,
       message: this.getValidationMessage(this.currentValidation),
@@ -522,7 +522,7 @@ export class DeploymentWorkflowIntegration {
     this.enhanceApplicationGeneration();
     this.enhanceExportWithValidationResults();
     this.addValidationBadges();
-    
+
     console.log('✅ Deployment workflow integration complete');
   }
 }

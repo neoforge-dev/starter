@@ -164,7 +164,7 @@ class MyComponent extends LitElement {
           type="email"
           required
         ></nf-input>
-        
+
         <nf-button
           variant="primary"
           @click=${this.handleSubmit}
@@ -223,4 +223,4 @@ class MyComponent extends LoadingMixin(ErrorMixin(LitElement)) {
 - Learn about [State Management](./state-management)
 - Explore [Theming](./theming)
 - Read our [Testing Guide](./testing)
-- Check [Component Examples](./examples) 
+- Check [Component Examples](./examples)

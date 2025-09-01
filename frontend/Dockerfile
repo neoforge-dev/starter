@@ -6,7 +6,7 @@ WORKDIR /app
 # Copy package files for better caching
 COPY package*.json bun.lock* ./
 
-# Copy source code (but excluding problematic directories via .dockerignore)  
+# Copy source code (but excluding problematic directories via .dockerignore)
 COPY . .
 
 # Remove the problematic local eslint plugin dependency for Docker builds
@@ -97,4 +97,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 EXPOSE 80
 
 # Start nginx
-CMD ["nginx", "-g", "daemon off;"] 
+CMD ["nginx", "-g", "daemon off;"]

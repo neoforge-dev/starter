@@ -1,6 +1,6 @@
 /**
  * Health Check Templates for Generated Applications
- * 
+ *
  * Provides reusable health check templates that get embedded into generated applications
  * to ensure proper deployment validation and monitoring readiness.
  */
@@ -30,7 +30,7 @@ export class HealthCheckTemplates {
    */
   generateHealthCheckSystem(appConfig) {
     const template = this.getTemplate(appConfig.type, appConfig.healthConfig);
-    
+
     return {
       files: this.generateHealthCheckFiles(template, appConfig),
       endpoints: template.config.endpoints || [],
@@ -117,16 +117,16 @@ export class HealthCheckTemplates {
     <div id="health-status" class="status loading">
         <strong>Status:</strong> Checking...
     </div>
-    
+
     <div id="health-details">
         <h2>System Metrics</h2>
         <div id="metrics-container"></div>
     </div>
-    
+
     <div class="timestamp">
         Last checked: <span id="last-check">Loading...</span>
     </div>
-    
+
     <script>
         class HealthMonitor {
             constructor() {
@@ -140,10 +140,10 @@ export class HealthCheckTemplates {
                 };
                 this.results = {};
             }
-            
+
             async runHealthChecks() {
                 const startTime = Date.now();
-                
+
                 for (const [name, check] of Object.entries(this.checks)) {
                     try {
                         this.results[name] = await check();
@@ -155,12 +155,12 @@ export class HealthCheckTemplates {
                         };
                     }
                 }
-                
+
                 this.results.totalCheckTime = Date.now() - startTime;
                 this.updateDisplay();
                 return this.results;
             }
-            
+
             checkDOMReady() {
                 return {
                     status: document.readyState === 'complete' ? 'healthy' : 'unhealthy',
@@ -168,7 +168,7 @@ export class HealthCheckTemplates {
                     timestamp: new Date().toISOString()
                 };
             }
-            
+
             checkScriptsLoaded() {
                 const scripts = document.scripts.length;
                 const errors = document.querySelectorAll('script[data-error]').length;
@@ -178,7 +178,7 @@ export class HealthCheckTemplates {
                     timestamp: new Date().toISOString()
                 };
             }
-            
+
             checkStylesLoaded() {
                 const styles = document.styleSheets.length;
                 return {
@@ -187,7 +187,7 @@ export class HealthCheckTemplates {
                     timestamp: new Date().toISOString()
                 };
             }
-            
+
             async checkAPIConnectivity() {
                 if (!window.API_BASE_URL && !window.location.pathname.includes('/api/')) {
                     return {
@@ -196,11 +196,11 @@ export class HealthCheckTemplates {
                         timestamp: new Date().toISOString()
                     };
                 }
-                
+
                 try {
-                    const response = await fetch('/api/health', { 
+                    const response = await fetch('/api/health', {
                         method: 'GET',
-                        timeout: 5000 
+                        timeout: 5000
                     });
                     return {
                         status: response.ok ? 'healthy' : 'unhealthy',
@@ -215,7 +215,7 @@ export class HealthCheckTemplates {
                     };
                 }
             }
-            
+
             checkLocalStorage() {
                 try {
                     localStorage.setItem('health-test', 'test');
@@ -233,27 +233,27 @@ export class HealthCheckTemplates {
                     };
                 }
             }
-            
+
             checkPerformance() {
                 const timing = performance.timing;
                 const loadTime = timing.loadEventEnd - timing.navigationStart;
-                
+
                 return {
                     status: loadTime < 3000 ? 'healthy' : 'unhealthy',
                     value: \`\${loadTime}ms load time\`,
                     timestamp: new Date().toISOString()
                 };
             }
-            
+
             updateDisplay() {
                 const statusEl = document.getElementById('health-status');
                 const metricsEl = document.getElementById('metrics-container');
                 const timestampEl = document.getElementById('last-check');
-                
+
                 const overallHealth = this.getOverallHealth();
                 statusEl.className = \`status \${overallHealth}\`;
                 statusEl.innerHTML = \`<strong>Status:</strong> \${overallHealth.charAt(0).toUpperCase() + overallHealth.slice(1)}\`;
-                
+
                 metricsEl.innerHTML = Object.entries(this.results)
                     .filter(([key]) => key !== 'totalCheckTime')
                     .map(([key, result]) => \`
@@ -262,33 +262,33 @@ export class HealthCheckTemplates {
                             <span class="metric-value \${result.status}">\${result.value || result.status}</span>
                         </div>
                     \`).join('');
-                
+
                 timestampEl.textContent = new Date().toLocaleString();
             }
-            
+
             getOverallHealth() {
                 const statuses = Object.values(this.results)
                     .filter(result => result && result.status)
                     .map(result => result.status);
-                    
+
                 if (statuses.includes('unhealthy')) return 'unhealthy';
                 if (statuses.every(status => status === 'healthy')) return 'healthy';
                 return 'loading';
             }
         }
-        
+
         // Initialize and run health checks
         const monitor = new HealthMonitor();
-        
+
         document.addEventListener('DOMContentLoaded', () => {
             monitor.runHealthChecks();
-            
+
             // Re-run checks every 30 seconds
             setInterval(() => {
                 monitor.runHealthChecks();
             }, 30000);
         });
-        
+
         // Expose for external monitoring
         window.healthMonitor = monitor;
     </script>
@@ -313,11 +313,11 @@ export class HealthMonitor {
       performanceThreshold: 3000,
       ...config
     };
-    
+
     this.checks = new Map();
     this.results = new Map();
     this.listeners = new Set();
-    
+
     this.setupDefaultChecks();
     this.startMonitoring();
   }
@@ -355,11 +355,11 @@ export class HealthMonitor {
       try {
         const result = await Promise.race([
           check(),
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Check timeout')), this.config.apiTimeout)
           )
         ]);
-        
+
         results.set(name, {
           status: 'healthy',
           ...result,
@@ -381,7 +381,7 @@ export class HealthMonitor {
 
     this.results = results;
     this.notifyListeners();
-    
+
     return this.getHealthSummary();
   }
 
@@ -391,10 +391,10 @@ export class HealthMonitor {
   getHealthSummary() {
     const checks = Array.from(this.results.entries())
       .filter(([key]) => key !== '_meta');
-    
+
     const healthy = checks.filter(([, result]) => result.status === 'healthy').length;
     const total = checks.length;
-    
+
     return {
       status: healthy === total ? 'healthy' : 'unhealthy',
       healthy,
@@ -418,7 +418,7 @@ export class HealthMonitor {
     this.addCheck('performance', () => {
       const timing = performance.timing;
       const loadTime = timing.loadEventEnd - timing.navigationStart;
-      
+
       return {
         value: \`\${loadTime}ms\`,
         healthy: loadTime < this.config.performanceThreshold
@@ -451,7 +451,7 @@ export class HealthMonitor {
       if (!navigator.onLine) {
         return { value: 'offline', healthy: false };
       }
-      
+
       try {
         await fetch('/health.html', { method: 'HEAD', cache: 'no-cache' });
         return { value: 'online', healthy: true };
@@ -465,11 +465,11 @@ export class HealthMonitor {
       if (!performance.memory) {
         return { value: 'unavailable', healthy: true };
       }
-      
+
       const used = performance.memory.usedJSHeapSize;
       const limit = performance.memory.jsHeapSizeLimit;
       const percentage = Math.round((used / limit) * 100);
-      
+
       return {
         value: \`\${percentage}% used\`,
         healthy: percentage < 90
@@ -483,15 +483,15 @@ export class HealthMonitor {
   startMonitoring() {
     // Initial check
     this.runHealthChecks();
-    
+
     // Periodic checks
     this.intervalId = setInterval(() => {
       this.runHealthChecks();
     }, this.config.checkInterval);
-    
+
     // Monitor console errors
     this.setupConsoleMonitoring();
-    
+
     // Monitor page visibility
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
@@ -516,19 +516,19 @@ export class HealthMonitor {
     if (!window.__consoleErrors) {
       window.__consoleErrors = [];
     }
-    
+
     const originalError = console.error;
     console.error = (...args) => {
       window.__consoleErrors.push({
         message: args.join(' '),
         timestamp: new Date().toISOString()
       });
-      
+
       // Keep only last 10 errors
       if (window.__consoleErrors.length > 10) {
         window.__consoleErrors = window.__consoleErrors.slice(-10);
       }
-      
+
       originalError.apply(console, args);
     };
   }
@@ -609,7 +609,7 @@ async def detailed_health_check(db = Depends(get_db), redis = Depends(get_redis)
     """Detailed health check with all dependencies"""
     checks = {}
     overall_status = "healthy"
-    
+
     # Database check
     try:
         await db.execute("SELECT 1")
@@ -624,7 +624,7 @@ async def detailed_health_check(db = Depends(get_db), redis = Depends(get_redis)
             "timestamp": datetime.utcnow().isoformat()
         }
         overall_status = "unhealthy"
-    
+
     # Redis check
     try:
         await redis.ping()
@@ -639,22 +639,22 @@ async def detailed_health_check(db = Depends(get_db), redis = Depends(get_redis)
             "timestamp": datetime.utcnow().isoformat()
         }
         overall_status = "unhealthy"
-    
+
     # System resources
     try:
         cpu_percent = psutil.cpu_percent()
         memory = psutil.virtual_memory()
-        
+
         checks["system"] = {
             "status": "healthy" if cpu_percent < 80 and memory.percent < 85 else "degraded",
             "cpu_percent": cpu_percent,
             "memory_percent": memory.percent,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
         if checks["system"]["status"] == "degraded":
             overall_status = "degraded"
-            
+
     except Exception as e:
         checks["system"] = {
             "status": "unhealthy",
@@ -662,7 +662,7 @@ async def detailed_health_check(db = Depends(get_db), redis = Depends(get_redis)
             "timestamp": datetime.utcnow().isoformat()
         }
         overall_status = "unhealthy"
-    
+
     return {
         "status": overall_status,
         "timestamp": datetime.utcnow().isoformat(),
@@ -677,10 +677,10 @@ async def readiness_check(db = Depends(get_db), redis = Depends(get_redis)):
     try:
         # Check database connection
         await db.execute("SELECT 1")
-        
+
         # Check Redis connection
         await redis.ping()
-        
+
         return {"status": "ready"}
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Service not ready: {str(e)}")
@@ -778,11 +778,11 @@ router.get('/ready', async (req, res) => {
     if (req.db) {
       await req.db.raw('SELECT 1');
     }
-    
+
     if (req.redis) {
       await req.redis.ping();
     }
-    
+
     res.json({ status: 'ready' });
   } catch (error) {
     res.status(503).json({
@@ -820,28 +820,28 @@ class HealthMiddleware:
     def __init__(self, app):
         self.app = app
         self.start_time = datetime.utcnow()
-        
+
     async def __call__(self, request: Request, call_next):
         start_time = time.time()
-        
+
         # Process request
         response = await call_next(request)
-        
+
         # Add health headers
         process_time = time.time() - start_time
         response.headers["X-Process-Time"] = str(process_time)
         response.headers["X-Service-Name"] = "${appConfig.name}"
         response.headers["X-Service-Version"] = "${appConfig.version || '1.0.0'}"
-        
+
         # Add system health indicators
         if request.url.path.startswith('/health'):
             memory_usage = psutil.virtual_memory().percent
             cpu_usage = psutil.cpu_percent()
-            
+
             response.headers["X-Memory-Usage"] = str(memory_usage)
             response.headers["X-CPU-Usage"] = str(cpu_usage)
             response.headers["X-Uptime"] = str((datetime.utcnow() - self.start_time).total_seconds())
-        
+
         return response
 `;
     }
@@ -857,25 +857,25 @@ const healthMiddleware = (req, res, next) => {
   res.set('X-Service-Name', '${appConfig.name}');
   res.set('X-Service-Version', '${appConfig.version || '1.0.0'}');
   res.set('X-Request-ID', req.id || 'unknown');
-  
+
   // Add timing
   const start = Date.now();
-  
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     res.set('X-Response-Time', \`\${duration}ms\`);
   });
-  
+
   // Add system health for health endpoints
   if (req.path.startsWith('/health') || req.path.startsWith('/api/health')) {
     const memUsage = process.memoryUsage();
     const uptime = Date.now() - startTime;
-    
+
     res.set('X-Memory-Usage', Math.round(memUsage.rss / 1024 / 1024) + 'MB');
     res.set('X-Uptime', Math.round(uptime / 1000) + 's');
     res.set('X-Node-Version', process.version);
   }
-  
+
   next();
 };
 
@@ -1024,7 +1024,7 @@ EOF`;
    */
   getDependencyValidation(appConfig) {
     const rules = {};
-    
+
     if (appConfig.database) {
       rules.database = {
         type: appConfig.database,
@@ -1032,14 +1032,14 @@ EOF`;
         healthCheck: 'SELECT 1'
       };
     }
-    
+
     if (appConfig.redis) {
       rules.redis = {
         required: true,
         healthCheck: 'PING'
       };
     }
-    
+
     return rules;
   }
 }

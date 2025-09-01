@@ -1,19 +1,22 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from prometheus_client import Counter, Histogram, Gauge
+from prometheus_client import Counter, Gauge, Histogram
 
 # Import the module with patching to avoid the actual psutil import
-with patch("psutil.Process"), patch("psutil.cpu_percent"), patch("psutil.virtual_memory"):
+with patch("psutil.Process"), patch("psutil.cpu_percent"), patch(
+    "psutil.virtual_memory"
+):
     from app.core.metrics import (
-        initialize_metrics,
-        get_metrics,
-        reset_metrics,
         MetricsManager,
-        get_process_time,
+        format_bytes,
+        get_metrics,
         get_process_memory,
+        get_process_time,
         get_system_cpu,
         get_system_memory,
-        format_bytes,
+        initialize_metrics,
+        reset_metrics,
     )
 
 
@@ -22,10 +25,10 @@ class TestMetrics:
         """Test that metrics are initialized correctly."""
         # Reset metrics to ensure a clean state
         reset_metrics()
-        
+
         # Initialize metrics
         metrics = initialize_metrics()
-        
+
         # Check that all expected metrics are created
         assert "http_requests" in metrics
         assert "http_request_duration_seconds" in metrics
@@ -33,7 +36,7 @@ class TestMetrics:
         assert "db_query_duration_seconds" in metrics
         assert "redis_operations_total" in metrics
         assert "redis_errors_total" in metrics
-        
+
         # Check types
         assert isinstance(metrics["http_requests"], Counter)
         assert isinstance(metrics["http_request_duration_seconds"], Histogram)
@@ -46,10 +49,10 @@ class TestMetrics:
         """Test that get_metrics returns the initialized metrics."""
         # Reset metrics to ensure a clean state
         reset_metrics()
-        
+
         # Get metrics
         metrics = get_metrics()
-        
+
         # Check that metrics are initialized
         assert len(metrics) > 0
         assert "http_requests" in metrics
@@ -58,10 +61,10 @@ class TestMetrics:
         """Test that reset_metrics clears all metrics."""
         # Initialize metrics
         initialize_metrics()
-        
+
         # Reset metrics
         reset_metrics()
-        
+
         # Check that metrics are reset
         metrics = get_metrics()
         assert len(metrics) > 0  # Should be re-initialized by get_metrics
@@ -73,7 +76,7 @@ class TestMetrics:
             # Check that metrics are initialized
             assert len(manager.metrics) > 0
             assert "http_requests" in manager.metrics
-        
+
         # Check that metrics are reset after exiting the context
         assert len(get_metrics()) > 0  # Should be re-initialized by get_metrics
 
@@ -82,10 +85,10 @@ class TestMetrics:
         """Test get_process_time function."""
         # Set up mock
         mock_process_time.return_value = 123.45
-        
+
         # Call function
         result = get_process_time()
-        
+
         # Check result
         assert result == 123.45
         mock_process_time.assert_called_once()
@@ -97,10 +100,10 @@ class TestMetrics:
         mock_instance = MagicMock()
         mock_instance.memory_info.return_value.rss = 1024 * 1024  # 1 MB
         mock_process.return_value = mock_instance
-        
+
         # Call function
         result = get_process_memory()
-        
+
         # Check result
         assert result == 1024 * 1024
         mock_instance.memory_info.assert_called_once()
@@ -110,10 +113,10 @@ class TestMetrics:
         """Test get_system_cpu function."""
         # Set up mock
         mock_cpu_percent.return_value = 75.5
-        
+
         # Call function
         result = get_system_cpu()
-        
+
         # Check result
         assert result == 75.5
         mock_cpu_percent.assert_called_once_with(interval=None)
@@ -126,10 +129,10 @@ class TestMetrics:
         mock_memory.total = 16 * 1024 * 1024 * 1024  # 16 GB
         mock_memory.available = 8 * 1024 * 1024 * 1024  # 8 GB
         mock_virtual_memory.return_value = mock_memory
-        
+
         # Call function
         total, available, percent_used = get_system_memory()
-        
+
         # Check result
         assert total == 16 * 1024 * 1024 * 1024
         assert available == 8 * 1024 * 1024 * 1024
@@ -143,4 +146,4 @@ class TestMetrics:
         assert format_bytes(1500) == "1.5 KB"
         assert format_bytes(1500 * 1024) == "1.5 MB"
         assert format_bytes(1500 * 1024 * 1024) == "1.5 GB"
-        assert format_bytes(1500 * 1024 * 1024 * 1024) == "1.5 TB" 
+        assert format_bytes(1500 * 1024 * 1024 * 1024) == "1.5 TB"

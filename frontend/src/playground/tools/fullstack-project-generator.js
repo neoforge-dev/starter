@@ -1,6 +1,6 @@
 /**
  * Full-Stack Project Generator
- * 
+ *
  * Generates complete project templates with backend integration, not just frontend.
  * Transforms playground components into production-ready full-stack applications.
  */
@@ -17,23 +17,23 @@ export class FullStackProjectGenerator {
    */
   async generateFullStackProject(projectConfig) {
     this.validateProjectConfig(projectConfig);
-    
+
     try {
       // Generate frontend application
       const frontend = await this.generateFrontend(projectConfig);
-      
+
       // Generate backend API
       const backend = await this.generateBackend(projectConfig);
-      
+
       // Generate database schema
       const database = await this.generateDatabase(projectConfig);
-      
+
       // Generate deployment configuration
       const deployment = await this.generateDeploymentConfig(projectConfig);
-      
+
       // Generate documentation
       const documentation = await this.generateDocumentation(projectConfig);
-      
+
       return {
         success: true,
         projectName: projectConfig.name,
@@ -62,41 +62,41 @@ export class FullStackProjectGenerator {
    */
   async generateFrontend(projectConfig) {
     const files = [];
-    
+
     // Enhanced index.html with API configuration
     files.push({
       path: 'frontend/index.html',
       content: this.generateEnhancedIndexHTML(projectConfig)
     });
-    
+
     // Main app with API integration
     files.push({
       path: 'frontend/src/app.js',
       content: this.generateFullStackApp(projectConfig)
     });
-    
+
     // API service layer
     files.push({
       path: 'frontend/src/services/api.js',
       content: this.generateAPIService(projectConfig)
     });
-    
+
     // State management
     files.push({
       path: 'frontend/src/store/app-store.js',
       content: this.generateAppStore(projectConfig)
     });
-    
+
     // Environment configuration
     files.push({
       path: 'frontend/src/config/environment.js',
       content: this.generateEnvironmentConfig()
     });
-    
+
     // Component pages with API integration
     const pageFiles = this.generateAPIIntegratedPages(projectConfig);
     files.push(...pageFiles);
-    
+
     return {
       files,
       buildSystem: 'vite',
@@ -111,7 +111,7 @@ export class FullStackProjectGenerator {
   async generateBackend(projectConfig) {
     const backendType = projectConfig.backend || 'fastapi';
     const files = [];
-    
+
     switch (backendType) {
       case 'fastapi':
         return await this.generateFastAPIBackend(projectConfig);
@@ -129,31 +129,31 @@ export class FullStackProjectGenerator {
    */
   async generateFastAPIBackend(projectConfig) {
     const files = [];
-    
+
     // Main application
     files.push({
       path: 'backend/main.py',
       content: this.generateFastAPIMain(projectConfig)
     });
-    
+
     // API routes
     files.push({
       path: 'backend/app/api/v1/api.py',
       content: this.generateFastAPIRoutes(projectConfig)
     });
-    
+
     // Database models
     files.push({
       path: 'backend/app/models/__init__.py',
       content: this.generateFastAPIModels(projectConfig)
     });
-    
+
     // CRUD operations
     files.push({
       path: 'backend/app/crud/base.py',
       content: this.generateFastAPICRUD(projectConfig)
     });
-    
+
     // Authentication
     if (projectConfig.features.includes('auth')) {
       files.push({
@@ -161,19 +161,19 @@ export class FullStackProjectGenerator {
         content: this.generateFastAPIAuth()
       });
     }
-    
+
     // Database configuration
     files.push({
       path: 'backend/app/core/database.py',
       content: this.generateFastAPIDatabase(projectConfig)
     });
-    
+
     // Requirements
     files.push({
       path: 'backend/requirements.txt',
       content: this.generateFastAPIRequirements(projectConfig)
     });
-    
+
     return {
       files,
       framework: 'fastapi',
@@ -188,31 +188,31 @@ export class FullStackProjectGenerator {
   async generateDatabase(projectConfig) {
     const dbType = projectConfig.database || 'postgresql';
     const files = [];
-    
+
     // Database schema
     files.push({
       path: 'database/schema.sql',
       content: this.generateDatabaseSchema(projectConfig, dbType)
     });
-    
+
     // Migrations
     files.push({
       path: 'database/migrations/001_initial.sql',
       content: this.generateInitialMigration(projectConfig, dbType)
     });
-    
+
     // Seeds
     files.push({
       path: 'database/seeds/demo_data.sql',
       content: this.generateDemoData(projectConfig, dbType)
     });
-    
+
     // Database configuration
     files.push({
       path: 'database/config.json',
       content: this.generateDatabaseConfig(dbType)
     });
-    
+
     return {
       files,
       type: dbType,
@@ -226,49 +226,49 @@ export class FullStackProjectGenerator {
    */
   async generateDeploymentConfig(projectConfig) {
     const files = [];
-    
+
     // Docker configuration
     files.push({
       path: 'Dockerfile',
       content: this.generateDockerfile(projectConfig)
     });
-    
+
     files.push({
       path: 'docker-compose.yml',
       content: this.generateDockerCompose(projectConfig)
     });
-    
+
     // Kubernetes configuration
     if (projectConfig.deployment?.kubernetes) {
       files.push({
         path: 'k8s/deployment.yaml',
         content: this.generateKubernetesDeployment(projectConfig)
       });
-      
+
       files.push({
         path: 'k8s/service.yaml',
         content: this.generateKubernetesService(projectConfig)
       });
     }
-    
+
     // Vercel configuration
     files.push({
       path: 'vercel.json',
       content: this.generateVercelConfig(projectConfig)
     });
-    
+
     // Railway configuration
     files.push({
       path: 'railway.toml',
       content: this.generateRailwayConfig(projectConfig)
     });
-    
+
     // Environment files
     files.push({
       path: '.env.example',
       content: this.generateFullStackEnvExample(projectConfig)
     });
-    
+
     return {
       files,
       platforms: ['vercel', 'railway', 'kubernetes', 'docker'],
@@ -283,7 +283,7 @@ export class FullStackProjectGenerator {
   generateFastAPIMain(projectConfig) {
     const hasAuth = projectConfig.features.includes('auth');
     const hasCORS = true; // Always enable for frontend integration
-    
+
     return `"""
 ${projectConfig.name} - Generated from NeoForge Playground
 Full-stack application with FastAPI backend
@@ -351,7 +351,7 @@ if __name__ == "__main__":
     const hasTable = projectConfig.components.includes('neo-table');
     const hasForm = projectConfig.components.includes('neo-form-builder');
     const hasAuth = projectConfig.features.includes('auth');
-    
+
     let routes = `"""
 API routes for ${projectConfig.name}
 Generated based on selected components: ${projectConfig.components.join(', ')}
@@ -373,15 +373,15 @@ api_router = APIRouter()
     if (hasTable) {
       routes += this.generateTableAPIEndpoints(projectConfig);
     }
-    
+
     if (hasForm) {
       routes += this.generateFormAPIEndpoints(projectConfig);
     }
-    
+
     if (hasAuth) {
       routes += this.generateAuthAPIEndpoints();
     }
-    
+
     return routes;
   }
 
@@ -393,8 +393,8 @@ api_router = APIRouter()
 # Table data endpoints
 @api_router.get("/items/", response_model=List[Item])
 async def read_items(
-    skip: int = 0, 
-    limit: int = 100, 
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db)
 ):
     """Get paginated list of items for table component"""
@@ -416,8 +416,8 @@ async def create_item(item: ItemCreate, db: Session = Depends(get_db)):
 
 @api_router.put("/items/{item_id}", response_model=Item)
 async def update_item(
-    item_id: int, 
-    item: ItemUpdate, 
+    item_id: int,
+    item: ItemUpdate,
     db: Session = Depends(get_db)
 ):
     """Update existing item"""
@@ -442,7 +442,7 @@ async def delete_item(item_id: int, db: Session = Depends(get_db)):
    */
   generateAPIService(projectConfig) {
     const hasAuth = projectConfig.features.includes('auth');
-    
+
     return `/**
  * API Service for ${projectConfig.name}
  * Handles all backend communication
@@ -475,11 +475,11 @@ class APIService {
 
         try {
             const response = await fetch(url, config);
-            
+
             if (!response.ok) {
                 throw new Error(\`HTTP error! status: \${response.status}\`);
             }
-            
+
             return await response.json();
         } catch (error) {
             console.error('API request failed:', error);
@@ -539,12 +539,12 @@ export const apiService = new APIService();
             method: 'POST',
             body: JSON.stringify(credentials),
         });
-        
+
         if (response.access_token) {
             this.token = response.access_token;
             localStorage.setItem('authToken', this.token);
         }
-        
+
         return response;
     }
 
@@ -577,7 +577,7 @@ export const apiService = new APIService();
    */
   generateDockerfile(projectConfig) {
     const backendType = projectConfig.backend || 'fastapi';
-    
+
     if (backendType === 'fastapi') {
       return `# Multi-stage build for ${projectConfig.name}
 FROM node:18-alpine as frontend-builder
@@ -611,7 +611,7 @@ EXPOSE 8000
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
 `;
     }
-    
+
     return `# Docker configuration for ${projectConfig.name}`;
   }
 
@@ -620,7 +620,7 @@ CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
    */
   generateDockerCompose(projectConfig) {
     const dbType = projectConfig.database || 'postgresql';
-    
+
     return `version: '3.8'
 
 services:
@@ -734,17 +734,17 @@ volumes:
    */
   calculateSetupTime(projectConfig) {
     let baseTime = 10; // Base 10 minutes
-    
+
     // Add time based on features
     if (projectConfig.features.includes('auth')) baseTime += 5;
     if (projectConfig.features.includes('database')) baseTime += 3;
     if (projectConfig.backend !== 'none') baseTime += 5;
-    
+
     // Add time based on complexity
     const componentCount = projectConfig.components?.length || 0;
     if (componentCount > 5) baseTime += 3;
     if (componentCount > 10) baseTime += 5;
-    
+
     return Math.min(baseTime, 30); // Cap at 30 minutes
   }
 
@@ -754,7 +754,7 @@ volumes:
   validateProjectConfig(config) {
     const required = ['name', 'template', 'components'];
     const missing = required.filter(field => !config[field]);
-    
+
     if (missing.length > 0) {
       throw new Error(`Missing required fields: ${missing.join(', ')}`);
     }

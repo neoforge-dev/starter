@@ -1,6 +1,6 @@
 /**
  * Platform-Specific Validators
- * 
+ *
  * Detailed validation logic for each deployment platform to ensure
  * platform-specific features and configurations are working correctly.
  */
@@ -69,7 +69,7 @@ class VercelValidator {
     try {
       const response = await fetch(url, { method: 'HEAD' });
       const headers = response.headers;
-      
+
       // Check for Vercel-specific headers
       const vercelHeaders = {
         'x-vercel-cache': headers.get('x-vercel-cache'),
@@ -77,8 +77,8 @@ class VercelValidator {
         'server': headers.get('server')
       };
 
-      const hasVercelSignature = vercelHeaders['server']?.includes('Vercel') || 
-                                 vercelHeaders['x-vercel-id'] || 
+      const hasVercelSignature = vercelHeaders['server']?.includes('Vercel') ||
+                                 vercelHeaders['x-vercel-id'] ||
                                  vercelHeaders['x-vercel-cache'];
 
       return {
@@ -98,7 +98,7 @@ class VercelValidator {
     try {
       // Check for Edge Runtime headers or functions
       const response = await fetch(`${url}/api/edge-test`, { method: 'HEAD' });
-      
+
       return {
         passed: true,
         details: response.ok ? 'Edge functions accessible' : 'No edge functions detected',
@@ -117,7 +117,7 @@ class VercelValidator {
     try {
       // Common serverless function endpoints
       const endpoints = ['/api/health', '/api/hello', '/api/test'];
-      
+
       for (const endpoint of endpoints) {
         try {
           const response = await fetch(`${url}${endpoint}`);
@@ -153,17 +153,17 @@ class VercelValidator {
       const hostname = urlObj.hostname;
 
       // Check if using Vercel domain or custom domain
-      const isVercelDomain = hostname.includes('.vercel.app') || 
+      const isVercelDomain = hostname.includes('.vercel.app') ||
                             hostname.includes('.now.sh');
-      
+
       // Check DNS resolution
       const response = await fetch(url, { method: 'HEAD' });
       const dnsWorking = response.ok;
 
       return {
         passed: dnsWorking,
-        details: isVercelDomain ? 
-          'Using Vercel default domain' : 
+        details: isVercelDomain ?
+          'Using Vercel default domain' :
           'Using custom domain',
         hostname,
         isCustomDomain: !isVercelDomain,
@@ -266,14 +266,14 @@ class NetlifyValidator {
     try {
       const response = await fetch(url, { method: 'HEAD' });
       const headers = response.headers;
-      
+
       const netlifyHeaders = {
         'server': headers.get('server'),
         'x-nf-request-id': headers.get('x-nf-request-id'),
         'x-powered-by': headers.get('x-powered-by')
       };
 
-      const hasNetlifySignature = netlifyHeaders['server']?.includes('Netlify') || 
+      const hasNetlifySignature = netlifyHeaders['server']?.includes('Netlify') ||
                                   netlifyHeaders['x-nf-request-id'] ||
                                   netlifyHeaders['x-powered-by']?.includes('Netlify');
 
@@ -297,7 +297,7 @@ class NetlifyValidator {
       const html = await response.text();
 
       const optimizations = {
-        minifiedCSS: html.match(/<link[^>]*\.css/g)?.some(link => 
+        minifiedCSS: html.match(/<link[^>]*\.css/g)?.some(link =>
           link.includes('.min.css') || link.length < 100
         ),
         preloadResources: html.includes('rel="preload"'),
@@ -326,7 +326,7 @@ class NetlifyValidator {
       const html = await response.text();
 
       // Check for Netlify forms
-      const hasForms = html.includes('netlify') || 
+      const hasForms = html.includes('netlify') ||
                       html.includes('data-netlify="true"') ||
                       html.includes('method="POST"');
 
@@ -355,11 +355,11 @@ class NetlifyValidator {
 
       for (const test of redirectTests) {
         try {
-          const response = await fetch(`${url}${test.from}`, { 
+          const response = await fetch(`${url}${test.from}`, {
             method: 'HEAD',
-            redirect: 'manual' 
+            redirect: 'manual'
           });
-          
+
           if (response.status >= 300 && response.status < 400) {
             workingRedirects++;
           }
@@ -370,8 +370,8 @@ class NetlifyValidator {
 
       return {
         passed: true, // Redirects are optional
-        details: workingRedirects > 0 ? 
-          `${workingRedirects} redirect rules working` : 
+        details: workingRedirects > 0 ?
+          `${workingRedirects} redirect rules working` :
           'No redirects configured (optional)',
         workingRedirects
       };
@@ -387,7 +387,7 @@ class NetlifyValidator {
     try {
       // Check for Netlify Functions
       const endpoints = ['/.netlify/functions/hello', '/.netlify/functions/health'];
-      
+
       for (const endpoint of endpoints) {
         try {
           const response = await fetch(`${url}${endpoint}`);
@@ -472,8 +472,8 @@ class GitHubPagesValidator {
     try {
       const response = await fetch(url, { method: 'HEAD' });
       const server = response.headers.get('server');
-      
-      const isGitHubPages = server?.includes('GitHub.com') || 
+
+      const isGitHubPages = server?.includes('GitHub.com') ||
                            server?.includes('GitHub Pages') ||
                            url.includes('github.io');
 
@@ -494,9 +494,9 @@ class GitHubPagesValidator {
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname;
-      
+
       const isCustomDomain = !hostname.includes('github.io');
-      
+
       if (isCustomDomain) {
         // Check CNAME configuration
         const response = await fetch(url, { method: 'HEAD' });
@@ -535,19 +535,19 @@ class GitHubPagesValidator {
 
       // Test HTTP to HTTPS redirect
       const httpUrl = url.replace('https://', 'http://');
-      const response = await fetch(httpUrl, { 
+      const response = await fetch(httpUrl, {
         method: 'HEAD',
-        redirect: 'manual' 
+        redirect: 'manual'
       });
 
-      const redirectsToHttps = response.status >= 300 && 
-                               response.status < 400 && 
+      const redirectsToHttps = response.status >= 300 &&
+                               response.status < 400 &&
                                response.headers.get('location')?.startsWith('https://');
 
       return {
         passed: redirectsToHttps,
-        details: redirectsToHttps ? 
-          'HTTPS enforcement enabled' : 
+        details: redirectsToHttps ?
+          'HTTPS enforcement enabled' :
           'HTTPS redirect not configured',
         redirectStatus: response.status
       };
@@ -574,8 +574,8 @@ class GitHubPagesValidator {
 
       return {
         passed: true, // Jekyll processing is optional
-        details: jekyllIndicators.isBuildProcessed ? 
-          'Content appears to be build-processed' : 
+        details: jekyllIndicators.isBuildProcessed ?
+          'Content appears to be build-processed' :
           'Static content (no Jekyll processing detected)',
         indicators: jekyllIndicators
       };
@@ -673,14 +673,14 @@ class FirebaseValidator {
     try {
       const response = await fetch(url, { method: 'HEAD' });
       const headers = response.headers;
-      
+
       const firebaseHeaders = {
         'server': headers.get('server'),
         'x-cloud-trace-context': headers.get('x-cloud-trace-context'),
         'alt-svc': headers.get('alt-svc')
       };
 
-      const isFirebase = url.includes('.web.app') || 
+      const isFirebase = url.includes('.web.app') ||
                         url.includes('.firebaseapp.com') ||
                         firebaseHeaders['server']?.includes('Google Frontend');
 
@@ -720,8 +720,8 @@ class FirebaseValidator {
 
       return {
         passed: true, // Hosting rules are optional
-        details: rulesWorking > 0 ? 
-          `${rulesWorking} hosting rules appear to be working` : 
+        details: rulesWorking > 0 ?
+          `${rulesWorking} hosting rules appear to be working` :
           'No custom hosting rules detected (optional)',
         rulesWorking
       };
@@ -737,14 +737,14 @@ class FirebaseValidator {
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname;
-      
-      const isCustomDomain = !hostname.includes('.web.app') && 
+
+      const isCustomDomain = !hostname.includes('.web.app') &&
                             !hostname.includes('.firebaseapp.com');
-      
+
       return {
         passed: true, // Custom domains are optional
-        details: isCustomDomain ? 
-          'Custom domain configured' : 
+        details: isCustomDomain ?
+          'Custom domain configured' :
           'Using default Firebase domain',
         hostname,
         isCustomDomain
@@ -761,14 +761,14 @@ class FirebaseValidator {
     try {
       const response = await fetch(url, { method: 'HEAD' });
       const cacheControl = response.headers.get('cache-control');
-      const cdnHeaders = response.headers.get('cf-ray') || 
+      const cdnHeaders = response.headers.get('cf-ray') ||
                         response.headers.get('x-served-by') ||
                         response.headers.get('server');
 
       return {
         passed: !!cacheControl,
-        details: cacheControl ? 
-          'CDN caching headers present' : 
+        details: cacheControl ?
+          'CDN caching headers present' :
           'No CDN caching headers detected',
         cacheControl,
         cdnHeaders
@@ -792,7 +792,7 @@ class FirebaseValidator {
 
       // Basic SSL check (browser handles the validation)
       const response = await fetch(url, { method: 'HEAD' });
-      
+
       return {
         passed: response.ok,
         details: 'SSL certificate appears valid',
@@ -821,7 +821,7 @@ class FirebaseValidator {
         try {
           const response = await fetch(`${url}${test.path}`, { method: 'HEAD' });
           const cacheControl = response.headers.get('cache-control');
-          
+
           if (cacheControl) {
             cachingConfigured++;
           }
@@ -832,8 +832,8 @@ class FirebaseValidator {
 
       return {
         passed: cachingConfigured > 0,
-        details: cachingConfigured > 0 ? 
-          'Caching rules configured' : 
+        details: cachingConfigured > 0 ?
+          'Caching rules configured' :
           'No caching headers detected',
         cachingConfigured
       };

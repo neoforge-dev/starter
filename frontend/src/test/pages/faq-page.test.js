@@ -17,7 +17,7 @@ describe("FAQ Page", () => {
     // Create the real faq-page element
     element = document.createElement('faq-page');
     container.appendChild(element);
-    
+
     // Wait for component to be fully rendered
     await element.updateComplete;
   });

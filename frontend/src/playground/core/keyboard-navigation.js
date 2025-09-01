@@ -1,8 +1,8 @@
 /**
  * Keyboard Navigation Service for Playground
- * 
+ *
  * Provides lightning-fast keyboard shortcuts for developer productivity:
- * - Component switching (Ctrl+1-9, Arrow keys)  
+ * - Component switching (Ctrl+1-9, Arrow keys)
  * - Panel toggling (Ctrl+P, Ctrl+C, Ctrl+R)
  * - Search activation (/)
  * - Code copying (Ctrl+Shift+C)
@@ -16,7 +16,7 @@ export class KeyboardNavigation {
     this.isSearchFocused = false;
     this.recentComponents = [];
     this.currentComponentIndex = -1;
-    
+
     this.initializeShortcuts();
     this.bindKeyboardEvents();
   }
@@ -50,15 +50,15 @@ export class KeyboardNavigation {
     // Search and navigation
     this.shortcuts.set('Slash', () => this.activateSearch());
     this.shortcuts.set('Escape', () => this.handleEscape());
-    
+
     // Code copying
     this.shortcuts.set('KeyC+ctrlKey+shiftKey', () => this.copyGeneratedCode());
-    
+
     // Quick actions
     this.shortcuts.set('KeyH+ctrlKey', () => this.showHelpDialog());
     this.shortcuts.set('KeyE+ctrlKey', () => this.exportPlaygroundConfig());
     this.shortcuts.set('KeyI+ctrlKey', () => this.importPlaygroundConfig());
-    
+
     // Recent components
     this.shortcuts.set('Tab+ctrlKey', () => this.switchToRecentComponent());
   }
@@ -75,7 +75,7 @@ export class KeyboardNavigation {
 
       const shortcutKey = this.getShortcutKey(e);
       const handler = this.shortcuts.get(shortcutKey);
-      
+
       if (handler) {
         e.preventDefault();
         e.stopPropagation();
@@ -97,8 +97,8 @@ export class KeyboardNavigation {
   isTypingInInput(e) {
     const activeElement = document.activeElement;
     return activeElement && (
-      activeElement.tagName === 'INPUT' || 
-      activeElement.tagName === 'TEXTAREA' || 
+      activeElement.tagName === 'INPUT' ||
+      activeElement.tagName === 'TEXTAREA' ||
       activeElement.contentEditable === 'true'
     );
   }
@@ -122,12 +122,12 @@ export class KeyboardNavigation {
     let key = e.code || e.key;
     if (e.key === '/') key = 'Slash';
     if (e.key === 'Escape') key = 'Escape';
-    
+
     const modifiers = [];
     if (e.ctrlKey || e.metaKey) modifiers.push('ctrlKey');
     if (e.shiftKey) modifiers.push('shiftKey');
     if (e.altKey) modifiers.push('altKey');
-    
+
     return modifiers.length > 0 ? `${key}+${modifiers.join('+')}` : key;
   }
 
@@ -147,7 +147,7 @@ export class KeyboardNavigation {
    */
   navigateComponent(direction) {
     const componentButtons = Array.from(document.querySelectorAll('.component-button:not([style*="display: none"])'));
-    
+
     if (componentButtons.length === 0) return;
 
     let newIndex;
@@ -157,7 +157,7 @@ export class KeyboardNavigation {
       newIndex = this.currentComponentIndex - 1;
       if (newIndex < 0) newIndex = componentButtons.length - 1;
     }
-    
+
     this.currentComponentIndex = newIndex;
     componentButtons[newIndex].click();
     componentButtons[newIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -169,16 +169,16 @@ export class KeyboardNavigation {
   togglePanel(panelId) {
     const panel = document.getElementById(panelId);
     const isVisible = panel && panel.style.display !== 'none';
-    
+
     if (this.app.togglePanel) {
       this.app.togglePanel(panelId);
-      
+
       const panelNames = {
         'props-panel': 'Properties',
         'code-panel': 'Code',
         'responsive-panel': 'Responsive'
       };
-      
+
       this.showTooltip(`${panelNames[panelId]} panel ${isVisible ? 'hidden' : 'shown'}`, 'info');
     }
   }
@@ -203,7 +203,7 @@ export class KeyboardNavigation {
       const searchInput = document.getElementById('component-search');
       searchInput.blur();
       searchInput.value = '';
-      
+
       // Clear search filter
       if (this.app.filterComponents) {
         this.app.filterComponents('');
@@ -247,14 +247,14 @@ export class KeyboardNavigation {
             <div class="shortcut-item"><kbd>Ctrl + ↑↓</kbd> Navigate up/down</div>
             <div class="shortcut-item"><kbd>Ctrl + Tab</kbd> Recent component</div>
           </div>
-          
+
           <div class="shortcut-category">
             <h4>Panel Controls</h4>
             <div class="shortcut-item"><kbd>Ctrl + P</kbd> Toggle Properties</div>
             <div class="shortcut-item"><kbd>Ctrl + C</kbd> Toggle Code View</div>
             <div class="shortcut-item"><kbd>Ctrl + R</kbd> Toggle Responsive</div>
           </div>
-          
+
           <div class="shortcut-category">
             <h4>Actions</h4>
             <div class="shortcut-item"><kbd>/</kbd> Activate Search</div>
@@ -265,7 +265,7 @@ export class KeyboardNavigation {
         </div>
       </div>
     `;
-    
+
     this.showModal('Keyboard Shortcuts', helpContent);
   }
 
@@ -287,12 +287,12 @@ export class KeyboardNavigation {
 
     const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement('a');
     a.href = url;
     a.download = `playground-config-${Date.now()}.json`;
     a.click();
-    
+
     URL.revokeObjectURL(url);
     this.showTooltip('Configuration exported', 'success');
   }
@@ -304,11 +304,11 @@ export class KeyboardNavigation {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    
+
     input.onchange = (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
@@ -321,7 +321,7 @@ export class KeyboardNavigation {
       };
       reader.readAsText(file);
     };
-    
+
     input.click();
   }
 
@@ -345,15 +345,15 @@ export class KeyboardNavigation {
    */
   addToRecentComponents(category, name) {
     const component = { category, name, timestamp: Date.now() };
-    
+
     // Remove if already exists
     this.recentComponents = this.recentComponents.filter(
       c => !(c.category === category && c.name === name)
     );
-    
+
     // Add to front
     this.recentComponents.unshift(component);
-    
+
     // Keep only last 5
     if (this.recentComponents.length > 5) {
       this.recentComponents.pop();
@@ -371,7 +371,7 @@ export class KeyboardNavigation {
     const tooltip = document.createElement('div');
     tooltip.className = `keyboard-tooltip tooltip-${type}`;
     tooltip.textContent = message;
-    
+
     // Style the tooltip
     Object.assign(tooltip.style, {
       position: 'fixed',
@@ -391,7 +391,7 @@ export class KeyboardNavigation {
     });
 
     document.body.appendChild(tooltip);
-    
+
     // Animate in
     requestAnimationFrame(() => {
       tooltip.style.opacity = '1';
@@ -416,7 +416,7 @@ export class KeyboardNavigation {
 
     const modal = document.createElement('div');
     modal.className = 'keyboard-modal';
-    
+
     modal.innerHTML = `
       <div class="modal-backdrop"></div>
       <div class="modal-content">
@@ -429,7 +429,7 @@ export class KeyboardNavigation {
         </div>
       </div>
     `;
-    
+
     // Style the modal
     const style = document.createElement('style');
     style.textContent = `
@@ -515,19 +515,19 @@ export class KeyboardNavigation {
         font-family: monospace;
       }
     `;
-    
+
     document.head.appendChild(style);
     document.body.appendChild(modal);
-    
+
     // Close modal handlers
     const closeModal = () => {
       modal.remove();
       style.remove();
     };
-    
+
     modal.querySelector('.modal-close').addEventListener('click', closeModal);
     modal.querySelector('.modal-backdrop').addEventListener('click', closeModal);
-    
+
     // Close with Escape
     const escapeHandler = (e) => {
       if (e.key === 'Escape') {
@@ -554,7 +554,7 @@ export class KeyboardNavigation {
       const item = button.closest('.component-item');
       return item && item.dataset.category === category && item.dataset.component === name;
     });
-    
+
     this.addToRecentComponents(category, name);
   }
 }

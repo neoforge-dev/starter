@@ -7,7 +7,7 @@ import "../../atoms/badge/badge.js";
 /**
  * Navigation link with icon, text, badge, and active state support
  * @element neo-navigation-link
- * 
+ *
  * @prop {string} href - Link URL
  * @prop {string} text - Link text
  * @prop {string} icon - Icon name (optional)
@@ -25,7 +25,7 @@ import "../../atoms/badge/badge.js";
  * @prop {boolean} download - Whether link triggers download
  * @prop {string} downloadName - Download filename
  * @prop {boolean} exact - Whether active matching should be exact
- * 
+ *
  * @fires neo-navigation-click - When link is clicked
  * @fires neo-navigation-focus - When link receives focus
  * @fires neo-navigation-blur - When link loses focus
@@ -279,7 +279,7 @@ export class NeoNavigationLink extends BaseComponent {
   connectedCallback() {
     super.connectedCallback();
     this._checkCurrentPage();
-    
+
     // Listen for navigation events to update active state
     window.addEventListener('popstate', this._handleNavigationChange.bind(this));
   }
@@ -424,7 +424,7 @@ export class NeoNavigationLink extends BaseComponent {
 
   render() {
     const isActive = this.active || this._isCurrentPage;
-    
+
     const linkClasses = [
       'nav-link',
       `variant-${this.variant}`,
@@ -462,7 +462,7 @@ export class NeoNavigationLink extends BaseComponent {
     ` : '';
 
     const badgeElement = this.badge ? html`
-      <neo-badge 
+      <neo-badge
         class="nav-badge"
         variant="${this.badgeVariant}"
         size="sm">
@@ -480,21 +480,21 @@ export class NeoNavigationLink extends BaseComponent {
     `;
 
     return html`
-      <a 
+      <a
         class="${linkClasses}"
-        ${Object.entries(cleanAttributes).map(([key, value]) => 
+        ${Object.entries(cleanAttributes).map(([key, value]) =>
           html`${key}="${value}"`
         ).join(' ')}
         @click="${this._handleClick}"
         @focus="${this._handleFocus}"
         @blur="${this._handleBlur}">
-        
+
         <div class="badge-container">
           ${linkContent}
           ${badgeElement}
         </div>
       </a>
-      
+
       ${this.description ? html`
         <span id="${this.text}-desc" class="sr-only">
           ${this.description}

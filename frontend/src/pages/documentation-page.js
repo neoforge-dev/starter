@@ -1,4 +1,4 @@
-import { 
+import {
   html,
   css,
  } from 'lit';

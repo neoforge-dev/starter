@@ -17,36 +17,36 @@ data:
     node.data: true
     node.master: true
     node.ingest: true
-    
+
     # Network settings
     network.host: 0.0.0.0
     http.port: 9200
     transport.tcp.port: 9300
-    
+
     # Discovery settings for single node setup
     discovery.type: single-node
-    
+
     # Security settings
     xpack.security.enabled: false
     xpack.monitoring.collection.enabled: false
-    
+
     # Performance settings
     indices.memory.index_buffer_size: 20%
     indices.memory.min_index_buffer_size: 96mb
-    
+
     # Indexing settings for log data
     action.auto_create_index: "+*"
     indices.fielddata.cache.size: 30%
-    
+
     # Compression
     index.codec: best_compression
-    
+
     # Log retention settings
     cluster.routing.allocation.disk.threshold_enabled: true
     cluster.routing.allocation.disk.watermark.low: 85%
     cluster.routing.allocation.disk.watermark.high: 90%
     cluster.routing.allocation.disk.watermark.flood_stage: 95%
-    
+
   jvm.options: |
     -Xms2g
     -Xmx2g

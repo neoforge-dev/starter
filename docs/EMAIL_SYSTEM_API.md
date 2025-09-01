@@ -447,7 +447,7 @@ CREATE TABLE email_tracking (
     subject VARCHAR(500),
     template_name VARCHAR(100),
     status VARCHAR(50) NOT NULL,
-    
+
     -- Timestamps
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -458,7 +458,7 @@ CREATE TABLE email_tracking (
     first_clicked_at TIMESTAMP,
     last_clicked_at TIMESTAMP,
     bounced_at TIMESTAMP,
-    
+
     -- Metadata
     provider VARCHAR(50),
     provider_message_id VARCHAR(255),
@@ -473,7 +473,7 @@ CREATE TABLE email_events (
     event_type VARCHAR(50) NOT NULL,
     occurred_at TIMESTAMP NOT NULL DEFAULT NOW(),
     event_metadata JSONB,
-    
+
     -- Deduplication
     event_signature VARCHAR(64),  -- SHA256 hash for deduplication
     UNIQUE(email_id, event_signature)
@@ -839,7 +839,7 @@ services:
     depends_on:
       - db
       - redis
-    
+
   worker:
     build: .
     command: python -m app.worker.run_worker
@@ -849,7 +849,7 @@ services:
     depends_on:
       - db
       - redis
-    
+
   db:
     image: postgres:15
     environment:
@@ -858,7 +858,7 @@ services:
       POSTGRES_PASSWORD: password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    
+
   redis:
     image: redis:7-alpine
     volumes:

@@ -1,6 +1,6 @@
 /**
  * Session Memory System for Playground
- * 
+ *
  * Provides intelligent persistence and memory:
  * - Component state memory across sessions
  * - Property value persistence per component
@@ -17,7 +17,7 @@ export class SessionMemory {
     this.componentUsage = {};
     this.propertyDefaults = {};
     this.panelPreferences = {};
-    
+
     this.initializeMemory();
   }
 
@@ -120,7 +120,7 @@ export class SessionMemory {
       localStorage.setItem(this.storagePrefix + 'property-defaults', JSON.stringify(this.propertyDefaults));
       localStorage.setItem(this.storagePrefix + 'panel-preferences', JSON.stringify(this.panelPreferences));
       localStorage.setItem(this.storagePrefix + 'last-session', JSON.stringify(this.memoryData));
-      
+
       console.log('Memory data saved successfully');
     } catch (e) {
       console.warn('Failed to save memory data:', e);
@@ -133,7 +133,7 @@ export class SessionMemory {
   restoreSession() {
     // Restore panel states
     this.restorePanelStates();
-    
+
     // Restore last component if available
     if (this.memoryData.lastComponent) {
       setTimeout(() => {
@@ -155,7 +155,7 @@ export class SessionMemory {
       if (panel) {
         panel.style.display = isVisible ? 'block' : 'none';
         panel.classList.toggle('active', isVisible);
-        
+
         // Update button state
         const button = document.querySelector(`[onclick*="${panelId}"]`);
         if (button) {
@@ -175,7 +175,7 @@ export class SessionMemory {
    */
   recordComponentUsage(category, name) {
     const componentKey = `${category}-${name}`;
-    
+
     if (!this.componentUsage[componentKey]) {
       this.componentUsage[componentKey] = {
         category,
@@ -186,16 +186,16 @@ export class SessionMemory {
         startTime: Date.now()
       };
     }
-    
+
     const usage = this.componentUsage[componentKey];
     usage.count++;
     usage.lastUsed = Date.now();
     usage.startTime = Date.now();
-    
+
     // Update memory data
     this.memoryData.lastComponent = { category, name };
     this.memoryData.lastComponentStartTime = Date.now();
-    
+
     console.log(`Recorded usage for ${name}:`, usage.count, 'times');
   }
 
@@ -205,7 +205,7 @@ export class SessionMemory {
   recordTimeSpent(category, name) {
     const componentKey = `${category}-${name}`;
     const usage = this.componentUsage[componentKey];
-    
+
     if (usage && usage.startTime) {
       const timeSpent = Date.now() - usage.startTime;
       usage.totalTimeSpent += timeSpent;
@@ -218,11 +218,11 @@ export class SessionMemory {
    */
   rememberPropertyValues(category, name, properties) {
     const componentKey = `${category}-${name}`;
-    
+
     if (!this.propertyDefaults[componentKey]) {
       this.propertyDefaults[componentKey] = {};
     }
-    
+
     // Update remembered properties
     Object.entries(properties).forEach(([prop, value]) => {
       // Only remember if different from default
@@ -230,10 +230,10 @@ export class SessionMemory {
         this.propertyDefaults[componentKey][prop] = value;
       }
     });
-    
+
     // Update memory data
     this.memoryData.lastProps = properties;
-    
+
     console.log(`Remembered properties for ${name}:`, this.propertyDefaults[componentKey]);
   }
 
@@ -243,7 +243,7 @@ export class SessionMemory {
   getRememberedProperties(category, name) {
     const componentKey = `${category}-${name}`;
     const remembered = this.propertyDefaults[componentKey] || {};
-    
+
     console.log(`Retrieved remembered properties for ${name}:`, remembered);
     return remembered;
   }
@@ -263,12 +263,12 @@ export class SessionMemory {
     const componentKey = `${category}-${name}`;
     const usage = this.componentUsage[componentKey];
     const remembered = this.propertyDefaults[componentKey] || {};
-    
+
     // If this component has been used before, return remembered values
     if (usage && usage.count > 0) {
       return remembered;
     }
-    
+
     // For new components, suggest popular property combinations
     return this.getSuggestedDefaults(category, name);
   }
@@ -278,7 +278,7 @@ export class SessionMemory {
    */
   getSuggestedDefaults(category, name) {
     const suggestions = {};
-    
+
     // Component-specific suggestions based on common patterns
     const defaultPatterns = {
       'button': {
@@ -360,12 +360,12 @@ export class SessionMemory {
    */
   getUsageAnalytics() {
     const components = Object.values(this.componentUsage);
-    
+
     return {
       totalComponents: components.length,
       totalUsage: components.reduce((sum, usage) => sum + usage.count, 0),
       totalTimeSpent: components.reduce((sum, usage) => sum + usage.totalTimeSpent, 0),
-      averageTimePerComponent: components.length > 0 ? 
+      averageTimePerComponent: components.length > 0 ?
         components.reduce((sum, usage) => sum + usage.totalTimeSpent, 0) / components.length : 0,
       mostUsed: components.sort((a, b) => b.count - a.count)[0],
       sessionDuration: Date.now() - this.memoryData.sessionStartTime
@@ -378,7 +378,7 @@ export class SessionMemory {
   createPropertyPresets(category, name) {
     const componentKey = `${category}-${name}`;
     const usage = this.componentUsage[componentKey];
-    
+
     if (!usage || usage.count < 3) {
       return this.getDefaultPresets(category, name);
     }
@@ -455,14 +455,14 @@ export class SessionMemory {
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement('a');
     a.href = url;
     a.download = `playground-memory-${Date.now()}.json`;
     a.click();
-    
+
     URL.revokeObjectURL(url);
-    
+
     console.log('Memory data exported');
     return exportData;
   }
@@ -476,7 +476,7 @@ export class SessionMemory {
         this.componentUsage = { ...this.componentUsage, ...data.componentUsage };
         this.propertyDefaults = { ...this.propertyDefaults, ...data.propertyDefaults };
         this.panelPreferences = { ...this.panelPreferences, ...data.panelPreferences };
-        
+
         this.saveMemoryData();
         console.log('Memory data imported successfully');
         return true;
@@ -518,7 +518,7 @@ export class SessionMemory {
    * Format component name for display
    */
   formatComponentName(name) {
-    return name.split('-').map(part => 
+    return name.split('-').map(part =>
       part.charAt(0).toUpperCase() + part.slice(1)
     ).join(' ');
   }
@@ -528,7 +528,7 @@ export class SessionMemory {
    */
   getMemoryStats() {
     const analytics = this.getUsageAnalytics();
-    
+
     return {
       ...analytics,
       memorySize: JSON.stringify({

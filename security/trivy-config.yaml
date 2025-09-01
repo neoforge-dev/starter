@@ -25,22 +25,22 @@ vulnerability:
   type:
     - os        # OS packages
     - library   # Language-specific packages
-  
+
   # Severity levels to report (UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL)
   severity:
     - CRITICAL
-    - HIGH  
+    - HIGH
     - MEDIUM
     - LOW
-  
+
   # Ignore unfixed vulnerabilities
   ignore-unfixed: false
-  
+
   # Ignore vulnerabilities with these IDs (CVE format)
   ignore:
     # Add specific CVEs to ignore if needed for exceptions
     # - CVE-2023-12345
-  
+
   # VEX (Vulnerability Exploitability eXchange) settings
   vex:
     enabled: true
@@ -54,7 +54,7 @@ secret:
         regex: '(?i)(?:aws.{0,20})?(?-i)["\''`]?(?i)(AKIA[0-9A-Z]{16})["\''`]?'
         keywords:
           - akia
-      - id: aws-secret-key  
+      - id: aws-secret-key
         regex: '(?i)(?:aws.{0,20})?(?-i)["\''`]?([0-9a-zA-Z/+]{40})["\''`]?'
         keywords:
           - aws
@@ -78,7 +78,7 @@ secret:
         regex: '(?i)(postgres|mysql|mongodb)://[^\s]+'
         keywords:
           - postgres://
-          - mysql://  
+          - mysql://
           - mongodb://
 
 # License detection settings
@@ -121,7 +121,7 @@ misconfiguration:
 
 # SBOM (Software Bill of Materials) generation
 sbom:
-  # SBOM format (spdx, cyclonedx)  
+  # SBOM format (spdx, cyclonedx)
   format: spdx-json
   # Include vulnerability information in SBOM
   include-vuln: true
@@ -133,7 +133,7 @@ format:
     {
       "SchemaVersion": 2,
       "ArtifactName": "{{ .ArtifactName }}",
-      "ArtifactType": "{{ .ArtifactType }}",  
+      "ArtifactType": "{{ .ArtifactType }}",
       "CreatedAt": "{{ .CreatedAt }}",
       "Results": {{ .Results | toJson }}
     }
@@ -141,7 +141,7 @@ format:
 # File patterns to skip during scanning
 skip-dirs:
   - .git
-  - node_modules  
+  - node_modules
   - __pycache__
   - .pytest_cache
   - htmlcov
@@ -153,7 +153,7 @@ skip-dirs:
 
 skip-files:
   - "*.min.js"
-  - "*.min.css" 
+  - "*.min.css"
   - "*.map"
   - "*.lock"
   - "*.log"
@@ -162,7 +162,7 @@ skip-files:
 cache:
   # Cache directory
   dir: /tmp/trivy-cache
-  # Clear cache before scanning  
+  # Clear cache before scanning
   clear: false
   # TTL for cached results
   ttl: 168h # 1 week

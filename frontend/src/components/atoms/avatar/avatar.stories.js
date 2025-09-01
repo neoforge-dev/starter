@@ -53,7 +53,7 @@ Use this component to display user avatars in headers, cards, lists, and other U
 
 const Template = (args) => {
   return `
-    <neo-avatar 
+    <neo-avatar
       ${args.src ? `src="${args.src}"` : ""}
       ${args.name ? `name="${args.name}"` : ""}
       ${args.size ? `size="${args.size}"` : ""}

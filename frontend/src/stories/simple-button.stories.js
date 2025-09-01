@@ -10,7 +10,7 @@ export default {
 // Use a function that returns a string instead of a template literal
 const Template = (args) => {
   return `<button
-    style="background-color: ${args.backgroundColor}; 
+    style="background-color: ${args.backgroundColor};
            padding: 10px 20px;
            border-radius: 4px;
            border: none;

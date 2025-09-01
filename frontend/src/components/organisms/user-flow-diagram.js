@@ -416,17 +416,17 @@ export class UserFlowDiagram extends LitElement {
     this.zoomLevel = 1;
     this.showMetrics = true;
     this.minFlowThreshold = 5;
-    
+
     // Flow data
     this.nodes = new Map();
     this.edges = [];
     this.paths = [];
-    
+
     // Interaction state
     this.isDragging = false;
     this.dragStart = { x: 0, y: 0 };
     this.panOffset = { x: 0, y: 0 };
-    
+
     this.resizeObserver = null;
   }
 
@@ -467,12 +467,12 @@ export class UserFlowDiagram extends LitElement {
 
   async loadFlowData() {
     this.loading = true;
-    
+
     try {
       const flowData = await this.fetchFlowAnalytics();
       this.processFlowData(flowData);
       this.generateLayout();
-      
+
     } catch (error) {
       console.error('[UserFlowDiagram] Error loading flow data:', error);
     } finally {
@@ -483,7 +483,7 @@ export class UserFlowDiagram extends LitElement {
   async fetchFlowAnalytics() {
     const endDate = new Date();
     const startDate = new Date();
-    
+
     switch (this.timeRange) {
       case '1d':
         startDate.setDate(endDate.getDate() - 1);
@@ -524,7 +524,7 @@ export class UserFlowDiagram extends LitElement {
       if (!sessionFlows.has(sessionId)) {
         sessionFlows.set(sessionId, []);
       }
-      
+
       sessionFlows.get(sessionId).push({
         path: event.dimensions.page_path || '/',
         type: event.dimensions.event_type,
@@ -537,7 +537,7 @@ export class UserFlowDiagram extends LitElement {
     sessionFlows.forEach((events, sessionId) => {
       // Sort events by timestamp
       events.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      
+
       // Create nodes for each page
       events.forEach(event => {
         const pageKey = event.path;
@@ -553,7 +553,7 @@ export class UserFlowDiagram extends LitElement {
             type: this.getNodeType(pageKey),
           });
         }
-        
+
         const node = pageNodes.get(pageKey);
         node.visits += event.count;
         node.uniqueSessions.add(sessionId);
@@ -563,9 +563,9 @@ export class UserFlowDiagram extends LitElement {
       for (let i = 0; i < events.length - 1; i++) {
         const fromPage = events[i].path;
         const toPage = events[i + 1].path;
-        
+
         if (fromPage === toPage) continue; // Skip self-loops
-        
+
         const transitionKey = `${fromPage} -> ${toPage}`;
         if (!transitions.has(transitionKey)) {
           transitions.set(transitionKey, {
@@ -575,7 +575,7 @@ export class UserFlowDiagram extends LitElement {
             sessions: new Set(),
           });
         }
-        
+
         const transition = transitions.get(transitionKey);
         transition.count++;
         transition.sessions.add(sessionId);
@@ -615,7 +615,7 @@ export class UserFlowDiagram extends LitElement {
       '/checkout': 'Checkout',
       '/confirmation': 'Confirmation',
     };
-    
+
     return titles[path] || path.replace(/\//g, '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown Page';
   }
 
@@ -628,7 +628,7 @@ export class UserFlowDiagram extends LitElement {
   calculateMetrics() {
     // Calculate outflow percentages for edges
     const outflowTotals = new Map();
-    
+
     this.edges.forEach(edge => {
       if (!outflowTotals.has(edge.from)) {
         outflowTotals.set(edge.from, 0);
@@ -664,10 +664,10 @@ export class UserFlowDiagram extends LitElement {
     // Simple Sankey-like layout
     const layers = new Map();
     const visited = new Set();
-    
+
     // Identify layers using BFS
     const queue = [];
-    
+
     // Find start nodes (nodes with no incoming edges)
     this.nodes.forEach(node => {
       const hasIncoming = this.edges.some(e => e.to === node.path);
@@ -704,7 +704,7 @@ export class UserFlowDiagram extends LitElement {
 
     layers.forEach((nodesInLayer, layerIndex) => {
       const layerHeight = this.height / (nodesInLayer.length + 1);
-      
+
       nodesInLayer.forEach((node, nodeIndex) => {
         node.x = layerIndex * layerWidth + 50;
         node.y = (nodeIndex + 1) * layerHeight - nodeHeight / 2;
@@ -738,12 +738,12 @@ export class UserFlowDiagram extends LitElement {
           const dx = nodes[j].x - nodes[i].x;
           const dy = nodes[j].y - nodes[i].y;
           const distance = Math.sqrt(dx * dx + dy * dy) || 1;
-          
+
           if (distance < 200) {
             const force = 1000 / (distance * distance);
             const fx = (dx / distance) * force;
             const fy = (dy / distance) * force;
-            
+
             nodes[i].x -= fx * 0.1;
             nodes[i].y -= fy * 0.1;
             nodes[j].x += fx * 0.1;
@@ -756,16 +756,16 @@ export class UserFlowDiagram extends LitElement {
       this.edges.forEach(edge => {
         const fromNode = this.nodes.get(edge.from);
         const toNode = this.nodes.get(edge.to);
-        
+
         if (fromNode && toNode) {
           const dx = toNode.x - fromNode.x;
           const dy = toNode.y - fromNode.y;
           const distance = Math.sqrt(dx * dx + dy * dy) || 1;
-          
+
           const force = distance * 0.01;
           const fx = (dx / distance) * force;
           const fy = (dy / distance) * force;
-          
+
           fromNode.x += fx * 0.5;
           fromNode.y += fy * 0.5;
           toNode.x -= fx * 0.5;
@@ -785,7 +785,7 @@ export class UserFlowDiagram extends LitElement {
     // Top-down hierarchical layout
     const levels = new Map();
     const visited = new Set();
-    
+
     // Find root nodes and create levels
     this.nodes.forEach(node => {
       if (node.type === 'start') {
@@ -798,11 +798,11 @@ export class UserFlowDiagram extends LitElement {
     let currentLevel = 0;
     while (levels.has(currentLevel)) {
       const nextLevel = currentLevel + 1;
-      
+
       levels.get(currentLevel).forEach(node => {
         if (visited.has(node.path)) return;
         visited.add(node.path);
-        
+
         this.edges
           .filter(e => e.from === node.path)
           .forEach(edge => {
@@ -815,16 +815,16 @@ export class UserFlowDiagram extends LitElement {
             }
           });
       });
-      
+
       currentLevel++;
     }
 
     // Position nodes
     const levelHeight = this.height / (levels.size || 1);
-    
+
     levels.forEach((nodesInLevel, levelIndex) => {
       const nodeWidth = this.width / (nodesInLevel.length + 1);
-      
+
       nodesInLevel.forEach((node, nodeIndex) => {
         node.x = (nodeIndex + 1) * nodeWidth - 75;
         node.y = levelIndex * levelHeight + 50;
@@ -838,13 +838,13 @@ export class UserFlowDiagram extends LitElement {
     if (this.isDragging) {
       const dx = event.clientX - this.dragStart.x;
       const dy = event.clientY - this.dragStart.y;
-      
+
       this.panOffset.x += dx;
       this.panOffset.y += dy;
-      
+
       this.dragStart.x = event.clientX;
       this.dragStart.y = event.clientY;
-      
+
       this.requestUpdate();
     }
   }
@@ -861,16 +861,16 @@ export class UserFlowDiagram extends LitElement {
 
   handleWheel(event) {
     event.preventDefault();
-    
+
     const delta = event.deltaY > 0 ? 0.9 : 1.1;
     this.zoomLevel = Math.max(0.2, Math.min(3, this.zoomLevel * delta));
-    
+
     this.requestUpdate();
   }
 
   handleNodeClick(node, event) {
     event.stopPropagation();
-    
+
     if (this.highlightedNode === node) {
       this.highlightedNode = null;
       this.selectedPath = null;
@@ -878,7 +878,7 @@ export class UserFlowDiagram extends LitElement {
       this.highlightedNode = node;
       this.selectedPath = this.findPathsFromNode(node);
     }
-    
+
     this.dispatchEvent(new CustomEvent('node-selected', {
       detail: { node, paths: this.selectedPath },
       bubbles: true,
@@ -889,17 +889,17 @@ export class UserFlowDiagram extends LitElement {
   findPathsFromNode(node) {
     const paths = [];
     const visited = new Set();
-    
+
     const dfs = (currentPath, currentNode) => {
       if (visited.has(currentNode.path) || currentPath.length > 5) {
         return;
       }
-      
+
       visited.add(currentNode.path);
       currentPath.push(currentNode);
-      
+
       const outgoingEdges = this.edges.filter(e => e.from === currentNode.path);
-      
+
       if (outgoingEdges.length === 0) {
         paths.push([...currentPath]);
       } else {
@@ -911,7 +911,7 @@ export class UserFlowDiagram extends LitElement {
         });
       }
     };
-    
+
     dfs([], node);
     return paths.slice(0, 5); // Limit to top 5 paths
   }
@@ -946,7 +946,7 @@ export class UserFlowDiagram extends LitElement {
   getEdgeThickness(edge) {
     const maxSessions = Math.max(...this.edges.map(e => e.sessions));
     const ratio = edge.sessions / maxSessions;
-    
+
     if (ratio > 0.7) return 'thick';
     if (ratio > 0.3) return 'medium';
     return 'thin';
@@ -955,44 +955,44 @@ export class UserFlowDiagram extends LitElement {
   renderEdge(edge) {
     const fromNode = this.nodes.get(edge.from);
     const toNode = this.nodes.get(edge.to);
-    
+
     if (!fromNode || !toNode) return '';
-    
+
     const x1 = fromNode.x + fromNode.width;
     const y1 = fromNode.y + fromNode.height / 2;
     const x2 = toNode.x;
     const y2 = toNode.y + toNode.height / 2;
-    
+
     // Calculate control points for curved edges
     const midX = (x1 + x2) / 2;
     const curvature = Math.abs(y2 - y1) * 0.3;
-    
+
     const pathD = `M ${x1} ${y1} Q ${midX} ${y1 - curvature} ${x2} ${y2}`;
     const thickness = this.getEdgeThickness(edge);
-    
-    const isHighlighted = this.highlightedNode && 
+
+    const isHighlighted = this.highlightedNode &&
       (this.highlightedNode.path === edge.from || this.highlightedNode.path === edge.to);
 
     return html`
-      <svg 
-        class="flow-edge" 
+      <svg
+        class="flow-edge"
         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"
       >
         <defs>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+          <marker id="arrowhead" markerWidth="10" markerHeight="7"
                   refX="10" refY="3.5" orient="auto">
-            <polygon class="edge-arrow ${isHighlighted ? 'highlighted' : ''}" 
+            <polygon class="edge-arrow ${isHighlighted ? 'highlighted' : ''}"
                      points="0 0, 10 3.5, 0 7" />
           </marker>
         </defs>
-        <path 
+        <path
           class="edge-line ${thickness} ${isHighlighted ? 'highlighted' : ''}"
           d="${pathD}"
           marker-end="url(#arrowhead)"
         />
       </svg>
       ${edge.percentage > 10 ? html`
-        <div 
+        <div
           class="edge-label"
           style="left: ${midX}px; top: ${(y1 + y2) / 2 - 10}px; transform: translateX(-50%);"
         >
@@ -1005,9 +1005,9 @@ export class UserFlowDiagram extends LitElement {
   renderNode(node) {
     const isHighlighted = this.highlightedNode === node;
     const nodeClass = `flow-node ${node.type}-node ${isHighlighted ? 'highlighted' : ''}`;
-    
+
     return html`
-      <div 
+      <div
         class="${nodeClass}"
         style="left: ${node.x}px; top: ${node.y}px; width: ${node.width}px; height: ${node.height}px;"
         @click=${(e) => this.handleNodeClick(node, e)}
@@ -1035,9 +1035,9 @@ export class UserFlowDiagram extends LitElement {
 
   renderPathDetails() {
     if (!this.selectedPath || this.selectedPath.length === 0) return '';
-    
+
     const mainPath = this.selectedPath[0]; // Show the first/main path
-    
+
     return html`
       <div class="path-details">
         <div class="path-title">User Journey from ${this.highlightedNode.title}</div>
@@ -1093,21 +1093,21 @@ export class UserFlowDiagram extends LitElement {
                 <option value="hierarchical">Hierarchical</option>
               </select>
             </div>
-            
+
             <div class="control-group">
               <span class="control-label">Min Flow:</span>
-              <input 
-                type="range" 
+              <input
+                type="range"
                 class="control-slider"
-                min="1" 
-                max="50" 
+                min="1"
+                max="50"
                 .value=${this.minFlowThreshold}
                 @input=${this.handleThresholdChange}
               >
               <span>${this.minFlowThreshold}</span>
             </div>
-            
-            <button 
+
+            <button
               class="toggle-button ${this.showMetrics ? 'active' : ''}"
               @click=${this.toggleMetrics}
             >

@@ -17,7 +17,7 @@ export function fixGridAutoFlow() {
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
     }
-    
+
     /* Fix for dense grid layout */
     .grid[data-auto-flow="dense"] {
       grid-auto-flow: dense;
@@ -58,12 +58,12 @@ export function fixGridAlignment() {
       min-height: 0;
       min-width: 0;
     }
-    
+
     /* Fix for align-content: stretch */
     .grid[data-align-content="stretch"] {
       height: 100%;
     }
-    
+
     /* Fix for justify-content: stretch */
     .grid[data-justify-content="stretch"] {
       width: 100%;
@@ -84,7 +84,7 @@ export function fixGridItemSizing() {
       min-width: 0;
       min-height: 0;
     }
-    
+
     /* Fix for grid item overflow */
     .grid > *[data-overflow] {
       overflow: hidden;

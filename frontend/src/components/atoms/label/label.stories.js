@@ -53,7 +53,7 @@ Use this component to label form inputs, selects, and other form controls. It au
 
 const Template = ({ content, ...args }) => {
   return `
-    <neo-label 
+    <neo-label
       ${args.for ? `for="${args.for}"` : ""}
       ${args.required ? "required" : ""}
       ${args.helpText ? `help-text="${args.helpText}"` : ""}
@@ -103,7 +103,7 @@ SmallSize.args = {
 export const LargeSize = Template.bind({});
 LargeSize.args = {
   content: "Large Label",
-  for: "large-input", 
+  for: "large-input",
   size: "lg",
 };
 
@@ -122,12 +122,12 @@ export const WithFormExample = () => {
         <neo-label for="example-username" required>Username</neo-label>
         <input id="example-username" type="text" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;" />
       </div>
-      
+
       <div>
         <neo-label for="example-email" help-text="We'll use this to send you important updates">Email</neo-label>
         <input id="example-email" type="email" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;" />
       </div>
-      
+
       <div>
         <neo-label for="example-bio" size="lg">Bio</neo-label>
         <textarea id="example-bio" rows="3" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;"></textarea>

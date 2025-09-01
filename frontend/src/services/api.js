@@ -35,14 +35,14 @@ class ApiService {
 
     const { retryCount = 0, params, ...requestOptions } = options;
     const method = requestOptions.method || 'GET';
-    
+
     // Build URL with query parameters if provided
     let url = `${this.baseUrl}${endpoint}`;
     if (params) {
       const queryString = new URLSearchParams(params).toString();
       url = `${url}${queryString ? `?${queryString}` : ""}`;
     }
-    
+
     try {
       const token = authService.getToken();
       const headers = {
@@ -81,8 +81,8 @@ class ApiService {
       }
 
       // Handle server errors with retry for certain methods
-      if (response.status >= 500 && 
-          this.retryConfig.retryMethods.includes(method) && 
+      if (response.status >= 500 &&
+          this.retryConfig.retryMethods.includes(method) &&
           retryCount < this.retryConfig.maxRetries) {
         Logger.warn(`Server error ${response.status}, retrying (${retryCount + 1}/${this.retryConfig.maxRetries})`);
         await this._delay(this.retryConfig.retryDelay * Math.pow(2, retryCount));
@@ -100,7 +100,7 @@ class ApiService {
       // Handle network errors
       if (error.name === 'TypeError' || error.message.includes('fetch')) {
         Logger.warn(`Network error for ${method} ${endpoint}:`, error.message);
-        
+
         // Try to get cached data for GET requests
         if (method === 'GET') {
           try {
@@ -113,7 +113,7 @@ class ApiService {
             Logger.debug('No cached data available', cacheError);
           }
         }
-        
+
         // Queue non-GET requests for later
         if (method !== 'GET' && !navigator.onLine) {
           Logger.info(`Queueing offline action: ${method} ${endpoint}`);
@@ -258,10 +258,10 @@ class ApiService {
   // Request with caching for GET requests
   async requestWithCache(endpoint, options = {}, ttl = 300000) { // 5 minutes default
     const method = options.method || 'GET';
-    
+
     if (method === 'GET') {
       const cacheKey = `api:${endpoint}`;
-      
+
       try {
         const cached = await pwaService.getOfflineData(cacheKey);
         if (cached) {
@@ -274,7 +274,7 @@ class ApiService {
     }
 
     const data = await this.request(endpoint, options);
-    
+
     // Cache successful GET responses
     if (method === 'GET' && data) {
       try {
@@ -292,7 +292,7 @@ class ApiService {
   async bulkRequest(requests, onProgress) {
     const results = [];
     const total = requests.length;
-    
+
     for (let i = 0; i < requests.length; i++) {
       try {
         const result = await this.request(requests[i].endpoint, requests[i].options);
@@ -300,7 +300,7 @@ class ApiService {
       } catch (error) {
         results.push({ success: false, error: error.message, index: i });
       }
-      
+
       if (onProgress) {
         onProgress({
           completed: i + 1,
@@ -309,7 +309,7 @@ class ApiService {
         });
       }
     }
-    
+
     return results;
   }
 
@@ -317,7 +317,7 @@ class ApiService {
   async requestWithTimeout(endpoint, options = {}, timeout = 30000) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
-    
+
     try {
       const result = await this.request(endpoint, {
         ...options,

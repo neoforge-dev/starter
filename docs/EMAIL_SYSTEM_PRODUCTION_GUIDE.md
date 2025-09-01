@@ -208,9 +208,9 @@ WORKER_CONNECTIONS=1000
 
 ```sql
 -- Create production database
-CREATE DATABASE neoforge_prod 
-    WITH ENCODING 'UTF8' 
-    LC_COLLATE='en_US.UTF-8' 
+CREATE DATABASE neoforge_prod
+    WITH ENCODING 'UTF8'
+    LC_COLLATE='en_US.UTF-8'
     LC_CTYPE='en_US.UTF-8';
 
 -- Create application user
@@ -224,9 +224,9 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO neoforge_
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO neoforge_app;
 
 -- Set default privileges for future tables
-ALTER DEFAULT PRIVILEGES IN SCHEMA public 
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO neoforge_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public 
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT USAGE, SELECT ON SEQUENCES TO neoforge_app;
 ```
 
@@ -446,7 +446,7 @@ version: '3.8'
 
 services:
   api:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     image: neoforge/email-api:${VERSION:-latest}
@@ -480,7 +480,7 @@ services:
           cpus: '0.5'
 
   worker:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     image: neoforge/email-api:${VERSION:-latest}
@@ -1075,13 +1075,13 @@ tar -czf "$BACKUP_DIR/config_$DATE.tar.gz" /etc/neoforge/
 
 ```sql
 -- Indexes for common queries
-CREATE INDEX CONCURRENTLY idx_email_tracking_recipient 
+CREATE INDEX CONCURRENTLY idx_email_tracking_recipient
     ON email_tracking (recipient);
 
-CREATE INDEX CONCURRENTLY idx_email_tracking_status_created 
+CREATE INDEX CONCURRENTLY idx_email_tracking_status_created
     ON email_tracking (status, created_at DESC);
 
-CREATE INDEX CONCURRENTLY idx_email_events_email_occurred 
+CREATE INDEX CONCURRENTLY idx_email_events_email_occurred
     ON email_events (email_id, occurred_at DESC);
 
 -- Partition large tables by date

@@ -13,7 +13,7 @@ describe("404 Page", () => {
     // Create the 404-page element
     element = document.createElement('not-found-page');
     container.appendChild(element);
-    
+
     // Wait for component to be fully rendered
     await element.updateComplete;
   });
@@ -32,7 +32,7 @@ describe("404 Page", () => {
   it("should render 404 message", async () => {
     const shadowRoot = element.shadowRoot;
     const heading = shadowRoot.querySelector("h1");
-    
+
     expect(heading).toBeTruthy();
     expect(heading.textContent).toContain("404");
     expect(heading.textContent).toContain("Page Not Found");

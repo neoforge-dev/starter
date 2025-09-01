@@ -48,4 +48,4 @@ If tests can't connect to the database:
 
 1. Ensure the PostgreSQL container is running: `docker compose -f backend/docker-compose.dev.yml ps`
 2. Check the PostgreSQL logs: `docker compose -f backend/docker-compose.dev.yml logs db`
-3. Verify the test database exists: `docker compose -f backend/docker-compose.dev.yml exec db psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname = 'test_db'"` 
+3. Verify the test database exists: `docker compose -f backend/docker-compose.dev.yml exec db psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname = 'test_db'"`

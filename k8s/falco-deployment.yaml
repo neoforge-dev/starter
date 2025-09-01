@@ -73,41 +73,41 @@ metadata:
 data:
   falco.yaml: |
     # Falco configuration for NeoForge platform security monitoring
-    
+
     # Rules files to load
     rules_file:
       - /etc/falco/falco_rules.yaml
       - /etc/falco/k8s_audit_rules.yaml
       - /etc/falco/neoforge_rules.yaml
-    
+
     # Time format for output
     time_format_iso_8601: true
-    
+
     # JSON output for better integration
     json_output: true
     json_include_output_property: true
     json_include_tags_property: true
-    
+
     # Log level (emergency, alert, critical, error, warning, notice, info, debug)
     log_level: info
-    
+
     # Log to stderr
     log_stderr: true
-    
+
     # Log to syslog
     log_syslog: false
-    
+
     # Minimum priority level to output (emergency, alert, critical, error, warning, notice, info, debug)
     priority: info
-    
+
     # Buffered outputs (reduce syscall overhead)
     buffered_outputs: true
-    
+
     # Rate limiting
     outputs:
       rate: 1
       max_burst: 1000
-    
+
     # Syscall event drops
     syscall_event_drops:
       threshold: 10
@@ -116,31 +116,31 @@ data:
         - alert
       rate: 0.03333
       max_burst: 10
-    
+
     # gRPC server settings
     grpc:
       enabled: true
       bind_address: "0.0.0.0:5060"
       threadiness: 8
       max_message_size: 67108864  # 64MB
-    
+
     # gRPC output service
     grpc_output:
       enabled: false
-    
-    # HTTP output service  
+
+    # HTTP output service
     http_output:
       enabled: true
       url: "http://falcosidekick:2801/"
       user_agent: "falco/0.36.0"
-      
+
     # Webserver for health checks
     webserver:
       enabled: true
       listen_port: 8765
       k8s_healthz_endpoint: /healthz
       ssl_enabled: false
-    
+
     # Metadata download settings
     metadata_download:
       max_mb: 100
@@ -161,7 +161,7 @@ data:
   neoforge_rules.yaml: |
     # NeoForge-specific Falco security rules
     # These rules are loaded from the external file we created
-    
+
     # This ConfigMap will be populated by the external falco-rules.yaml file
     # during deployment using kubectl create configmap command
 

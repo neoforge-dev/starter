@@ -107,7 +107,7 @@ log GREEN "✅ Developer experience: Optimized workflow"
 log BLUE ""
 log BLUE "🚀 Next Steps:"
 echo "1. Run: ./scripts/test-suite-manager.sh fast"
-echo "2. Run: ./scripts/test-suite-manager.sh smoke"  
+echo "2. Run: ./scripts/test-suite-manager.sh smoke"
 echo "3. Integrate with your development workflow"
 echo "4. Configure CI/CD with optimized-tests.yml"
 

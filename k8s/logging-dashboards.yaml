@@ -33,7 +33,7 @@ data:
         }
       ]
     }
-  
+
   security-monitoring.json: |
     {
       "version": "8.11.1",
@@ -56,7 +56,7 @@ data:
         }
       ]
     }
-  
+
   performance-analytics.json: |
     {
       "version": "8.11.1",
@@ -79,7 +79,7 @@ data:
         }
       ]
     }
-  
+
   business-insights.json: |
     {
       "version": "8.11.1",
@@ -102,7 +102,7 @@ data:
         }
       ]
     }
-  
+
   error-tracking.json: |
     {
       "version": "8.11.1",
@@ -149,7 +149,7 @@ data:
       "columns": ["@timestamp", "level", "event", "user_id", "ip_address", "security_severity"],
       "sort": [["@timestamp", "desc"]]
     }
-  
+
   failed-requests.json: |
     {
       "title": "Failed HTTP Requests",
@@ -160,7 +160,7 @@ data:
       "columns": ["@timestamp", "method", "path", "status_code", "response_time", "user_id"],
       "sort": [["@timestamp", "desc"]]
     }
-  
+
   slow-queries.json: |
     {
       "title": "Slow Database Queries",
@@ -171,7 +171,7 @@ data:
       "columns": ["@timestamp", "query", "execution_time", "correlation_id"],
       "sort": [["execution_time", "desc"]]
     }
-  
+
   high-response-times.json: |
     {
       "title": "High Response Times",
@@ -210,7 +210,7 @@ data:
       days: 2
     use_ssl: False
     verify_certs: False
-  
+
   security-alerts.yaml: |
     name: Security Events Alert
     type: frequency
@@ -223,25 +223,25 @@ data:
         log_category: ["security"]
     - terms:
         security_severity: ["high", "critical"]
-    
+
     alert:
     - "email"
     - "slack"
-    
+
     email:
     - "security@neoforge.com"
-    
+
     slack:
       slack_webhook_url: "YOUR_SLACK_WEBHOOK_URL"
       slack_channel_override: "#security-alerts"
       slack_username_override: "ElastAlert"
-    
+
     alert_text: |
       Security Alert: {0} high-severity security events detected in the last 5 minutes.
-      
+
       Query: {1}
       Time: {2}
-    
+
     alert_text_type: alert_text_only
     include:
     - "@timestamp"
@@ -249,7 +249,7 @@ data:
     - "user_id"
     - "ip_address"
     - "security_severity"
-  
+
   error-rate-alert.yaml: |
     name: High Error Rate Alert
     type: percentage_match
@@ -264,32 +264,32 @@ data:
         status_code:
           gte: 500
           lt: 600
-    
+
     alert:
     - "email"
     - "slack"
-    
+
     email:
     - "ops@neoforge.com"
-    
+
     slack:
       slack_webhook_url: "YOUR_SLACK_WEBHOOK_URL"
       slack_channel_override: "#operations"
-    
+
     alert_text: |
       High Error Rate Alert: More than 10% of requests are returning 5xx errors.
-      
+
       Time Range: {0}
       Error Count: {1}
       Total Requests: {2}
-    
+
     include:
     - "@timestamp"
     - "path"
     - "method"
     - "status_code"
     - "response_time"
-  
+
   performance-degradation.yaml: |
     name: Performance Degradation Alert
     type: metric_aggregation
@@ -302,29 +302,29 @@ data:
     filter:
     - exists:
         field: response_time
-    
+
     alert:
     - "email"
     - "pagerduty"
-    
+
     email:
     - "ops@neoforge.com"
-    
+
     pagerduty:
       pagerduty_service_key: "YOUR_PAGERDUTY_SERVICE_KEY"
       pagerduty_client_name: "NeoForge Logging"
-    
+
     alert_text: |
       Performance Degradation: Average response time exceeded 5 seconds.
-      
+
       Average Response Time: {0}ms
       Time Range: {1}
-    
+
     include:
     - "path"
     - "method"
     - "response_time"
-  
+
   authentication-failures.yaml: |
     name: Multiple Authentication Failures
     type: frequency
@@ -336,23 +336,23 @@ data:
     filter:
     - match:
         event: "Authentication failed"
-    
+
     alert:
     - "email"
     - "slack"
-    
+
     email:
     - "security@neoforge.com"
-    
+
     slack:
       slack_webhook_url: "YOUR_SLACK_WEBHOOK_URL"
       slack_channel_override: "#security-alerts"
-    
+
     alert_text: |
       Potential Brute Force Attack: {0} authentication failures from IP {1} in 5 minutes.
-      
+
       Time: {2}
-    
+
     include:
     - "@timestamp"
     - "username"
@@ -455,7 +455,7 @@ spec:
             - -c
             - |
               echo "Generating daily log analysis report..."
-              
+
               # Get error rate for last 24h
               ERROR_RATE=$(curl -s "http://elasticsearch:9200/neoforge-logs-*/_search" \
                 -H "Content-Type: application/json" \
@@ -475,7 +475,7 @@ spec:
                     }
                   }
                 }' | jq -r '.aggregations.error_rate.value // 0')
-              
+
               # Get average response time
               AVG_RESPONSE_TIME=$(curl -s "http://elasticsearch:9200/neoforge-logs-*/_search" \
                 -H "Content-Type: application/json" \
@@ -495,7 +495,7 @@ spec:
                     }
                   }
                 }' | jq -r '.aggregations.avg_response_time.value // 0')
-              
+
               echo "Daily Report - $(date)"
               echo "Error Rate: $ERROR_RATE"
               echo "Average Response Time: ${AVG_RESPONSE_TIME}ms"

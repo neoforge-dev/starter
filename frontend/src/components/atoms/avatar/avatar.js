@@ -140,7 +140,7 @@ export class NeoAvatar extends BaseComponent {
           .avatar {
             border: 2px solid var(--color-text);
           }
-          
+
           .status-indicator {
             border-width: 3px;
           }
@@ -186,12 +186,12 @@ export class NeoAvatar extends BaseComponent {
    */
   _getInitials(name) {
     if (!name) return "?";
-    
+
     const parts = name.trim().split(/\s+/);
     if (parts.length === 1) {
       return parts[0].charAt(0).toUpperCase();
     }
-    
+
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   }
 
@@ -211,7 +211,7 @@ export class NeoAvatar extends BaseComponent {
     this._imageLoaded = false;
     this._imageError = true;
     this.requestUpdate();
-    
+
     this.dispatchEvent(
       new CustomEvent("neo-avatar-error", {
         bubbles: true,

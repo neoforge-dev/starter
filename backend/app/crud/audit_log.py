@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, List, Tuple
-
-from sqlalchemy import select, and_
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional, Tuple
 
 from app.models.audit_log import AuditLog
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class CRUDAuditLog:
@@ -19,7 +18,9 @@ class CRUDAuditLog:
         resource: Optional[str] = None,
         metadata: Optional[str] = None,
     ) -> AuditLog:
-        entry = AuditLog(user_id=user_id, action=action, resource=resource, event_metadata=metadata)
+        entry = AuditLog(
+            user_id=user_id, action=action, resource=resource, event_metadata=metadata
+        )
         db.add(entry)
         await db.commit()
         await db.refresh(entry)

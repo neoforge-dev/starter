@@ -34,10 +34,10 @@ We've created a set of utility functions in `src/test/utils/component-mock-utils
 ### Basic Usage
 
 ```javascript
-import { 
+import {
   createMockComponent,
   createMockFixture,
-  createAndRegisterMockComponent 
+  createAndRegisterMockComponent
 } from "../utils/component-mock-utils.js";
 
 // Create a mock fixture function
@@ -238,4 +238,4 @@ describe("Button Tests", () => {
 
 By using our component mock utilities, we can create standardized mock implementations of components with CDN imports for testing. This approach allows us to test our components without relying on the actual implementations that use CDN URLs, which aren't supported in the test environment.
 
-For more information, see the [Component Mock Utilities Tests](../src/test/utils/component-mock-utils.test.js) for examples of how to use these utilities. 
+For more information, see the [Component Mock Utilities Tests](../src/test/utils/component-mock-utils.test.js) for examples of how to use these utilities.

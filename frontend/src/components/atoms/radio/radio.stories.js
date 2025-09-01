@@ -67,15 +67,15 @@ export default {
 };
 
 // Base Template
-const Template = ({ 
-  label, 
-  name, 
-  value, 
-  checked, 
-  disabled, 
-  required, 
-  error, 
-  helper 
+const Template = ({
+  label,
+  name,
+  value,
+  checked,
+  disabled,
+  required,
+  error,
+  helper
 }) => html`
   <neo-radio
     name=${name}
@@ -152,9 +152,9 @@ export const RadioGroup = () => html`
 // Radio Group with Description
 export const RadioGroupWithDescription = () => html`
   <div style="display: grid; gap: 16px;">
-    <neo-radio 
-      name="plan" 
-      value="basic" 
+    <neo-radio
+      name="plan"
+      value="basic"
       label="Basic Plan"
       checked
     >
@@ -162,18 +162,18 @@ export const RadioGroupWithDescription = () => html`
         Perfect for personal use
       </div>
     </neo-radio>
-    <neo-radio 
-      name="plan" 
-      value="pro" 
+    <neo-radio
+      name="plan"
+      value="pro"
       label="Pro Plan"
     >
       <div slot="description" style="color: var(--color-text-light); font-size: 14px; margin-top: 4px;">
         Ideal for professionals
       </div>
     </neo-radio>
-    <neo-radio 
-      name="plan" 
-      value="enterprise" 
+    <neo-radio
+      name="plan"
+      value="enterprise"
       label="Enterprise Plan"
     >
       <div slot="description" style="color: var(--color-text-light); font-size: 14px; margin-top: 4px;">
@@ -195,21 +195,21 @@ export const InlineRadioGroup = () => html`
 // Custom Styled Radio Group
 export const CustomStyledRadioGroup = () => html`
   <div style="display: grid; gap: 8px;">
-    <neo-radio 
-      name="custom" 
-      value="success" 
+    <neo-radio
+      name="custom"
+      value="success"
       label="Success Option"
       style="--radio-color: var(--color-success);"
     ></neo-radio>
-    <neo-radio 
-      name="custom" 
-      value="warning" 
+    <neo-radio
+      name="custom"
+      value="warning"
       label="Warning Option"
       style="--radio-color: var(--color-warning);"
     ></neo-radio>
-    <neo-radio 
-      name="custom" 
-      value="error" 
+    <neo-radio
+      name="custom"
+      value="error"
       label="Error Option"
       style="--radio-color: var(--color-error);"
     ></neo-radio>
@@ -268,4 +268,4 @@ export const CardRadio = () => html`
       </div>
     </label>
   </div>
-`; 
+`;

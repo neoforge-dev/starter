@@ -1,6 +1,6 @@
 /**
  * Test Template Generator
- * 
+ *
  * Generates comprehensive test files for new components
  */
 
@@ -122,7 +122,7 @@ describe('${className}', () => {
       const startTime = performance.now();
       await fixture(html\`<${componentName}></${componentName}>\`);
       const endTime = performance.now();
-      
+
       // Should render in less than 100ms
       expect(endTime - startTime).to.be.lessThan(100);
     });
@@ -132,7 +132,7 @@ describe('${className}', () => {
       element.title = 'New title';
       await element.updateComplete;
       const endTime = performance.now();
-      
+
       // Should update in less than 50ms
       expect(endTime - startTime).to.be.lessThan(50);
     });
@@ -142,7 +142,7 @@ describe('${className}', () => {
     it('should handle invalid property values gracefully', async () => {
       element.setAttribute('invalid-attr', 'invalid-value');
       await element.updateComplete;
-      
+
       // Component should still render
       expect(element.shadowRoot.querySelector('.container')).to.exist;
     });
@@ -168,14 +168,14 @@ function generatePropertyTest(prop, componentName) {
       element.${prop.name} = ${expectedValue};
       await element.updateComplete;
       expect(element.${prop.name}).to.equal(${expectedValue});
-      
+
       ${prop.reflect ? `expect(element.getAttribute('${prop.name}')).to.equal(String(${expectedValue}));` : '// Property does not reflect'}
     });
 
     it('should render correctly with property set', async () => {
       element.${prop.name} = ${expectedValue};
       await element.updateComplete;
-      
+
       // Add specific rendering assertions based on property
       expect(element.shadowRoot).to.exist;
     });
@@ -188,7 +188,7 @@ function getTestValue(type, propName) {
   if (propName === 'title') return 'Test Title';
   if (propName === 'label') return 'Test Label';
   if (propName === 'text') return 'Test Text';
-  
+
   switch (type) {
     case 'Boolean': return true;
     case 'Number': return 42;

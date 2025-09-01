@@ -9,7 +9,7 @@
 - **[API Development](../api/)** - REST API patterns and best practices
 - **[Testing Guide](../../backend/TESTING.md)** - Backend testing comprehensive guide
 
-### Frontend Development  
+### Frontend Development
 - **[Frontend Setup & Development](../frontend/)** - Lit components, PWA setup
 - **[Component Development](../../frontend/docs/)** - Web component patterns
 - **[Testing Strategies](../../frontend/src/test/TESTING.md)** - Frontend testing guide

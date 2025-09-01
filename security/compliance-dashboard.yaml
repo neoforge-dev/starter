@@ -19,7 +19,7 @@ data:
         "description": "Comprehensive security monitoring and compliance reporting for NeoForge platform",
         "tags": [
           "security",
-          "compliance", 
+          "compliance",
           "neoforge",
           "vulnerability",
           "runtime-security"
@@ -101,7 +101,7 @@ data:
           {
             "id": 3,
             "title": "Runtime Security Events",
-            "type": "graph", 
+            "type": "graph",
             "targets": [
               {
                 "expr": "rate(falco_events_total[5m])",
@@ -463,7 +463,7 @@ spec:
     - record: neoforge:vulnerability_trend_7d
       expr: |
         (
-          sum(security_scan_vulnerabilities_total) - 
+          sum(security_scan_vulnerabilities_total) -
           sum(security_scan_vulnerabilities_total offset 7d)
         )
 

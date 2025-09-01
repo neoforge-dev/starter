@@ -65,7 +65,7 @@ data:
         }
       }
     }
-  
+
   security-logs-policy.json: |
     {
       "policy": {
@@ -117,7 +117,7 @@ data:
         }
       }
     }
-  
+
   performance-logs-policy.json: |
     {
       "policy": {
@@ -158,7 +158,7 @@ data:
         }
       }
     }
-  
+
   system-logs-policy.json: |
     {
       "policy": {
@@ -336,7 +336,7 @@ data:
       "priority": 100,
       "version": 1
     }
-  
+
   neoforge-security-template.json: |
     {
       "index_patterns": ["neoforge-security-*"],
@@ -398,13 +398,13 @@ data:
       http_auth:
       timeout: 30
       master_only: False
-    
+
     logging:
       loglevel: INFO
       logfile:
       logformat: default
       blacklist: ['elasticsearch', 'urllib3']
-  
+
   cleanup-old-indices.yml: |
     actions:
       1:

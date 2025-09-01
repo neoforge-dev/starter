@@ -1,6 +1,6 @@
 /**
  * Story Template Generator
- * 
+ *
  * Generates Storybook-compatible story files for components
  */
 
@@ -59,7 +59,7 @@ export default {
 const Template = (args) => html\`
   <${componentName}
     ${properties.map(prop => `.\${args.${prop.name} ? '${prop.name}' : ''}`).join('\n    ')}
-    ${properties.filter(prop => prop.type !== 'Boolean').map(prop => 
+    ${properties.filter(prop => prop.type !== 'Boolean').map(prop =>
       `.${prop.name}="\${args.${prop.name}}"`
     ).join('\n    ')}
   >
@@ -92,10 +92,10 @@ export const Documentation = () => html\`
   <div style="max-width: 800px; margin: 0 auto; padding: 2rem;">
     <h1>${className} Component</h1>
     <p>${description}</p>
-    
+
     <h2>Usage</h2>
     <pre><code>&lt;${componentName}${properties.length > 0 ? ' ' + properties.map(p => `${p.name}="${getExampleValue(p)}"`).join(' ') : ''}&gt;&lt;/${componentName}&gt;</code></pre>
-    
+
     <h2>Properties</h2>
     <table style="width: 100%; border-collapse: collapse;">
       <thead>
@@ -117,7 +117,7 @@ export const Documentation = () => html\`
         `).join('')}
       </tbody>
     </table>
-    
+
     <h2>Examples</h2>
     <div style="display: grid; gap: 2rem; margin-top: 1rem;">
       ${generateDocumentationExamples(componentName, properties)}
@@ -157,7 +157,7 @@ function getExampleValue(prop) {
   if (prop.name === 'size') return 'md';
   if (prop.name === 'title') return 'Example Title';
   if (prop.name === 'label') return 'Example Label';
-  
+
   switch (prop.type) {
     case 'Boolean': return 'true';
     case 'Number': return '42';
@@ -186,7 +186,7 @@ export const Variants = () => html\`
 function generateStateStories(properties) {
   const hasDisabled = properties.some(p => p.name === 'disabled');
   const hasLoading = properties.some(p => p.name === 'loading');
-  
+
   if (!hasDisabled && !hasLoading) return '';
 
   return `

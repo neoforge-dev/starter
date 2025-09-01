@@ -143,7 +143,7 @@ export const NestedCheckboxes = () => html`
 
 // Terms and Conditions Example
 export const TermsCheckbox = () => html`
-  <neo-checkbox 
+  <neo-checkbox
     required
     helper="Please read and accept the terms"
   >
@@ -156,4 +156,4 @@ export const CustomStyled = () => html`
   <neo-checkbox style="--checkbox-color: var(--color-success); --checkbox-size: 24px;">
     Custom Styled Checkbox
   </neo-checkbox>
-`; 
+`;

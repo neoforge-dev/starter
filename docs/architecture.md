@@ -73,7 +73,7 @@ sequenceDiagram
     participant Component
     participant Service
     participant API
-    
+
     User->>Component: Interaction
     Component->>Service: Request Data
     Service->>API: API Call
@@ -90,7 +90,7 @@ sequenceDiagram
     participant FastAPI
     participant Cache
     participant Database
-    
+
     Client->>FastAPI: Request
     FastAPI->>Cache: Check Cache
     alt Cache Hit
@@ -162,7 +162,7 @@ sequenceDiagram
 @customElement('user-card')
 export class UserCard extends LitElement {
   @property({ type: Object }) user!: User;
-  
+
   // Optimize re-renders
   protected shouldUpdate(changedProps: Map<string, any>) {
     return changedProps.has('user');
@@ -196,7 +196,7 @@ class CostOptimizedService:
         cache_key = f"user:{user_id}"
         if cached := await self.redis.get(cache_key):
             return json.loads(cached)
-            
+
         # Fallback to database
         user = await self.db.get_user(user_id)
         await self.redis.set(cache_key, json.dumps(user), ex=self.cache_ttl)
@@ -332,7 +332,7 @@ class CacheConfig:
 export class DataTable extends LitElement {
   // Use virtual scrolling for large datasets
   @property({ type: Array }) data!: any[];
-  
+
   // Implement intersection observer for lazy loading
   firstUpdated() {
     const observer = new IntersectionObserver(
@@ -357,7 +357,7 @@ async def get_user_data(self, user_id: int):
         selectinload(User.preferences),  # Eager load related data
         selectinload(User.settings)
     ).where(User.id == user_id)
-    
+
     return await self.db.execute(query)
 ```
 
@@ -387,11 +387,11 @@ async def monitor_requests(request: Request, call_next):
     start_time = time.time()
     response = await call_next(request)
     duration = time.time() - start_time
-    
+
     # Log if expensive request
     if duration > 1.0:  # More than 1 second
         logger.warning(f"Expensive request: {request.url}")
-    
+
     return response
 ```
 
@@ -425,7 +425,7 @@ version: '3.8'
 
 services:
   backend:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile.dev
     ports:

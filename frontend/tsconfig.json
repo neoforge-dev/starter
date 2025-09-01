@@ -22,7 +22,7 @@
     "declarationMap": false,
     "experimentalDecorators": true,
     "useUnknownInCatchVariables": true,
-    
+
     // Strict type checking
     "noImplicitAny": true,
     "noImplicitReturns": true,
@@ -79,7 +79,7 @@
     "src/playground/**/*",
     "src/stories/**/*",
     "src/components/molecules/test-analytics.js",
-    "src/components/molecules/variant-renderer.js", 
+    "src/components/molecules/variant-renderer.js",
     "src/components/organisms/ab-test-manager.js",
     "src/components/pages/ab-testing-dashboard.js"
   ],

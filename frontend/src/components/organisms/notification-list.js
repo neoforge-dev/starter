@@ -12,7 +12,7 @@ import "../molecules/cta-button-row/cta-button-row.js";
 /**
  * Enhanced notification list component with grouping, actions, and real-time updates
  * @element neo-notification-list
- * 
+ *
  * @prop {Array} notifications - Array of notification objects
  * @prop {boolean} groupByDate - Group notifications by date
  * @prop {boolean} showActions - Show action buttons for notifications
@@ -26,7 +26,7 @@ import "../molecules/cta-button-row/cta-button-row.js";
  * @prop {Array} selectedIds - Currently selected notification IDs
  * @prop {Object} filters - Active filters
  * @prop {boolean} showFilters - Show filter controls
- * 
+ *
  * @fires neo-notification-click - When notification is clicked
  * @fires neo-notification-action - When notification action is performed
  * @fires neo-notification-select - When notification selection changes
@@ -396,8 +396,8 @@ export class NeoNotificationList extends BaseComponent {
 
   updated(changedProperties) {
     super.updated(changedProperties);
-    
-    if (changedProperties.has('notifications') || 
+
+    if (changedProperties.has('notifications') ||
         changedProperties.has('filters') ||
         changedProperties.has('groupByDate')) {
       this._processNotifications();
@@ -417,14 +417,14 @@ export class NeoNotificationList extends BaseComponent {
    */
   _processNotifications() {
     let processed = [...(this.notifications || [])];
-    
+
     // Apply filters
     if (this.filters && Object.keys(this.filters).length > 0) {
       processed = this._applyFilters(processed);
     }
-    
+
     this._filteredNotifications = processed;
-    
+
     // Group by date if enabled
     if (this.groupByDate) {
       this._groupedNotifications = this._groupByDate(processed);
@@ -440,10 +440,10 @@ export class NeoNotificationList extends BaseComponent {
     return notifications.filter(notification => {
       return Object.entries(this.filters).every(([key, value]) => {
         if (!value) return true;
-        
+
         switch (key) {
           case 'read':
-            return value === 'all' ? true : 
+            return value === 'all' ? true :
                    value === 'read' ? notification.read : !notification.read;
           case 'type':
             return value === 'all' ? true : notification.type === value;
@@ -511,7 +511,7 @@ export class NeoNotificationList extends BaseComponent {
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
-    
+
     return time.toLocaleDateString();
   }
 
@@ -519,7 +519,7 @@ export class NeoNotificationList extends BaseComponent {
    * Handle notification click
    */
   _handleNotificationClick(notification, e) {
-    if (e.target.closest('.notification-checkbox') || 
+    if (e.target.closest('.notification-checkbox') ||
         e.target.closest('.notification-actions')) {
       return;
     }
@@ -541,7 +541,7 @@ export class NeoNotificationList extends BaseComponent {
    */
   _handleNotificationSelect(notification, selected) {
     let newSelection = [...this.selectedIds];
-    
+
     if (selected) {
       if (!newSelection.includes(notification.id)) {
         newSelection.push(notification.id);
@@ -549,14 +549,14 @@ export class NeoNotificationList extends BaseComponent {
     } else {
       newSelection = newSelection.filter(id => id !== notification.id);
     }
-    
+
     this.selectedIds = newSelection;
-    
+
     this.dispatchEvent(new CustomEvent('neo-notification-select', {
-      detail: { 
-        notification, 
-        selected, 
-        selectedIds: this.selectedIds 
+      detail: {
+        notification,
+        selected,
+        selectedIds: this.selectedIds
       },
       bubbles: true,
       composed: true
@@ -572,11 +572,11 @@ export class NeoNotificationList extends BaseComponent {
     } else {
       this.selectedIds = [];
     }
-    
+
     this.dispatchEvent(new CustomEvent('neo-notification-select', {
-      detail: { 
+      detail: {
         selectAll: selected,
-        selectedIds: this.selectedIds 
+        selectedIds: this.selectedIds
       },
       bubbles: true,
       composed: true
@@ -588,7 +588,7 @@ export class NeoNotificationList extends BaseComponent {
    */
   _updateSelectAllState() {
     const visibleIds = this._filteredNotifications.map(n => n.id);
-    this._isAllSelected = visibleIds.length > 0 && 
+    this._isAllSelected = visibleIds.length > 0 &&
       visibleIds.every(id => this.selectedIds.includes(id));
   }
 
@@ -630,7 +630,7 @@ export class NeoNotificationList extends BaseComponent {
    */
   _handleNotificationAction(notification, action, e) {
     e.stopPropagation();
-    
+
     switch (action) {
       case 'read':
         this._markAsRead(notification);
@@ -657,10 +657,10 @@ export class NeoNotificationList extends BaseComponent {
     const selectedNotifications = this._filteredNotifications.filter(
       n => this.selectedIds.includes(n.id)
     );
-    
+
     this.dispatchEvent(new CustomEvent('neo-bulk-action', {
-      detail: { 
-        action, 
+      detail: {
+        action,
         notifications: selectedNotifications,
         selectedIds: this.selectedIds
       },
@@ -714,7 +714,7 @@ export class NeoNotificationList extends BaseComponent {
   render() {
     const hasNotifications = this._filteredNotifications.length > 0;
     const hasSelection = this.selectedIds.length > 0;
-    
+
     return html`
       <div class="notification-list-container">
         <!-- Header -->
@@ -724,8 +724,8 @@ export class NeoNotificationList extends BaseComponent {
             ${this.unreadCount > 0 ? html`
               <span class="unread-count">${this.unreadCount} unread</span>
             ` : ''}
-            <neo-button 
-              variant="ghost" 
+            <neo-button
+              variant="ghost"
               size="sm"
               @click="${this.markAllAsRead}">
               Mark all read
@@ -736,17 +736,17 @@ export class NeoNotificationList extends BaseComponent {
         <!-- Filters -->
         ${this.showFilters ? html`
           <div class="notification-filters">
-            <button 
+            <button
               class="filter-chip ${(!this.filters.read || this.filters.read === 'all') ? 'active' : ''}"
               @click="${() => this._handleFilterChange('read', 'all')}">
               All
             </button>
-            <button 
+            <button
               class="filter-chip ${this.filters.read === 'unread' ? 'active' : ''}"
               @click="${() => this._handleFilterChange('read', 'unread')}">
               Unread
             </button>
-            <button 
+            <button
               class="filter-chip ${this.filters.read === 'read' ? 'active' : ''}"
               @click="${() => this._handleFilterChange('read', 'read')}">
               Read
@@ -782,12 +782,12 @@ export class NeoNotificationList extends BaseComponent {
                 ${this.groupByDate && Object.keys(this._groupedNotifications).length > 1 ? html`
                   <div class="group-header">${groupName}</div>
                 ` : ''}
-                
+
                 ${notifications.map(notification => html`
-                  <div 
+                  <div
                     class="notification-item ${notification.read ? '' : 'unread'} ${this.selectedIds.includes(notification.id) ? 'selected' : ''}"
                     @click="${(e) => this._handleNotificationClick(notification, e)}">
-                    
+
                     ${this.selectable ? html`
                       <neo-checkbox
                         class="notification-checkbox"
@@ -795,7 +795,7 @@ export class NeoNotificationList extends BaseComponent {
                         @neo-checkbox-change="${(e) => this._handleNotificationSelect(notification, e.detail.checked)}">
                       </neo-checkbox>
                     ` : ''}
-                    
+
                     ${this.showAvatars && notification.user ? html`
                       <neo-avatar
                         class="notification-avatar"
@@ -804,7 +804,7 @@ export class NeoNotificationList extends BaseComponent {
                         size="sm">
                       </neo-avatar>
                     ` : ''}
-                    
+
                     <div class="notification-content">
                       <div class="notification-header-row">
                         <h4 class="notification-title">${notification.title}</h4>
@@ -812,20 +812,20 @@ export class NeoNotificationList extends BaseComponent {
                           ${this._formatTimeAgo(notification.timestamp)}
                         </span>
                       </div>
-                      
+
                       <p class="notification-message">${notification.message}</p>
-                      
+
                       ${notification.type || this.showActions ? html`
                         <div class="notification-meta">
                           ${notification.type ? html`
-                            <neo-badge 
+                            <neo-badge
                               class="notification-type-badge"
                               variant="${this._getTypeVariant(notification.type)}"
                               size="sm">
                               ${notification.type}
                             </neo-badge>
                           ` : ''}
-                          
+
                           ${this.showActions ? html`
                             <div class="notification-actions">
                               ${!notification.read ? html`
@@ -843,7 +843,7 @@ export class NeoNotificationList extends BaseComponent {
                                   <neo-icon name="mail"></neo-icon>
                                 </neo-button>
                               `}
-                              
+
                               <neo-button
                                 variant="ghost"
                                 size="sm"
@@ -855,7 +855,7 @@ export class NeoNotificationList extends BaseComponent {
                         </div>
                       ` : ''}
                     </div>
-                    
+
                     ${!notification.read ? html`
                       <div class="unread-indicator"></div>
                     ` : ''}

@@ -1,6 +1,6 @@
 /**
  * Direct Vitest Worker Patch (CommonJS version)
- * 
+ *
  * This file directly patches the Vitest worker.js file to ensure the performance API
  * is available in all contexts. It uses a monkey patching approach to intercept
  * the worker module and apply the performance polyfill.
@@ -9,7 +9,7 @@
 // Create a performance polyfill
 const createPerformancePolyfill = () => {
   const startTime = Date.now();
-  
+
   return {
     now() {
       return Date.now() - startTime;
@@ -25,16 +25,16 @@ const createPerformancePolyfill = () => {
       if (typeof this._measures !== 'object') {
         this._measures = {};
       }
-      
+
       const startTime = this._marks[startMark] || 0;
       const endTime = this._marks[endMark] || this.now();
-      
+
       this._measures[name] = {
         name,
         startTime,
         duration: endTime - startTime
       };
-      
+
       return this._measures[name];
     },
     getEntriesByName(name, type) {
@@ -42,11 +42,11 @@ const createPerformancePolyfill = () => {
         return [{ name, startTime: this._marks[name], entryType: 'mark' }];
       }
       if (type === 'measure' && this._measures && this._measures[name]) {
-        return [{ 
-          name, 
-          startTime: this._measures[name].startTime, 
+        return [{
+          name,
+          startTime: this._measures[name].startTime,
           duration: this._measures[name].duration,
-          entryType: 'measure' 
+          entryType: 'measure'
         }];
       }
       return [];
@@ -102,22 +102,22 @@ const patchVitestWorker = () => {
     // Apply the performance polyfill to the global objects
     applyPerformancePolyfill(global);
     applyPerformancePolyfill(globalThis);
-    
+
     if (typeof self !== 'undefined') {
       applyPerformancePolyfill(self);
     }
-    
+
     if (typeof window !== 'undefined') {
       applyPerformancePolyfill(window);
     }
-    
+
     // Get the path to the Vitest worker.js file
     let vitestWorkerPath;
     try {
       vitestWorkerPath = require.resolve('vitest/dist/worker.js');
     } catch (resolveError) {
       console.log('Could not resolve Vitest worker path:', resolveError.message);
-      
+
       // Try an alternative approach to find the worker file
       try {
         const vitestPath = require.resolve('vitest');
@@ -126,41 +126,41 @@ const patchVitestWorker = () => {
         console.log('Alternative approach failed:', altError.message);
       }
     }
-    
+
     if (!vitestWorkerPath) {
       console.log('Could not find Vitest worker path, applying global polyfill only');
       return false;
     }
-    
+
     // Get the original module
     const originalModule = require(vitestWorkerPath);
-    
+
     // Monkey patch the run function in the worker module
     if (originalModule && typeof originalModule.run === 'function') {
       const originalRun = originalModule.run;
-      
+
       originalModule.run = function(...args) {
         // Ensure performance is available before running
         applyPerformancePolyfill(global);
         applyPerformancePolyfill(globalThis);
-        
+
         if (typeof self !== 'undefined') {
           applyPerformancePolyfill(self);
         }
-        
+
         if (typeof window !== 'undefined') {
           applyPerformancePolyfill(window);
         }
-        
+
         // Call the original run function
         return originalRun.apply(this, args);
       };
-      
+
       console.log('Vitest worker.js run function patched successfully');
     } else {
       console.log('Could not find run function in Vitest worker module');
     }
-    
+
     // Also patch the Tinypool process.js file
     try {
       let tinypoolProcessPath;
@@ -168,7 +168,7 @@ const patchVitestWorker = () => {
         tinypoolProcessPath = require.resolve('tinypool/dist/esm/entry/process.js');
       } catch (resolveError) {
         console.log('Could not resolve Tinypool process path:', resolveError.message);
-        
+
         // Try an alternative approach
         try {
           const tinypoolPath = require.resolve('tinypool');
@@ -177,34 +177,34 @@ const patchVitestWorker = () => {
           console.log('Alternative approach for Tinypool failed:', altError.message);
         }
       }
-      
+
       if (!tinypoolProcessPath) {
         console.log('Could not find Tinypool process path');
         return true; // Continue with just the Vitest worker patch
       }
-      
+
       const tinypoolProcess = require(tinypoolProcessPath);
-      
+
       if (tinypoolProcess && typeof tinypoolProcess.onMessage === 'function') {
         const originalOnMessage = tinypoolProcess.onMessage;
-        
+
         tinypoolProcess.onMessage = function(...args) {
           // Ensure performance is available before processing messages
           applyPerformancePolyfill(global);
           applyPerformancePolyfill(globalThis);
-          
+
           if (typeof self !== 'undefined') {
             applyPerformancePolyfill(self);
           }
-          
+
           if (typeof window !== 'undefined') {
             applyPerformancePolyfill(window);
           }
-          
+
           // Call the original onMessage function
           return originalOnMessage.apply(this, args);
         };
-        
+
         console.log('Tinypool process.js onMessage function patched successfully');
       } else {
         console.log('Could not find onMessage function in Tinypool process module');
@@ -212,7 +212,7 @@ const patchVitestWorker = () => {
     } catch (tinypoolError) {
       console.log('Error patching Tinypool process.js:', tinypoolError.message);
     }
-    
+
     console.log('Direct Vitest worker patch applied successfully (CommonJS version)');
     return true;
   } catch (error) {
@@ -227,11 +227,11 @@ process.on('uncaughtException', (error) => {
     console.log('Caught performance.now error, reapplying polyfill');
     applyPerformancePolyfill(global);
     applyPerformancePolyfill(globalThis);
-    
+
     if (typeof self !== 'undefined') {
       applyPerformancePolyfill(self);
     }
-    
+
     if (typeof window !== 'undefined') {
       applyPerformancePolyfill(window);
     }
@@ -242,4 +242,4 @@ process.on('uncaughtException', (error) => {
 patchVitestWorker();
 
 // Export the patch function
-module.exports = patchVitestWorker; 
+module.exports = patchVitestWorker;

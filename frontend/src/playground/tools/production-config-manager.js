@@ -1,6 +1,6 @@
 /**
  * Production Configuration Manager
- * 
+ *
  * Manages environment variables, database setup, deployment configs, and security settings.
  * Ensures generated applications are production-ready with proper configurations.
  */
@@ -17,23 +17,23 @@ export class ProductionConfigManager {
    */
   async generateProductionConfig(configRequest) {
     this.validateConfigRequest(configRequest);
-    
+
     try {
       // Generate environment configurations
       const environments = await this.generateEnvironmentConfigs(configRequest);
-      
+
       // Generate database configurations
       const database = await this.generateDatabaseConfig(configRequest);
-      
+
       // Generate security configurations
       const security = await this.generateSecurityConfig(configRequest);
-      
+
       // Generate monitoring and logging configs
       const monitoring = await this.generateMonitoringConfig(configRequest);
-      
+
       // Generate deployment-specific configs
       const deployment = await this.generateDeploymentConfigs(configRequest);
-      
+
       return {
         success: true,
         configurations: {
@@ -61,11 +61,11 @@ export class ProductionConfigManager {
   async generateEnvironmentConfigs(configRequest) {
     const environments = ['development', 'staging', 'production'];
     const configs = {};
-    
+
     for (const env of environments) {
       configs[env] = await this.generateEnvironmentConfig(configRequest, env);
     }
-    
+
     return configs;
   }
 
@@ -75,46 +75,46 @@ export class ProductionConfigManager {
   async generateEnvironmentConfig(configRequest, environment) {
     const template = this.configTemplates[configRequest.template] || this.configTemplates.default;
     const isProduction = environment === 'production';
-    
+
     const config = {
       // Application settings
       APP_NAME: configRequest.appName,
       APP_ENV: environment,
       APP_DEBUG: !isProduction,
       APP_URL: this.generateAppURL(configRequest, environment),
-      
+
       // Database settings
       ...this.generateDatabaseEnvVars(configRequest, environment),
-      
+
       // Security settings
       ...this.generateSecurityEnvVars(configRequest, environment),
-      
+
       // API settings
       API_VERSION: 'v1',
       API_PREFIX: '/api/v1',
       API_DOCS_URL: isProduction ? null : '/docs',
-      
+
       // CORS settings
       CORS_ORIGINS: this.generateCORSOrigins(configRequest, environment),
       CORS_CREDENTIALS: true,
-      
+
       // Logging settings
       LOG_LEVEL: isProduction ? 'WARNING' : 'DEBUG',
       LOG_FORMAT: 'json',
-      
+
       // Cache settings
       REDIS_URL: this.generateRedisURL(environment),
       CACHE_TTL: isProduction ? 3600 : 300,
-      
+
       // Email settings (if needed)
       ...(configRequest.features.includes('email') && this.generateEmailEnvVars(environment)),
-      
+
       // Payment settings (if needed)
       ...(configRequest.features.includes('billing') && this.generatePaymentEnvVars(environment)),
-      
+
       // Analytics settings
       ...(configRequest.features.includes('analytics') && this.generateAnalyticsEnvVars(environment)),
-      
+
       // Platform-specific settings
       ...this.generatePlatformEnvVars(configRequest, environment)
     };
@@ -132,7 +132,7 @@ export class ProductionConfigManager {
   async generateDatabaseConfig(configRequest) {
     const dbType = configRequest.database || 'postgresql';
     const configs = {};
-    
+
     // Database connection configuration
     configs.connection = {
       file: 'database/config.json',
@@ -189,26 +189,26 @@ export class ProductionConfigManager {
         }
       }, null, 2)
     };
-    
+
     // Migration configuration
     configs.migrations = {
       file: 'database/migrate.config.js',
       content: this.generateMigrationConfig(dbType)
     };
-    
+
     // Database initialization script
     configs.initialization = {
       file: 'database/init.sql',
       content: this.generateDatabaseInitScript(configRequest, dbType)
     };
-    
+
     // Backup configuration
     configs.backup = {
       file: 'database/backup.sh',
       content: this.generateBackupScript(dbType),
       executable: true
     };
-    
+
     return configs;
   }
 
@@ -218,7 +218,7 @@ export class ProductionConfigManager {
   async generateSecurityConfig(configRequest) {
     const securityPreset = this.securityPresets[configRequest.securityLevel || 'standard'];
     const configs = {};
-    
+
     // Security headers configuration
     configs.headers = {
       file: 'config/security-headers.json',
@@ -232,7 +232,7 @@ export class ProductionConfigManager {
         "Permissions-Policy": "geolocation=(), camera=(), microphone=()"
       }, null, 2)
     };
-    
+
     // Rate limiting configuration
     configs.rateLimiting = {
       file: 'config/rate-limits.json',
@@ -255,7 +255,7 @@ export class ProductionConfigManager {
         }
       }, null, 2)
     };
-    
+
     // JWT configuration
     if (configRequest.features.includes('auth')) {
       configs.jwt = {
@@ -269,7 +269,7 @@ export class ProductionConfigManager {
         }, null, 2)
       };
     }
-    
+
     // CORS configuration
     configs.cors = {
       file: 'config/cors.json',
@@ -289,7 +289,7 @@ export class ProductionConfigManager {
         }
       }, null, 2)
     };
-    
+
     return configs;
   }
 
@@ -298,7 +298,7 @@ export class ProductionConfigManager {
    */
   async generateMonitoringConfig(configRequest) {
     const configs = {};
-    
+
     // Logging configuration
     configs.logging = {
       file: 'config/logging.json',
@@ -338,7 +338,7 @@ export class ProductionConfigManager {
         }
       }, null, 2)
     };
-    
+
     // Health check configuration
     configs.healthCheck = {
       file: 'config/health-checks.json',
@@ -372,7 +372,7 @@ export class ProductionConfigManager {
         }
       }, null, 2)
     };
-    
+
     // Metrics configuration
     configs.metrics = {
       file: 'config/metrics.json',
@@ -391,7 +391,7 @@ export class ProductionConfigManager {
         collection_interval: 15
       }, null, 2)
     };
-    
+
     return configs;
   }
 
@@ -400,7 +400,7 @@ export class ProductionConfigManager {
    */
   async generateDeploymentConfigs(configRequest) {
     const configs = {};
-    
+
     // Vercel configuration
     configs.vercel = {
       file: 'vercel.json',
@@ -437,25 +437,25 @@ export class ProductionConfigManager {
         }
       }, null, 2)
     };
-    
+
     // Railway configuration
     configs.railway = {
       file: 'railway.toml',
       content: this.generateRailwayConfig(configRequest)
     };
-    
+
     // Render configuration
     configs.render = {
       file: 'render.yaml',
       content: this.generateRenderConfig(configRequest)
     };
-    
+
     // GitHub Actions workflow
     configs.githubActions = {
       file: '.github/workflows/deploy.yml',
       content: this.generateGitHubActionsWorkflow(configRequest)
     };
-    
+
     return configs;
   }
 
@@ -464,35 +464,35 @@ export class ProductionConfigManager {
    */
   generateCSPPolicy(configRequest) {
     let policy = "default-src 'self'; ";
-    
+
     // Script sources
     policy += "script-src 'self' 'unsafe-inline'; ";
-    
+
     // Style sources
     policy += "style-src 'self' 'unsafe-inline' fonts.googleapis.com; ";
-    
+
     // Font sources
     policy += "font-src 'self' fonts.gstatic.com; ";
-    
+
     // Image sources
     policy += "img-src 'self' data: https:; ";
-    
+
     // Connect sources (API endpoints)
     if (configRequest.apiDomains) {
       policy += `connect-src 'self' ${configRequest.apiDomains.join(' ')}; `;
     } else {
       policy += "connect-src 'self'; ";
     }
-    
+
     // Frame sources
     policy += "frame-src 'none'; ";
-    
+
     // Object sources
     policy += "object-src 'none'; ";
-    
+
     // Base URI
     policy += "base-uri 'self'; ";
-    
+
     return policy.trim();
   }
 
@@ -502,7 +502,7 @@ export class ProductionConfigManager {
   generateDatabaseEnvVars(configRequest, environment) {
     const dbType = configRequest.database || 'postgresql';
     const isProduction = environment === 'production';
-    
+
     const vars = {
       DB_TYPE: dbType,
       DB_HOST: isProduction ? '${DATABASE_HOST}' : 'localhost',
@@ -511,17 +511,17 @@ export class ProductionConfigManager {
       DB_USER: isProduction ? '${DATABASE_USER}' : 'developer',
       DB_PASSWORD: isProduction ? '${DATABASE_PASSWORD}' : 'dev_password',
     };
-    
+
     // Add database-specific settings
     if (dbType === 'postgresql') {
       vars.DB_SSL_MODE = isProduction ? 'require' : 'disable';
     }
-    
+
     if (dbType === 'mysql') {
       vars.DB_CHARSET = 'utf8mb4';
       vars.DB_COLLATION = 'utf8mb4_unicode_ci';
     }
-    
+
     return vars;
   }
 
@@ -530,21 +530,21 @@ export class ProductionConfigManager {
    */
   generateSecurityEnvVars(configRequest, environment) {
     const isProduction = environment === 'production';
-    
+
     return {
       SECRET_KEY: isProduction ? '${SECRET_KEY}' : this.generateSecretKey(),
       JWT_SECRET: isProduction ? '${JWT_SECRET}' : this.generateSecretKey(),
       ENCRYPTION_KEY: isProduction ? '${ENCRYPTION_KEY}' : this.generateSecretKey(),
       SESSION_SECRET: isProduction ? '${SESSION_SECRET}' : this.generateSecretKey(),
-      
+
       // Password hashing
       BCRYPT_ROUNDS: isProduction ? 12 : 10,
-      
+
       // Rate limiting
       RATE_LIMIT_ENABLED: isProduction,
       RATE_LIMIT_WINDOW_MS: 15 * 60 * 1000,
       RATE_LIMIT_MAX_REQUESTS: isProduction ? 100 : 1000,
-      
+
       // Security headers
       SECURITY_HEADERS_ENABLED: isProduction,
       HTTPS_ONLY: isProduction,
@@ -693,7 +693,7 @@ export class ProductionConfigManager {
       'password', 'secret', 'key', 'token', 'credential',
       'private', 'auth', 'api_key', 'access_key'
     ];
-    
+
     return Object.keys(config).filter(key =>
       sensitivePatterns.some(pattern =>
         key.toLowerCase().includes(pattern)
@@ -704,7 +704,7 @@ export class ProductionConfigManager {
   validateConfigRequest(request) {
     const required = ['appName', 'template'];
     const missing = required.filter(field => !request[field]);
-    
+
     if (missing.length > 0) {
       throw new Error(`Missing required fields: ${missing.join(', ')}`);
     }

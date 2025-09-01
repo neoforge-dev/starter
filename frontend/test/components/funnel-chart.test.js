@@ -35,13 +35,13 @@ describe('FunnelChart', () => {
     });
 
     element = await fixture(html`
-      <funnel-chart 
+      <funnel-chart
         .timeRange=${'7d'}
         .showDropoffRates=${true}
         .interactive=${true}
       ></funnel-chart>
     `);
-    
+
     // Wait for data loading
     await new Promise(resolve => setTimeout(resolve, 100));
   });
@@ -81,14 +81,14 @@ describe('FunnelChart', () => {
         { name: 'Product', event_type: 'page_enter', path: '/product' },
         { name: 'Add to Cart', event_type: 'click_interaction', element: '.add-to-cart' }
       ];
-      
+
       await element.loadFunnelData();
     });
 
     it('should process analytics data into funnel steps', () => {
       expect(element.data).to.be.an('array');
       expect(element.data.length).to.be.greaterThan(0);
-      
+
       const firstStep = element.data[0];
       expect(firstStep).to.have.property('count');
       expect(firstStep).to.have.property('conversionRate');
@@ -98,10 +98,10 @@ describe('FunnelChart', () => {
 
     it('should calculate conversion rates correctly', () => {
       const steps = element.data;
-      
+
       // First step should have 100% conversion rate
       expect(steps[0].conversionRate).to.equal(100);
-      
+
       // Subsequent steps should have lower conversion rates
       for (let i = 1; i < steps.length; i++) {
         expect(steps[i].conversionRate).to.be.lessThan(steps[i - 1].conversionRate);
@@ -110,10 +110,10 @@ describe('FunnelChart', () => {
 
     it('should calculate drop-off rates', () => {
       const steps = element.data;
-      
+
       // First step should have 0% drop-off
       expect(steps[0].dropoffRate).to.equal(0);
-      
+
       // Check drop-off calculation for subsequent steps
       for (let i = 1; i < steps.length; i++) {
         if (steps[i - 1].count > steps[i].count) {
@@ -132,7 +132,7 @@ describe('FunnelChart', () => {
     it('should calculate step widths based on relative volume', () => {
       const steps = element.data;
       const maxCount = Math.max(...steps.map(s => s.count));
-      
+
       steps.forEach(step => {
         const expectedWidth = Math.max((step.count / maxCount) * 100, 10);
         expect(step.width).to.be.closeTo(expectedWidth, 1);
@@ -146,10 +146,10 @@ describe('FunnelChart', () => {
         { dimensions: { event_type: 'page_enter' }, count: 100 },
         { dimensions: { event_type: 'click_interaction' }, count: 50 }
       ];
-      
+
       const step = { event_type: 'page_enter' };
       const matches = element.findMatchingEvents(events, step);
-      
+
       expect(matches).to.have.length(1);
       expect(matches[0].count).to.equal(100);
     });
@@ -159,10 +159,10 @@ describe('FunnelChart', () => {
         { dimensions: { event_type: 'page_enter', page_path: '/home' }, count: 100 },
         { dimensions: { event_type: 'page_enter', page_path: '/product' }, count: 75 }
       ];
-      
+
       const step = { path: '/product' };
       const matches = element.findMatchingEvents(events, step);
-      
+
       expect(matches).to.have.length(1);
       expect(matches[0].count).to.equal(75);
     });
@@ -177,10 +177,10 @@ describe('FunnelChart', () => {
           count: 30
         }
       ];
-      
+
       const step = { element: '.add-to-cart' };
       const matches = element.findMatchingEvents(events, step);
-      
+
       expect(matches).to.have.length(1);
     });
 
@@ -194,10 +194,10 @@ describe('FunnelChart', () => {
           count: 15
         }
       ];
-      
+
       const step = { conversion_type: 'purchase' };
       const matches = element.findMatchingEvents(events, step);
-      
+
       expect(matches).to.have.length(1);
     });
   });
@@ -228,20 +228,20 @@ describe('FunnelChart', () => {
     it('should handle step clicks when interactive', () => {
       const eventSpy = spy();
       element.addEventListener('step-selected', eventSpy);
-      
+
       const step = element.data[0];
       element.handleStepClick(step, new Event('click'));
-      
+
       expect(eventSpy.calledOnce).to.be.true;
       expect(element.selectedSegment).to.equal(step);
     });
 
     it('should toggle selection on repeated clicks', () => {
       const step = element.data[0];
-      
+
       element.handleStepClick(step, new Event('click'));
       expect(element.selectedSegment).to.equal(step);
-      
+
       element.handleStepClick(step, new Event('click'));
       expect(element.selectedSegment).to.be.null;
     });
@@ -249,10 +249,10 @@ describe('FunnelChart', () => {
     it('should not handle clicks when not interactive', async () => {
       element.interactive = false;
       await element.updateComplete;
-      
+
       const step = element.data[0];
       const originalSelection = element.selectedSegment;
-      
+
       element.handleStepClick(step, new Event('click'));
       expect(element.selectedSegment).to.equal(originalSelection);
     });
@@ -260,19 +260,19 @@ describe('FunnelChart', () => {
     it('should show tooltips on hover when enabled', () => {
       const step = element.data[0];
       const mockEvent = { target: document.createElement('div') };
-      
+
       element.handleStepMouseEnter(step, mockEvent);
-      
+
       expect(element.tooltip).to.exist;
     });
 
     it('should hide tooltips on mouse leave', () => {
       const step = element.data[0];
       const mockEvent = { target: document.createElement('div') };
-      
+
       element.handleStepMouseEnter(step, mockEvent);
       element.handleStepMouseLeave();
-      
+
       if (element.tooltip) {
         expect(element.tooltip.classList.contains('visible')).to.be.false;
       }
@@ -288,9 +288,9 @@ describe('FunnelChart', () => {
         conversionRate: 75.0,
         dropoffRate: 25.0
       };
-      
+
       const content = element.renderTooltipContent(step);
-      
+
       expect(content).to.include('Product View');
       expect(content).to.include('750');
       expect(content).to.include('600');
@@ -306,9 +306,9 @@ describe('FunnelChart', () => {
         conversionRate: 100.0,
         dropoffRate: 0
       };
-      
+
       const content = element.renderTooltipContent(step);
-      
+
       expect(content).to.include('Landing');
       expect(content).to.not.include('Drop-off Rate');
     });
@@ -321,9 +321,9 @@ describe('FunnelChart', () => {
         dropoffRate: 60,
         conversionRate: 40
       };
-      
+
       const insights = element.generateStepInsights(step);
-      
+
       const warning = insights.find(i => i.type === 'warning');
       expect(warning).to.exist;
       expect(warning.message).to.include('drop-off rate');
@@ -335,9 +335,9 @@ describe('FunnelChart', () => {
         dropoffRate: 5,
         conversionRate: 85
       };
-      
+
       const insights = element.generateStepInsights(step);
-      
+
       const success = insights.find(i => i.type === 'success');
       expect(success).to.exist;
       expect(success.message).to.include('conversion rate');
@@ -350,9 +350,9 @@ describe('FunnelChart', () => {
         dropoffRate: 20,
         conversionRate: 60
       };
-      
+
       const insights = element.generateStepInsights(step);
-      
+
       const info = insights.find(i => i.type === 'info');
       expect(info).to.exist;
       expect(info.message).to.include('multiple times');
@@ -363,9 +363,9 @@ describe('FunnelChart', () => {
         dropoffRate: 40,
         conversionRate: 15
       };
-      
+
       const recommendations = element.generateStepRecommendations(step);
-      
+
       expect(recommendations).to.be.an('array').with.length.greaterThan(0);
       expect(recommendations.some(r => r.includes('A/B test'))).to.be.true;
     });
@@ -385,7 +385,7 @@ describe('FunnelChart', () => {
     it('should calculate overall conversion rate', () => {
       const summaryStats = element.renderSummaryStats();
       expect(summaryStats).to.not.be.empty;
-      
+
       // Check if conversion rate is calculated (200/1000 = 20%)
       const overallRate = (200 / 1000) * 100;
       expect(overallRate).to.equal(20);
@@ -396,7 +396,7 @@ describe('FunnelChart', () => {
       element.data.forEach((step, index) => {
         step.dropoffRate = index === 0 ? 0 : (element.data[index - 1].count - step.count) / element.data[index - 1].count * 100;
       });
-      
+
       const avgDropoff = element.data.reduce((sum, step) => sum + step.dropoffRate, 0) / element.data.length;
       expect(avgDropoff).to.be.a('number');
     });
@@ -405,17 +405,17 @@ describe('FunnelChart', () => {
   describe('Control Interactions', () => {
     it('should toggle drop-off rates display', async () => {
       const initialState = element.showDropoffRates;
-      
+
       element.toggleDropoffRates();
-      
+
       expect(element.showDropoffRates).to.equal(!initialState);
     });
 
     it('should toggle tooltips display', async () => {
       const initialState = element.showTooltips;
-      
+
       element.toggleTooltips();
-      
+
       expect(element.showTooltips).to.equal(!initialState);
     });
   });
@@ -423,20 +423,20 @@ describe('FunnelChart', () => {
   describe('Time Range Changes', () => {
     it('should reload data when time range changes', async () => {
       const loadDataSpy = spy(element, 'loadFunnelData');
-      
+
       element.timeRange = '30d';
       await element.loadFunnelData();
-      
+
       expect(loadDataSpy.called).to.be.true;
     });
 
     it('should use correct date range in API calls', async () => {
       element.timeRange = '1d';
       await element.loadFunnelData();
-      
+
       const lastCall = apiStub.lastCall;
       expect(lastCall).to.exist;
-      
+
       // Check if API was called with correct date parameters
       expect(apiStub.called).to.be.true;
     });
@@ -446,9 +446,9 @@ describe('FunnelChart', () => {
     it('should handle API errors gracefully', async () => {
       apiStub.restore();
       apiStub = stub(window, 'fetch').rejects(new Error('Network error'));
-      
+
       const errorElement = await fixture(html`<funnel-chart></funnel-chart>`);
-      
+
       // Should not throw error
       expect(errorElement).to.exist;
       expect(errorElement.loading).to.be.false;
@@ -457,7 +457,7 @@ describe('FunnelChart', () => {
     it('should show empty state when no data', async () => {
       element.data = [];
       await element.updateComplete;
-      
+
       const emptyState = element.shadowRoot.querySelector('.empty-state');
       expect(emptyState).to.exist;
     });
@@ -468,9 +468,9 @@ describe('FunnelChart', () => {
         ok: true,
         json: () => Promise.resolve({ data: { results: [] } })
       });
-      
+
       await element.loadFunnelData();
-      
+
       expect(element.data).to.be.an('array');
     });
   });
@@ -513,7 +513,7 @@ describe('FunnelChart', () => {
     it('should render drop-off indicators for high drop-off rates', () => {
       element.data[1].dropoffRate = 30; // High drop-off
       element.requestUpdate();
-      
+
       return element.updateComplete.then(() => {
         const dropoffIndicators = element.shadowRoot.querySelectorAll('.dropoff-indicator');
         expect(dropoffIndicators.length).to.be.greaterThan(0);
@@ -522,7 +522,7 @@ describe('FunnelChart', () => {
 
     it('should apply step colors correctly', () => {
       const stepBars = element.shadowRoot.querySelectorAll('.step-bar');
-      
+
       stepBars.forEach((bar, index) => {
         const style = getComputedStyle(bar);
         // Check if color is applied (would need to inspect CSS custom properties)
@@ -533,7 +533,7 @@ describe('FunnelChart', () => {
     it('should show loading state', async () => {
       element.loading = true;
       await element.updateComplete;
-      
+
       const loadingSpinner = element.shadowRoot.querySelector('.loading-spinner');
       expect(loadingSpinner).to.exist;
     });
@@ -548,7 +548,7 @@ describe('FunnelChart', () => {
 
     it('should support keyboard navigation', () => {
       const steps = element.shadowRoot.querySelectorAll('.funnel-step');
-      
+
       steps.forEach(step => {
         // Steps should be focusable for keyboard navigation
         expect(step.getAttribute('tabindex')).to.not.be.null;
@@ -569,10 +569,10 @@ describe('FunnelChart', () => {
         configurable: true,
         value: 400,
       });
-      
+
       element.dispatchEvent(new Event('resize'));
       await element.updateComplete;
-      
+
       // Should still render correctly
       const container = element.shadowRoot.querySelector('.funnel-container');
       expect(container).to.exist;

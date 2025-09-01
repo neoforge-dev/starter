@@ -1,6 +1,6 @@
 /**
  * Deployment Validator
- * 
+ *
  * Comprehensive validation system that ensures deployed applications are working correctly.
  * Integrates with health checks and provides real-time feedback on deployment success.
  */
@@ -20,13 +20,13 @@ export class DeploymentValidator {
   async validateDeployment(deploymentConfig) {
     const validationId = this.generateValidationId();
     const startTime = Date.now();
-    
+
     try {
       console.log('🔍 Starting deployment validation...', { validationId, config: deploymentConfig });
-      
+
       // Track validation start
       this.trackValidationStart(validationId, deploymentConfig);
-      
+
       // Run validation phases
       const results = {
         validationId,
@@ -36,45 +36,45 @@ export class DeploymentValidator {
         startTime,
         status: 'running'
       };
-      
+
       // Phase 1: Basic connectivity
       results.phases.connectivity = await this.validateConnectivity(deploymentConfig);
       this.notifyProgress(validationId, 'connectivity', results.phases.connectivity);
-      
+
       // Phase 2: Platform-specific validation
       results.phases.platform = await this.validatePlatform(deploymentConfig);
       this.notifyProgress(validationId, 'platform', results.phases.platform);
-      
+
       // Phase 3: Application health
       results.phases.health = await this.validateApplicationHealth(deploymentConfig);
       this.notifyProgress(validationId, 'health', results.phases.health);
-      
+
       // Phase 4: Performance validation
       results.phases.performance = await this.validatePerformance(deploymentConfig);
       this.notifyProgress(validationId, 'performance', results.phases.performance);
-      
+
       // Phase 5: Security validation
       results.phases.security = await this.validateSecurity(deploymentConfig);
       this.notifyProgress(validationId, 'security', results.phases.security);
-      
+
       // Calculate overall status
       results.endTime = Date.now();
       results.duration = results.endTime - startTime;
       results.status = this.calculateOverallStatus(results.phases);
       results.summary = this.generateValidationSummary(results);
-      
+
       // Store and notify
       this.validationResults.set(validationId, results);
       this.notifyComplete(validationId, results);
-      
-      console.log('✅ Deployment validation complete', { 
-        validationId, 
+
+      console.log('✅ Deployment validation complete', {
+        validationId,
         status: results.status,
-        duration: results.duration 
+        duration: results.duration
       });
-      
+
       return results;
-      
+
     } catch (error) {
       const errorResult = {
         validationId,
@@ -83,10 +83,10 @@ export class DeploymentValidator {
         endTime: Date.now(),
         duration: Date.now() - startTime
       };
-      
+
       this.validationResults.set(validationId, errorResult);
       this.notifyError(validationId, errorResult);
-      
+
       console.error('❌ Deployment validation failed', { validationId, error });
       return errorResult;
     }
@@ -97,17 +97,17 @@ export class DeploymentValidator {
    */
   async validateConnectivity(config) {
     console.log('🌐 Validating connectivity...');
-    
+
     const checks = {
       httpResponse: await this.checkHttpResponse(config.url),
       httpsRedirect: await this.checkHttpsRedirect(config.url),
       dns: await this.checkDNSResolution(config.url),
       cors: await this.checkCORSConfiguration(config.url)
     };
-    
+
     const passed = Object.values(checks).filter(check => check.passed).length;
     const total = Object.keys(checks).length;
-    
+
     return {
       status: passed === total ? 'passed' : 'failed',
       passed,
@@ -122,7 +122,7 @@ export class DeploymentValidator {
    */
   async validatePlatform(config) {
     console.log('🔧 Validating platform configuration...');
-    
+
     try {
       const result = await this.platformValidators.validatePlatform(config.platform, config);
       return {
@@ -146,30 +146,30 @@ export class DeploymentValidator {
    */
   async validateApplicationHealth(config) {
     console.log('💚 Validating application health...');
-    
+
     const checks = {};
-    
+
     // Check for health endpoint
     const healthEndpoints = this.getHealthEndpoints(config);
-    
+
     for (const endpoint of healthEndpoints) {
       const checkName = endpoint.replace(/[^a-zA-Z0-9]/g, '_');
       checks[checkName] = await this.checkHealthEndpoint(`${config.url}${endpoint}`);
     }
-    
+
     // Check for frontend health indicators
     if (config.type === 'frontend-only' || config.type === 'fullstack') {
       checks.frontend_health = await this.checkFrontendHealth(config.url);
     }
-    
+
     // Check for API functionality
     if (config.type === 'api-only' || config.type === 'fullstack') {
       checks.api_health = await this.checkAPIHealth(config.url);
     }
-    
+
     const passed = Object.values(checks).filter(check => check.passed).length;
     const total = Object.keys(checks).length;
-    
+
     return {
       status: passed >= Math.ceil(total * 0.8) ? 'passed' : 'failed', // 80% threshold
       passed,
@@ -183,17 +183,17 @@ export class DeploymentValidator {
    */
   async validatePerformance(config) {
     console.log('⚡ Validating performance...');
-    
+
     const checks = {
       loadTime: await this.checkLoadTime(config.url),
       firstPaint: await this.checkFirstPaint(config.url),
       resourceSizes: await this.checkResourceSizes(config.url),
       compression: await this.checkCompression(config.url)
     };
-    
+
     const passed = Object.values(checks).filter(check => check.passed).length;
     const total = Object.keys(checks).length;
-    
+
     return {
       status: passed >= Math.ceil(total * 0.7) ? 'passed' : 'failed', // 70% threshold for performance
       passed,
@@ -207,17 +207,17 @@ export class DeploymentValidator {
    */
   async validateSecurity(config) {
     console.log('🔒 Validating security...');
-    
+
     const checks = {
       https: await this.checkHttpsEnforcement(config.url),
       headers: await this.checkSecurityHeaders(config.url),
       certificates: await this.checkSSLCertificate(config.url),
       vulnerabilities: await this.checkCommonVulnerabilities(config.url)
     };
-    
+
     const passed = Object.values(checks).filter(check => check.passed).length;
     const total = Object.keys(checks).length;
-    
+
     return {
       status: passed >= Math.ceil(total * 0.9) ? 'passed' : 'failed', // 90% threshold for security
       passed,
@@ -231,15 +231,15 @@ export class DeploymentValidator {
    */
   async checkHttpResponse(url) {
     const startTime = Date.now();
-    
+
     try {
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Cache-Control': 'no-cache' }
       });
-      
+
       const duration = Date.now() - startTime;
-      
+
       return {
         passed: response.ok,
         status: response.status,
@@ -261,7 +261,7 @@ export class DeploymentValidator {
    */
   async checkHttpsRedirect(url) {
     const startTime = Date.now();
-    
+
     if (!url.startsWith('https://')) {
       return {
         passed: false,
@@ -269,18 +269,18 @@ export class DeploymentValidator {
         duration: Date.now() - startTime
       };
     }
-    
+
     const httpUrl = url.replace('https://', 'http://');
-    
+
     try {
       const response = await fetch(httpUrl, {
         method: 'GET',
         redirect: 'manual'
       });
-      
+
       const duration = Date.now() - startTime;
       const location = response.headers.get('location');
-      
+
       return {
         passed: response.status >= 300 && response.status < 400 && location?.startsWith('https://'),
         status: response.status,
@@ -301,11 +301,11 @@ export class DeploymentValidator {
    */
   async checkDNSResolution(url) {
     const startTime = Date.now();
-    
+
     try {
       // Simple DNS check by trying to connect
       const response = await fetch(url, { method: 'HEAD' });
-      
+
       return {
         passed: true,
         duration: Date.now() - startTime,
@@ -325,7 +325,7 @@ export class DeploymentValidator {
    */
   async checkCORSConfiguration(url) {
     const startTime = Date.now();
-    
+
     try {
       const response = await fetch(url, {
         method: 'OPTIONS',
@@ -334,14 +334,14 @@ export class DeploymentValidator {
           'Access-Control-Request-Method': 'GET'
         }
       });
-      
+
       const duration = Date.now() - startTime;
       const corsHeaders = {
         'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
         'access-control-allow-methods': response.headers.get('access-control-allow-methods'),
         'access-control-allow-headers': response.headers.get('access-control-allow-headers')
       };
-      
+
       return {
         passed: response.ok || response.status === 204,
         status: response.status,
@@ -362,11 +362,11 @@ export class DeploymentValidator {
    */
   async checkHealthEndpoint(url) {
     const startTime = Date.now();
-    
+
     try {
       const response = await fetch(url);
       const duration = Date.now() - startTime;
-      
+
       if (!response.ok) {
         return {
           passed: false,
@@ -375,16 +375,16 @@ export class DeploymentValidator {
           duration
         };
       }
-      
+
       const contentType = response.headers.get('content-type');
       let data = null;
-      
+
       if (contentType?.includes('application/json')) {
         data = await response.json();
       } else if (contentType?.includes('text/')) {
         data = await response.text();
       }
-      
+
       return {
         passed: true,
         status: response.status,
@@ -406,22 +406,22 @@ export class DeploymentValidator {
    */
   async checkFrontendHealth(url) {
     const startTime = Date.now();
-    
+
     try {
       const response = await fetch(url);
       const html = await response.text();
       const duration = Date.now() - startTime;
-      
+
       const checks = {
         hasTitle: html.includes('<title>'),
         hasMetaViewport: html.includes('name="viewport"'),
         noJsErrors: !html.includes('Uncaught'),
         hasMainContent: html.length > 1000
       };
-      
+
       const passed = Object.values(checks).filter(Boolean).length;
       const total = Object.keys(checks).length;
-      
+
       return {
         passed: passed >= Math.ceil(total * 0.75),
         checks,
@@ -443,7 +443,7 @@ export class DeploymentValidator {
   async checkAPIHealth(url) {
     const startTime = Date.now();
     const apiEndpoints = ['/api/health', '/health', '/api/status'];
-    
+
     for (const endpoint of apiEndpoints) {
       try {
         const response = await fetch(`${url}${endpoint}`);
@@ -461,7 +461,7 @@ export class DeploymentValidator {
         // Continue to next endpoint
       }
     }
-    
+
     return {
       passed: false,
       reason: 'No accessible API health endpoints found',
@@ -474,12 +474,12 @@ export class DeploymentValidator {
    */
   async checkLoadTime(url) {
     const startTime = Date.now();
-    
+
     try {
       const response = await fetch(url);
       await response.text(); // Ensure full download
       const duration = Date.now() - startTime;
-      
+
       return {
         passed: duration < 3000, // 3 second threshold
         duration,
@@ -499,22 +499,22 @@ export class DeploymentValidator {
    */
   async checkSecurityHeaders(url) {
     const startTime = Date.now();
-    
+
     try {
       const response = await fetch(url);
       const duration = Date.now() - startTime;
-      
+
       const requiredHeaders = [
         'x-frame-options',
         'x-content-type-options',
         'referrer-policy',
         'strict-transport-security'
       ];
-      
-      const presentHeaders = requiredHeaders.filter(header => 
+
+      const presentHeaders = requiredHeaders.filter(header =>
         response.headers.has(header)
       );
-      
+
       return {
         passed: presentHeaders.length >= Math.ceil(requiredHeaders.length * 0.75),
         requiredHeaders,
@@ -543,15 +543,15 @@ export class DeploymentValidator {
    */
   getHealthEndpoints(config) {
     const endpoints = [];
-    
+
     if (config.type === 'frontend-only' || config.type === 'static-site') {
       endpoints.push('/health.html');
     }
-    
+
     if (config.type === 'api-only' || config.type === 'fullstack') {
       endpoints.push('/api/health', '/health', '/api/health/ready');
     }
-    
+
     return endpoints;
   }
 
@@ -560,18 +560,18 @@ export class DeploymentValidator {
    */
   isHealthy(data) {
     if (!data) return false;
-    
+
     if (typeof data === 'string') {
-      return !data.toLowerCase().includes('error') && 
+      return !data.toLowerCase().includes('error') &&
              !data.toLowerCase().includes('fail');
     }
-    
+
     if (typeof data === 'object') {
-      return data.status === 'healthy' || 
-             data.status === 'ok' || 
+      return data.status === 'healthy' ||
+             data.status === 'ok' ||
              data.healthy === true;
     }
-    
+
     return true;
   }
 
@@ -582,26 +582,26 @@ export class DeploymentValidator {
     const criticalPhases = ['connectivity', 'health'];
     const importantPhases = ['platform'];
     const optionalPhases = ['performance', 'security'];
-    
+
     // Critical phases must pass (connectivity, health)
-    const criticalPassed = criticalPhases.every(phase => 
+    const criticalPassed = criticalPhases.every(phase =>
       phases[phase]?.status === 'passed'
     );
-    
+
     if (!criticalPassed) return 'failed';
-    
+
     // Important phases should pass (platform)
     const importantPassed = importantPhases.every(phase =>
       phases[phase]?.status === 'passed'
     );
-    
+
     // Count optional phase results
     const optionalResults = optionalPhases.filter(phase => phases[phase])
       .map(phase => phases[phase].status === 'passed');
-    
-    const optionalPassed = optionalResults.length > 0 ? 
+
+    const optionalPassed = optionalResults.length > 0 ?
       optionalResults.filter(Boolean).length / optionalResults.length : 1;
-    
+
     // Determine overall status
     if (importantPassed && optionalPassed >= 0.8) return 'passed';
     if (importantPassed && optionalPassed >= 0.5) return 'warning';
@@ -615,12 +615,12 @@ export class DeploymentValidator {
   generateValidationSummary(results) {
     const issues = [];
     const recommendations = [];
-    
+
     // Analyze each phase
     Object.entries(results.phases).forEach(([phase, result]) => {
       if (result.status === 'failed') {
         issues.push(`${phase} validation failed`);
-        
+
         if (phase === 'security') {
           recommendations.push('Implement security headers and HTTPS enforcement');
         } else if (phase === 'performance') {
@@ -630,7 +630,7 @@ export class DeploymentValidator {
         }
       }
     });
-    
+
     return {
       overallStatus: results.status,
       totalDuration: results.duration,
@@ -652,27 +652,27 @@ export class DeploymentValidator {
         'Review security configuration periodically'
       ];
     }
-    
+
     const steps = [];
-    
+
     if (results.phases.connectivity?.status === 'failed') {
       steps.push('Fix connectivity issues first');
     }
-    
+
     if (results.phases.health?.status === 'failed') {
       steps.push('Implement health check endpoints');
     }
-    
+
     if (results.phases.security?.status === 'failed') {
       steps.push('Configure security headers and HTTPS');
     }
-    
+
     if (results.phases.performance?.status === 'failed') {
       steps.push('Optimize application performance');
     }
-    
+
     steps.push('Re-run validation after making changes');
-    
+
     return steps;
   }
 

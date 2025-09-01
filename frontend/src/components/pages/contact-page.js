@@ -10,14 +10,14 @@ export class ContactPage extends BasePageComponent {
         margin: 0 auto;
         text-align: center;
       }
-      
+
       .form-grid {
         display: flex;
         flex-direction: column;
         gap: var(--spacing-md);
         margin-bottom: var(--spacing-lg);
       }
-      
+
       input,
       textarea {
         padding: var(--spacing-sm);
@@ -26,14 +26,14 @@ export class ContactPage extends BasePageComponent {
         font-size: var(--text-base);
         transition: border-color 0.2s;
       }
-      
+
       input:focus,
       textarea:focus {
         outline: none;
         border-color: var(--primary-color);
         box-shadow: 0 0 0 2px var(--primary-color, #3b82f6)40;
       }
-      
+
       .submit-button {
         background: var(--primary-color);
         color: white;
@@ -45,11 +45,11 @@ export class ContactPage extends BasePageComponent {
         transition: opacity 0.2s;
         align-self: center;
       }
-      
+
       .submit-button:hover:not(:disabled) {
         opacity: 0.9;
       }
-      
+
       .submit-button:disabled {
         opacity: 0.6;
         cursor: not-allowed;
@@ -68,31 +68,31 @@ export class ContactPage extends BasePageComponent {
       <div class="contact-form">
         <form class="form-container" @submit=${this._handleSubmit}>
           <div class="form-grid">
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="name"
-              placeholder="Your Name" 
-              required 
+              placeholder="Your Name"
+              required
               ?disabled=${this.loading}
             />
-            <input 
-              type="email" 
+            <input
+              type="email"
               name="email"
-              placeholder="Your Email" 
-              required 
+              placeholder="Your Email"
+              required
               ?disabled=${this.loading}
             />
-            <textarea 
+            <textarea
               name="message"
-              placeholder="Your Message" 
-              rows="5" 
-              required 
+              placeholder="Your Message"
+              rows="5"
+              required
               ?disabled=${this.loading}
             ></textarea>
           </div>
-          
-          <button 
-            type="submit" 
+
+          <button
+            type="submit"
             class="submit-button"
             ?disabled=${this.loading}
           >
@@ -105,7 +105,7 @@ export class ContactPage extends BasePageComponent {
 
   async _handleSubmit(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(e.target);
     const data = {
       name: formData.get("name"),
@@ -130,12 +130,12 @@ export class ContactPage extends BasePageComponent {
       await this.handleAsync(async () => {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         // In a real app, you would submit to your API here
         console.log("Contact form submitted:", data);
-        
+
         this.showToast("Thank you for contacting us! We'll get back to you soon.", "success");
-        
+
         // Reset form
         e.target.reset();
       });

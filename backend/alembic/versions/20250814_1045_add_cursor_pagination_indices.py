@@ -18,161 +18,169 @@ Performance Benefits:
 """
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '20250814_add_cursor_pagination_indices'
-down_revision: Union[str, None] = '20250812_add_proj_support_comm_idemp'
+revision: str = "20250814_add_cursor_pagination_indices"
+down_revision: Union[str, None] = "20250812_add_proj_support_comm_idemp"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
     """Add optimized indices for cursor-based pagination."""
-    
+
     # Projects table indices for cursor pagination
     # Primary sort: created_at DESC, id DESC (newest first)
     op.create_index(
-        'ix_projects_created_at_id_desc',
-        'projects',
-        [sa.text('created_at DESC'), sa.text('id DESC')],
-        unique=False
+        "ix_projects_created_at_id_desc",
+        "projects",
+        [sa.text("created_at DESC"), sa.text("id DESC")],
+        unique=False,
     )
-    
+
     # Alternative sort: updated_at DESC, id DESC (recently updated first)
     op.create_index(
-        'ix_projects_updated_at_id_desc',
-        'projects',
-        [sa.text('updated_at DESC'), sa.text('id DESC')],
-        unique=False
+        "ix_projects_updated_at_id_desc",
+        "projects",
+        [sa.text("updated_at DESC"), sa.text("id DESC")],
+        unique=False,
     )
-    
+
     # Covering index for projects with essential fields (avoids table lookup)
     op.create_index(
-        'ix_projects_created_at_covering',
-        'projects',
-        ['created_at', 'id'],
+        "ix_projects_created_at_covering",
+        "projects",
+        ["created_at", "id"],
         unique=False,
-        postgresql_include=['name', 'owner_id', 'updated_at']
+        postgresql_include=["name", "owner_id", "updated_at"],
     )
-    
+
     # Support tickets table indices for cursor pagination
     # Primary sort: created_at DESC, id DESC (newest tickets first)
     op.create_index(
-        'ix_support_tickets_created_at_id_desc',
-        'support_tickets',
-        [sa.text('created_at DESC'), sa.text('id DESC')],
-        unique=False
+        "ix_support_tickets_created_at_id_desc",
+        "support_tickets",
+        [sa.text("created_at DESC"), sa.text("id DESC")],
+        unique=False,
     )
-    
+
     # Alternative sort: updated_at DESC, id DESC (recently updated tickets)
     op.create_index(
-        'ix_support_tickets_updated_at_id_desc',
-        'support_tickets',
-        [sa.text('updated_at DESC'), sa.text('id DESC')],
-        unique=False
+        "ix_support_tickets_updated_at_id_desc",
+        "support_tickets",
+        [sa.text("updated_at DESC"), sa.text("id DESC")],
+        unique=False,
     )
-    
+
     # Status-based filtering with cursor support
     op.create_index(
-        'ix_support_tickets_status_created_at_id',
-        'support_tickets',
-        ['status', sa.text('created_at DESC'), sa.text('id DESC')],
-        unique=False
+        "ix_support_tickets_status_created_at_id",
+        "support_tickets",
+        ["status", sa.text("created_at DESC"), sa.text("id DESC")],
+        unique=False,
     )
-    
+
     # Covering index for support tickets with essential fields
     op.create_index(
-        'ix_support_tickets_created_at_covering',
-        'support_tickets',
-        ['created_at', 'id'],
+        "ix_support_tickets_created_at_covering",
+        "support_tickets",
+        ["created_at", "id"],
         unique=False,
-        postgresql_include=['email', 'subject', 'status', 'updated_at']
+        postgresql_include=["email", "subject", "status", "updated_at"],
     )
-    
+
     # Community posts table indices for cursor pagination
     # Primary sort: created_at DESC, id DESC (newest posts first)
     op.create_index(
-        'ix_community_posts_created_at_id_desc',
-        'community_posts',
-        [sa.text('created_at DESC'), sa.text('id DESC')],
-        unique=False
+        "ix_community_posts_created_at_id_desc",
+        "community_posts",
+        [sa.text("created_at DESC"), sa.text("id DESC")],
+        unique=False,
     )
-    
+
     # Alternative sort: updated_at DESC, id DESC (recently updated posts)
     op.create_index(
-        'ix_community_posts_updated_at_id_desc',
-        'community_posts',
-        [sa.text('updated_at DESC'), sa.text('id DESC')],
-        unique=False
+        "ix_community_posts_updated_at_id_desc",
+        "community_posts",
+        [sa.text("updated_at DESC"), sa.text("id DESC")],
+        unique=False,
     )
-    
+
     # Author-based filtering with cursor support
     op.create_index(
-        'ix_community_posts_author_created_at_id',
-        'community_posts',
-        ['author', sa.text('created_at DESC'), sa.text('id DESC')],
-        unique=False
+        "ix_community_posts_author_created_at_id",
+        "community_posts",
+        ["author", sa.text("created_at DESC"), sa.text("id DESC")],
+        unique=False,
     )
-    
+
     # Covering index for community posts with essential fields
     op.create_index(
-        'ix_community_posts_created_at_covering',
-        'community_posts',
-        ['created_at', 'id'],
+        "ix_community_posts_created_at_covering",
+        "community_posts",
+        ["created_at", "id"],
         unique=False,
-        postgresql_include=['title', 'author', 'updated_at']
+        postgresql_include=["title", "author", "updated_at"],
     )
-    
+
     # Add indices for ascending sorts (less common but may be needed)
-    
+
     # Projects ascending sorts
     op.create_index(
-        'ix_projects_created_at_id_asc',
-        'projects',
-        [sa.text('created_at ASC'), sa.text('id ASC')],
-        unique=False
+        "ix_projects_created_at_id_asc",
+        "projects",
+        [sa.text("created_at ASC"), sa.text("id ASC")],
+        unique=False,
     )
-    
+
     # Support tickets ascending sorts
     op.create_index(
-        'ix_support_tickets_created_at_id_asc',
-        'support_tickets',
-        [sa.text('created_at ASC'), sa.text('id ASC')],
-        unique=False
+        "ix_support_tickets_created_at_id_asc",
+        "support_tickets",
+        [sa.text("created_at ASC"), sa.text("id ASC")],
+        unique=False,
     )
-    
+
     # Community posts ascending sorts
     op.create_index(
-        'ix_community_posts_created_at_id_asc',
-        'community_posts',
-        [sa.text('created_at ASC'), sa.text('id ASC')],
-        unique=False
+        "ix_community_posts_created_at_id_asc",
+        "community_posts",
+        [sa.text("created_at ASC"), sa.text("id ASC")],
+        unique=False,
     )
 
 
 def downgrade() -> None:
     """Remove cursor pagination indices."""
-    
+
     # Drop all the indices in reverse order
-    
+
     # Community posts indices
-    op.drop_index('ix_community_posts_created_at_id_asc', table_name='community_posts')
-    op.drop_index('ix_community_posts_created_at_covering', table_name='community_posts')
-    op.drop_index('ix_community_posts_author_created_at_id', table_name='community_posts')
-    op.drop_index('ix_community_posts_updated_at_id_desc', table_name='community_posts')
-    op.drop_index('ix_community_posts_created_at_id_desc', table_name='community_posts')
-    
+    op.drop_index("ix_community_posts_created_at_id_asc", table_name="community_posts")
+    op.drop_index(
+        "ix_community_posts_created_at_covering", table_name="community_posts"
+    )
+    op.drop_index(
+        "ix_community_posts_author_created_at_id", table_name="community_posts"
+    )
+    op.drop_index("ix_community_posts_updated_at_id_desc", table_name="community_posts")
+    op.drop_index("ix_community_posts_created_at_id_desc", table_name="community_posts")
+
     # Support tickets indices
-    op.drop_index('ix_support_tickets_created_at_id_asc', table_name='support_tickets')
-    op.drop_index('ix_support_tickets_created_at_covering', table_name='support_tickets')
-    op.drop_index('ix_support_tickets_status_created_at_id', table_name='support_tickets')
-    op.drop_index('ix_support_tickets_updated_at_id_desc', table_name='support_tickets')
-    op.drop_index('ix_support_tickets_created_at_id_desc', table_name='support_tickets')
-    
+    op.drop_index("ix_support_tickets_created_at_id_asc", table_name="support_tickets")
+    op.drop_index(
+        "ix_support_tickets_created_at_covering", table_name="support_tickets"
+    )
+    op.drop_index(
+        "ix_support_tickets_status_created_at_id", table_name="support_tickets"
+    )
+    op.drop_index("ix_support_tickets_updated_at_id_desc", table_name="support_tickets")
+    op.drop_index("ix_support_tickets_created_at_id_desc", table_name="support_tickets")
+
     # Projects indices
-    op.drop_index('ix_projects_created_at_id_asc', table_name='projects')
-    op.drop_index('ix_projects_created_at_covering', table_name='projects')
-    op.drop_index('ix_projects_updated_at_id_desc', table_name='projects')
-    op.drop_index('ix_projects_created_at_id_desc', table_name='projects')
+    op.drop_index("ix_projects_created_at_id_asc", table_name="projects")
+    op.drop_index("ix_projects_created_at_covering", table_name="projects")
+    op.drop_index("ix_projects_updated_at_id_desc", table_name="projects")
+    op.drop_index("ix_projects_created_at_id_desc", table_name="projects")

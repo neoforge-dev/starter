@@ -1,9 +1,9 @@
 /**
  * Story Extractor - Convert Storybook stories to playground format
- * 
+ *
  * This utility extracts story information from .stories.js files and converts them
  * to the Native Web Components playground format.
- * 
+ *
  * Browser-compatible implementation using simulation for demo purposes.
  * In production, this would be done at build time with proper AST parsing.
  */
@@ -43,7 +43,7 @@ export class StoryExtractor {
     // Extract component information from file path
     const pathParts = filePath.split('/');
     const fileName = pathParts[pathParts.length - 1].replace('.stories.js', '');
-    
+
     if (filePath.includes('button')) {
       return {
         component: 'neo-button',
@@ -87,7 +87,7 @@ export class StoryExtractor {
             props: { label: 'Primary Button', variant: 'primary' }
           },
           {
-            name: 'Secondary', 
+            name: 'Secondary',
             props: { label: 'Secondary Button', variant: 'secondary' }
           },
           {

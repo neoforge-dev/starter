@@ -275,7 +275,7 @@ export class LoginForm extends LitElement {
       input {
         border-width: 2px;
       }
-      
+
       button {
         border: 2px solid transparent;
       }
@@ -320,16 +320,16 @@ export class LoginForm extends LitElement {
 
   private _validatePassword(password: string): 'weak' | 'medium' | 'strong' | '' {
     if (password.length === 0) return '';
-    
+
     const hasMinLength = password.length >= 8;
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
+
     const criteriaCount = [hasMinLength, hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar]
       .filter(Boolean).length;
-    
+
     if (criteriaCount >= 4) return 'strong';
     if (criteriaCount >= 2) return 'medium';
     return 'weak';
@@ -339,7 +339,7 @@ export class LoginForm extends LitElement {
     const target = e.target as HTMLInputElement;
     const password = target.value;
     this._passwordStrength = this._validatePassword(password);
-    
+
     // Clear password field error when user starts typing
     if (this._fieldErrors['password']) {
       this._fieldErrors = { ...this._fieldErrors };
@@ -351,14 +351,14 @@ export class LoginForm extends LitElement {
   private _handleEmailInput(e: Event): void {
     const target = e.target as HTMLInputElement;
     const email = target.value;
-    
+
     // Clear email field error when user starts typing
     if (this._fieldErrors['email']) {
       this._fieldErrors = { ...this._fieldErrors };
       delete this._fieldErrors['email'];
       this.requestUpdate();
     }
-    
+
     // Clear general error when user modifies form
     if (this.errorMessage) {
       this.errorMessage = '';
@@ -444,7 +444,7 @@ export class LoginForm extends LitElement {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Login failed";
       this.errorMessage = message;
-      
+
       this.dispatchEvent(
         new CustomEvent("login-error", {
           detail: { message },
@@ -468,12 +468,12 @@ export class LoginForm extends LitElement {
       >
         <div class="form-group">
           <label for="email">Email Address</label>
-          <input 
-            type="email" 
-            id="email" 
-            name="email" 
-            data-testid="login-email" 
-            required 
+          <input
+            type="email"
+            id="email"
+            name="email"
+            data-testid="login-email"
+            required
             autocomplete="email"
             aria-describedby=${this._fieldErrors['email'] ? "email-error" : ""}
             aria-invalid=${this._fieldErrors['email'] ? "true" : "false"}
@@ -487,12 +487,12 @@ export class LoginForm extends LitElement {
         <div class="form-group">
           <label for="password">Password</label>
           <div class="password-container">
-            <input 
-              type="password" 
-              id="password" 
-              name="password" 
-              data-testid="login-password" 
-              required 
+            <input
+              type="password"
+              id="password"
+              name="password"
+              data-testid="login-password"
+              required
               class="password-input"
               autocomplete="current-password"
               minlength="8"
@@ -543,9 +543,9 @@ export class LoginForm extends LitElement {
             : "Sign In"}
         </button>
 
-        <a 
-          href="#" 
-          class="forgot-password" 
+        <a
+          href="#"
+          class="forgot-password"
           @click=${this._showForgotPassword}
           role="button"
         >

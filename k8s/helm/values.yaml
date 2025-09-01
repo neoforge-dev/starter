@@ -34,13 +34,13 @@ api:
     repository: neoforge/backend
     tag: "latest"
     pullPolicy: Always
-  
+
   service:
     type: ClusterIP
     port: 8000
     targetPort: 8000
     annotations: {}
-  
+
   resources:
     requests:
       memory: "512Mi"
@@ -48,11 +48,11 @@ api:
     limits:
       memory: "1Gi"
       cpu: "1000m"
-  
+
   nodeSelector: {}
   tolerations: []
   affinity: {}
-  
+
   # Probes configuration
   livenessProbe:
     httpGet:
@@ -62,7 +62,7 @@ api:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 6
-  
+
   readinessProbe:
     httpGet:
       path: /health/ready
@@ -71,13 +71,13 @@ api:
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
-  
+
   # Environment variables
   env:
     ENVIRONMENT: production
     API_PORT: "8000"
     LOG_LEVEL: INFO
-  
+
   # ConfigMap and Secret references
   envFrom:
     - configMapRef:
@@ -93,13 +93,13 @@ frontend:
     repository: neoforge/frontend
     tag: "latest"
     pullPolicy: Always
-  
+
   service:
     type: ClusterIP
     port: 80
     targetPort: 80
     annotations: {}
-  
+
   resources:
     requests:
       memory: "64Mi"
@@ -107,7 +107,7 @@ frontend:
     limits:
       memory: "128Mi"
       cpu: "200m"
-  
+
   nodeSelector: {}
   tolerations: []
   affinity: {}
@@ -115,7 +115,7 @@ frontend:
 # Celery workers configuration
 celery:
   enabled: true
-  
+
   # General workers
   workers:
     replicaCount: 2
@@ -123,7 +123,7 @@ celery:
       repository: neoforge/backend
       tag: "latest"
       pullPolicy: Always
-    
+
     resources:
       requests:
         memory: "256Mi"
@@ -131,15 +131,15 @@ celery:
       limits:
         memory: "512Mi"
         cpu: "500m"
-    
+
     concurrency: 2
     queues: "default,high_priority"
     maxTasksPerChild: 1000
-    
+
     nodeSelector: {}
     tolerations: []
     affinity: {}
-  
+
   # Email workers
   emailWorkers:
     replicaCount: 1
@@ -150,7 +150,7 @@ celery:
       limits:
         memory: "256Mi"
         cpu: "250m"
-    
+
     concurrency: 1
     queues: "email"
     maxTasksPerChild: 500
@@ -161,19 +161,19 @@ postgresql:
   image:
     repository: postgres
     tag: "15-alpine"
-  
+
   auth:
     postgresPassword: "your_secure_db_password"
     username: "postgres"
     password: "your_secure_db_password"
     database: "neoforge"
-  
+
   primary:
     persistence:
       enabled: true
       size: 50Gi
       storageClass: "neoforge-ssd"
-    
+
     resources:
       requests:
         memory: "512Mi"
@@ -181,13 +181,13 @@ postgresql:
       limits:
         memory: "2Gi"
         cpu: "1000m"
-  
+
   metrics:
     enabled: true
     image:
       repository: prometheuscommunity/postgres-exporter
       tag: "v0.15.0"
-    
+
     resources:
       requests:
         memory: "64Mi"
@@ -202,17 +202,17 @@ redis:
   image:
     repository: redis
     tag: "7.2-alpine"
-  
+
   auth:
     enabled: true
     password: "redis-prod-password-2024"
-  
+
   master:
     persistence:
       enabled: true
       size: 10Gi
       storageClass: "neoforge-ssd"
-    
+
     resources:
       requests:
         memory: "128Mi"
@@ -220,13 +220,13 @@ redis:
       limits:
         memory: "512Mi"
         cpu: "500m"
-  
+
   metrics:
     enabled: true
     image:
       repository: oliver006/redis_exporter
       tag: "v1.56.0"
-    
+
     resources:
       requests:
         memory: "32Mi"
@@ -249,7 +249,7 @@ ingress:
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,X-CSRF-Token"
-  
+
   hosts:
     - host: neoforge.example.com
       paths:
@@ -267,7 +267,7 @@ ingress:
           pathType: Prefix
           service: api
           port: 8000
-  
+
   tls:
     - secretName: neoforge-tls-cert
       hosts:
@@ -279,14 +279,14 @@ ingress:
 # Monitoring configuration
 monitoring:
   enabled: true
-  
+
   prometheus:
     enabled: true
     persistence:
       enabled: true
       size: 20Gi
       storageClass: "neoforge-ssd"
-    
+
     resources:
       requests:
         memory: "512Mi"
@@ -294,10 +294,10 @@ monitoring:
       limits:
         memory: "2Gi"
         cpu: "1000m"
-    
+
     retention: "30d"
     retentionSize: "10GB"
-  
+
   grafana:
     enabled: true
     adminPassword: "admin123"  # Change this!
@@ -305,7 +305,7 @@ monitoring:
       enabled: true
       size: 5Gi
       storageClass: "neoforge-standard"
-    
+
     resources:
       requests:
         memory: "128Mi"
@@ -313,14 +313,14 @@ monitoring:
       limits:
         memory: "512Mi"
         cpu: "500m"
-  
+
   alertmanager:
     enabled: true
     persistence:
       enabled: true
       size: 2Gi
       storageClass: "neoforge-standard"
-    
+
     resources:
       requests:
         memory: "64Mi"
@@ -332,19 +332,19 @@ monitoring:
 # Autoscaling configuration
 autoscaling:
   enabled: true
-  
+
   api:
     minReplicas: 2
     maxReplicas: 10
     targetCPUUtilizationPercentage: 70
     targetMemoryUtilizationPercentage: 80
-  
+
   frontend:
     minReplicas: 2
     maxReplicas: 6
     targetCPUUtilizationPercentage: 60
     targetMemoryUtilizationPercentage: 70
-  
+
   celeryWorkers:
     minReplicas: 1
     maxReplicas: 8
@@ -355,16 +355,16 @@ autoscaling:
 security:
   networkPolicies:
     enabled: true
-  
+
   rbac:
     enabled: true
     create: true
-  
+
   serviceAccount:
     create: true
     annotations: {}
     name: ""
-  
+
   podSecurityPolicy:
     enabled: false
 
@@ -380,7 +380,7 @@ config:
     name: "NeoForge"
     version: "1.0.0"
     debug: false
-    
+
     # Database configuration
     database:
       host: "postgres"
@@ -388,14 +388,14 @@ config:
       name: "neoforge"
       poolSize: 20
       maxOverflow: 30
-    
+
     # Redis configuration
     redis:
       host: "redis"
       port: 6379
       db: 0
       maxConnections: 50
-    
+
     # Email configuration
     email:
       smtpHost: "smtp.gmail.com"
@@ -403,13 +403,13 @@ config:
       smtpUser: "neoforge@example.com"
       useTLS: true
       fromEmail: "NeoForge <neoforge@example.com>"
-    
+
     # JWT configuration
     jwt:
       algorithm: "HS256"
       accessTokenExpire: 30
       refreshTokenExpire: 30
-    
+
     # Features
     features:
       registration: true
@@ -422,18 +422,18 @@ secrets:
   # Database credentials
   database:
     url: "postgresql+asyncpg://postgres:your_secure_db_password@postgres:5432/neoforge"
-  
+
   # Application secrets
   secretKey: "your_super_secret_key_change_in_production_32_chars_min"
   jwtSecretKey: "jwt_secret_key_change_in_production_32_chars_minimum"
-  
+
   # Email credentials
   smtpPassword: "your_smtp_password_here"
-  
+
   # Redis credentials
   redisUrl: "redis://:redis-prod-password-2024@redis:6379/0"
   redisPassword: "redis-prod-password-2024"
-  
+
   # Third-party API keys
   sendgridApiKey: "your_sendgrid_api_key"
   stripeSecretKey: "your_stripe_secret_key"

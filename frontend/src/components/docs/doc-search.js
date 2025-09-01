@@ -165,7 +165,7 @@ export class DocSearch extends LitElement {
 
   _highlightMatch(text, query) {
     if (!query) return text;
-    
+
     const regex = new RegExp(`(${query})`, 'gi');
     return text.replace(regex, '<span class="result-highlight">$1</span>');
   }
@@ -209,4 +209,4 @@ export class DocSearch extends LitElement {
   }
 }
 
-customElements.define('doc-search', DocSearch); 
+customElements.define('doc-search', DocSearch);

@@ -12,7 +12,7 @@ describe("Settings Page", () => {
     // Create the settings-page element
     element = document.createElement('settings-page');
     container.appendChild(element);
-    
+
     // Wait for component to be fully rendered
     await element.updateComplete;
   });

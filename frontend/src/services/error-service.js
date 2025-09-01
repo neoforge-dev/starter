@@ -237,9 +237,9 @@ class ErrorService {
       };
 
       // Send the error to the backend
-      await apiService.request("/errors", { 
-        method: "POST", 
-        body: JSON.stringify(payload) 
+      await apiService.request("/errors", {
+        method: "POST",
+        body: JSON.stringify(payload)
       });
     } catch (err) {
       Logger.error("Failed to report error:", err);

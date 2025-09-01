@@ -1,12 +1,12 @@
 /**
  * Performance API Polyfill (CommonJS version)
- * 
+ *
  * This file provides a complete polyfill for the Performance API in CommonJS format,
  * specifically for use in worker threads and other environments that require CommonJS.
- * 
+ *
  * It ensures that performance.now() and other Performance API methods are available
  * in all JavaScript environments, including Node.js, JSDOM, and worker threads.
- * 
+ *
  * See /docs/performance-polyfill.md for detailed documentation.
  */
 
@@ -15,10 +15,10 @@ let isPolyfillInstalled = false;
 
 /**
  * Apply the Performance API polyfill
- * 
+ *
  * This function creates a comprehensive implementation of the Performance API
  * and applies it to the global context if it's not already available.
- * 
+ *
  * @returns {Object} The performance object
  */
 function applyPolyfill() {
@@ -81,10 +81,10 @@ function applyPolyfill() {
 
 /**
  * Create a complete performance polyfill
- * 
+ *
  * This function creates a comprehensive implementation of the Performance API,
  * including methods like getEntriesByType, mark, measure, and more.
- * 
+ *
  * @returns {Object} A complete performance polyfill object
  */
 function createCompletePerformancePolyfill() {
@@ -215,7 +215,7 @@ function createCompletePerformancePolyfill() {
 
 /**
  * Set up error handling for performance.now errors
- * 
+ *
  * This function sets up global error handlers to catch and suppress
  * performance-related errors.
  */
@@ -247,4 +247,4 @@ setupErrorHandling();
 // Export the functions for use in other modules
 module.exports = applyPolyfill;
 module.exports.setupErrorHandling = setupErrorHandling;
-module.exports.createCompletePerformancePolyfill = createCompletePerformancePolyfill; 
+module.exports.createCompletePerformancePolyfill = createCompletePerformancePolyfill;

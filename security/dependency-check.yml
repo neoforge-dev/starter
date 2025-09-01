@@ -8,30 +8,30 @@ python:
     ignore:
       # Ignore specific vulnerability IDs if needed (with justification)
       # - 12345  # Justification: False positive in development dependency
-    
+
     # Minimum severity level to report
     minimum_severity: medium
-    
+
     # Check full requirements.txt recursively
     full_report: true
-    
+
     # JSON output for CI/CD integration
     output_format: json
-    
+
     # Include development dependencies
     include_dev: true
-    
+
     # Database sources
     databases:
       - pyup.io
       - github_advisory
-      
+
   bandit:
     # Bandit SAST configuration for Python
     config: |
-      tests: 
+      tests:
         - B101  # Use of assert detected
-        - B102  # exec_used  
+        - B102  # exec_used
         - B103  # set_bad_file_permissions
         - B104  # hardcoded_bind_all_interfaces
         - B105  # hardcoded_password_string
@@ -79,7 +79,7 @@ python:
         - B411  # import_xmlrpclib
         - B412  # import_httpoxy
         - B413  # import_pycrypto
-        - B501  # request_with_no_cert_validation  
+        - B501  # request_with_no_cert_validation
         - B502  # ssl_with_bad_version
         - B503  # ssl_with_bad_defaults
         - B504  # ssl_with_no_version
@@ -100,7 +100,7 @@ python:
         - B701  # jinja2_autoescape_false
         - B702  # use_of_mako_templates
         - B703  # django_mark_safe
-        
+
     # Skip paths
     exclude_dirs:
       - tests
@@ -108,11 +108,11 @@ python:
       - __pycache__
       - .pytest_cache
       - htmlcov
-      
+
     # Severity levels
     severity: medium
-    
-    # Output format  
+
+    # Output format
     format: json
 
 # Node.js dependency scanning (npm audit, yarn audit, Snyk)
@@ -120,16 +120,16 @@ javascript:
   npm_audit:
     # npm audit configuration
     audit_level: moderate  # info, low, moderate, high, critical
-    
+
     # Production dependencies only
     production_only: false
-    
+
     # JSON output for parsing
     output_format: json
-    
+
     # Registry configuration
     registry: https://registry.npmjs.org/
-    
+
   license_checker:
     # License compliance checking
     allowed_licenses:
@@ -140,19 +140,19 @@ javascript:
       - ISC
       - CC0-1.0
       - Unlicense
-      
+
     # Prohibited licenses that will fail the build
     prohibited_licenses:
       - GPL-3.0
       - AGPL-3.0
       - LGPL-3.0
       - WTFPL
-      
+
     # Custom license handling
     custom_format:
       json: true
       csv: false
-      
+
     # Exclude packages from license check
     excludes:
       - dev-dependencies  # Exclude dev dependencies from strict license checking
@@ -161,21 +161,21 @@ javascript:
 snyk:
   # API settings
   api_version: "2023-06-19"
-  
+
   # Scan configuration
   severity_threshold: medium
   fail_on: all  # upgradable, patchable, all
-  
+
   # Monitoring
   monitor: true
-  
+
   # Test configuration
   test:
     include_dev_deps: false
-    
+
   # Policy file location
   policy_file: .snyk
-  
+
   # Ignore unfixable vulnerabilities
   ignore_unfixable: false
 
@@ -183,26 +183,26 @@ snyk:
 global:
   # Maximum severity level that will fail the build
   fail_on_severity: high
-  
+
   # Retry configuration
   retry_attempts: 3
   retry_delay: 5  # seconds
-  
+
   # Timeout settings
   timeout: 300  # seconds
-  
+
   # Cache configuration
   cache:
     enabled: true
     ttl: 3600  # 1 hour
-    
+
   # Reporting
   report:
     format: json
     include_dev_deps: true
     include_licenses: true
     include_cvss_score: true
-    
+
   # Integration settings
   integration:
     github_security_advisories: true

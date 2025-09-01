@@ -67,7 +67,7 @@ Use this component for page titles, section headings, and any hierarchical text 
 
 const Template = ({ content, ...args }) => {
   return `
-    <neo-heading 
+    <neo-heading
       ${args.level ? `level="${args.level}"` : ""}
       ${args.visualLevel ? `visual-level="${args.visualLevel}"` : ""}
       ${args.size ? `size="${args.size}"` : ""}
@@ -236,17 +236,17 @@ export const PageLayout = () => {
       <p style="margin: 1rem 0; color: #6b7280;">
         This is the main page content that follows the primary heading.
       </p>
-      
+
       <neo-heading level="2" style="margin-top: 2rem;">Section Heading</neo-heading>
       <p style="margin: 1rem 0; color: #6b7280;">
         This section contains important information about the topic.
       </p>
-      
+
       <neo-heading level="3" style="margin-top: 1.5rem;">Subsection</neo-heading>
       <p style="margin: 1rem 0; color: #6b7280;">
         More detailed information in this subsection.
       </p>
-      
+
       <neo-heading level="4" color="muted" style="margin-top: 1rem;">Details</neo-heading>
       <p style="margin: 1rem 0; color: #6b7280;">
         Fine-grained details and additional information.

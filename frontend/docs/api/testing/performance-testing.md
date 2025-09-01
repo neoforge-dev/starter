@@ -28,7 +28,7 @@ These tests measure the time taken for layout operations to complete. We target 
 ```javascript
 it('should have acceptable layout duration', async () => {
   const el = await fixture(html`<your-component></your-component>`);
-  
+
   // Force layout recalculation
   el.style.display = 'none';
   await el.updateComplete;
@@ -46,7 +46,7 @@ Monitor the number and duration of style recalculations triggered by component u
 ```javascript
 it('should minimize style recalculations', async () => {
   const el = await fixture(html`<your-component></your-component>`);
-  
+
   // Trigger component update
   el.someProperty = 'new value';
   await el.updateComplete;
@@ -61,7 +61,7 @@ Tests for memory leaks using the Memory Leak Detector utility.
 ```javascript
 it('should not leak memory', async () => {
   const { detectLeaks } = await import('../../utils/memory-leak-detector.js');
-  
+
   const results = await detectLeaks(() => {
     const el = document.createElement('your-component');
     document.body.appendChild(el);
@@ -109,7 +109,7 @@ function measureCustomMetric(callback) {
     const entries = list.getEntries();
     callback(entries);
   });
-  
+
   observer.observe({ entryTypes: ['measure'] });
 }
 ```
@@ -161,4 +161,4 @@ Common issues and solutions:
 3. **CI/CD Failures**
    - Check resource constraints
    - Verify test environment
-   - Review performance budgets 
+   - Review performance budgets

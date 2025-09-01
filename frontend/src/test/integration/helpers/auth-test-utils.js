@@ -1,6 +1,6 @@
 /**
  * Authentication Testing Utilities
- * 
+ *
  * This module provides utility functions for testing authentication flows,
  * including session management, token handling, and user state management.
  */
@@ -75,7 +75,7 @@ export class AuthTestUtils {
     // Clear any existing data
     this.mockLocalStorage.clear();
     this.mockSessionStorage.clear();
-    
+
     // Mock localStorage and sessionStorage BEFORE any services are instantiated
     if (typeof window !== 'undefined') {
       Object.defineProperty(window, 'localStorage', {
@@ -83,21 +83,21 @@ export class AuthTestUtils {
         writable: true,
         configurable: true
       });
-      
+
       Object.defineProperty(window, 'sessionStorage', {
         value: this.mockSessionStorage,
         writable: true,
         configurable: true
       });
     }
-    
+
     // Always set global mocks for Node.js environment
     Object.defineProperty(global, 'localStorage', {
       value: this.mockLocalStorage,
       writable: true,
       configurable: true
     });
-    
+
     Object.defineProperty(global, 'sessionStorage', {
       value: this.mockSessionStorage,
       writable: true,
@@ -106,7 +106,7 @@ export class AuthTestUtils {
 
     // Mock fetch
     global.fetch = vi.fn();
-    
+
     return this;
   }
 
@@ -117,7 +117,7 @@ export class AuthTestUtils {
     this.mockLocalStorage.clear();
     this.mockSessionStorage.clear();
     this.fetchMocks.clear();
-    
+
     if (this.originalFetch) {
       global.fetch = this.originalFetch;
     }
@@ -128,7 +128,7 @@ export class AuthTestUtils {
    */
   setupFetchMock(urlPattern, mockResponse) {
     this.fetchMocks.set(urlPattern, mockResponse);
-    
+
     global.fetch.mockImplementation(async (url, options = {}) => {
       for (const [pattern, response] of this.fetchMocks.entries()) {
         if (url.includes(pattern)) {
@@ -138,7 +138,7 @@ export class AuthTestUtils {
           return response;
         }
       }
-      
+
       // Default mock response for unmatched URLs
       return {
         ok: false,
@@ -165,7 +165,7 @@ export class AuthTestUtils {
     const token = this.createMockJWT(mockUser);
 
     this.mockLocalStorage.setItem('auth_token', token);
-    
+
     return { user: mockUser, token };
   }
 
@@ -175,17 +175,17 @@ export class AuthTestUtils {
   createMockJWT(user, expiresIn = 3600) {
     const header = { alg: "HS256", typ: "JWT" };
     const exp = Math.floor(Date.now() / 1000) + expiresIn;
-    const payload = { 
-      sub: user.id, 
+    const payload = {
+      sub: user.id,
       email: user.email,
-      exp, 
-      iat: Math.floor(Date.now() / 1000) 
+      exp,
+      iat: Math.floor(Date.now() / 1000)
     };
-    
+
     const headerB64 = btoa(JSON.stringify(header));
     const payloadB64 = btoa(JSON.stringify(payload));
     const signature = "mock_signature_" + Math.random().toString(36).substr(2, 9);
-    
+
     return `${headerB64}.${payloadB64}.${signature}`;
   }
 
@@ -240,7 +240,7 @@ export class AuthTestUtils {
     if (component.updateComplete) {
       await component.updateComplete;
     }
-    
+
     // Additional wait for DOM rendering
     await new Promise(resolve => setTimeout(resolve, additionalWait));
   }
@@ -254,7 +254,7 @@ export class AuthTestUtils {
 
     const inputs = shadowRoot.querySelectorAll('input');
     const values = {};
-    
+
     inputs.forEach(input => {
       if (input.name) {
         values[input.name] = input.value;
@@ -310,7 +310,7 @@ export class AuthTestUtils {
 
     const loadingIndicator = shadowRoot.querySelector('.loading-spinner, [data-testid="loading"]');
     const disabledButton = shadowRoot.querySelector('button[disabled]');
-    
+
     return !!(loadingIndicator || disabledButton || component.isLoading);
   }
 
@@ -330,14 +330,14 @@ export class AuthTestUtils {
    */
   async waitForCondition(condition, timeout = 5000, interval = 100) {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       if (await condition()) {
         return true;
       }
       await new Promise(resolve => setTimeout(resolve, interval));
     }
-    
+
     throw new Error(`Condition not met within ${timeout}ms`);
   }
 
@@ -385,15 +385,15 @@ export class AuthTestUtils {
    */
   assertAuthenticationState(authService, expectedState) {
     const { isAuthenticated, user, token } = expectedState;
-    
+
     if (isAuthenticated !== undefined) {
       expect(authService.isAuthenticated()).toBe(isAuthenticated);
     }
-    
+
     if (user !== undefined) {
       expect(authService.getUser()).toEqual(user);
     }
-    
+
     if (token !== undefined) {
       expect(authService.getToken()).toBe(token);
     }

@@ -38,16 +38,16 @@ const Template = (args) => {
       searchBar[key] = args[key];
     }
   });
-  
+
   // Add event listeners for demonstration
   searchBar.addEventListener('neo-search', (e) => {
     console.log('Search:', e.detail);
   });
-  
+
   searchBar.addEventListener('neo-clear', () => {
     console.log('Search cleared');
   });
-  
+
   return searchBar;
 };
 
@@ -89,7 +89,7 @@ Disabled.args = {
 export const Sizes = () => {
   const container = document.createElement('div');
   container.style.cssText = 'display: flex; flex-direction: column; gap: 1rem; max-width: 400px;';
-  
+
   const sizes = ['sm', 'md', 'lg'];
   sizes.forEach(size => {
     const searchBar = document.createElement('neo-search-bar');
@@ -98,20 +98,20 @@ export const Sizes = () => {
     searchBar.shortcuts = '⌘K';
     container.appendChild(searchBar);
   });
-  
+
   return container;
 };
 
 export const InteractiveDemo = () => {
   const container = document.createElement('div');
   container.style.cssText = 'max-width: 500px; padding: 1rem;';
-  
+
   const searchBar = document.createElement('neo-search-bar');
   searchBar.placeholder = 'Search with live suggestions...';
   searchBar.showSuggestions = true;
   searchBar.shortcuts = '⌘K';
   searchBar.debounce = 150;
-  
+
   // Mock data
   const allSuggestions = [
     'JavaScript fundamentals',
@@ -125,22 +125,22 @@ export const InteractiveDemo = () => {
     'Web accessibility',
     'Performance optimization'
   ];
-  
+
   searchBar.suggestions = allSuggestions;
-  
+
   container.appendChild(searchBar);
-  
+
   // Status display
   const status = document.createElement('div');
   status.style.cssText = 'margin-top: 1rem; padding: 0.5rem; background: #f3f4f6; border-radius: 4px; font-size: 0.875rem;';
   status.textContent = 'Status: Ready for search (try ⌘K)';
-  
+
   // Event listeners
   searchBar.addEventListener('neo-search', (e) => {
     status.style.background = '#d1fae5';
     status.textContent = `Status: Searched for "${e.detail.query}"`;
   });
-  
+
   searchBar.addEventListener('neo-search-immediate', (e) => {
     if (e.detail.query) {
       status.style.background = '#fef3c7';
@@ -150,26 +150,26 @@ export const InteractiveDemo = () => {
       status.textContent = 'Status: Ready for search';
     }
   });
-  
+
   searchBar.addEventListener('neo-suggestion-select', (e) => {
     status.style.background = '#dbeafe';
     status.textContent = `Status: Selected "${e.detail.suggestion}"`;
   });
-  
+
   searchBar.addEventListener('neo-clear', () => {
     status.style.background = '#f3f4f6';
     status.textContent = 'Status: Search cleared';
   });
-  
+
   container.appendChild(status);
-  
+
   return container;
 };
 
 export const CustomStyling = () => {
   const container = document.createElement('div');
   container.style.cssText = 'display: flex; flex-direction: column; gap: 1rem; max-width: 400px;';
-  
+
   // Dark theme search
   const darkSearch = document.createElement('neo-search-bar');
   darkSearch.placeholder = 'Dark theme search...';
@@ -180,7 +180,7 @@ export const CustomStyling = () => {
     --color-text-light: #9ca3af;
     --color-primary: #60a5fa;
   `;
-  
+
   // Colored search
   const coloredSearch = document.createElement('neo-search-bar');
   coloredSearch.placeholder = 'Colored search...';
@@ -189,17 +189,17 @@ export const CustomStyling = () => {
     --color-primary-light: #6ee7b7;
     --input-border-color: #10b981;
   `;
-  
+
   container.appendChild(darkSearch);
   container.appendChild(coloredSearch);
-  
+
   return container;
 };
 
 export const KeyboardShortcuts = () => {
   const container = document.createElement('div');
   container.style.cssText = 'max-width: 500px; padding: 1rem;';
-  
+
   const info = document.createElement('div');
   info.style.cssText = 'margin-bottom: 1rem; padding: 1rem; background: #f0f9ff; border-radius: 8px; font-size: 0.875rem;';
   info.innerHTML = `
@@ -209,7 +209,7 @@ export const KeyboardShortcuts = () => {
     • <kbd>Enter</kbd> - Select suggestion<br>
     • <kbd>Escape</kbd> - Close suggestions
   `;
-  
+
   const searchBar = document.createElement('neo-search-bar');
   searchBar.placeholder = 'Try the keyboard shortcuts...';
   searchBar.shortcuts = '⌘K';
@@ -220,9 +220,9 @@ export const KeyboardShortcuts = () => {
     'Third suggestion',
     'Fourth suggestion'
   ];
-  
+
   container.appendChild(info);
   container.appendChild(searchBar);
-  
+
   return container;
 };

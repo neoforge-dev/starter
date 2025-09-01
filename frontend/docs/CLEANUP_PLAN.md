@@ -37,9 +37,9 @@
 5. Consolidate tests to avoid redundancy
 
 ### ErrorPage Component Cleanup
-1. **Choose Primary Implementation**: 
+1. **Choose Primary Implementation**:
    - `src/components/error/error-page.js` appears to be the more complete implementation with better error handling
-   
+
 2. **Merge Functionality**:
    - Incorporate any unique features from `src/components/error-page.js` into the primary implementation
    - Ensure all properties and methods are preserved
@@ -55,7 +55,7 @@
 ### Toast Component Cleanup
 1. **Choose Primary Implementation**:
    - `src/components/ui/toast/index.js` appears to be the more structured implementation and is already imported in multiple places
-   
+
 2. **Merge Functionality**:
    - Incorporate any unique features from other toast implementations into the primary implementation
    - Ensure all properties and methods are preserved
@@ -105,4 +105,4 @@
 2. Implement a component registry to prevent duplicates
 3. Use linting rules to detect potential duplicates
 4. Regular codebase audits to identify and clean up duplicates
-5. Document component locations in a central registry 
+5. Document component locations in a central registry

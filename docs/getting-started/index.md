@@ -17,7 +17,7 @@ NeoForge is a production-ready full-stack starter kit optimized for bootstrapped
 
 Make sure you have installed:
 - **Docker & Docker Compose** - For containerized development
-- **Make** - For task automation  
+- **Make** - For task automation
 - **Git** - For version control
 - **Node.js 18+** - For frontend development (if working outside containers)
 
@@ -98,7 +98,7 @@ This creates:
 # Test backend changes
 make test-backend
 
-# Test frontend changes  
+# Test frontend changes
 make test-frontend
 
 # Start development to see changes
@@ -166,7 +166,7 @@ make db-shell
 make migrate
 ```
 
-### Frontend Development  
+### Frontend Development
 ```bash
 # Run frontend tests only
 make test-frontend
@@ -201,7 +201,7 @@ SECRET_KEY=dev-secret-key-change-in-production
 After setup, you should have:
 
 - **✅ Complete backend API** with authentication, CRUD operations, background tasks
-- **✅ Modern frontend** with web components, PWA support, comprehensive testing  
+- **✅ Modern frontend** with web components, PWA support, comprehensive testing
 - **✅ Production-ready security** with JWT, rate limiting, security headers
 - **✅ Comprehensive testing** with 95%+ backend coverage, 98%+ frontend stability
 - **✅ Development automation** with hot-reload, auto-testing, health monitoring
@@ -212,7 +212,7 @@ After setup, you should have:
 ### **For Daily Development**
 → **[Development Guide](../development/)** - Workflows, testing, best practices
 
-### **For Production Deployment** 
+### **For Production Deployment**
 → **[First Deployment](first-deployment.md)** - Production deployment walkthrough
 
 ### **For Architecture Understanding**
@@ -223,7 +223,7 @@ After setup, you should have:
 
 ## 🆘 Need Help?
 
-- **Common Issues**: [Troubleshooting Guide](troubleshooting.md)  
+- **Common Issues**: [Troubleshooting Guide](troubleshooting.md)
 - **Development Questions**: [Development Guide](../development/)
 - **Production Issues**: [Operations Guide](../operations/)
 - **Bug Reports**: [GitHub Issues](https://github.com/yourusername/neoforge/issues)

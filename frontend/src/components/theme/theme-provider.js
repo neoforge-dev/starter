@@ -67,4 +67,4 @@ export class ThemeProvider extends LitElement {
   }
 }
 
-customElements.define('neo-theme-provider', ThemeProvider); 
+customElements.define('neo-theme-provider', ThemeProvider);

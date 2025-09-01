@@ -19,7 +19,7 @@
 
 **Bun vs NPM Benchmarks**:
 - **Install Speed**: 7s vs 30s (4.3x faster)
-- **Test Execution**: 0.092s vs 0.696s (7.6x faster)  
+- **Test Execution**: 0.092s vs 0.696s (7.6x faster)
 - **Build Compatibility**: Seamless with existing Vite setup
 
 ---
@@ -60,7 +60,7 @@ Embrace Web Standards + Practical Tooling + Developer Happiness
 
 #### **Expected Benefits**
 - **10x faster component testing** (< 100ms feedback loop)
-- **4x faster dependency management** 
+- **4x faster dependency management**
 - **100% component isolation** testing capability
 - **Zero configuration** component playground
 - **Maintain current performance** (no bundle size regression)

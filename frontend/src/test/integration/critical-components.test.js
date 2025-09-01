@@ -1,6 +1,6 @@
 /**
  * Critical Component Test - 80/20 Rule Applied
- * 
+ *
  * Test only the atomic components that deliver 80% of design system value
  */
 import { describe, it, expect } from 'vitest';
@@ -32,7 +32,7 @@ describe('Critical Component Loading', () => {
       expect(module).toBeDefined();
     } catch (error) {
       console.log('Checkbox component import error:', error.message);
-      expect(error.message).toContain('https:'); // Expected CDN import error  
+      expect(error.message).toContain('https:'); // Expected CDN import error
     }
   });
 });

@@ -1,8 +1,11 @@
 """Database initialization script."""
 import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine
-from app.core.config import get_settings
+
 from app.db.base import Base
+from sqlalchemy.ext.asyncio import create_async_engine
+
+from app.core.config import get_settings
+
 
 async def init_db():
     """Initialize database tables."""
@@ -12,5 +15,6 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
     await engine.dispose()
 
+
 if __name__ == "__main__":
-    asyncio.run(init_db()) 
+    asyncio.run(init_db())

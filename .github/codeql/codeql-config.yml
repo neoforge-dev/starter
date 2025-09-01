@@ -7,7 +7,7 @@ disable-default-queries: false
 queries:
   - name: security-extended
     uses: security-extended
-  - name: security-and-quality  
+  - name: security-and-quality
     uses: security-and-quality
 
 # Path filters - focus on application code, exclude test files from some checks
@@ -23,7 +23,7 @@ paths-ignore:
 # Include additional paths that might have security implications
 paths:
   - "backend/app/**"
-  - "frontend/src/**" 
+  - "frontend/src/**"
   - "k8s/**"
   - "deploy/**"
   - "docker-compose*.yml"

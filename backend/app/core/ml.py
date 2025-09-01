@@ -1,6 +1,7 @@
 """ML module."""
 from importlib.metadata import version
 from typing import Optional
+
 from pydantic import BaseModel, Field
 
 # Import MLflow
@@ -13,6 +14,7 @@ except ImportError:
 
 class ModelMetrics(BaseModel):
     """Model metrics."""
+
     accuracy: float = Field(ge=0.0, le=1.0)
     precision: float = Field(ge=0.0, le=1.0)
     recall: float = Field(ge=0.0, le=1.0)
@@ -22,7 +24,7 @@ class ModelMetrics(BaseModel):
 def log_training_run(metrics: ModelMetrics) -> None:
     """
     Log model training metrics to MLflow.
-    
+
     Args:
         metrics: Model metrics to log
     """
@@ -35,4 +37,4 @@ def log_training_run(metrics: ModelMetrics) -> None:
         mlflow.log_metric("accuracy", metrics.accuracy)
         mlflow.log_metric("precision", metrics.precision)
         mlflow.log_metric("recall", metrics.recall)
-        mlflow.log_metric("training_cost_usd", metrics.training_cost) 
+        mlflow.log_metric("training_cost_usd", metrics.training_cost)

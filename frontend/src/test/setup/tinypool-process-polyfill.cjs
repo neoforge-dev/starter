@@ -35,16 +35,16 @@ const originalRequire = module.require;
 // Override the require function to intercept the Tinypool process module
 module.require = function(id) {
   const exports = originalRequire.apply(this, arguments);
-  
+
   // If this is the Tinypool process module, patch it
   if (id.includes('tinypool/dist') && id.includes('process')) {
     console.log('Intercepted Tinypool process module, applying performance polyfill');
-    
+
     // Apply the polyfill to global objects
     if (typeof global !== 'undefined') applyPerformancePolyfill(global);
     if (typeof globalThis !== 'undefined') applyPerformancePolyfill(globalThis);
     if (typeof self !== 'undefined') applyPerformancePolyfill(self);
-    
+
     // Monkey patch the onMessage function to ensure performance is available
     const originalOnMessage = exports.onMessage;
     if (originalOnMessage) {
@@ -53,14 +53,14 @@ module.require = function(id) {
         if (typeof global !== 'undefined') applyPerformancePolyfill(global);
         if (typeof globalThis !== 'undefined') applyPerformancePolyfill(globalThis);
         if (typeof self !== 'undefined') applyPerformancePolyfill(self);
-        
+
         // Call the original onMessage function
         return originalOnMessage.apply(this, arguments);
       };
       console.log('Monkey patched Tinypool onMessage function');
     }
   }
-  
+
   return exports;
 };
 
@@ -85,4 +85,4 @@ console.log('Tinypool process polyfill installed');
 
 module.exports = {
   applyPerformancePolyfill
-}; 
+};

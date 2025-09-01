@@ -986,7 +986,7 @@ This section contains the contents of the repository's files.
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -1062,7 +1062,7 @@ This section contains the contents of the repository's files.
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> wcag2aa </span>
                             <span class="badge bg-light text-dark"> wcag143 </span>
@@ -1324,7 +1324,7 @@ This section contains the contents of the repository's files.
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -1394,7 +1394,7 @@ This section contains the contents of the repository's files.
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -1646,7 +1646,7 @@ This section contains the contents of the repository's files.
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag241 </span>
@@ -1741,7 +1741,7 @@ This section contains the contents of the repository's files.
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.language </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag311 </span>
@@ -1808,7 +1808,7 @@ This section contains the contents of the repository's files.
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag111 </span>
@@ -1948,7 +1948,7 @@ This section contains the contents of the repository's files.
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.forms </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -2022,7 +2022,7 @@ This section contains the contents of the repository's files.
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -2142,7 +2142,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -2219,7 +2219,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> experimental </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
@@ -2287,7 +2287,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -2559,7 +2559,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -3253,7 +3253,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -3686,7 +3686,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -3762,7 +3762,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> wcag2aa </span>
                             <span class="badge bg-light text-dark"> wcag143 </span>
@@ -4024,7 +4024,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -4094,7 +4094,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -4346,7 +4346,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag241 </span>
@@ -4441,7 +4441,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.language </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag311 </span>
@@ -4508,7 +4508,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag111 </span>
@@ -4648,7 +4648,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.forms </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -4722,7 +4722,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -4842,7 +4842,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -4919,7 +4919,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> experimental </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
@@ -4987,7 +4987,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -5259,7 +5259,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -5953,7 +5953,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -7013,7 +7013,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -7089,7 +7089,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> wcag2aa </span>
                             <span class="badge bg-light text-dark"> wcag143 </span>
@@ -7351,7 +7351,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -7421,7 +7421,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -7673,7 +7673,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag241 </span>
@@ -7768,7 +7768,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.language </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag311 </span>
@@ -7835,7 +7835,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag111 </span>
@@ -7975,7 +7975,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.forms </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -8049,7 +8049,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -8169,7 +8169,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -8246,7 +8246,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> experimental </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
@@ -8314,7 +8314,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -8586,7 +8586,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -9280,7 +9280,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -9824,7 +9824,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -9900,7 +9900,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> wcag2aa </span>
                             <span class="badge bg-light text-dark"> wcag143 </span>
@@ -10162,7 +10162,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -10232,7 +10232,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -10484,7 +10484,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag241 </span>
@@ -10579,7 +10579,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.language </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag311 </span>
@@ -10646,7 +10646,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag111 </span>
@@ -10786,7 +10786,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.forms </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -10860,7 +10860,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -10980,7 +10980,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -11057,7 +11057,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> experimental </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
@@ -11125,7 +11125,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -11397,7 +11397,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -12091,7 +12091,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -13307,7 +13307,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -13383,7 +13383,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> wcag2aa </span>
                             <span class="badge bg-light text-dark"> wcag143 </span>
@@ -13645,7 +13645,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -13715,7 +13715,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -13967,7 +13967,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag241 </span>
@@ -14062,7 +14062,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.language </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag311 </span>
@@ -14129,7 +14129,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag111 </span>
@@ -14269,7 +14269,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.forms </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -14343,7 +14343,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -14463,7 +14463,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -14540,7 +14540,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> experimental </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
@@ -14608,7 +14608,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -14880,7 +14880,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -15574,7 +15574,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -16579,7 +16579,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -16655,7 +16655,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> wcag2aa </span>
                             <span class="badge bg-light text-dark"> wcag143 </span>
@@ -16917,7 +16917,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -16987,7 +16987,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.parsing </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag411 </span>
@@ -17239,7 +17239,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag241 </span>
@@ -17334,7 +17334,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.language </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag311 </span>
@@ -17401,7 +17401,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.text-alternatives </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag111 </span>
@@ -17541,7 +17541,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.forms </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -17615,7 +17615,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -17735,7 +17735,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -17812,7 +17812,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.color </span>
                             <span class="badge bg-light text-dark"> experimental </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
@@ -17880,7 +17880,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.name-role-value </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag412 </span>
@@ -18152,7 +18152,7 @@ html</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -18846,7 +18846,7 @@ img[src$&#x3D;&quot;jot&quot;]</code></pre>
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -19206,7 +19206,7 @@ These tests measure the time taken for layout operations to complete. We target 
 ```javascript
 it('should have acceptable layout duration', async () => {
   const el = await fixture(html`<your-component></your-component>`);
-  
+
   // Force layout recalculation
   el.style.display = 'none';
   await el.updateComplete;
@@ -19224,7 +19224,7 @@ Monitor the number and duration of style recalculations triggered by component u
 ```javascript
 it('should minimize style recalculations', async () => {
   const el = await fixture(html`<your-component></your-component>`);
-  
+
   // Trigger component update
   el.someProperty = 'new value';
   await el.updateComplete;
@@ -19239,7 +19239,7 @@ Tests for memory leaks using the Memory Leak Detector utility.
 ```javascript
 it('should not leak memory', async () => {
   const { detectLeaks } = await import('../../utils/memory-leak-detector.js');
-  
+
   const results = await detectLeaks(() => {
     const el = document.createElement('your-component');
     document.body.appendChild(el);
@@ -19287,7 +19287,7 @@ function measureCustomMetric(callback) {
     const entries = list.getEntries();
     callback(entries);
   });
-  
+
   observer.observe({ entryTypes: ['measure'] });
 }
 ```
@@ -19507,7 +19507,7 @@ NeoForge uses Docker for all deployments, with separate configurations for devel
    on:
      push:
        branches: [main]
-   
+
    jobs:
      deploy:
        runs-on: ubuntu-latest
@@ -19677,7 +19677,7 @@ graph TB
             DB[(PostgreSQL)]
             CACHE[(Redis Cache)]
         end
-        
+
         subgraph "Monitoring"
             PROM[Prometheus]
             NODE[Node Exporter]
@@ -19690,7 +19690,7 @@ graph TB
     NGINX --> API
     API --> DB
     API --> CACHE
-    
+
     PROM --> NODE
     NODE --> FE
     NODE --> API
@@ -20104,10 +20104,10 @@ We've created a set of utility functions in `src/test/utils/component-mock-utils
 ### Basic Usage
 
 ```javascript
-import { 
+import {
   createMockComponent,
   createMockFixture,
-  createAndRegisterMockComponent 
+  createAndRegisterMockComponent
 } from "../utils/component-mock-utils.js";
 
 // Create a mock fixture function
@@ -20375,7 +20375,7 @@ describe('Test Environment', () => {
   beforeEach(() => {
     setupTestEnvironment();
   });
-  
+
   it('mocks components correctly', () => {
     const MockedComponent = mockComponent('test-component');
     expect(MockedComponent).to.exist;
@@ -20396,10 +20396,10 @@ describe('Test Environment', () => {
 it('handles edge case correctly', async () => {
   // 1. Arrange: Setup minimal test case
   const el = await fixture('<my-component></my-component>');
-  
+
   // 2. Act: Trigger the specific behavior
   el.setAttribute('value', 'test');
-  
+
   // 3. Assert: Verify only the specific fix
   expect(el.value).to.equal('test');
 });
@@ -20424,17 +20424,17 @@ it('handles edge case correctly', async () => {
 1. **Deep Analysis Documentation**
    ```markdown
    ## Error Investigation Log
-   
+
    ### Hypothesis 1: Component Lifecycle
    - Current behavior:
    - Expected behavior:
    - Evidence:
-   
+
    ### Hypothesis 2: State Management
    - Current behavior:
    - Expected behavior:
    - Evidence:
-   
+
    ### Hypothesis 3: Event Handling
    - Current behavior:
    - Expected behavior:
@@ -20666,7 +20666,7 @@ import { NeoButton, NeoInput } from '@components/atoms';
 <neo-button variant="primary">Click Me</neo-button>
 
 // Input usage
-<neo-input 
+<neo-input
   type="email"
   label="Email Address"
   required
@@ -20806,7 +20806,7 @@ Design tokens are the visual design atoms of the design system. They're used in 
 ### Token Categories
 
 ```javascript
-import { 
+import {
   colors,
   typography,
   spacing,
@@ -21122,7 +21122,7 @@ async function loadPolyfills() {
 if (isSafari()) {
   // Fix for Safari's shadow DOM issues
   import('./safari-shadow-dom-fix.js');
-  
+
   // Fix for Safari's CSS Grid implementation
   import('./safari-grid-fix.js');
 }
@@ -21240,13 +21240,13 @@ test('component renders consistently across browsers', async ({ page }) => {
 // feature-detection.test.js
 test('polyfills are loaded when needed', async ({ page }) => {
   await page.goto('/');
-  
+
   const features = await page.evaluate(() => ({
     containerQueries: CSS.supports('(container-type: inline-size)'),
     subgrid: CSS.supports('(display: subgrid)'),
     viewTransitions: 'startViewTransition' in document,
   }));
-  
+
   expect(features.containerQueries).toBe(true);
   expect(features.subgrid).toBe(true);
   expect(features.viewTransitions).toBe(true);
@@ -21329,9 +21329,9 @@ test('polyfills are loaded when needed', async ({ page }) => {
 5. Consolidate tests to avoid redundancy
 
 ### ErrorPage Component Cleanup
-1. **Choose Primary Implementation**: 
+1. **Choose Primary Implementation**:
    - `src/components/error/error-page.js` appears to be the more complete implementation with better error handling
-   
+
 2. **Merge Functionality**:
    - Incorporate any unique features from `src/components/error-page.js` into the primary implementation
    - Ensure all properties and methods are preserved
@@ -21347,7 +21347,7 @@ test('polyfills are loaded when needed', async ({ page }) => {
 ### Toast Component Cleanup
 1. **Choose Primary Implementation**:
    - `src/components/ui/toast/index.js` appears to be the more structured implementation and is already imported in multiple places
-   
+
 2. **Merge Functionality**:
    - Incorporate any unique features from other toast implementations into the primary implementation
    - Ensure all properties and methods are preserved
@@ -21852,7 +21852,7 @@ Happy coding with NeoForge! 🚀
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.language </span>
                             <span class="badge bg-light text-dark"> wcag2a </span>
                             <span class="badge bg-light text-dark"> wcag311 </span>
@@ -21919,7 +21919,7 @@ Happy coding with NeoForge! 🚀
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.semantics </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -21985,7 +21985,7 @@ Happy coding with NeoForge! 🚀
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -22056,7 +22056,7 @@ Happy coding with NeoForge! 🚀
                     </div>
                     <div class="violationCardLine">
                         <h6 class="card-subtitle mb-2 text-muted violationCardTitleItem">
-                            Issue Tags: 
+                            Issue Tags:
                             <span class="badge bg-light text-dark"> cat.keyboard </span>
                             <span class="badge bg-light text-dark"> best-practice </span>
                         </h6>
@@ -23511,8 +23511,8 @@ mockButton._shadowRoot.querySelector = (selector) => {
   if (selector === '.button') {
     return createMockElement({
       tagName: 'button',
-      attributes: { 
-        'aria-disabled': mockButton._properties.disabled.toString() 
+      attributes: {
+        'aria-disabled': mockButton._properties.disabled.toString()
       },
       clickHandler: () => mockButton.handleClick()
     });
@@ -23524,10 +23524,10 @@ mockButton._shadowRoot.querySelector = (selector) => {
 test('button should dispatch click event when not disabled', () => {
   const clickHandler = vi.fn();
   mockButton.addEventListener('click', clickHandler);
-  
+
   const buttonElement = mockButton.shadowRoot.querySelector('.button');
   buttonElement.click();
-  
+
   expect(clickHandler).toHaveBeenCalled();
 });
 ```
@@ -23550,7 +23550,7 @@ test('button should dispatch click event when not disabled', () => {
 test('should update button variant', () => {
   const button = new MockButton();
   button.variant = 'secondary';
-  
+
   const buttonElement = button.shadowRoot.querySelector('.button');
   expect(buttonElement.classList.contains('secondary')).toBe(true);
 });
@@ -23563,10 +23563,10 @@ test('should dispatch click event', () => {
   const button = new MockButton();
   const clickHandler = vi.fn();
   button.addEventListener('click', clickHandler);
-  
+
   const buttonElement = button.shadowRoot.querySelector('.button');
   buttonElement.click();
-  
+
   expect(clickHandler).toHaveBeenCalled();
 });
 ```
@@ -23577,7 +23577,7 @@ test('should dispatch click event', () => {
 test('should show loading indicator when loading', () => {
   const button = new MockButton();
   button.loading = true;
-  
+
   const loadingIndicator = button.shadowRoot.querySelector('.loading-indicator');
   expect(loadingIndicator).toBeTruthy();
 });
@@ -23624,10 +23624,10 @@ For new components, we recommend using the mock component helper library to crea
 
 // Form with Validation
 <neo-form validation-mode="onChange">
-  <neo-input 
-    label="Email" 
-    type="email" 
-    pattern="[^@]+@[^@]+\.[^@]+" 
+  <neo-input
+    label="Email"
+    type="email"
+    pattern="[^@]+@[^@]+\.[^@]+"
     error-message="Please enter a valid email">
   </neo-input>
 </neo-form>
@@ -23671,7 +23671,7 @@ For new components, we recommend using the mock component helper library to crea
 
 ```javascript
 // Data Table
-<neo-data-table 
+<neo-data-table
   .data=\${data}
   .columns=\${columns}
   sortable
@@ -23679,7 +23679,7 @@ For new components, we recommend using the mock component helper library to crea
 </neo-data-table>
 
 // Charts
-<neo-chart 
+<neo-chart
   type="line"
   .data=\${chartData}
   .options=\${chartOptions}>
@@ -23815,7 +23815,7 @@ static styles = css\`
 ```javascript
 render() {
   return html\`
-    <div role="dialog" 
+    <div role="dialog"
          aria-labelledby="dialog-title"
          aria-describedby="dialog-content">
       <h2 id="dialog-title">Dialog Title</h2>
@@ -23841,7 +23841,7 @@ handleKeyDown(e) {
 
 render() {
   return html\`
-    <div tabindex="0" 
+    <div tabindex="0"
          @keydown=\${this.handleKeyDown}
          role="button">
       Clickable Element
@@ -23870,10 +23870,10 @@ describe('MyComponent', () => {
   it('handles events correctly', async () => {
     const el = await fixture(html\`<my-component></my-component>\`);
     const button = el.shadowRoot.querySelector('button');
-    
+
     let eventFired = false;
     el.addEventListener('custom-event', () => eventFired = true);
-    
+
     button.click();
     expect(eventFired).to.be.true;
   });
@@ -24250,23 +24250,23 @@ await registerTestComponents(components);
 The `improved-setup.js` file provides an improved setup for testing web components:
 
 ```javascript
-import { 
-  setupTestEnvironment, 
+import {
+  setupTestEnvironment,
   cleanupTestEnvironment,
   TestUtils
 } from './improved-setup.js';
 
 describe('MyComponent', () => {
   let helpers;
-  
+
   beforeEach(async () => {
     helpers = await setupTestEnvironment();
   });
-  
+
   afterEach(() => {
     cleanupTestEnvironment();
   });
-  
+
   it('renders correctly', async () => {
     // Test code here
   });
@@ -24326,15 +24326,15 @@ Always set up and clean up your test environment properly:
 ```javascript
 describe('MyComponent', () => {
   let helpers;
-  
+
   beforeEach(async () => {
     helpers = await setupTestEnvironment();
   });
-  
+
   afterEach(() => {
     cleanupTestEnvironment();
   });
-  
+
   // Tests here
 });
 ```
@@ -24350,9 +24350,9 @@ it('renders correctly', async () => {
     prop1: 'value1',
     prop2: 'value2'
   });
-  
+
   // Test the component
-  
+
   // Clean up
   helpers.cleanupComponentFixture(component);
 });
@@ -24365,12 +24365,12 @@ Always wait for components to be ready before testing them:
 ```javascript
 it('renders correctly', async () => {
   const component = await helpers.createComponentFixture('my-component');
-  
+
   // Wait for the component to be ready
   await component.updateComplete;
-  
+
   // Test the component
-  
+
   helpers.cleanupComponentFixture(component);
 });
 ```
@@ -24382,11 +24382,11 @@ Use the `TestUtils` object to test shadow DOM elements:
 ```javascript
 it('renders correctly', async () => {
   const component = await helpers.createComponentFixture('my-component');
-  
+
   // Query a shadow DOM element
   const element = TestUtils.queryComponent(component, '.my-element');
   expect(element).toBeDefined();
-  
+
   helpers.cleanupComponentFixture(component);
 });
 ```
@@ -24400,16 +24400,16 @@ it('reflects attribute changes', async () => {
   const component = await helpers.createComponentFixture('my-component', {
     prop1: 'value1'
   });
-  
+
   // Change a property
   component.prop1 = 'value2';
-  
+
   // Wait for the component to update
   await component.updateComplete;
-  
+
   // Verify the property was updated
   expect(component.prop1).toBe('value2');
-  
+
   helpers.cleanupComponentFixture(component);
 });
 ```
@@ -24420,61 +24420,61 @@ Here's an example of a complete test for a button component:
 
 ```javascript
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
-  setupTestEnvironment, 
+import {
+  setupTestEnvironment,
   cleanupTestEnvironment,
   TestUtils
 } from './improved-setup.js';
 
 describe('NeoButton', () => {
   let helpers;
-  
+
   beforeEach(async () => {
     helpers = await setupTestEnvironment();
   });
-  
+
   afterEach(() => {
     cleanupTestEnvironment();
   });
-  
+
   it('renders with default properties', async () => {
     // Create a button fixture
     const button = await helpers.createComponentFixture('neo-button', {
       label: 'Click me'
     });
-    
+
     // Verify the button properties
     expect(button.label).toBe('Click me');
     expect(button.variant).toBe('primary'); // Default variant
-    
+
     // Verify the button's shadow DOM
     const buttonElement = TestUtils.queryComponent(button, 'button');
     expect(buttonElement.textContent.trim()).toBe('Click me');
     expect(buttonElement.classList.contains('primary')).toBe(true);
-    
+
     // Clean up
     helpers.cleanupComponentFixture(button);
   });
-  
+
   it('handles click events', async () => {
     // Create a button fixture
     const button = await helpers.createComponentFixture('neo-button', {
       label: 'Click me'
     });
-    
+
     // Set up a click handler
     let clicked = false;
     button.addEventListener('click', () => {
       clicked = true;
     });
-    
+
     // Click the button
     const buttonElement = TestUtils.queryComponent(button, 'button');
     buttonElement.click();
-    
+
     // Verify the click handler was called
     expect(clicked).toBe(true);
-    
+
     // Clean up
     helpers.cleanupComponentFixture(button);
   });
@@ -24488,8 +24488,8 @@ To migrate an existing test to use the improved testing approach:
 1. Import the improved setup:
 
 ```javascript
-import { 
-  setupTestEnvironment, 
+import {
+  setupTestEnvironment,
   cleanupTestEnvironment,
   TestUtils
 } from './improved-setup.js';
@@ -24500,15 +24500,15 @@ import {
 ```javascript
 describe('MyComponent', () => {
   let helpers;
-  
+
   beforeEach(async () => {
     helpers = await setupTestEnvironment();
   });
-  
+
   afterEach(() => {
     cleanupTestEnvironment();
   });
-  
+
   // Tests here
 });
 ```
@@ -24657,10 +24657,10 @@ it('handles animation completion', async () => {
   // Trigger animation
   element.startAnimation();
   await element.updateComplete;
-  
+
   // Manually trigger animation end
   await triggerTransitionEnd();
-  
+
   // Check final state
   expect(element.animationComplete).to.be.true;
 });
@@ -24777,7 +24777,7 @@ index 1234567..abcdef0 100644
 +import { svg } from "lit";
 +import { css } from "lit/decorators.js";
  import { html } from "lit-html";
- 
+
  export const DistanceGuide = (props) => {
 diff --git a/node_modules/@figspec/components/esm/es2015/FigspecViewer/ErrorMessage.js b/node_modules/@figspec/components/esm/es2015/FigspecViewer/ErrorMessage.js
 index 1234567..abcdef0 100644
@@ -24787,7 +24787,7 @@ index 1234567..abcdef0 100644
 -import { css, html } from "lit";
 +import { html } from "lit";
 +import { css } from "lit/decorators.js";
- 
+
  export const ErrorMessage = (props) => {
 diff --git a/node_modules/@figspec/components/esm/es2015/FigspecViewer/FigspecFileViewer.js b/node_modules/@figspec/components/esm/es2015/FigspecViewer/FigspecFileViewer.js
 index 1234567..abcdef0 100644
@@ -24800,7 +24800,7 @@ index 1234567..abcdef0 100644
 -import { LitElement, css, html } from "lit";
 +import { LitElement, html } from "lit";
 +import { css } from "lit/decorators.js";
- 
+
  export class FigspecFileViewer extends ViewerMixin(LitElement) {
 diff --git a/node_modules/@figspec/components/esm/es2015/FigspecViewer/Footer/Footer.js b/node_modules/@figspec/components/esm/es2015/FigspecViewer/Footer/Footer.js
 index 1234567..abcdef0 100644
@@ -24810,7 +24810,7 @@ index 1234567..abcdef0 100644
 -import { css, html } from "lit";
 +import { html } from "lit";
 +import { css } from "lit/decorators.js";
- 
+
  export const Footer = (props) => {
 diff --git a/node_modules/@figspec/components/esm/es2015/FigspecViewer/InspectorView/InspectorView.js b/node_modules/@figspec/components/esm/es2015/FigspecViewer/InspectorView/InspectorView.js
 index 1234567..abcdef0 100644
@@ -24823,7 +24823,7 @@ index 1234567..abcdef0 100644
 -import { css, html } from "lit";
 +import { html } from "lit";
 +import { css } from "lit/decorators.js";
- 
+
  export const InspectorView = (props) => {
 diff --git a/node_modules/@figspec/components/esm/es2015/FigspecViewer/Node.js b/node_modules/@figspec/components/esm/es2015/FigspecViewer/Node.js
 index 1234567..abcdef0 100644
@@ -24833,7 +24833,7 @@ index 1234567..abcdef0 100644
 -import { css, html, svg } from "lit";
 +import { html, svg } from "lit";
 +import { css } from "lit/decorators.js";
- 
+
  export const Node = (props) => {
 diff --git a/node_modules/@figspec/components/esm/es2015/FigspecViewer/ViewerMixin.js b/node_modules/@figspec/components/esm/es2015/FigspecViewer/ViewerMixin.js
 index 1234567..abcdef0 100644
@@ -24846,7 +24846,7 @@ index 1234567..abcdef0 100644
 -import { css, html, svg } from "lit";
 +import { html, svg } from "lit";
 +import { css } from "lit/decorators.js";
- 
+
  export const ViewerMixin = (Base) => {
 </file>
 
@@ -24887,7 +24887,7 @@ index 1234567..abcdef0 100644
 +++ b/node_modules/vitest/dist/worker.js
 @@ -60,6 +60,19 @@ function run(data) {
    const { config } = data;
-   
+
 +  // Performance API polyfill for worker threads
 +  if (typeof performance === 'undefined' || typeof performance.now !== 'function') {
 +    const startTime = Date.now();
@@ -24900,7 +24900,7 @@ index 1234567..abcdef0 100644
 +    globalThis.performance.getEntriesByName = globalThis.performance.getEntriesByName || function() { return []; };
 +    globalThis.performance.getEntriesByType = globalThis.performance.getEntriesByType || function() { return []; };
 +  }
-+  
++
    // Rest of the function...
  }
 </file>
@@ -24925,7 +24925,7 @@ graph TD
     API[FastAPI Backend]
     DB[(PostgreSQL)]
     Cache[(Redis Cache)]
-    
+
     Client --> CDN
     CDN --> Frontend
     Client --> API
@@ -24982,7 +24982,7 @@ sequenceDiagram
     participant Component
     participant Service
     participant API
-    
+
     User->>Component: Interaction
     Component->>Service: Request Data
     Service->>API: API Call
@@ -24999,7 +24999,7 @@ sequenceDiagram
     participant FastAPI
     participant Cache
     participant Database
-    
+
     Client->>FastAPI: Request
     FastAPI->>Cache: Check Cache
     alt Cache Hit
@@ -25040,7 +25040,7 @@ graph TD
     Registry[Container Registry]
     DO[Digital Ocean]
     CDN[Cloudflare CDN]
-    
+
     GitHub --> Actions
     Actions --> Registry
     Registry --> DO
@@ -25250,7 +25250,7 @@ class MyComponent extends LitElement {
           type="email"
           required
         ></nf-input>
-        
+
         <nf-button
           variant="primary"
           @click=${this.handleSubmit}
@@ -27023,7 +27023,7 @@ let patchCount = 0;
 
 files.forEach(file => {
   let content = fs.readFileSync(file, 'utf8');
-  
+
   // Check if the file imports css from lit
   if (content.includes('import { css') || content.includes('import {css')) {
     // Replace the import with our custom import
@@ -27032,7 +27032,7 @@ files.forEach(file => {
       .replace(/import\s*{\s*([^}]+),\s*css\s*}\s*from\s*["']lit["']/g, 'import {$1} from "lit";\nimport { css } from "lit/css"')
       .replace(/import\s*{\s*css\s*}\s*from\s*["']lit["']/g, 'import { css } from "lit/css"')
       .replace(/import\s*{\s*css\s*}\s*from\s*["']lit\/css["']/g, 'import { css } from "lit/css"');
-    
+
     if (newContent !== content) {
       fs.writeFileSync(file, newContent, 'utf8');
       patchCount++;
@@ -30050,7 +30050,7 @@ export const NestedCheckboxes = () => html`
 `;
 // Terms and Conditions Example
 export const TermsCheckbox = () => html`
-  <neo-checkbox 
+  <neo-checkbox
     required
     helper="Please read and accept the terms"
   >
@@ -30753,15 +30753,15 @@ export default {
   },
 };
 // Base Template
-const Template = ({ 
-  type, 
-  label, 
-  placeholder, 
-  value, 
-  required, 
-  disabled, 
-  error, 
-  helper 
+const Template = ({
+  type,
+  label,
+  placeholder,
+  value,
+  required,
+  disabled,
+  error,
+  helper
 }) => html`
   <neo-input
     type=\${ifDefined(type)}
@@ -31865,15 +31865,15 @@ export default {
   },
 };
 // Base Template
-const Template = ({ 
-  label, 
-  name, 
-  value, 
-  checked, 
-  disabled, 
-  required, 
-  error, 
-  helper 
+const Template = ({
+  label,
+  name,
+  value,
+  checked,
+  disabled,
+  required,
+  error,
+  helper
 }) => html`
   <neo-radio
     name=\${ifDefined(name)}
@@ -31942,9 +31942,9 @@ export const RadioGroup = () => html`
 // Radio Group with Description
 export const RadioGroupWithDescription = () => html`
   <div style="display: grid; gap: 16px;">
-    <neo-radio 
-      name="plan" 
-      value="basic" 
+    <neo-radio
+      name="plan"
+      value="basic"
       label="Basic Plan"
       checked
     >
@@ -31952,18 +31952,18 @@ export const RadioGroupWithDescription = () => html`
         Perfect for personal use
       </div>
     </neo-radio>
-    <neo-radio 
-      name="plan" 
-      value="pro" 
+    <neo-radio
+      name="plan"
+      value="pro"
       label="Pro Plan"
     >
       <div slot="description" style="color: var(--color-text-light); font-size: 14px; margin-top: 4px;">
         Ideal for professionals
       </div>
     </neo-radio>
-    <neo-radio 
-      name="plan" 
-      value="enterprise" 
+    <neo-radio
+      name="plan"
+      value="enterprise"
       label="Enterprise Plan"
     >
       <div slot="description" style="color: var(--color-text-light); font-size: 14px; margin-top: 4px;">
@@ -31983,21 +31983,21 @@ export const InlineRadioGroup = () => html`
 // Custom Styled Radio Group
 export const CustomStyledRadioGroup = () => html`
   <div style="display: grid; gap: 8px;">
-    <neo-radio 
-      name="custom" 
-      value="success" 
+    <neo-radio
+      name="custom"
+      value="success"
       label="Success Option"
       style="--radio-color: var(--color-success);"
     ></neo-radio>
-    <neo-radio 
-      name="custom" 
-      value="warning" 
+    <neo-radio
+      name="custom"
+      value="warning"
       label="Warning Option"
       style="--radio-color: var(--color-warning);"
     ></neo-radio>
-    <neo-radio 
-      name="custom" 
-      value="error" 
+    <neo-radio
+      name="custom"
+      value="error"
       label="Error Option"
       style="--radio-color: var(--color-error);"
     ></neo-radio>
@@ -35170,7 +35170,7 @@ export class VerifyEmail extends LoadingMixin(ErrorMixin(LitElement)) {
         <span class="material-icons icon">mail</span>
         <div class="title">Verify Your Email</div>
         <div class="message">
-          ${this.token ? 
+          ${this.token ?
             'The verification link appears to be invalid or has expired. Please request a new verification link.' :
             'Enter your email address below and we\'ll send you a verification link.'}
         </div>
@@ -35185,14 +35185,14 @@ export class VerifyEmail extends LoadingMixin(ErrorMixin(LitElement)) {
             placeholder="Enter your email address"
             ?disabled=${this.loading}
           >
-          <button 
+          <button
             class="primary"
             @click=${this.resendVerification}
             ?disabled=${this.loading}
           >
             Send Verification Link
           </button>
-          <button 
+          <button
             class="secondary"
             @click=${() => window.location.href = '/login'}
           >
@@ -37953,8 +37953,8 @@ export class DocNav extends LitElement {
     });
   }
   findItemByPath(items, path) {
-    return items.some(item => 
-      item.path === path || 
+    return items.some(item =>
+      item.path === path ||
       (item.items && this.findItemByPath(item.items, path))
     );
   }
@@ -37976,7 +37976,7 @@ export class DocNav extends LitElement {
     if (item.items) {
       return html`
         <div class="nav-group">
-          <div 
+          <div
             class="nav-group-header ${this.expandedSections[item.title] ? 'expanded' : ''}"
             @click=${() => this.toggleSection(item.title)}
           >
@@ -37991,7 +37991,7 @@ export class DocNav extends LitElement {
     }
     return html`
       <div class="nav-item">
-        <a 
+        <a
           href="/docs/${item.path}"
           class="nav-link ${this.currentPath === item.path ? 'active' : ''}"
           @click=${(e) => {
@@ -64014,7 +64014,7 @@ job "neoforge-frontend" {
       service {
         name = "frontend"
         port = "http"
-        
+
         check {
           type     = "http"
           path     = "/"
@@ -64043,22 +64043,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
-      
+
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
           push: true
           tags: your-org/neoforge-frontend:latest
-      
+
       - name: Deploy to Digital Ocean
         uses: appleboy/ssh-action@master
         with:
@@ -72372,7 +72372,7 @@ class DocsService {
   }
   /**
    * Extracts front matter from markdown content
-   * @param {string} markdown 
+   * @param {string} markdown
    * @returns {{content: string, frontMatter: Object}}
    */
   _extractFrontMatter(markdown) {
@@ -72401,7 +72401,7 @@ class DocsService {
   }
   /**
    * Processes markdown content
-   * @param {string} markdown 
+   * @param {string} markdown
    * @returns {Promise<string>}
    */
   async _processMarkdown(markdown) {
@@ -72428,7 +72428,7 @@ class DocsService {
   }
   /**
    * Generates a table of contents from markdown content
-   * @param {string} markdown 
+   * @param {string} markdown
    * @returns {Array<{text: string, level: number, id: string}>}
    */
   _generateToc(markdown) {
@@ -72449,7 +72449,7 @@ class DocsService {
   }
   /**
    * Generates a title from the document path
-   * @param {string} path 
+   * @param {string} path
    * @returns {string}
    */
   _generateTitle(path) {
@@ -72461,7 +72461,7 @@ class DocsService {
   }
   /**
    * Escapes HTML special characters
-   * @param {string} html 
+   * @param {string} html
    * @returns {string}
    */
   _escapeHtml(html) {
@@ -72471,7 +72471,7 @@ class DocsService {
   }
   /**
    * Searches documentation content
-   * @param {string} query 
+   * @param {string} query
    * @returns {Promise<Array>}
    */
   async search(query) {
@@ -74575,11 +74575,11 @@ import Accessibility from "./assets/accessibility.png";
 import Theming from "./assets/theming.png";
 import AddonLibrary from "./assets/addon-library.png";
 
-export const RightArrow = () => <svg 
-    viewBox="0 0 14 14" 
-    width="8px" 
-    height="14px" 
-    style={{ 
+export const RightArrow = () => <svg
+    viewBox="0 0 14 14"
+    width="8px"
+    height="14px"
+    style={{
       marginLeft: '4px',
       display: 'inline-block',
       shapeRendering: 'inherit',
@@ -75218,7 +75218,7 @@ export default {
 // Use a function that returns a string instead of a template literal
 const Template = (args) => {
   return `<button
-    style="background-color: ${args.backgroundColor}; 
+    style="background-color: ${args.backgroundColor};
            padding: 10px 20px;
            border-radius: 4px;
            border: none;
@@ -76765,7 +76765,7 @@ export const ErrorMixin = (superClass) =>
 /* Theme transition handling */
 .theme-transition,
 .theme-transition * {
-  transition: 
+  transition:
     background-color var(--transition-normal),
     border-color var(--transition-normal),
     color var(--transition-normal),
@@ -93693,22 +93693,22 @@ let hasPatched = false;
 // Override the require function to intercept worker.js
 Module.prototype.require = function(path) {
   const result = originalRequire.apply(this, arguments);
-  
+
   // Check if this is the Vitest worker module
   if (path.includes('worker.js') && path.includes('vitest') && !hasPatched) {
     try {
       console.log(`Patching Vitest worker at path: ${path}`);
-      
+
       // Apply performance polyfill to all global objects
       const performancePolyfill = createPerformancePolyfill();
-      
+
       const globalObjects = [
         globalThis,
         typeof global !== 'undefined' ? global : null,
         typeof self !== 'undefined' ? self : null,
         typeof window !== 'undefined' ? window : null,
       ];
-      
+
       globalObjects.forEach(obj => {
         if (obj) {
           // Create or patch the performance object
@@ -93720,7 +93720,7 @@ Module.prototype.require = function(path) {
           }
         }
       });
-      
+
       // Monkey patch the worker's code at line 63 (where the error occurs)
       // This is a defensive approach to ensure the code doesn't throw
       if (result && typeof result === 'object') {
@@ -93728,7 +93728,7 @@ Module.prototype.require = function(path) {
         Object.keys(result).forEach(key => {
           if (typeof result[key] === 'function') {
             const originalFn = result[key];
-            
+
             // Wrap the function to catch performance.now errors
             result[key] = function(...args) {
               try {
@@ -93736,17 +93736,17 @@ Module.prototype.require = function(path) {
                 if (!globalThis.performance || typeof globalThis.performance.now !== 'function') {
                   globalThis.performance = createPerformancePolyfill();
                 }
-                
+
                 return originalFn.apply(this, args);
               } catch (error) {
                 if (error.message && error.message.includes('performance.now is not a function')) {
                   // Silently handle the error and reapply the polyfill
                   globalThis.performance = createPerformancePolyfill();
-                  
+
                   // Try again with the polyfill in place
                   return originalFn.apply(this, args);
                 }
-                
+
                 // Rethrow other errors
                 throw error;
               }
@@ -93754,7 +93754,7 @@ Module.prototype.require = function(path) {
           }
         });
       }
-      
+
       // Mark as patched to avoid multiple patches
       hasPatched = true;
       console.log('Successfully patched Vitest worker');
@@ -93762,7 +93762,7 @@ Module.prototype.require = function(path) {
       console.error('Error patching Vitest worker:', error);
     }
   }
-  
+
   return result;
 };
 
@@ -93779,18 +93779,18 @@ process.on('uncaughtException', (error) => {
   if (error.message && error.message.includes('performance.now is not a function')) {
     // Silently suppress the error
     console.debug('Suppressed performance.now error in direct patch');
-    
+
     // Reapply the polyfill
     const performancePolyfill = createPerformancePolyfill();
-    
+
     [globalThis, global, self, window].forEach(obj => {
       if (obj) obj.performance = performancePolyfill;
     });
-    
+
     // Don't rethrow
     return;
   }
-  
+
   // Rethrow other errors
   throw error;
 });
@@ -94014,7 +94014,7 @@ module.exports = {
 <file path="src/test/setup/direct-vitest-worker-patch.cjs">
 /**
  * Direct Vitest Worker Patch (CommonJS version)
- * 
+ *
  * This file directly patches the Vitest worker.js file to ensure the performance API
  * is available in all contexts. It uses a monkey patching approach to intercept
  * the worker module and apply the performance polyfill.
@@ -94023,7 +94023,7 @@ module.exports = {
 // Create a performance polyfill
 const createPerformancePolyfill = () => {
   const startTime = Date.now();
-  
+
   return {
     now() {
       return Date.now() - startTime;
@@ -94039,16 +94039,16 @@ const createPerformancePolyfill = () => {
       if (typeof this._measures !== 'object') {
         this._measures = {};
       }
-      
+
       const startTime = this._marks[startMark] || 0;
       const endTime = this._marks[endMark] || this.now();
-      
+
       this._measures[name] = {
         name,
         startTime,
         duration: endTime - startTime
       };
-      
+
       return this._measures[name];
     },
     getEntriesByName(name, type) {
@@ -94056,11 +94056,11 @@ const createPerformancePolyfill = () => {
         return [{ name, startTime: this._marks[name], entryType: 'mark' }];
       }
       if (type === 'measure' && this._measures && this._measures[name]) {
-        return [{ 
-          name, 
-          startTime: this._measures[name].startTime, 
+        return [{
+          name,
+          startTime: this._measures[name].startTime,
           duration: this._measures[name].duration,
-          entryType: 'measure' 
+          entryType: 'measure'
         }];
       }
       return [];
@@ -94116,22 +94116,22 @@ const patchVitestWorker = () => {
     // Apply the performance polyfill to the global objects
     applyPerformancePolyfill(global);
     applyPerformancePolyfill(globalThis);
-    
+
     if (typeof self !== 'undefined') {
       applyPerformancePolyfill(self);
     }
-    
+
     if (typeof window !== 'undefined') {
       applyPerformancePolyfill(window);
     }
-    
+
     // Get the path to the Vitest worker.js file
     let vitestWorkerPath;
     try {
       vitestWorkerPath = require.resolve('vitest/dist/worker.js');
     } catch (resolveError) {
       console.log('Could not resolve Vitest worker path:', resolveError.message);
-      
+
       // Try an alternative approach to find the worker file
       try {
         const vitestPath = require.resolve('vitest');
@@ -94140,41 +94140,41 @@ const patchVitestWorker = () => {
         console.log('Alternative approach failed:', altError.message);
       }
     }
-    
+
     if (!vitestWorkerPath) {
       console.log('Could not find Vitest worker path, applying global polyfill only');
       return false;
     }
-    
+
     // Get the original module
     const originalModule = require(vitestWorkerPath);
-    
+
     // Monkey patch the run function in the worker module
     if (originalModule && typeof originalModule.run === 'function') {
       const originalRun = originalModule.run;
-      
+
       originalModule.run = function(...args) {
         // Ensure performance is available before running
         applyPerformancePolyfill(global);
         applyPerformancePolyfill(globalThis);
-        
+
         if (typeof self !== 'undefined') {
           applyPerformancePolyfill(self);
         }
-        
+
         if (typeof window !== 'undefined') {
           applyPerformancePolyfill(window);
         }
-        
+
         // Call the original run function
         return originalRun.apply(this, args);
       };
-      
+
       console.log('Vitest worker.js run function patched successfully');
     } else {
       console.log('Could not find run function in Vitest worker module');
     }
-    
+
     // Also patch the Tinypool process.js file
     try {
       let tinypoolProcessPath;
@@ -94182,7 +94182,7 @@ const patchVitestWorker = () => {
         tinypoolProcessPath = require.resolve('tinypool/dist/esm/entry/process.js');
       } catch (resolveError) {
         console.log('Could not resolve Tinypool process path:', resolveError.message);
-        
+
         // Try an alternative approach
         try {
           const tinypoolPath = require.resolve('tinypool');
@@ -94191,34 +94191,34 @@ const patchVitestWorker = () => {
           console.log('Alternative approach for Tinypool failed:', altError.message);
         }
       }
-      
+
       if (!tinypoolProcessPath) {
         console.log('Could not find Tinypool process path');
         return true; // Continue with just the Vitest worker patch
       }
-      
+
       const tinypoolProcess = require(tinypoolProcessPath);
-      
+
       if (tinypoolProcess && typeof tinypoolProcess.onMessage === 'function') {
         const originalOnMessage = tinypoolProcess.onMessage;
-        
+
         tinypoolProcess.onMessage = function(...args) {
           // Ensure performance is available before processing messages
           applyPerformancePolyfill(global);
           applyPerformancePolyfill(globalThis);
-          
+
           if (typeof self !== 'undefined') {
             applyPerformancePolyfill(self);
           }
-          
+
           if (typeof window !== 'undefined') {
             applyPerformancePolyfill(window);
           }
-          
+
           // Call the original onMessage function
           return originalOnMessage.apply(this, args);
         };
-        
+
         console.log('Tinypool process.js onMessage function patched successfully');
       } else {
         console.log('Could not find onMessage function in Tinypool process module');
@@ -94226,7 +94226,7 @@ const patchVitestWorker = () => {
     } catch (tinypoolError) {
       console.log('Error patching Tinypool process.js:', tinypoolError.message);
     }
-    
+
     console.log('Direct Vitest worker patch applied successfully (CommonJS version)');
     return true;
   } catch (error) {
@@ -94241,11 +94241,11 @@ process.on('uncaughtException', (error) => {
     console.log('Caught performance.now error, reapplying polyfill');
     applyPerformancePolyfill(global);
     applyPerformancePolyfill(globalThis);
-    
+
     if (typeof self !== 'undefined') {
       applyPerformancePolyfill(self);
     }
-    
+
     if (typeof window !== 'undefined') {
       applyPerformancePolyfill(window);
     }
@@ -94456,10 +94456,10 @@ module.exports = patchVitestWorker;
 <file path="src/test/setup/global-performance-polyfill.cjs">
 /**
  * Global Performance API polyfill (CommonJS version)
- * 
+ *
  * This file provides a comprehensive polyfill for the Performance API
  * that works in all environments, including Node.js, JSDOM, and worker threads.
- * 
+ *
  * It uses a more aggressive approach to ensure the polyfill is available
  * everywhere it's needed, including in dynamically loaded modules.
  */
@@ -94512,7 +94512,7 @@ function applyPolyfill() {
         return seconds * 1000 + nanoseconds / 1000000;
       }
     };
-    
+
     // Apply the Node.js-specific implementation
     if (typeof global !== 'undefined') {
       if (!global.performance) {
@@ -94540,10 +94540,10 @@ applyPolyfill();
 // Monkey patch require to ensure the polyfill is available in dynamically loaded modules
 if (typeof require === 'function' && typeof module !== 'undefined') {
   const originalRequire = require;
-  
+
   function patchedRequire(id) {
     const result = originalRequire(id);
-    
+
     // If the module is related to testing or workers, ensure it has the performance polyfill
     if (id.includes('vitest') || id.includes('worker') || id.includes('tinypool')) {
       // Apply the polyfill to the module's context
@@ -94554,21 +94554,21 @@ if (typeof require === 'function' && typeof module !== 'undefined') {
           Object.assign(result.performance, createPerformancePolyfill());
         }
       }
-      
+
       // Also reapply globally to ensure it's available
       applyPolyfill();
     }
-    
+
     return result;
   }
-  
+
   // Copy all properties from the original require
   for (const key in originalRequire) {
     if (Object.prototype.hasOwnProperty.call(originalRequire, key)) {
       patchedRequire[key] = originalRequire[key];
     }
   }
-  
+
   // Replace the original require with our patched version
   module.constructor.prototype.require = patchedRequire;
 }
@@ -94720,7 +94720,7 @@ if (typeof process !== "undefined" && process.on) {
 <file path="src/test/setup/monkey-patch-vitest-worker.cjs">
 /**
  * Monkey Patch for Vitest Worker (CommonJS version)
- * 
+ *
  * This file directly monkey patches the Node.js module loader to intercept
  * and modify the Vitest worker.js module when it's loaded. This ensures that
  * the performance API is properly polyfilled in the worker context.
@@ -94732,7 +94732,7 @@ const originalRequire = module.constructor.prototype.require;
 // Create a performance polyfill
 const createPerformancePolyfill = () => {
   const startTime = Date.now();
-  
+
   return {
     now() {
       return Date.now() - startTime;
@@ -94748,16 +94748,16 @@ const createPerformancePolyfill = () => {
       if (typeof this._measures !== 'object') {
         this._measures = {};
       }
-      
+
       const startTime = this._marks[startMark] || 0;
       const endTime = this._marks[endMark] || this.now();
-      
+
       this._measures[name] = {
         name,
         startTime,
         duration: endTime - startTime
       };
-      
+
       return this._measures[name];
     },
     getEntriesByName(name, type) {
@@ -94765,11 +94765,11 @@ const createPerformancePolyfill = () => {
         return [{ name, startTime: this._marks[name], entryType: 'mark' }];
       }
       if (type === 'measure' && this._measures && this._measures[name]) {
-        return [{ 
-          name, 
-          startTime: this._measures[name].startTime, 
+        return [{
+          name,
+          startTime: this._measures[name].startTime,
           duration: this._measures[name].duration,
-          entryType: 'measure' 
+          entryType: 'measure'
         }];
       }
       return [];
@@ -94823,11 +94823,11 @@ const applyPerformancePolyfill = (globalObj) => {
 const applyPolyfillToAllGlobals = () => {
   applyPerformancePolyfill(global);
   applyPerformancePolyfill(globalThis);
-  
+
   if (typeof self !== 'undefined') {
     applyPerformancePolyfill(self);
   }
-  
+
   if (typeof window !== 'undefined') {
     applyPerformancePolyfill(window);
   }
@@ -94840,56 +94840,56 @@ applyPolyfillToAllGlobals();
 module.constructor.prototype.require = function(path) {
   // Apply the polyfill before requiring any module
   applyPolyfillToAllGlobals();
-  
+
   // Call the original require function
   const originalModule = originalRequire.apply(this, arguments);
-  
+
   // Check if this is the Vitest worker module
   if (path === 'vitest/dist/worker.js' || path.includes('vitest/dist/worker.js')) {
     console.log('Intercepted Vitest worker.js module load (CommonJS)');
-    
+
     // Apply the performance polyfill to the global objects
     applyPolyfillToAllGlobals();
-    
+
     // Monkey patch the run function in the worker module
     if (originalModule && typeof originalModule.run === 'function') {
       const originalRun = originalModule.run;
-      
+
       originalModule.run = function(...args) {
         // Ensure performance is available before running
         applyPolyfillToAllGlobals();
-        
+
         // Call the original run function
         return originalRun.apply(this, args);
       };
-      
+
       console.log('Vitest worker.js run function monkey patched successfully (CommonJS)');
     }
   }
-  
+
   // Check if this is the Tinypool process module
   if (path === 'tinypool/dist/esm/entry/process.js' || path.includes('tinypool/dist/esm/entry/process.js')) {
     console.log('Intercepted Tinypool process.js module load (CommonJS)');
-    
+
     // Apply the performance polyfill to the global objects
     applyPolyfillToAllGlobals();
-    
+
     // Monkey patch the onMessage function in the process module
     if (originalModule && typeof originalModule.onMessage === 'function') {
       const originalOnMessage = originalModule.onMessage;
-      
+
       originalModule.onMessage = function(...args) {
         // Ensure performance is available before processing messages
         applyPolyfillToAllGlobals();
-        
+
         // Call the original onMessage function
         return originalOnMessage.apply(this, args);
       };
-      
+
       console.log('Tinypool process.js onMessage function monkey patched successfully (CommonJS)');
     }
   }
-  
+
   return originalModule;
 };
 
@@ -95110,13 +95110,13 @@ console.log("Vitest worker monkey patch installed");
 <file path="src/test/setup/optimized-performance-polyfill.cjs">
 /**
  * Performance API Polyfill (CommonJS version)
- * 
+ *
  * This file provides a complete polyfill for the Performance API in CommonJS format,
  * specifically for use in worker threads and other environments that require CommonJS.
- * 
+ *
  * It ensures that performance.now() and other Performance API methods are available
  * in all JavaScript environments, including Node.js, JSDOM, and worker threads.
- * 
+ *
  * See /docs/performance-polyfill.md for detailed documentation.
  */
 
@@ -95125,10 +95125,10 @@ let isPolyfillInstalled = false;
 
 /**
  * Apply the Performance API polyfill
- * 
+ *
  * This function creates a comprehensive implementation of the Performance API
  * and applies it to the global context if it's not already available.
- * 
+ *
  * @returns {Object} The performance object
  */
 function applyPolyfill() {
@@ -95191,10 +95191,10 @@ function applyPolyfill() {
 
 /**
  * Create a complete performance polyfill
- * 
+ *
  * This function creates a comprehensive implementation of the Performance API,
  * including methods like getEntriesByType, mark, measure, and more.
- * 
+ *
  * @returns {Object} A complete performance polyfill object
  */
 function createCompletePerformancePolyfill() {
@@ -95325,7 +95325,7 @@ function createCompletePerformancePolyfill() {
 
 /**
  * Set up error handling for performance.now errors
- * 
+ *
  * This function sets up global error handlers to catch and suppress
  * performance-related errors.
  */
@@ -95738,7 +95738,7 @@ export { createPerformancePolyfill, patchVitestModules, setupErrorHandling };
 <file path="src/test/setup/package-patches.cjs">
 /**
  * Package Patches (CommonJS version)
- * 
+ *
  * This file contains patches for third-party packages that have issues in the test environment.
  * It's specifically designed for worker threads and other environments that require CommonJS.
  */
@@ -95749,7 +95749,7 @@ let isPatched = false;
 /**
  * Patch the @open-wc/semantic-dom-diff package to fix the deprecation warning
  * about missing "main" or "exports" field
- * 
+ *
  * @returns {boolean} Whether the patching was successful
  */
 function patchSemanticDomDiff() {
@@ -95910,16 +95910,16 @@ const applyPerformancePolyfill = (target) => {
 // Override the require function to intercept the Vitest worker module
 module.require = function(id) {
   const exports = originalRequire.apply(this, arguments);
-  
+
   // If this is the Vitest worker module, patch it
   if (id === VITEST_WORKER_PATH || id.includes(VITEST_WORKER_PATH)) {
     console.log('Intercepted Vitest worker module, applying performance polyfill');
-    
+
     // Apply the polyfill to global objects
     if (typeof global !== 'undefined') applyPerformancePolyfill(global);
     if (typeof globalThis !== 'undefined') applyPerformancePolyfill(globalThis);
     if (typeof self !== 'undefined') applyPerformancePolyfill(self);
-    
+
     // Add a global error handler to catch any issues with performance.now
     if (typeof process !== 'undefined') {
       process.on('uncaughtException', (err) => {
@@ -95932,7 +95932,7 @@ module.require = function(id) {
       });
     }
   }
-  
+
   return exports;
 };
 
@@ -95947,7 +95947,7 @@ function verifyPatch() {
     } else {
       console.log('Performance API is available');
     }
-    
+
     // Test if performance.now works
     const time = performance.now();
     console.log(`Performance.now() = ${time}`);
@@ -96251,7 +96251,7 @@ When updating these utilities:
 <file path="src/test/setup/silence-lit-dev-mode.cjs">
 /**
  * Silence Lit Dev Mode Warning (CommonJS version)
- * 
+ *
  * This utility silences the Lit dev mode warning by patching the reactive-element.js file.
  * It's specifically designed for worker threads and other environments that require CommonJS.
  */
@@ -96261,10 +96261,10 @@ let isSilenced = false;
 
 /**
  * Silence the Lit dev mode warning by patching the reactive-element.js file
- * 
+ *
  * This function patches the reactive-element.js file to prevent it from
  * showing the dev mode warning message.
- * 
+ *
  * @returns {boolean} Whether the silencing was successful
  */
 function silenceLitDevModeWarning() {
@@ -96442,16 +96442,16 @@ const originalRequire = module.require;
 // Override the require function to intercept the Tinypool process module
 module.require = function(id) {
   const exports = originalRequire.apply(this, arguments);
-  
+
   // If this is the Tinypool process module, patch it
   if (id.includes('tinypool/dist') && id.includes('process')) {
     console.log('Intercepted Tinypool process module, applying performance polyfill');
-    
+
     // Apply the polyfill to global objects
     if (typeof global !== 'undefined') applyPerformancePolyfill(global);
     if (typeof globalThis !== 'undefined') applyPerformancePolyfill(globalThis);
     if (typeof self !== 'undefined') applyPerformancePolyfill(self);
-    
+
     // Monkey patch the onMessage function to ensure performance is available
     const originalOnMessage = exports.onMessage;
     if (originalOnMessage) {
@@ -96460,14 +96460,14 @@ module.require = function(id) {
         if (typeof global !== 'undefined') applyPerformancePolyfill(global);
         if (typeof globalThis !== 'undefined') applyPerformancePolyfill(globalThis);
         if (typeof self !== 'undefined') applyPerformancePolyfill(self);
-        
+
         // Call the original onMessage function
         return originalOnMessage.apply(this, arguments);
       };
       console.log('Monkey patched Tinypool onMessage function');
     }
   }
-  
+
   return exports;
 };
 
@@ -96498,7 +96498,7 @@ module.exports = {
 <file path="src/test/setup/vitest-worker-polyfill.cjs">
 /**
  * Vitest Worker Performance Polyfill (CommonJS version)
- * 
+ *
  * This file provides a robust performance polyfill for Vitest worker threads.
  * It ensures that the performance API is available in all contexts.
  */
@@ -96508,7 +96508,7 @@ function setupWorkerPerformancePolyfill() {
   // Only apply if performance is not defined or performance.now is not a function
   if (typeof performance === 'undefined' || typeof performance.now !== 'function') {
     const startTime = Date.now();
-    
+
     // Create a comprehensive performance polyfill
     const performancePolyfill = {
       now() {
@@ -96522,24 +96522,24 @@ function setupWorkerPerformancePolyfill() {
       clearMeasures() {},
       timeOrigin: startTime
     };
-    
+
     // Apply the polyfill to all possible global objects
     if (typeof globalThis !== 'undefined') globalThis.performance = performancePolyfill;
     if (typeof global !== 'undefined') global.performance = performancePolyfill;
     if (typeof self !== 'undefined') self.performance = performancePolyfill;
     if (typeof window !== 'undefined') window.performance = performancePolyfill;
-    
+
     // Directly assign to the performance variable if it exists in this scope
     try {
       performance = performancePolyfill; // eslint-disable-line no-global-assign
     } catch (e) {
       // Ignore assignment errors
     }
-    
+
     console.log("Vitest worker performance polyfill installed (CJS)");
     return true;
   }
-  
+
   return false;
 }
 
@@ -98707,12 +98707,12 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 describe.skip("Browser Compatibility", () => {
   let document;
   let window;
-  
+
   beforeEach(() => {
     // Create a mock DOM environment
     document = global.document;
     window = global.window;
-    
+
     // Set up test elements
     document.body.innerHTML = `
       <div id="app">
@@ -98723,7 +98723,7 @@ describe.skip("Browser Compatibility", () => {
         <app-footer></app-footer>
       </div>
     `;
-    
+
     // Mock custom elements
     if (!customElements.get('app-header')) {
       customElements.define('app-header', class extends HTMLElement {
@@ -98733,7 +98733,7 @@ describe.skip("Browser Compatibility", () => {
         }
       });
     }
-    
+
     if (!customElements.get('app-footer')) {
       customElements.define('app-footer', class extends HTMLElement {
         constructor() {
@@ -98742,36 +98742,36 @@ describe.skip("Browser Compatibility", () => {
         }
       });
     }
-    
+
     // Mock CSS
     global.CSS = {
       supports: (feature) => {
-        return feature.includes('container-type') || 
-               feature.includes('display: grid') || 
+        return feature.includes('container-type') ||
+               feature.includes('display: grid') ||
                feature.includes('gap');
       }
     };
-    
+
     // Mock ContainerQueryPolyfill
     window.ContainerQueryPolyfill = {};
   });
-  
+
   afterEach(() => {
     document.body.innerHTML = '';
   });
 
   it("Web Components are properly rendered", () => {
     // Check if custom elements are defined
-    const customElementsDefined = 
+    const customElementsDefined =
       customElements.get("app-header") !== undefined &&
       customElements.get("app-footer") !== undefined;
-    
+
     expect(customElementsDefined).toBe(true);
 
     // Check if shadow DOM is working
     const header = document.querySelector("app-header");
     const shadowRootExists = header?.shadowRoot !== null;
-    
+
     expect(shadowRootExists).toBe(true);
   });
 
@@ -98779,13 +98779,13 @@ describe.skip("Browser Compatibility", () => {
     // Check if grid layout is applied
     const grid = document.querySelector(".grid");
     const hasGridLayout = window.getComputedStyle(grid).display === "grid";
-    
+
     expect(hasGridLayout).toBe(true);
 
     // Check grid gap inheritance
     const style = window.getComputedStyle(grid);
     const hasGridGap = style.gap !== "0px" || style.gridGap !== "0px";
-    
+
     expect(hasGridGap).toBe(true);
   });
 
@@ -98797,12 +98797,12 @@ describe.skip("Browser Compatibility", () => {
       // Test native support
       const container = document.querySelector(".container");
       const containerWorking = window.getComputedStyle(container).contain.includes("layout");
-      
+
       expect(containerWorking).toBe(true);
     } else {
       // Test polyfill
       const polyfillLoaded = typeof window.ContainerQueryPolyfill !== "undefined";
-      
+
       expect(polyfillLoaded).toBe(true);
     }
   });
@@ -98814,45 +98814,45 @@ describe.skip("Browser Compatibility", () => {
     if (viewTransitionsSupported) {
       // Test native support
       const transitionWorks = typeof document.startViewTransition === "function";
-      
+
       expect(transitionWorks).toBe(true);
     } else {
       // Test fallback
       const element = document.querySelector(".transition-element");
       const fallbackWorks = window.getComputedStyle(element).transition !== "";
-      
+
       expect(fallbackWorks).toBe(true);
     }
   });
 
   it("Performance API is available", () => {
-    const performanceAPIWorks = 
+    const performanceAPIWorks =
       typeof performance.now === "function" &&
       typeof performance.mark === "function" &&
       typeof performance.measure === "function";
-    
+
     expect(performanceAPIWorks).toBe(true);
   });
 
   it("Intersection Observer is working", () => {
     const intersectionObserverWorks = typeof IntersectionObserver === "function";
-    
+
     expect(intersectionObserverWorks).toBe(true);
   });
 
   it("ResizeObserver is working", () => {
     const resizeObserverWorks = typeof ResizeObserver === "function";
-    
+
     expect(resizeObserverWorks).toBe(true);
   });
 
   it("CSS Custom Properties are supported", () => {
     // Set a custom property
     document.documentElement.style.setProperty('--primary-color', '#ff0000');
-    
+
     const style = window.getComputedStyle(document.documentElement);
     const customPropertiesWork = style.getPropertyValue("--primary-color") !== "";
-    
+
     expect(customPropertiesWork).toBe(true);
   });
 });
@@ -99437,14 +99437,14 @@ async function registerComponent(name, component) {
     let ComponentClass;
 
     if (typeof component === "function") {
-      if (component.constructor && component.constructor.name === "AsyncFunction" || 
+      if (component.constructor && component.constructor.name === "AsyncFunction" ||
           component.toString().includes('import(')) {
         // If component is a dynamic import, wait for it to load
         try {
           const module = await component();
           // Try different ways to get the component class
-          ComponentClass = 
-            module.default || 
+          ComponentClass =
+            module.default ||
             module[name.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join("")] ||
             module[name.charAt(0).toUpperCase() + name.slice(1)];
         } catch (error) {
@@ -99507,7 +99507,7 @@ if (!globalThis.document) {
     url: 'http://localhost',
     pretendToBeVisual: true,
   });
-  
+
   globalThis.window = dom.window;
   globalThis.document = dom.window.document;
   globalThis.HTMLElement = dom.window.HTMLElement;
@@ -99515,7 +99515,7 @@ if (!globalThis.document) {
   globalThis.Event = dom.window.Event;
   globalThis.Node = dom.window.Node;
   globalThis.navigator = dom.window.navigator;
-  
+
   // Add missing browser APIs
   globalThis.window.matchMedia = vi.fn().mockImplementation(query => ({
     matches: false,
@@ -99722,7 +99722,7 @@ export function setupDashboardTest() {
       status: 'Updated'
     })
   };
-  
+
   window.api = api;
   return api;
 }
@@ -99744,7 +99744,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.clearAllMocks();
   store = {};
-  
+
   // Clean up any elements added to the body
   document.body.innerHTML = '';
 });
@@ -100238,10 +100238,10 @@ it("renders correctly", async () => {
 it("handles button click", async () => {
   const button = await TestUtils.queryComponent(element, "button");
   button.click();
-  
+
   // Wait for component to update
   await TestUtils.waitForComponent(element);
-  
+
   // Assert expected changes
   const result = await TestUtils.queryComponent(element, ".result");
   expect(result.textContent).to.include("Button Clicked");
@@ -100254,14 +100254,14 @@ it("handles button click", async () => {
 it("handles form submission", async () => {
   const form = await TestUtils.queryComponent(element, "form");
   const input = form.querySelector("input[name='email']");
-  
+
   // Set input value
   input.value = "test@example.com";
   input.dispatchEvent(new Event("input"));
-  
+
   // Submit form
   form.dispatchEvent(new Event("submit"));
-  
+
   // Listen for custom event
   const { detail } = await TestUtils.oneEvent(element, "form-submit");
   expect(detail.email).to.equal("test@example.com");
@@ -100274,22 +100274,22 @@ it("handles form submission", async () => {
 it("handles async operations", async () => {
   // Mock API response
   window.api.getData = vi.fn().mockResolvedValue({ data: "test" });
-  
+
   // Trigger async operation
   const button = await TestUtils.queryComponent(element, ".load-button");
   button.click();
-  
+
   // Wait for component to update
   await TestUtils.waitForComponent(element);
-  
+
   // Assert loading state
   const loading = await TestUtils.queryComponent(element, ".loading");
   expect(loading).to.exist;
-  
+
   // Wait for operation to complete
   await new Promise(resolve => setTimeout(resolve, 0));
   await TestUtils.waitForComponent(element);
-  
+
   // Assert result
   const result = await TestUtils.queryComponent(element, ".result");
   expect(result.textContent).to.include("test");
@@ -100347,59 +100347,59 @@ import "../../components/login-form.js";
 
 describe("Login Form", () => {
   let element;
-  
+
   beforeEach(async () => {
     // Mock auth service
     window.auth = {
       login: vi.fn().mockResolvedValue({ success: true }),
     };
-    
+
     element = await TestUtils.fixture(html`<login-form></login-form>`);
     await TestUtils.waitForAll(element);
   });
-  
+
   it("renders login form with email and password fields", async () => {
     const form = await TestUtils.queryComponent(element, "form");
     const emailInput = form.querySelector("input[type='email']");
     const passwordInput = form.querySelector("input[type='password']");
     const submitButton = form.querySelector("button[type='submit']");
-    
+
     expect(form).to.exist;
     expect(emailInput).to.exist;
     expect(passwordInput).to.exist;
     expect(submitButton).to.exist;
     expect(submitButton.textContent).to.include("Log In");
   });
-  
+
   it("validates form inputs", async () => {
     const form = await TestUtils.queryComponent(element, "form");
     const submitButton = form.querySelector("button[type='submit']");
-    
+
     // Submit empty form
     submitButton.click();
     await TestUtils.waitForComponent(element);
-    
+
     // Check for validation errors
     const errors = await TestUtils.queryAllComponents(element, ".error-message");
     expect(errors.length).to.be.greaterThan(0);
   });
-  
+
   it("submits form with valid data", async () => {
     const form = await TestUtils.queryComponent(element, "form");
     const emailInput = form.querySelector("input[type='email']");
     const passwordInput = form.querySelector("input[type='password']");
     const submitButton = form.querySelector("button[type='submit']");
-    
+
     // Fill form
     emailInput.value = "test@example.com";
     passwordInput.value = "password123";
-    
+
     emailInput.dispatchEvent(new Event("input"));
     passwordInput.dispatchEvent(new Event("input"));
-    
+
     // Submit form
     submitButton.click();
-    
+
     // Check auth service was called
     expect(window.auth.login).to.have.been.calledWith({
       email: "test@example.com",
@@ -100539,13 +100539,13 @@ describe("My Component", () => {
 
   it("handles user interactions", async () => {
     const button = findInShadow(element, "button");
-    
+
     // Set up event listener
     const eventPromise = waitForEvent(element, "button-click");
-    
+
     // Perform action
     click(button);
-    
+
     // Wait for event
     const event = await eventPromise;
     expect(event.detail.clicked).to.be.true;
@@ -100553,19 +100553,19 @@ describe("My Component", () => {
 
   it("processes form submission", async () => {
     const form = findInShadow(element, "form");
-    
+
     // Fill form
     fillForm(form, {
       name: "John Doe",
       email: "john@example.com"
     });
-    
+
     // Submit form
     submitForm(form);
-    
+
     // Wait for component to update
     await waitForUpdate(element);
-    
+
     // Check results
     const successMessage = findInShadow(element, ".success-message");
     expect(successMessage).to.exist;
@@ -100591,7 +100591,7 @@ describe("My Component", () => {
    ```javascript
    // ❌ Don't use:
    element.querySelector(".button");
-   
+
    // ✅ Do use:
    findInShadow(element, ".button");
    ```
@@ -100622,12 +100622,12 @@ describe("My Component", () => {
    it("renders and handles clicks and submits forms", async () => {
      // Too many assertions
    });
-   
+
    // ✅ Do test one behavior:
    it("renders the form fields", async () => {
      // Assertions about rendering
    });
-   
+
    it("handles form submission", async () => {
      // Assertions about submission
    });
@@ -100722,62 +100722,62 @@ import "../../components/login-form.js";
 
 describe("Login Form", () => {
   let element;
-  
+
   beforeEach(async () => {
     // Mock auth service
     window.auth = {
       login: vi.fn().mockResolvedValue({ success: true })
     };
-    
+
     // Create component
     element = await createComponent("login-form");
   });
-  
+
   afterEach(() => {
     removeComponent(element);
   });
-  
+
   it("renders login form with email and password fields", async () => {
     const form = findInShadow(element, "form");
     const emailInput = form.querySelector("input[type='email']");
     const passwordInput = form.querySelector("input[type='password']");
-    
+
     expect(form).to.exist;
     expect(emailInput).to.exist;
     expect(passwordInput).to.exist;
   });
-  
+
   it("validates form inputs", async () => {
     const form = findInShadow(element, "form");
-    
+
     // Submit empty form
     submitForm(form);
     await waitForUpdate(element);
-    
+
     // Check for validation errors
     const errors = findAllInShadow(element, ".error-message");
     expect(errors.length).to.be.greaterThan(0);
   });
-  
+
   it("submits form with valid data", async () => {
     const form = findInShadow(element, "form");
-    
+
     // Fill form
     fillForm(form, {
       email: "test@example.com",
       password: "password123"
     });
-    
+
     // Submit form
     submitForm(form);
     await waitForUpdate(element);
-    
+
     // Check auth service was called
     expect(window.auth.login).to.have.been.calledWith({
       email: "test@example.com",
       password: "password123"
     });
-    
+
     // Check success message
     const successMessage = findInShadow(element, ".success-message");
     expect(successMessage).to.exist;
@@ -101556,7 +101556,7 @@ class KeyboardManager {
   }
   /**
    * Handle keydown events
-   * @param {KeyboardEvent} event 
+   * @param {KeyboardEvent} event
    */
   _handleKeyDown(event) {
     if (!this.enabled) return;
@@ -101575,7 +101575,7 @@ class KeyboardManager {
   }
   /**
    * Check if the event target is a typing element
-   * @param {EventTarget} target 
+   * @param {EventTarget} target
    * @returns {boolean}
    */
   _isTypingTarget(target) {
@@ -101589,7 +101589,7 @@ class KeyboardManager {
   }
   /**
    * Get a standardized key string from a keyboard event
-   * @param {KeyboardEvent} event 
+   * @param {KeyboardEvent} event
    * @returns {string}
    */
   _getEventKey(event) {
@@ -101627,7 +101627,7 @@ class KeyboardManager {
   }
   /**
    * Unregister a keyboard shortcut
-   * @param {string} key 
+   * @param {string} key
    */
   unregister(key) {
     const normalizedKey = key.toLowerCase();
@@ -101668,7 +101668,7 @@ class KeyboardManager {
   }
   /**
    * Check if a shortcut is registered
-   * @param {string} key 
+   * @param {string} key
    * @returns {boolean}
    */
   hasShortcut(key) {
@@ -101814,7 +101814,7 @@ class LoggerService {
   }
   /**
    * Check if the given level should be logged
-   * @param {string} level 
+   * @param {string} level
    * @returns {boolean}
    */
   _shouldLog(level) {
@@ -101822,8 +101822,8 @@ class LoggerService {
   }
   /**
    * Format the log message with timestamp and level
-   * @param {string} level 
-   * @param {string} message 
+   * @param {string} level
+   * @param {string} message
    * @returns {string}
    */
   _formatMessage(level, message) {
@@ -101832,8 +101832,8 @@ class LoggerService {
   }
   /**
    * Log an error message
-   * @param {string} message 
-   * @param {Error|any} [error] 
+   * @param {string} message
+   * @param {Error|any} [error]
    */
   error(message, error) {
     if (this._shouldLog('error')) {
@@ -101850,8 +101850,8 @@ class LoggerService {
   }
   /**
    * Log a warning message
-   * @param {string} message 
-   * @param {any} [data] 
+   * @param {string} message
+   * @param {any} [data]
    */
   warn(message, data) {
     if (this._shouldLog('warn')) {
@@ -101864,8 +101864,8 @@ class LoggerService {
   }
   /**
    * Log an info message
-   * @param {string} message 
-   * @param {any} [data] 
+   * @param {string} message
+   * @param {any} [data]
    */
   info(message, data) {
     if (this._shouldLog('info')) {
@@ -101878,8 +101878,8 @@ class LoggerService {
   }
   /**
    * Log a debug message
-   * @param {string} message 
-   * @param {any} [data] 
+   * @param {string} message
+   * @param {any} [data]
    */
   debug(message, data) {
     if (this._shouldLog('debug')) {
@@ -101892,7 +101892,7 @@ class LoggerService {
   }
   /**
    * Set the log level
-   * @param {'error'|'warn'|'info'|'debug'} level 
+   * @param {'error'|'warn'|'info'|'debug'} level
    */
   setLevel(level) {
     if (this.levels[level] !== undefined) {
@@ -102545,14 +102545,14 @@ class Router {
   }
   /**
    * Handle popstate events
-   * @param {PopStateEvent} event 
+   * @param {PopStateEvent} event
    */
   _handlePopState(event) {
     this._handleRoute(window.location.pathname + window.location.search);
   }
   /**
    * Handle click events for internal navigation
-   * @param {MouseEvent} event 
+   * @param {MouseEvent} event
    */
   _handleClick(event) {
     // Only handle primary mouse button clicks
@@ -102581,7 +102581,7 @@ class Router {
   }
   /**
    * Check if a URL is internal
-   * @param {string} url 
+   * @param {string} url
    * @returns {boolean}
    */
   _isInternalUrl(url) {
@@ -102594,8 +102594,8 @@ class Router {
   }
   /**
    * Parse route parameters from path
-   * @param {string} pattern 
-   * @param {string} path 
+   * @param {string} pattern
+   * @param {string} path
    * @returns {Object|null}
    */
   _parseParams(pattern, path) {
@@ -102615,7 +102615,7 @@ class Router {
   }
   /**
    * Parse query parameters from search string
-   * @param {string} search 
+   * @param {string} search
    * @returns {Object}
    */
   _parseQuery(search) {
@@ -102628,7 +102628,7 @@ class Router {
   }
   /**
    * Handle route change
-   * @param {string} url 
+   * @param {string} url
    */
   _handleRoute(url) {
     const [pathname, search] = url.split('?');
@@ -102677,14 +102677,14 @@ class Router {
   }
   /**
    * Register a not found handler
-   * @param {Function} handler 
+   * @param {Function} handler
    */
   registerNotFound(handler) {
     this.notFoundHandler = handler;
   }
   /**
    * Navigate to a URL
-   * @param {string} url 
+   * @param {string} url
    * @param {Object} [options] - Navigation options
    * @param {boolean} [options.replace=false] - Replace current history entry
    */
@@ -102709,7 +102709,7 @@ class Router {
   }
   /**
    * Check if current route matches pattern
-   * @param {string} pattern 
+   * @param {string} pattern
    * @returns {boolean}
    */
   isRoute(pattern) {
@@ -102920,17 +102920,17 @@ const components = [
 async function registerComponent(name, component) {
   try {
     if (typeof component === "function") {
-      if (component.constructor && component.constructor.name === "AsyncFunction" || 
+      if (component.constructor && component.constructor.name === "AsyncFunction" ||
           component.toString().includes('import(')) {
         // If component is a dynamic import, wait for it to load
         try {
           const module = await component();
           // Try different ways to get the component class
-          const ComponentClass = 
-            module.default || 
+          const ComponentClass =
+            module.default ||
             module[name.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join("")] ||
             module[name.charAt(0).toUpperCase() + name.slice(1)];
-          
+
           if (ComponentClass && typeof ComponentClass === 'function') {
             BaseComponent.registerComponent(name, ComponentClass);
           } else {
@@ -103869,7 +103869,7 @@ autorun_commands = ["npm run test", "npm run test:unit", "npm run build", "npm r
 # Coverage reports
 /coverage
 .nyc_output
-*.lcov 
+*.lcov
 *storybook.log
 </file>
 
@@ -105393,7 +105393,7 @@ static styles = css`
   :host {
     display: block;
   }
-  
+
   .my-class {
     color: var(--primary-color);
   }
@@ -105794,7 +105794,7 @@ self.addEventListener("notificationclick", (event) => {
           summary.innerHTML = `
                     <h2>Test Results</h2>
                     <p>
-                        <span class="pass">✓ ${testResults.passed} passed</span> / 
+                        <span class="pass">✓ ${testResults.passed} passed</span> /
                         <span class="fail">✗ ${testResults.failed} failed</span>
                         (${testResults.total} total)
                     </p>
@@ -107006,17 +107006,17 @@ const devConfig = {
             key: () => null
           };
           window.fetch = async () => ({ ok: true, json: async () => ({}) });
-          window.matchMedia = () => ({ 
-            matches: false, 
-            addListener: () => {}, 
+          window.matchMedia = () => ({
+            matches: false,
+            addListener: () => {},
             removeListener: () => {},
             addEventListener: () => {},
-            removeEventListener: () => {} 
+            removeEventListener: () => {}
           });
-          window.ResizeObserver = class { 
-            observe() {} 
-            unobserve() {} 
-            disconnect() {} 
+          window.ResizeObserver = class {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
           };
           window.IntersectionObserver = class {
             observe() {}

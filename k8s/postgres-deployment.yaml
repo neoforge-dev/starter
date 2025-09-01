@@ -135,7 +135,7 @@ spec:
           readOnlyRootFilesystem: false  # PostgreSQL needs to write to various locations
           runAsNonRoot: true
           runAsUser: 999
-      
+
       # PostgreSQL Exporter for Prometheus monitoring
       - name: postgres-exporter
         image: prometheuscommunity/postgres-exporter:v0.15.0
@@ -167,7 +167,7 @@ spec:
             - ALL
           readOnlyRootFilesystem: true
           runAsNonRoot: true
-      
+
       volumes:
       - name: postgres-config
         configMap:
@@ -181,7 +181,7 @@ spec:
         configMap:
           name: postgres-config
           defaultMode: 0755
-      
+
       # Node affinity to prefer running on nodes with SSD storage
       affinity:
         nodeAffinity:
@@ -202,7 +202,7 @@ spec:
                   operator: In
                   values: ["postgres"]
               topologyKey: kubernetes.io/hostname
-  
+
   volumeClaimTemplates:
   - metadata:
       name: postgres-storage

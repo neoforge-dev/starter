@@ -243,7 +243,7 @@ class AnalyticsService {
     existing.accessCount++;
     existing.totalTime += timeSpent;
     existing.lastAccess = Date.now();
-    
+
     this.playgroundData.componentUsage.set(key, existing);
     this.notifyObservers('componentUsage', { category, componentName, timeSpent });
   }
@@ -262,7 +262,7 @@ class AnalyticsService {
         timestamp: Date.now()
       });
       this.componentSwitchStart = null;
-      
+
       // Also track component usage
       this.trackComponentUsage(category, componentName);
     }
@@ -283,7 +283,7 @@ class AnalyticsService {
       resultsCount,
       timestamp: Date.now()
     });
-    
+
     this.notifyObservers('searchQuery', searchData);
   }
 
@@ -298,14 +298,14 @@ class AnalyticsService {
     };
 
     existing.interactions++;
-    
+
     // Track value frequency
     const valueKey = typeof value === 'object' ? JSON.stringify(value) : String(value);
     existing.values.set(valueKey, (existing.values.get(valueKey) || 0) + 1);
-    
+
     // Track interaction type
     existing.types.set(interactionType, (existing.types.get(interactionType) || 0) + 1);
-    
+
     this.playgroundData.propertyInteractions.set(key, existing);
     this.notifyObservers('propertyInteraction', { componentName, property, value, interactionType });
   }
@@ -319,7 +319,7 @@ class AnalyticsService {
 
     existing.usage++;
     existing.lastUsed = Date.now();
-    
+
     this.playgroundData.keyboardShortcuts.set(shortcut, existing);
     this.notifyObservers('keyboardShortcut', { shortcut });
   }
@@ -330,7 +330,7 @@ class AnalyticsService {
       success,
       timestamp: Date.now()
     });
-    
+
     this.notifyObservers('buildPerformance', { buildTime, success });
   }
 
@@ -340,14 +340,14 @@ class AnalyticsService {
       memory: memoryUsed,
       timestamp: Date.now()
     });
-    
+
     this.notifyObservers('memoryUsage', { component, memoryUsed });
   }
 
   // Data retrieval methods for playground analytics
   getPlaygroundData(timeRange = '24h') {
     const timeLimit = this.getTimeLimit(timeRange);
-    
+
     return {
       componentUsage: this.getFilteredComponentUsage(timeLimit),
       searchMetrics: this.getFilteredSearchMetrics(timeLimit),
@@ -432,7 +432,7 @@ class AnalyticsService {
     if (format === 'csv') {
       return this.convertToCSV(data);
     }
-    
+
     return JSON.stringify(data, (key, value) => {
       if (value instanceof Map) {
         return Object.fromEntries(value);
@@ -445,7 +445,7 @@ class AnalyticsService {
     // Convert playground component usage to CSV
     const componentUsageRows = [];
     componentUsageRows.push(['Component Category', 'Component Name', 'Access Count', 'Total Time (ms)', 'Last Access']);
-    
+
     for (const [key, usage] of data.playground.componentUsage) {
       componentUsageRows.push([
         usage.category,
@@ -457,11 +457,11 @@ class AnalyticsService {
     }
 
     const componentUsageCSV = componentUsageRows.map(row => row.join(',')).join('\n');
-    
+
     // Convert search metrics to CSV
     const searchRows = [];
     searchRows.push(['Query', 'Results Count', 'Response Time (ms)', 'Timestamp']);
-    
+
     data.playground.searchMetrics.forEach(search => {
       searchRows.push([
         `"${search.query}"`,

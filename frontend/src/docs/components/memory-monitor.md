@@ -170,4 +170,4 @@ We welcome contributions! Please see our [Contributing Guide](../contributing.md
 
 ## License
 
-MIT License - see [LICENSE.md](../LICENSE.md) for details. 
+MIT License - see [LICENSE.md](../LICENSE.md) for details.

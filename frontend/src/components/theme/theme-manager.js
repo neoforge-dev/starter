@@ -18,31 +18,31 @@ export const themes = {
       'colors.surfaceElevated': '#ffffff',
       'colors.border': '#e2e8f0',
       'colors.borderHover': '#cbd5e1',
-      
+
       // Text colors
       'colors.text': '#0f172a',
       'colors.textSecondary': '#475569',
       'colors.textTertiary': '#94a3b8',
       'colors.textInverse': '#ffffff',
-      
+
       // Brand colors
       'colors.brand.primary': '#2563eb',
       'colors.brand.primaryHover': '#1d4ed8',
       'colors.brand.primaryActive': '#1e40af',
       'colors.brand.secondary': '#4f46e5',
       'colors.brand.accent': '#0ea5e9',
-      
+
       // Semantic colors
       'colors.semantic.success': '#059669',
       'colors.semantic.warning': '#d97706',
       'colors.semantic.error': '#dc2626',
       'colors.semantic.info': '#0ea5e9',
-      
+
       // Interactive states
       'colors.hover': 'rgba(0, 0, 0, 0.05)',
       'colors.active': 'rgba(0, 0, 0, 0.1)',
       'colors.focus': '#2563eb',
-      
+
       // Shadows (elevated surfaces)
       'elevation.xs': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
       'elevation.sm': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
@@ -68,31 +68,31 @@ export const themes = {
       'colors.surfaceElevated': '#334155',
       'colors.border': '#475569',
       'colors.borderHover': '#64748b',
-      
+
       // Text colors
       'colors.text': '#f8fafc',
       'colors.textSecondary': '#cbd5e1',
       'colors.textTertiary': '#94a3b8',
       'colors.textInverse': '#0f172a',
-      
+
       // Brand colors (adjusted for dark background)
       'colors.brand.primary': '#3b82f6',
       'colors.brand.primaryHover': '#60a5fa',
       'colors.brand.primaryActive': '#2563eb',
       'colors.brand.secondary': '#6366f1',
       'colors.brand.accent': '#38bdf8',
-      
+
       // Semantic colors (enhanced for dark)
       'colors.semantic.success': '#10b981',
       'colors.semantic.warning': '#f59e0b',
       'colors.semantic.error': '#ef4444',
       'colors.semantic.info': '#38bdf8',
-      
+
       // Interactive states
       'colors.hover': 'rgba(255, 255, 255, 0.05)',
       'colors.active': 'rgba(255, 255, 255, 0.1)',
       'colors.focus': '#3b82f6',
-      
+
       // Enhanced shadows for dark mode
       'elevation.xs': '0 1px 2px 0 rgb(0 0 0 / 0.3)',
       'elevation.sm': '0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4)',
@@ -118,31 +118,31 @@ export const themes = {
       'colors.surfaceElevated': '#242b3d',
       'colors.border': '#3d4663',
       'colors.borderHover': '#4a5578',
-      
+
       // NeoForge brand text
       'colors.text': '#e2e8f0',
       'colors.textSecondary': '#a0aec0',
       'colors.textTertiary': '#718096',
       'colors.textInverse': '#0a0e1a',
-      
+
       // Custom NeoForge brand colors
       'colors.brand.primary': '#00d4ff', // Cyan primary
       'colors.brand.primaryHover': '#33ddff',
       'colors.brand.primaryActive': '#0099cc',
       'colors.brand.secondary': '#6c5ce7', // Purple secondary
       'colors.brand.accent': '#fd79a8', // Pink accent
-      
+
       // Enhanced semantic colors
       'colors.semantic.success': '#00cec9',
       'colors.semantic.warning': '#fdcb6e',
       'colors.semantic.error': '#e84393',
       'colors.semantic.info': '#74b9ff',
-      
+
       // Brand-specific interactive states
       'colors.hover': 'rgba(0, 212, 255, 0.1)',
       'colors.active': 'rgba(0, 212, 255, 0.2)',
       'colors.focus': '#00d4ff',
-      
+
       // Deep shadows for brand theme
       'elevation.xs': '0 1px 2px 0 rgba(0, 212, 255, 0.1)',
       'elevation.sm': '0 1px 3px 0 rgba(0, 212, 255, 0.15), 0 1px 2px -1px rgba(0, 0, 0, 0.3)',
@@ -168,31 +168,31 @@ export const themes = {
       'colors.surfaceElevated': '#333333',
       'colors.border': '#ffffff',
       'colors.borderHover': '#ffff00',
-      
+
       // High contrast text
       'colors.text': '#ffffff',
       'colors.textSecondary': '#ffffff',
       'colors.textTertiary': '#cccccc',
       'colors.textInverse': '#000000',
-      
+
       // High contrast brand colors
       'colors.brand.primary': '#ffff00', // Yellow for visibility
       'colors.brand.primaryHover': '#ffff66',
       'colors.brand.primaryActive': '#cccc00',
       'colors.brand.secondary': '#00ffff', // Cyan
       'colors.brand.accent': '#ff00ff', // Magenta
-      
+
       // High contrast semantic colors
       'colors.semantic.success': '#00ff00',
       'colors.semantic.warning': '#ffff00',
       'colors.semantic.error': '#ff0000',
       'colors.semantic.info': '#00ffff',
-      
+
       // High contrast interactive states
       'colors.hover': 'rgba(255, 255, 0, 0.3)',
       'colors.active': 'rgba(255, 255, 0, 0.5)',
       'colors.focus': '#ffff00',
-      
+
       // Strong shadows
       'elevation.xs': '0 0 0 2px #ffffff',
       'elevation.sm': '0 0 0 3px #ffffff',
@@ -226,13 +226,13 @@ export class ThemeManager {
     this.systemPreference = null;
     this.persistenceKey = 'neoforge-theme';
     this.listeners = new Set();
-    
+
     // Initialize system preference detection
     this.initializeSystemPreference();
-    
+
     // Load persisted theme or use system default
     this.initialize();
-    
+
     // Set up system preference change listening
     this.watchSystemPreference();
   }
@@ -263,19 +263,19 @@ export class ThemeManager {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleChange = (e) => {
         this.systemPreference = e.matches ? 'dark' : 'light';
-        
+
         // If using system theme, update automatically
         if (this.currentTheme === 'system') {
           this.applySystemTheme();
         }
-        
+
         this.notifyListeners('systemPreferenceChanged', {
           systemPreference: this.systemPreference
         });
       };
 
       mediaQuery.addEventListener('change', handleChange);
-      
+
       // Store cleanup function
       this.cleanupSystemWatcher = () => {
         mediaQuery.removeEventListener('change', handleChange);
@@ -300,26 +300,26 @@ export class ThemeManager {
 
     // Apply theme tokens
     this.applyThemeTokens(theme);
-    
+
     // Update current theme
     this.currentTheme = themeId;
-    
+
     // Apply theme class to document
     this.updateDocumentTheme(themeId);
-    
+
     // Persist theme choice
     this.persistTheme(themeId);
-    
+
     // Handle accessibility settings
     this.applyAccessibilitySettings(theme.accessibility);
-    
+
     // Notify listeners
     this.notifyListeners('themeChanged', {
       themeId,
       theme,
       tokens: theme.tokens
     });
-    
+
     console.log(`Applied theme: ${theme.name}`);
     return true;
   }
@@ -329,10 +329,10 @@ export class ThemeManager {
    */
   applySystemTheme() {
     const systemTheme = themes.system;
-    const targetThemeId = this.systemPreference === 'dark' 
-      ? systemTheme.darkTheme 
+    const targetThemeId = this.systemPreference === 'dark'
+      ? systemTheme.darkTheme
       : systemTheme.lightTheme;
-    
+
     const targetTheme = themes[targetThemeId];
     if (!targetTheme) {
       console.warn(`System theme target not found: ${targetThemeId}`);
@@ -341,19 +341,19 @@ export class ThemeManager {
 
     // Apply the target theme tokens
     this.applyThemeTokens(targetTheme);
-    
+
     // Update current theme to system
     this.currentTheme = 'system';
-    
+
     // Apply theme class
     this.updateDocumentTheme(`system-${targetThemeId}`);
-    
+
     // Persist system preference
     this.persistTheme('system');
-    
+
     // Apply accessibility settings
     this.applyAccessibilitySettings(targetTheme.accessibility);
-    
+
     // Notify listeners
     this.notifyListeners('themeChanged', {
       themeId: 'system',
@@ -370,13 +370,13 @@ export class ThemeManager {
    */
   applyThemeTokens(theme) {
     const updates = {};
-    
+
     // Convert theme tokens to CSS custom property format
     for (const [tokenPath, value] of Object.entries(theme.tokens)) {
       const cssProperty = tokenPath.replace(/\./g, '-');
       updates[tokenPath] = value;
     }
-    
+
     // Batch update for performance
     batchUpdateTokens(updates);
   }
@@ -389,17 +389,17 @@ export class ThemeManager {
       // Remove existing theme classes
       const existingClasses = Array.from(document.documentElement.classList)
         .filter(className => className.startsWith('theme-'));
-      
+
       existingClasses.forEach(className => {
         document.documentElement.classList.remove(className);
       });
-      
+
       // Add new theme class
       document.documentElement.classList.add(`theme-${themeId}`);
-      
+
       // Add data attribute for CSS targeting
       document.documentElement.setAttribute('data-theme', themeId);
-      
+
       // Update color scheme for browser UI
       const resolvedTheme = this.getResolvedTheme();
       document.documentElement.style.colorScheme = resolvedTheme === 'dark' ? 'dark' : 'light';
@@ -417,7 +417,7 @@ export class ThemeManager {
       } else {
         document.documentElement.classList.remove('reduce-motion');
       }
-      
+
       // Add contrast level class
       document.documentElement.setAttribute('data-contrast', settings.contrastRatio.toLowerCase());
     }
@@ -439,10 +439,10 @@ export class ThemeManager {
   getCurrentTheme() {
     const themeId = this.currentTheme;
     const theme = themes[themeId];
-    
+
     if (themeId === 'system') {
-      const resolvedId = this.systemPreference === 'dark' 
-        ? theme.darkTheme 
+      const resolvedId = this.systemPreference === 'dark'
+        ? theme.darkTheme
         : theme.lightTheme;
       return {
         id: themeId,
@@ -451,7 +451,7 @@ export class ThemeManager {
         resolvedTheme: themes[resolvedId]
       };
     }
-    
+
     return {
       id: themeId,
       theme
@@ -548,7 +548,7 @@ export class ThemeManager {
 
     // Add to themes registry
     themes[id] = customTheme;
-    
+
     // Notify listeners
     this.notifyListeners('customThemeCreated', {
       themeId: id,
@@ -565,7 +565,7 @@ export class ThemeManager {
   exportTheme(format = 'json') {
     const currentTheme = this.getCurrentTheme();
     const theme = currentTheme.resolvedTheme || currentTheme.theme;
-    
+
     switch (format) {
       case 'json':
         return JSON.stringify(theme, null, 2);
@@ -601,11 +601,11 @@ export class ThemeManager {
 
     // Add to themes registry
     themes[themeConfig.id] = themeConfig;
-    
+
     if (applyImmediately) {
       this.applyTheme(themeConfig.id);
     }
-    
+
     this.notifyListeners('themeImported', {
       themeId: themeConfig.id,
       theme: themeConfig

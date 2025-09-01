@@ -6,11 +6,11 @@ const contactFormSchema = {
     { id: 'name', type: 'text', label: 'Full Name', name: 'name', required: true, placeholder: 'Enter your full name' },
     { id: 'email', type: 'email', label: 'Email Address', name: 'email', required: true, placeholder: 'your@email.com' },
     { id: 'phone', type: 'text', label: 'Phone Number', name: 'phone', placeholder: '+1 (555) 123-4567' },
-    { 
-      id: 'subject', 
-      type: 'select', 
-      label: 'Subject', 
-      name: 'subject', 
+    {
+      id: 'subject',
+      type: 'select',
+      label: 'Subject',
+      name: 'subject',
       required: true,
       options: [
         { label: 'General Inquiry', value: 'general' },
@@ -19,12 +19,12 @@ const contactFormSchema = {
         { label: 'Partnership', value: 'partnership' }
       ]
     },
-    { 
-      id: 'message', 
-      type: 'textarea', 
-      label: 'Message', 
-      name: 'message', 
-      required: true, 
+    {
+      id: 'message',
+      type: 'textarea',
+      label: 'Message',
+      name: 'message',
+      required: true,
       rows: 5,
       placeholder: 'Tell us how we can help you...',
       helpText: 'Please provide as much detail as possible'
@@ -36,11 +36,11 @@ const surveyFormSchema = {
   fields: [
     { id: 'section1', type: 'section', label: 'Personal Information', description: 'Tell us a bit about yourself' },
     { id: 'age', type: 'number', label: 'Age', name: 'age', min: '13', max: '120', required: true },
-    { 
-      id: 'gender', 
-      type: 'radio', 
-      label: 'Gender', 
-      name: 'gender', 
+    {
+      id: 'gender',
+      type: 'radio',
+      label: 'Gender',
+      name: 'gender',
       options: [
         { label: 'Male', value: 'male' },
         { label: 'Female', value: 'female' },
@@ -50,10 +50,10 @@ const surveyFormSchema = {
     },
     { id: 'spacer1', type: 'spacer' },
     { id: 'section2', type: 'section', label: 'Preferences', description: 'Help us understand your preferences' },
-    { 
-      id: 'interests', 
-      type: 'checkbox', 
-      label: 'Areas of Interest', 
+    {
+      id: 'interests',
+      type: 'checkbox',
+      label: 'Areas of Interest',
       name: 'interests',
       options: [
         { label: 'Technology', value: 'tech' },
@@ -63,10 +63,10 @@ const surveyFormSchema = {
         { label: 'Food & Cooking', value: 'food' }
       ]
     },
-    { 
-      id: 'frequency', 
-      type: 'select', 
-      label: 'How often do you use our product?', 
+    {
+      id: 'frequency',
+      type: 'select',
+      label: 'How often do you use our product?',
       name: 'frequency',
       options: [
         { label: 'Daily', value: 'daily' },
@@ -75,21 +75,21 @@ const surveyFormSchema = {
         { label: 'Rarely', value: 'rarely' }
       ]
     },
-    { 
-      id: 'rating', 
-      type: 'number', 
-      label: 'Overall Satisfaction (1-10)', 
-      name: 'rating', 
-      min: '1', 
-      max: '10', 
+    {
+      id: 'rating',
+      type: 'number',
+      label: 'Overall Satisfaction (1-10)',
+      name: 'rating',
+      min: '1',
+      max: '10',
       required: true,
       helpText: '1 = Very Dissatisfied, 10 = Very Satisfied'
     },
-    { 
-      id: 'feedback', 
-      type: 'textarea', 
-      label: 'Additional Feedback', 
-      name: 'feedback', 
+    {
+      id: 'feedback',
+      type: 'textarea',
+      label: 'Additional Feedback',
+      name: 'feedback',
       rows: 4,
       placeholder: 'Any suggestions for improvement?'
     }
@@ -106,11 +106,11 @@ const jobApplicationSchema = {
     { id: 'birthDate', type: 'date', label: 'Date of Birth', name: 'birthDate' },
     { id: 'spacer1', type: 'spacer' },
     { id: 'section2', type: 'section', label: 'Position Information' },
-    { 
-      id: 'position', 
-      type: 'select', 
-      label: 'Position Applied For', 
-      name: 'position', 
+    {
+      id: 'position',
+      type: 'select',
+      label: 'Position Applied For',
+      name: 'position',
       required: true,
       options: [
         { label: 'Software Engineer', value: 'software_engineer' },
@@ -120,11 +120,11 @@ const jobApplicationSchema = {
         { label: 'Sales Representative', value: 'sales_rep' }
       ]
     },
-    { 
-      id: 'experience', 
-      type: 'radio', 
-      label: 'Years of Experience', 
-      name: 'experience', 
+    {
+      id: 'experience',
+      type: 'radio',
+      label: 'Years of Experience',
+      name: 'experience',
       required: true,
       options: [
         { label: '0-1 years', value: '0-1' },
@@ -134,10 +134,10 @@ const jobApplicationSchema = {
       ]
     },
     { id: 'salary', type: 'number', label: 'Expected Salary ($)', name: 'salary', min: '0' },
-    { 
-      id: 'availability', 
-      type: 'checkbox', 
-      label: 'Availability', 
+    {
+      id: 'availability',
+      type: 'checkbox',
+      label: 'Availability',
       name: 'availability',
       options: [
         { label: 'Immediate', value: 'immediate' },
@@ -146,11 +146,11 @@ const jobApplicationSchema = {
         { label: 'Flexible', value: 'flexible' }
       ]
     },
-    { 
-      id: 'coverLetter', 
-      type: 'textarea', 
-      label: 'Cover Letter', 
-      name: 'coverLetter', 
+    {
+      id: 'coverLetter',
+      type: 'textarea',
+      label: 'Cover Letter',
+      name: 'coverLetter',
       rows: 6,
       required: true,
       placeholder: 'Tell us why you want to work with us...',
@@ -367,11 +367,11 @@ export const ValidationShowcase = {
         { id: 'required_text', type: 'text', label: 'Required Text Field', name: 'required_text', required: true, placeholder: 'This field is required' },
         { id: 'email_field', type: 'email', label: 'Email Validation', name: 'email_field', required: true, placeholder: 'Enter a valid email' },
         { id: 'number_range', type: 'number', label: 'Number Range (1-100)', name: 'number_range', min: '1', max: '100', required: true },
-        { 
-          id: 'required_select', 
-          type: 'select', 
-          label: 'Required Selection', 
-          name: 'required_select', 
+        {
+          id: 'required_select',
+          type: 'select',
+          label: 'Required Selection',
+          name: 'required_select',
           required: true,
           options: [
             { label: 'Option 1', value: 'opt1' },
@@ -379,11 +379,11 @@ export const ValidationShowcase = {
             { label: 'Option 3', value: 'opt3' }
           ]
         },
-        { 
-          id: 'required_checkbox', 
-          type: 'checkbox', 
-          label: 'Required Checkbox (Select at least one)', 
-          name: 'required_checkbox', 
+        {
+          id: 'required_checkbox',
+          type: 'checkbox',
+          label: 'Required Checkbox (Select at least one)',
+          name: 'required_checkbox',
           required: true,
           options: [
             { label: 'Option A', value: 'a' },
@@ -424,28 +424,28 @@ export const InteractiveExample = {
   },
   play: async ({ canvasElement }) => {
     const formBuilder = canvasElement.querySelector('neo-form-builder');
-    
+
     // Add comprehensive event listeners
     formBuilder.addEventListener('field-add', (e) => {
       console.log('Field added:', e.detail);
     });
-    
+
     formBuilder.addEventListener('field-delete', (e) => {
       console.log('Field deleted:', e.detail);
     });
-    
+
     formBuilder.addEventListener('field-update', (e) => {
       console.log('Field updated:', e.detail);
     });
-    
+
     formBuilder.addEventListener('value-change', (e) => {
       console.log('Value changed:', e.detail);
     });
-    
+
     formBuilder.addEventListener('form-save', (e) => {
       console.log('Form saved:', e.detail);
     });
-    
+
     formBuilder.addEventListener('form-submit', (e) => {
       console.log('Form submitted:', e.detail);
     });

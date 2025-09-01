@@ -2,14 +2,14 @@
 import json
 from datetime import timedelta
 from functools import wraps
-from typing import Any, Callable, Optional, TypeVar, Union, cast, List, Awaitable
+from typing import Any, Awaitable, Callable, List, Optional, TypeVar, Union, cast
 from uuid import UUID
 
+import structlog
 from fastapi import HTTPException, status
+from prometheus_client import Counter, Histogram
 from pydantic import BaseModel
 from redis.asyncio import Redis
-import structlog
-from prometheus_client import Counter, Histogram
 
 logger = structlog.get_logger()
 
@@ -46,6 +46,7 @@ CACHE_OPERATION_DURATION = Histogram(
 
 class CacheError(Exception):
     """Base exception for cache-related errors."""
+
     pass
 
 
@@ -61,14 +62,16 @@ class Cache:
         """Generate prefixed cache key."""
         return f"{self.prefix}:{str(key)}"
 
-    async def get(self, key: Union[str, int, UUID], model: Optional[type[BaseModel]] = None) -> Any:
+    async def get(
+        self, key: Union[str, int, UUID], model: Optional[type[BaseModel]] = None
+    ) -> Any:
         """
         Get value from cache.
-        
+
         Args:
             key: Cache key
             model: Optional Pydantic model to deserialize the cached value
-            
+
         Returns:
             Cached value or None if not found
         """
@@ -105,12 +108,12 @@ class Cache:
     ) -> bool:
         """
         Set value in cache with optional expiration.
-        
+
         Args:
             key: Cache key
             value: Value to cache (must be JSON serializable)
             expire: Optional expiration time in seconds or timedelta
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -153,7 +156,7 @@ class Cache:
                     await self.redis.setex(
                         self._get_key(key),
                         expire,
-                        json_string, # Use the serialized string
+                        json_string,  # Use the serialized string
                     )
                 else:
                     await self.redis.set(self._get_key(key), json_string)
@@ -217,7 +220,9 @@ class Cache:
             )
             return 0
 
-    async def increment(self, key: Union[str, int, UUID], amount: int = 1) -> Optional[int]:
+    async def increment(
+        self, key: Union[str, int, UUID], amount: int = 1
+    ) -> Optional[int]:
         """Increment value in cache."""
         try:
             with CACHE_OPERATION_DURATION.labels("increment").time():
@@ -271,17 +276,17 @@ def cached(
     def decorator(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
-            from app.core.redis import get_redis
             from app.core.config import get_settings
+            from app.core.redis import get_redis
 
             current_settings = get_settings()
 
             # Get Redis connection
             redis = await anext(get_redis())
-            
+
             # Determine the final prefix/namespace
             final_prefix = namespace or prefix or current_settings.app_name.lower()
-            
+
             cache = Cache(redis, final_prefix)
 
             # Build cache key (Reverted to inline logic)
@@ -303,14 +308,14 @@ def cached(
                         cache_key=f"{final_prefix}:{cache_key}",
                         function=f"{func.__module__}.{func.__name__}",
                     )
-                    return cached_value # Assuming stored value is directly usable
+                    return cached_value  # Assuming stored value is directly usable
             except Exception as e:
-                 logger.error(
-                    "cache_get_error", 
-                    cache_key=f"{final_prefix}:{cache_key}", 
-                    error=str(e)
+                logger.error(
+                    "cache_get_error",
+                    cache_key=f"{final_prefix}:{cache_key}",
+                    error=str(e),
                 )
-                 # If cache read fails, proceed to execute function
+                # If cache read fails, proceed to execute function
 
             logger.debug(
                 "cache_miss",
@@ -326,9 +331,9 @@ def cached(
                 await cache.set(cache_key, result, ttl)
             except Exception as e:
                 logger.error(
-                    "cache_set_error", 
-                    cache_key=f"{final_prefix}:{cache_key}", 
-                    error=str(e)
+                    "cache_set_error",
+                    cache_key=f"{final_prefix}:{cache_key}",
+                    error=str(e),
                 )
                 # If cache write fails, still return the result
 
@@ -342,6 +347,7 @@ def cached(
 async def clear_cache() -> bool:
     """Clear all keys from Redis."""
     from app.core.redis import get_redis
+
     redis = await anext(get_redis())
     cache = Cache(redis)
     return await cache.clear_cache()
@@ -350,5 +356,6 @@ async def clear_cache() -> bool:
 async def get_cache() -> Cache:
     """Get a Cache instance."""
     from app.core.redis import get_redis
+
     redis = await anext(get_redis())
-    return Cache(redis) 
+    return Cache(redis)

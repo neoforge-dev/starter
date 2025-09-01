@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Technical Debt Monitoring and Alerting System
- * 
+ *
  * This script provides continuous monitoring of technical debt by:
  * - Running regular debt analysis and trend tracking
  * - Setting up alerts for debt threshold violations
@@ -23,7 +23,7 @@ class TechnicalDebtMonitor {
     this.reportDir = path.join(this.projectRoot, 'reports', 'technical-debt');
     this.historyDir = path.join(this.reportDir, 'history');
     this.configFile = path.join(this.reportDir, 'monitor-config.json');
-    
+
     // Default thresholds
     this.defaultConfig = {
       thresholds: {
@@ -60,7 +60,7 @@ class TechnicalDebtMonitor {
         email: false   // Can be configured with email service
       }
     };
-    
+
     this.config = this.loadConfig();
   }
 
@@ -73,7 +73,7 @@ class TechnicalDebtMonitor {
         console.warn('⚠️  Failed to load monitor config, using defaults:', error.message);
       }
     }
-    
+
     this.saveConfig(this.defaultConfig);
     return this.defaultConfig;
   }
@@ -87,33 +87,33 @@ class TechnicalDebtMonitor {
 
   async monitor() {
     console.log('🔍 Technical Debt Monitor Starting...\n');
-    
+
     try {
       // Run technical debt analysis
       const analyzer = new TechnicalDebtAnalyzer();
       const exitCode = await analyzer.run();
-      
+
       // Load the latest report
       const latestReport = this.getLatestReport();
       if (!latestReport) {
         console.error('❌ No report data available for monitoring');
         return 1;
       }
-      
+
       // Analyze trends
       const trends = this.analyzeTrends();
-      
+
       // Check thresholds and generate alerts
       const alerts = this.checkThresholds(latestReport, trends);
-      
+
       // Process notifications
       await this.processNotifications(alerts, latestReport, trends);
-      
+
       // Generate monitoring summary
       this.generateMonitoringSummary(latestReport, trends, alerts);
-      
+
       return alerts.some(alert => alert.level === 'critical') ? 1 : 0;
-      
+
     } catch (error) {
       console.error('❌ Technical debt monitoring failed:', error.message);
       return 1;
@@ -126,14 +126,14 @@ class TechnicalDebtMonitor {
         .filter(file => file.startsWith('technical-debt-') && file.endsWith('.json'))
         .sort()
         .reverse();
-      
+
       if (reportFiles.length === 0) {
         return null;
       }
-      
+
       const latestFile = path.join(this.reportDir, reportFiles[0]);
       return JSON.parse(fs.readFileSync(latestFile, 'utf8'));
-      
+
     } catch (error) {
       console.error('❌ Failed to load latest report:', error.message);
       return null;
@@ -146,14 +146,14 @@ class TechnicalDebtMonitor {
         .filter(file => file.endsWith('.json'))
         .sort()
         .reverse();
-      
+
       if (historyFiles.length < 2) {
         return { insufficient_data: true };
       }
-      
+
       // Get data from the last N days
       const cutoffDate = Date.now() - (this.config.trending.lookbackDays * 24 * 60 * 60 * 1000);
-      
+
       const recentHistory = historyFiles
         .map(file => {
           const filePath = path.join(this.historyDir, file);
@@ -167,13 +167,13 @@ class TechnicalDebtMonitor {
         })
         .filter(data => data && data.timestamp_ms > cutoffDate)
         .sort((a, b) => a.timestamp_ms - b.timestamp_ms);
-      
+
       if (recentHistory.length < 2) {
         return { insufficient_data: true };
       }
-      
+
       return this.calculateTrends(recentHistory);
-      
+
     } catch (error) {
       console.error('❌ Failed to analyze trends:', error.message);
       return { error: error.message };
@@ -183,13 +183,13 @@ class TechnicalDebtMonitor {
   calculateTrends(history) {
     const latest = history[history.length - 1];
     const baseline = history[0];
-    
+
     const trends = {
       period_days: Math.ceil((latest.timestamp_ms - baseline.timestamp_ms) / (24 * 60 * 60 * 1000)),
       data_points: history.length,
       metrics: {}
     };
-    
+
     // Calculate percentage change for key metrics
     const metrics = [
       'totalDebtIssues',
@@ -199,11 +199,11 @@ class TechnicalDebtMonitor {
       'bundleSizeMB',
       'debtScore'
     ];
-    
+
     metrics.forEach(metric => {
       const latestValue = latest.summary?.[metric] || 0;
       const baselineValue = baseline.summary?.[metric] || 0;
-      
+
       if (baselineValue !== 0) {
         const percentChange = ((latestValue - baselineValue) / baselineValue) * 100;
         trends.metrics[metric] = {
@@ -223,7 +223,7 @@ class TechnicalDebtMonitor {
         };
       }
     });
-    
+
     return trends;
   }
 
@@ -231,23 +231,23 @@ class TechnicalDebtMonitor {
     // Lower values are better for these metrics
     const lowerIsBetter = [
       'totalDebtIssues',
-      'criticalIssues', 
+      'criticalIssues',
       'highPriorityIssues',
       'bundleSizeMB',
       'debtScore'
     ];
-    
-    // Higher values are better for these metrics  
+
+    // Higher values are better for these metrics
     const higherIsBetter = [
       'testCoveragePercentage'
     ];
-    
+
     if (lowerIsBetter.includes(metric)) {
       return percentChange < 0;
     } else if (higherIsBetter.includes(metric)) {
       return percentChange > 0;
     }
-    
+
     return null;
   }
 
@@ -255,7 +255,7 @@ class TechnicalDebtMonitor {
     const alerts = [];
     const summary = report.summary;
     const thresholds = this.config.thresholds;
-    
+
     // Check debt score thresholds
     if (summary.debtScore >= thresholds.debtScore.critical) {
       alerts.push({
@@ -274,7 +274,7 @@ class TechnicalDebtMonitor {
         message: `Technical debt score (${summary.debtScore}) exceeds warning threshold (${thresholds.debtScore.warning})`
       });
     }
-    
+
     // Check critical issues
     if (summary.criticalIssues >= thresholds.criticalIssues.critical) {
       alerts.push({
@@ -293,7 +293,7 @@ class TechnicalDebtMonitor {
         message: `Critical issues (${summary.criticalIssues}) exceed warning threshold (${thresholds.criticalIssues.warning})`
       });
     }
-    
+
     // Check total ESLint issues
     if (summary.totalDebtIssues >= thresholds.eslintIssues.critical) {
       alerts.push({
@@ -306,13 +306,13 @@ class TechnicalDebtMonitor {
     } else if (summary.totalDebtIssues >= thresholds.eslintIssues.warning) {
       alerts.push({
         level: 'warning',
-        metric: 'eslintIssues', 
+        metric: 'eslintIssues',
         current: summary.totalDebtIssues,
         threshold: thresholds.eslintIssues.warning,
         message: `ESLint issues (${summary.totalDebtIssues}) exceed warning threshold (${thresholds.eslintIssues.warning})`
       });
     }
-    
+
     // Check test coverage
     if (summary.testCoveragePercentage < thresholds.testCoverage.critical) {
       alerts.push({
@@ -331,7 +331,7 @@ class TechnicalDebtMonitor {
         message: `Test coverage (${summary.testCoveragePercentage.toFixed(1)}%) below warning threshold (${thresholds.testCoverage.warning}%)`
       });
     }
-    
+
     // Check bundle size
     if (summary.bundleSizeMB >= thresholds.bundleSize.critical) {
       alerts.push({
@@ -350,20 +350,20 @@ class TechnicalDebtMonitor {
         message: `Bundle size (${summary.bundleSizeMB}MB) exceeds warning threshold (${thresholds.bundleSize.warning}MB)`
       });
     }
-    
+
     // Check trending alerts
     if (!trends.insufficient_data && !trends.error && this.config.trending.alertOnIncreasingTrend) {
       const trendAlerts = this.checkTrendAlerts(trends);
       alerts.push(...trendAlerts);
     }
-    
+
     return alerts;
   }
 
   checkTrendAlerts(trends) {
     const alerts = [];
     const threshold = this.config.trending.trendThreshold;
-    
+
     // Check for concerning trends
     Object.entries(trends.metrics).forEach(([metric, data]) => {
       if (data.percentChange !== null && !data.improving) {
@@ -379,7 +379,7 @@ class TechnicalDebtMonitor {
         }
       }
     });
-    
+
     return alerts;
   }
 
@@ -387,28 +387,28 @@ class TechnicalDebtMonitor {
     if (alerts.length === 0) {
       return;
     }
-    
+
     const notifications = this.config.notifications;
-    
+
     if (notifications.console) {
       this.sendConsoleNotifications(alerts);
     }
-    
+
     if (notifications.file) {
       this.sendFileNotifications(alerts, report, trends);
     }
-    
+
     if (notifications.github && process.env.GITHUB_ACTIONS) {
       this.sendGitHubNotifications(alerts);
     }
-    
+
     // Additional notification methods can be added here
   }
 
   sendConsoleNotifications(alerts) {
     console.log('\n🚨 TECHNICAL DEBT ALERTS');
     console.log('=' + '='.repeat(50));
-    
+
     alerts.forEach((alert, index) => {
       const icon = alert.level === 'critical' ? '🔥' : '⚠️';
       console.log(`${icon} ${alert.level.toUpperCase()}: ${alert.message}`);
@@ -423,7 +423,7 @@ class TechnicalDebtMonitor {
       summary: report.summary,
       trends: trends
     };
-    
+
     fs.writeFileSync(alertsFile, JSON.stringify(alertData, null, 2));
   }
 
@@ -431,15 +431,15 @@ class TechnicalDebtMonitor {
     // GitHub Actions workflow commands
     const criticalAlerts = alerts.filter(alert => alert.level === 'critical');
     const warningAlerts = alerts.filter(alert => alert.level === 'warning');
-    
+
     criticalAlerts.forEach(alert => {
       console.log(`::error title=Technical Debt Critical::${alert.message}`);
     });
-    
+
     warningAlerts.forEach(alert => {
       console.log(`::warning title=Technical Debt Warning::${alert.message}`);
     });
-    
+
     // Set output for use in subsequent workflow steps
     if (criticalAlerts.length > 0) {
       console.log(`::set-output name=debt-critical::${criticalAlerts.length}`);
@@ -452,17 +452,17 @@ class TechnicalDebtMonitor {
   generateMonitoringSummary(report, trends, alerts) {
     console.log('\n📊 MONITORING SUMMARY');
     console.log('=' + '='.repeat(50));
-    
+
     const summary = report.summary;
     console.log(`Overall Health: ${report.metrics.overallHealthScore}/100`);
     console.log(`Debt Score: ${summary.debtScore}/100`);
     console.log(`Total Issues: ${summary.totalDebtIssues} (${summary.criticalIssues} critical)`);
     console.log(`Test Coverage: ${summary.testCoveragePercentage.toFixed(1)}%`);
-    
+
     if (!trends.insufficient_data && !trends.error) {
       console.log('\n📈 TRENDS (' + trends.period_days + ' days)');
       console.log('-'.repeat(30));
-      
+
       Object.entries(trends.metrics).forEach(([metric, data]) => {
         if (data.percentChange !== null) {
           const trendIcon = data.improving ? '📈' : '📉';
@@ -471,11 +471,11 @@ class TechnicalDebtMonitor {
         }
       });
     }
-    
+
     if (alerts.length > 0) {
       const criticalCount = alerts.filter(a => a.level === 'critical').length;
       const warningCount = alerts.filter(a => a.level === 'warning').length;
-      
+
       console.log(`\n🚨 ACTIVE ALERTS: ${alerts.length}`);
       console.log(`   Critical: ${criticalCount}, Warnings: ${warningCount}`);
     } else {
@@ -500,32 +500,32 @@ on:
 jobs:
   debt-analysis:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Run Technical Debt Analysis
         id: debt-analysis
         run: |
           cd frontend
           node scripts/debt-monitor.js
-          
+
       - name: Upload Reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: technical-debt-reports
           path: frontend/reports/technical-debt/
-          
+
       - name: Comment on PR
         if: github.event_name == 'pull_request' && steps.debt-analysis.outputs.debt-critical
         uses: actions/github-script@v7
@@ -533,13 +533,13 @@ jobs:
           script: |
             const criticalCount = process.env.DEBT_CRITICAL || '0';
             const warningCount = process.env.DEBT_WARNINGS || '0';
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: \`⚠️ **Technical Debt Alert**
-              
+
 This PR introduces technical debt concerns:
 - Critical issues: \${criticalCount}
 - Warning issues: \${warningCount}
@@ -549,10 +549,10 @@ Please review the technical debt report and consider addressing these issues bef
 `
       }
     };
-    
+
     const outputFile = path.join(this.reportDir, 'ci-integration.yml');
     fs.writeFileSync(outputFile, ciConfig['github-actions'].workflow);
-    
+
     console.log(`\n🔧 CI/CD Integration config generated: ${outputFile}`);
   }
 }
@@ -561,7 +561,7 @@ Please review the technical debt report and consider addressing these issues bef
 if (import.meta.url === `file://${process.argv[1]}`) {
   const command = process.argv[2];
   const monitor = new TechnicalDebtMonitor();
-  
+
   switch (command) {
     case 'init':
       console.log('🚀 Initializing Technical Debt Monitor...');
@@ -570,7 +570,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.log('✅ Monitor initialized successfully');
       console.log(`📄 Configuration saved to: ${monitor.configFile}`);
       break;
-      
+
     case 'run':
     default:
       monitor.monitor().then(exitCode => {

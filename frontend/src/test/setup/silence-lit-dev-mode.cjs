@@ -1,6 +1,6 @@
 /**
  * Silence Lit Dev Mode Warning (CommonJS version)
- * 
+ *
  * This utility silences the Lit dev mode warning by patching the reactive-element.js file.
  * It's specifically designed for worker threads and other environments that require CommonJS.
  */
@@ -10,10 +10,10 @@ let isSilenced = false;
 
 /**
  * Silence the Lit dev mode warning by patching the reactive-element.js file
- * 
+ *
  * This function patches the reactive-element.js file to prevent it from
  * showing the dev mode warning message.
- * 
+ *
  * @returns {boolean} Whether the silencing was successful
  */
 function silenceLitDevModeWarning() {
@@ -81,4 +81,4 @@ function silenceLitDevModeWarning() {
 silenceLitDevModeWarning();
 
 // Export the function for use in other modules
-module.exports = silenceLitDevModeWarning; 
+module.exports = silenceLitDevModeWarning;

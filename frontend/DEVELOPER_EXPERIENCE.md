@@ -129,4 +129,4 @@ docker-compose -f docker-compose.prod.yml up
    - Test coverage report
    - Updated documentation
 
-Happy coding with NeoForge! 
+Happy coding with NeoForge!

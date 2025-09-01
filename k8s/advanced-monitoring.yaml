@@ -1,0 +1,432 @@
+# NeoForge Advanced Monitoring & Alerting System
+# Comprehensive observability with Prometheus, Grafana, and AlertManager
+
+---
+# PodMonitor for Detailed Pod Metrics
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: neoforge-pod-metrics
+  namespace: neoforge-monitoring
+  labels:
+    app.kubernetes.io/name: neoforge-pod-metrics
+    app.kubernetes.io/instance: neoforge-pod-metrics
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: neoforge
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: neoforge
+  namespaceSelector:
+    matchNames:
+    - neoforge
+  podMetricsEndpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: pod_name
+    - sourceLabels: [__meta_kubernetes_pod_container_name]
+      targetLabel: container_name
+    - sourceLabels: [__meta_kubernetes_namespace]
+      targetLabel: namespace
+  - port: http
+    path: /health
+    interval: 30s
+    scrapeTimeout: 5s
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: pod_name
+    - sourceLabels: [__meta_kubernetes_pod_container_name]
+      targetLabel: container_name
+
+---
+# AlertManager Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: neoforge-monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager-config
+    app.kubernetes.io/instance: neoforge-alertmanager
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: neoforge
+data:
+  alertmanager.yml: |
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'alerts@neoforge.dev'
+      smtp_auth_username: '${SMTP_USERNAME}'
+      smtp_auth_password: '${SMTP_PASSWORD}'
+      smtp_require_tls: true
+
+    route:
+      group_by: ['alertname', 'service', 'severity']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'neoforge-team'
+      routes:
+      - match:
+          severity: critical
+        receiver: 'neoforge-critical'
+        group_wait: 5s
+        group_interval: 5s
+        repeat_interval: 30m
+      - match:
+          service: database
+        receiver: 'database-team'
+      - match:
+          service: api
+        receiver: 'backend-team'
+      - match:
+          service: frontend
+        receiver: 'frontend-team'
+
+    receivers:
+    - name: 'neoforge-team'
+      slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts'
+        title: 'NeoForge Alert'
+        text: |
+          {{ range .Alerts }}
+          *{{ .Annotations.summary }}*
+          {{ .Annotations.description }}
+          {{ end }}
+        footer: 'NeoForge Monitoring'
+        color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+      email_configs:
+      - to: 'team@neoforge.dev'
+        subject: 'NeoForge Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Service: {{ .Labels.service }}
+          {{ end }}
+
+    - name: 'neoforge-critical'
+      slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#critical-alerts'
+        title: '🚨 CRITICAL NeoForge Alert 🚨'
+        text: |
+          {{ range .Alerts }}
+          *{{ .Annotations.summary }}*
+          {{ .Annotations.description }}
+          Runbook: {{ .Annotations.runbook_url }}
+          {{ end }}
+        color: 'danger'
+      pagerduty_configs:
+      - service_key: '${PAGERDUTY_SERVICE_KEY}'
+        description: 'NeoForge Critical Alert: {{ .Annotations.summary }}'
+        severity: 'critical'
+
+    - name: 'database-team'
+      slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#database-alerts'
+        title: 'Database Alert'
+        text: |
+          {{ range .Alerts }}
+          *{{ .Annotations.summary }}*
+          {{ .Annotations.description }}
+          {{ end }}
+        color: 'warning'
+
+    - name: 'backend-team'
+      slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#backend-alerts'
+        title: 'Backend Alert'
+        text: |
+          {{ range .Alerts }}
+          *{{ .Annotations.summary }}*
+          {{ .Annotations.description }}
+          {{ end }}
+        color: 'warning'
+
+    - name: 'frontend-team'
+      slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#frontend-alerts'
+        title: 'Frontend Alert'
+        text: |
+          {{ range .Alerts }}
+          *{{ .Annotations.summary }}*
+          {{ .Annotations.description }}
+          {{ end }}
+        color: 'warning'
+
+---
+# Comprehensive Prometheus Rules
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: neoforge-comprehensive-alerts
+  namespace: neoforge-monitoring
+  labels:
+    app.kubernetes.io/name: neoforge-comprehensive-alerts
+    app.kubernetes.io/instance: neoforge-alerts
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: neoforge
+spec:
+  groups:
+  - name: infrastructure_alerts
+    rules:
+    - alert: KubernetesNodeDown
+      expr: up{job="kubernetes-nodes"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        service: infrastructure
+      annotations:
+        summary: "Kubernetes node is down"
+        description: "Node {{ $labels.node }} has been down for more than 5 minutes"
+        runbook_url: "https://docs.neoforge.dev/runbooks/node-down"
+
+    - alert: KubernetesPodCrashLooping
+      expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+      for: 10m
+      labels:
+        severity: warning
+        service: infrastructure
+      annotations:
+        summary: "Pod is crash looping"
+        description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is crash looping"
+
+    - alert: KubernetesHighMemoryUsage
+      expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.9
+      for: 5m
+      labels:
+        severity: warning
+        service: infrastructure
+      annotations:
+        summary: "High memory usage"
+        description: "Container {{ $labels.container }} memory usage is above 90%"
+
+    - alert: KubernetesHighCPUUsage
+      expr: rate(container_cpu_usage_seconds_total[5m]) > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        service: infrastructure
+      annotations:
+        summary: "High CPU usage"
+        description: "Container {{ $labels.container }} CPU usage is above 80%"
+
+  - name: application_alerts
+    rules:
+    - alert: APIHighErrorRate
+      expr: |
+        rate(http_requests_total{service="api", status=~"5.."}[5m])
+        /
+        rate(http_requests_total{service="api"}[5m]) > 0.05
+      for: 5m
+      labels:
+        severity: critical
+        service: api
+      annotations:
+        summary: "API has high error rate"
+        description: "API error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+        runbook_url: "https://docs.neoforge.dev/runbooks/api-high-error-rate"
+
+    - alert: APIHighLatency
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{service="api"}[5m])) > 2
+      for: 5m
+      labels:
+        severity: warning
+        service: api
+      annotations:
+        summary: "API has high latency"
+        description: "API 95th percentile latency is {{ $value }} seconds"
+
+    - alert: DatabaseConnectionHigh
+      expr: |
+        rate(postgres_connections_total[5m])
+        /
+        postgres_max_connections > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        service: database
+      annotations:
+        summary: "High database connection usage"
+        description: "Database connection usage is {{ $value | humanizePercentage }}"
+
+    - alert: RedisMemoryHigh
+      expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+      for: 5m
+      labels:
+        severity: warning
+        service: cache
+      annotations:
+        summary: "Redis memory usage is high"
+        description: "Redis memory usage is {{ $value | humanizePercentage }}"
+
+    - alert: FrontendJSBundleSize
+      expr: frontend_bundle_size_bytes > 5000000
+      for: 1m
+      labels:
+        severity: info
+        service: frontend
+      annotations:
+        summary: "Frontend bundle size is large"
+        description: "Frontend bundle size is {{ $value | humanizeBytes }}"
+
+  - name: business_metrics_alerts
+    rules:
+    - alert: LowUserEngagement
+      expr: rate(user_sessions_total[7d]) < 100
+      for: 1d
+      labels:
+        severity: info
+        service: business
+      annotations:
+        summary: "Low user engagement"
+        description: "Daily user sessions are below 100"
+
+    - alert: HighUserSignups
+      expr: rate(user_signups_total[1h]) > 10
+      for: 5m
+      labels:
+        severity: info
+        service: business
+      annotations:
+        summary: "High user signup rate"
+        description: "User signup rate is {{ $value }} per hour"
+
+    - alert: DatabaseSizeGrowing
+      expr: rate(postgres_database_size_bytes[1d]) > 1000000000
+      for: 1h
+      labels:
+        severity: info
+        service: database
+      annotations:
+        summary: "Database size is growing rapidly"
+        description: "Database is growing at {{ $value | humanizeBytes }}/day"
+
+---
+# Grafana Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: neoforge-monitoring
+  labels:
+    app.kubernetes.io/name: grafana-dashboards
+    app.kubernetes.io/instance: neoforge-grafana
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: neoforge
+data:
+  neoforge-overview.json: |
+    {
+      "dashboard": {
+        "title": "NeoForge Overview",
+        "tags": ["neoforge", "overview"],
+        "timezone": "UTC",
+        "panels": [
+          {
+            "title": "API Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{service=\"api\"}[5m])",
+                "legendFormat": "{{ method }} {{ status }}"
+              }
+            ]
+          },
+          {
+            "title": "API Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{service=\"api\"}[5m]))",
+                "legendFormat": "95th percentile"
+              }
+            ]
+          },
+          {
+            "title": "Database Connections",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "postgres_connections_active",
+                "legendFormat": "Active"
+              }
+            ]
+          },
+          {
+            "title": "Redis Memory Usage",
+            "type": "bargauge",
+            "targets": [
+              {
+                "expr": "(redis_memory_used_bytes / redis_memory_max_bytes) * 100",
+                "legendFormat": "Memory Usage %"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }
+
+---
+# Service Level Objectives (SLOs)
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: neoforge-slos
+  namespace: neoforge-monitoring
+  labels:
+    app.kubernetes.io/name: neoforge-slos
+    app.kubernetes.io/instance: neoforge-slos
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: neoforge
+spec:
+  groups:
+  - name: service_level_objectives
+    rules:
+    # API Availability SLO (99.9% uptime)
+    - record: api:availability:ratio_1h
+      expr: |
+        1 - (
+          rate(http_requests_total{service="api", status=~"5.."}[1h])
+          /
+          rate(http_requests_total{service="api"}[1h])
+        )
+
+    - alert: APIAvailabilitySLOViolation
+      expr: api:availability:ratio_1h < 0.999
+      for: 1h
+      labels:
+        severity: warning
+        service: api
+        slo: availability
+      annotations:
+        summary: "API availability SLO violation"
+        description: "API availability is {{ $value | humanizePercentage }} (target: 99.9%)"
+
+    # API Latency SLO (95th percentile < 2s)
+    - record: api:latency:p95_1h
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{service="api"}[1h]))
+
+    - alert: APILatencySLOViolation
+      expr: api:latency:p95_1h > 2
+      for: 15m
+      labels:
+        severity: warning
+        service: api
+        slo: latency
+      annotations:
+        summary: "API latency SLO violation"
+        description: "API 95th percentile latency is {{ $value }}s (target: < 2s)"

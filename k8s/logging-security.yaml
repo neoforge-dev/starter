@@ -26,24 +26,24 @@ data:
         Time_Key        @timestamp
         Include_Tag_Key On
         Tag_Key         tag
-        
+
         # TLS Configuration
         tls             On
         tls.verify      On
         tls.ca_file     /fluent-bit/ssl/ca.crt
         tls.crt_file    /fluent-bit/ssl/client.crt
         tls.key_file    /fluent-bit/ssl/client.key
-        
+
         # HTTP Authentication
         HTTP_User       ${FLUENT_BIT_USER}
         HTTP_Passwd     ${FLUENT_BIT_PASSWORD}
-        
+
         # Buffer and retry configuration
         storage.total_limit_size 1G
         Buffer_Size     4KB
         Workers         1
         Retry_Limit     3
-  
+
   # Access control policies
   rbac-policy.yaml: |
     apiVersion: rbac.authorization.k8s.io/v1
@@ -75,7 +75,7 @@ data:
     - apiGroups: ["batch"]
       resources: ["*"]
       verbs: ["*"]
-  
+
   # Network policies for log isolation
   network-policy.yaml: |
     apiVersion: networking.k8s.io/v1
@@ -263,42 +263,42 @@ data:
         resources: ["secrets", "configmaps"]
       - group: "apps"
         resources: ["deployments", "statefulsets", "daemonsets"]
-    
+
     # Log all access to logging secrets
     - level: RequestResponse
       resources:
       - group: ""
         resources: ["secrets"]
         resourceNames: ["logging-tls-certs", "kibana-basic-auth", "elasticsearch-basic-auth"]
-    
+
     # Log privileged operations
     - level: RequestResponse
       verbs: ["create", "update", "patch", "delete"]
       resources:
       - group: ""
         resources: ["pods/exec", "pods/portforward"]
-    
+
     # Log authentication failures
     - level: Request
       users: ["system:anonymous"]
       namespaces: ["neoforge-logging"]
-  
+
   falco-rules.yaml: |
     # Custom Falco rules for logging security
     - rule: Logging Container Exec
       desc: Detect shell execution in logging containers
       condition: >
-        spawned_process and 
-        container and 
+        spawned_process and
+        container and
         k8s_ns=neoforge-logging and
         (proc.name in (shell_binaries) or proc.name in (shell_mgmt_binaries))
       output: >
         Shell execution in logging container
-        (user=%user.name command=%proc.cmdline container=%container.id 
+        (user=%user.name command=%proc.cmdline container=%container.id
          image=%container.image.repository:%container.image.tag)
       priority: WARNING
       tags: [logging, security, shell]
-    
+
     - rule: Logging Configuration Change
       desc: Detect changes to logging configuration
       condition: >
@@ -307,11 +307,11 @@ data:
         (fd.name contains "/etc/" or fd.name contains "/opt/")
       output: >
         Configuration file modified in logging component
-        (file=%fd.name user=%user.name command=%proc.cmdline 
+        (file=%fd.name user=%user.name command=%proc.cmdline
          container=%container.id)
       priority: WARNING
       tags: [logging, security, configuration]
-    
+
     - rule: Unauthorized Log Access
       desc: Detect unauthorized access to log files
       condition: >
@@ -339,29 +339,29 @@ metadata:
 data:
   integrity-check.sh: |
     #!/bin/bash
-    
+
     # Log integrity checking script
     ELASTICSEARCH_URL="http://elasticsearch:9200"
     INTEGRITY_INDEX="log-integrity"
-    
+
     # Function to calculate log hash
     calculate_log_hash() {
         local index=$1
         local query='{"query":{"range":{"@timestamp":{"gte":"now-1h"}}},"sort":[{"@timestamp":{"order":"asc"}}]}'
-        
+
         curl -s "${ELASTICSEARCH_URL}/${index}/_search" \
             -H "Content-Type: application/json" \
             -d "$query" | \
             jq -r '.hits.hits[]._source | tostring' | \
             sha256sum | cut -d' ' -f1
     }
-    
+
     # Function to store integrity hash
     store_integrity_hash() {
         local index=$1
         local hash=$2
         local timestamp=$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)
-        
+
         local doc="{
             \"@timestamp\": \"$timestamp\",
             \"index_name\": \"$index\",
@@ -369,12 +369,12 @@ data:
             \"check_type\": \"hourly_integrity\",
             \"service_name\": \"log-integrity-monitor\"
         }"
-        
+
         curl -s -X POST "${ELASTICSEARCH_URL}/${INTEGRITY_INDEX}/_doc" \
             -H "Content-Type: application/json" \
             -d "$doc"
     }
-    
+
     # Check integrity for each log index
     for index in neoforge-logs neoforge-security neoforge-performance neoforge-system; do
         echo "Checking integrity for index: $index"
@@ -382,7 +382,7 @@ data:
         store_integrity_hash "$index" "$hash"
         echo "Stored integrity hash for $index: $hash"
     done
-    
+
     echo "Log integrity check completed at $(date)"
 ---
 # CronJob for regular integrity checks

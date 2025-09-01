@@ -1,11 +1,15 @@
 # NEW CODE: Insert TemplateError definition at the very top
 class TemplateError(Exception):
     """Exception raised when there is an error in email template processing."""
+
     pass
+
+
+from pathlib import Path
 
 # NEW CODE: Insert get_template_env and render_template functions
 from typing import Optional
-from pathlib import Path
+
 import jinja2
 
 
@@ -15,7 +19,7 @@ def get_template_env(template_dir: Optional[Path] = None) -> jinja2.Environment:
         template_dir = Path(__file__).parent / "email_templates"
     return jinja2.Environment(
         loader=jinja2.FileSystemLoader(str(template_dir)),
-        autoescape=jinja2.select_autoescape(['html', 'xml'])
+        autoescape=jinja2.select_autoescape(["html", "xml"]),
     )
 
 
@@ -35,4 +39,4 @@ def render_template(template_name: str, data: dict) -> str:
 # Set module exports
 __all__ = ["TemplateError", "get_template_env", "render_template"]
 
-# ... existing code ... 
+# ... existing code ...

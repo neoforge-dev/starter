@@ -13,7 +13,7 @@ describe("Contact Page", () => {
     // Create the contact-page element
     element = document.createElement('contact-page');
     container.appendChild(element);
-    
+
     // Wait for component to be fully rendered
     await element.updateComplete;
   });

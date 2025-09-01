@@ -219,4 +219,4 @@ const MockComponent = createAndRegisterMockComponent('test-component', {
 
 By using these utilities, we can test components that manipulate the DOM without relying on JSDOM's implementation of DOM APIs. This makes our tests more reliable and easier to maintain.
 
-For more information, see the [DOM Mock Utilities Tests](../../src/test/utils/dom-mock-utils.test.js) for examples of how to use these utilities. 
+For more information, see the [DOM Mock Utilities Tests](../../src/test/utils/dom-mock-utils.test.js) for examples of how to use these utilities.

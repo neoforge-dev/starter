@@ -1,6 +1,6 @@
 /**
  * Component Loader - Dynamic loading system for playground components
- * 
+ *
  * Handles loading and instantiation of components for the playground environment
  */
 import { html, render } from 'lit';
@@ -19,7 +19,7 @@ export class ComponentLoader {
    */
   async loadPlayground(category, name) {
     const cacheKey = `${category}/${name}`;
-    
+
     if (this.componentCache.has(cacheKey)) {
       return this.componentCache.get(cacheKey);
     }
@@ -27,10 +27,10 @@ export class ComponentLoader {
     try {
       // Load the actual component
       await this.loadComponent(category, name);
-      
+
       // Load or generate playground configuration
       const playgroundConfig = await this.loadPlaygroundConfig(category, name);
-      
+
       this.componentCache.set(cacheKey, playgroundConfig);
       return playgroundConfig;
     } catch (error) {
@@ -46,7 +46,7 @@ export class ComponentLoader {
    */
   async loadComponent(category, name) {
     const componentKey = `${category}-${name}`;
-    
+
     if (this.loadedComponents.has(componentKey)) {
       return this.loadedComponents.get(componentKey);
     }
@@ -171,7 +171,7 @@ export class ComponentLoader {
       } else {
         throw new Error(`Category ${category} not yet implemented`);
       }
-      
+
       this.loadedComponents.set(componentKey, componentModule);
       return componentModule;
     } catch (error) {
@@ -182,7 +182,7 @@ export class ComponentLoader {
 
   /**
    * Load playground configuration for a component
-   * @param {string} category - Component category  
+   * @param {string} category - Component category
    * @param {string} name - Component name
    * @returns {Promise<Object>} Playground configuration
    */
@@ -204,7 +204,7 @@ export class ComponentLoader {
             ]
           },
           {
-            name: 'Secondary Variants', 
+            name: 'Secondary Variants',
             description: 'Secondary button styles',
             variants: [
               { props: { variant: 'secondary', size: 'sm' }, label: 'Small Secondary' },
@@ -241,7 +241,7 @@ export class ComponentLoader {
             description: 'Disabled state'
           },
           loading: {
-            control: 'boolean', 
+            control: 'boolean',
             defaultValue: false,
             description: 'Loading state'
           },
@@ -286,7 +286,7 @@ export class ComponentLoader {
     if (category === 'atoms' && name === 'spinner') {
       return {
         component: 'neo-spinner',
-        title: 'Spinner Component', 
+        title: 'Spinner Component',
         description: 'Loading spinner with multiple variants and sizes',
         examples: [
           {
@@ -399,8 +399,8 @@ export class ComponentLoader {
             name: 'Basic Table',
             description: 'Simple data table with basic features',
             variants: [
-              { 
-                props: { 
+              {
+                props: {
                   data: JSON.stringify([
                     { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin' },
                     { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'User' },
@@ -411,7 +411,7 @@ export class ComponentLoader {
                     { key: 'email', label: 'Email', sortable: true },
                     { key: 'role', label: 'Role' }
                   ])
-                } 
+                }
               }
             ]
           },
@@ -419,8 +419,8 @@ export class ComponentLoader {
             name: 'Advanced Features',
             description: 'Table with sorting, filtering, and selection',
             variants: [
-              { 
-                props: { 
+              {
+                props: {
                   data: JSON.stringify([
                     { id: 1, name: 'Alice Brown', email: 'alice@example.com', role: 'Admin', status: 'Active' },
                     { id: 2, name: 'Charlie Davis', email: 'charlie@example.com', role: 'User', status: 'Inactive' },
@@ -434,7 +434,7 @@ export class ComponentLoader {
                   ]),
                   selectable: true,
                   searchable: true
-                } 
+                }
               }
             ]
           }
@@ -464,8 +464,8 @@ export class ComponentLoader {
             name: 'Editable Grid',
             description: 'Data grid with inline editing capabilities',
             variants: [
-              { 
-                props: { 
+              {
+                props: {
                   data: JSON.stringify([
                     { id: 1, product: 'Laptop', price: 999.99, category: 'Electronics', inStock: true },
                     { id: 2, product: 'Mouse', price: 29.99, category: 'Electronics', inStock: false },
@@ -478,7 +478,7 @@ export class ComponentLoader {
                     { key: 'inStock', label: 'In Stock', editable: true, type: 'boolean' }
                   ]),
                   editable: true
-                } 
+                }
               }
             ]
           },
@@ -486,8 +486,8 @@ export class ComponentLoader {
             name: 'Virtual Scrolling',
             description: 'Grid with virtual scrolling for large datasets',
             variants: [
-              { 
-                props: { 
+              {
+                props: {
                   data: JSON.stringify(Array.from({ length: 100 }, (_, i) => ({
                     id: i + 1,
                     name: `Item ${i + 1}`,
@@ -501,7 +501,7 @@ export class ComponentLoader {
                   ]),
                   virtualScrolling: true,
                   height: 400
-                } 
+                }
               }
             ]
           }
@@ -531,8 +531,8 @@ export class ComponentLoader {
             name: 'Contact Form',
             description: 'Pre-built contact form configuration',
             variants: [
-              { 
-                props: { 
+              {
+                props: {
                   schema: JSON.stringify({
                     fields: [
                       { type: 'text', name: 'name', label: 'Full Name', required: true, placeholder: 'Enter your name' },
@@ -542,7 +542,7 @@ export class ComponentLoader {
                     ]
                   }),
                   layout: 'vertical'
-                } 
+                }
               }
             ]
           },
@@ -550,8 +550,8 @@ export class ComponentLoader {
             name: 'Registration Form',
             description: 'User registration form with validation',
             variants: [
-              { 
-                props: { 
+              {
+                props: {
                   schema: JSON.stringify({
                     fields: [
                       { type: 'text', name: 'firstName', label: 'First Name', required: true, validation: { minLength: 2 } },
@@ -565,7 +565,7 @@ export class ComponentLoader {
                   }),
                   layout: 'horizontal',
                   validateOnChange: true
-                } 
+                }
               }
             ]
           },
@@ -573,8 +573,8 @@ export class ComponentLoader {
             name: 'Survey Form',
             description: 'Multi-step survey with conditional fields',
             variants: [
-              { 
-                props: { 
+              {
+                props: {
                   schema: JSON.stringify({
                     steps: [
                       {
@@ -597,7 +597,7 @@ export class ComponentLoader {
                   }),
                   multiStep: true,
                   showProgress: true
-                } 
+                }
               }
             ]
           }
@@ -676,7 +676,7 @@ export class ComponentLoader {
 
     // Create the component HTML
     const componentHtml = `<${componentName} ${attributes}>${props.label || ''}</${componentName}>`;
-    
+
     return html`${componentHtml}`;
   }
 
@@ -753,7 +753,7 @@ export class ComponentLoader {
       config.control = { type: 'select' };
       config.options = ['primary', 'secondary', 'tertiary', 'danger', 'ghost', 'text'];
     }
-    
+
     if (propName === 'size' && this.isButtonComponent(propName)) {
       config.control = { type: 'select' };
       config.options = ['sm', 'md', 'lg'];
@@ -792,7 +792,7 @@ export class ComponentLoader {
     return {
       atoms: [
         'button', 'text-input', 'icon', 'badge', 'checkbox',
-        'link', 'spinner', 'progress-bar', 'radio', 'select', 
+        'link', 'spinner', 'progress-bar', 'radio', 'select',
         'tooltip', 'dropdown', 'input'
       ],
       molecules: [
@@ -800,7 +800,7 @@ export class ComponentLoader {
         'breadcrumbs', 'phone-input', 'date-picker', 'language-selector'
       ],
       organisms: [
-        'neo-table', 'neo-data-grid', 'neo-form-builder', 'data-table', 'form', 
+        'neo-table', 'neo-data-grid', 'neo-form-builder', 'data-table', 'form',
         'pagination', 'charts', 'file-upload', 'rich-text-editor', 'form-validation', 'table'
       ],
       pages: []

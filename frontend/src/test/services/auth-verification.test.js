@@ -35,7 +35,7 @@ describe('AuthService Email Verification Tests', () => {
     // Reset all mocks
     vi.clearAllMocks();
     fetch.mockClear();
-    
+
     // Create fresh instance
     authService = new AuthService();
   });
@@ -51,7 +51,7 @@ describe('AuthService Email Verification Tests', () => {
         success: true,
         message: 'Email verified successfully'
       };
-      
+
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse
@@ -68,7 +68,7 @@ describe('AuthService Email Verification Tests', () => {
         },
         body: JSON.stringify({ token: 'valid-token-123' })
       });
-      
+
       expect(result).toEqual(mockResponse);
       expect(Logger.info).toHaveBeenCalledWith('Email verification successful');
     });
@@ -78,7 +78,7 @@ describe('AuthService Email Verification Tests', () => {
       const errorResponse = {
         message: 'Invalid or expired token'
       };
-      
+
       fetch.mockResolvedValueOnce({
         ok: false,
         json: async () => errorResponse
@@ -86,7 +86,7 @@ describe('AuthService Email Verification Tests', () => {
 
       // Act & Assert
       await expect(authService.verifyEmail('invalid-token')).rejects.toThrow('Invalid or expired token');
-      
+
       expect(fetch).toHaveBeenCalledWith('/api/auth/verify-email', {
         method: 'POST',
         headers: {
@@ -94,7 +94,7 @@ describe('AuthService Email Verification Tests', () => {
         },
         body: JSON.stringify({ token: 'invalid-token' })
       });
-      
+
       expect(Logger.error).toHaveBeenCalledWith('Email verification failed:', expect.any(Error));
     });
 
@@ -104,7 +104,7 @@ describe('AuthService Email Verification Tests', () => {
 
       // Act & Assert
       await expect(authService.verifyEmail('some-token')).rejects.toThrow('Network error');
-      
+
       expect(Logger.error).toHaveBeenCalledWith('Email verification failed:', expect.any(Error));
     });
 
@@ -127,7 +127,7 @@ describe('AuthService Email Verification Tests', () => {
         success: true,
         message: 'Verification email sent'
       };
-      
+
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse
@@ -144,7 +144,7 @@ describe('AuthService Email Verification Tests', () => {
         },
         body: JSON.stringify({ email: 'test@example.com' })
       });
-      
+
       expect(Logger.info).toHaveBeenCalledWith('Verification email resent successfully');
     });
 
@@ -153,7 +153,7 @@ describe('AuthService Email Verification Tests', () => {
       const errorResponse = {
         message: 'Email not found'
       };
-      
+
       fetch.mockResolvedValueOnce({
         ok: false,
         json: async () => errorResponse
@@ -161,7 +161,7 @@ describe('AuthService Email Verification Tests', () => {
 
       // Act & Assert
       await expect(authService.resendVerification('notfound@example.com')).rejects.toThrow('Email not found');
-      
+
       expect(Logger.error).toHaveBeenCalledWith('Failed to resend verification email:', expect.any(Error));
     });
 
@@ -171,7 +171,7 @@ describe('AuthService Email Verification Tests', () => {
 
       // Act & Assert
       await expect(authService.resendVerification('test@example.com')).rejects.toThrow('Network timeout');
-      
+
       expect(Logger.error).toHaveBeenCalledWith('Failed to resend verification email:', expect.any(Error));
     });
 
@@ -193,7 +193,7 @@ describe('AuthService Email Verification Tests', () => {
       const mockResponse = {
         verified: true
       };
-      
+
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse
@@ -212,7 +212,7 @@ describe('AuthService Email Verification Tests', () => {
       const mockResponse = {
         verified: false
       };
-      
+
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse
@@ -230,7 +230,7 @@ describe('AuthService Email Verification Tests', () => {
       const errorResponse = {
         message: 'Invalid email format'
       };
-      
+
       fetch.mockResolvedValueOnce({
         ok: false,
         json: async () => errorResponse
@@ -238,7 +238,7 @@ describe('AuthService Email Verification Tests', () => {
 
       // Act & Assert
       await expect(authService.checkEmailVerification('invalid-email')).rejects.toThrow('Invalid email format');
-      
+
       expect(Logger.error).toHaveBeenCalledWith('Failed to check email verification status:', expect.any(Error));
     });
 
@@ -263,7 +263,7 @@ describe('AuthService Email Verification Tests', () => {
 
       // Act & Assert
       await expect(authService.checkEmailVerification('test@example.com')).rejects.toThrow('Connection failed');
-      
+
       expect(Logger.error).toHaveBeenCalledWith('Failed to check email verification status:', expect.any(Error));
     });
 
@@ -286,7 +286,7 @@ describe('AuthService Email Verification Tests', () => {
         token: 'auth-token-123',
         user: { id: 1, email: 'test@example.com', name: 'Test User' }
       };
-      
+
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => loginResponse
@@ -303,7 +303,7 @@ describe('AuthService Email Verification Tests', () => {
         },
         body: JSON.stringify({ email: 'test@example.com', password: 'password123' })
       });
-      
+
       expect(result).toEqual(loginResponse.user);
       expect(authService.token).toBe('auth-token-123');
       expect(authService.user).toEqual(loginResponse.user);
@@ -315,7 +315,7 @@ describe('AuthService Email Verification Tests', () => {
         success: true,
         message: 'Registration successful, please verify your email'
       };
-      
+
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => signupResponse
@@ -336,9 +336,9 @@ describe('AuthService Email Verification Tests', () => {
           name: 'New User'
         })
       });
-      
+
       expect(result).toEqual(signupResponse);
-      
+
       // Should not set token/user until email is verified
       expect(authService.token).toBeFalsy();
       expect(authService.user).toBeFalsy();

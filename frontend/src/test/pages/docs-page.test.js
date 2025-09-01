@@ -13,7 +13,7 @@ describe("Docs Page", () => {
     // Create the docs-page element
     element = document.createElement('docs-page');
     container.appendChild(element);
-    
+
     // Wait for component to be fully rendered
     await element.updateComplete;
   });

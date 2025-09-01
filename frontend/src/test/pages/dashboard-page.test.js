@@ -257,10 +257,10 @@ describe("Dashboard Page", () => {
     container = document.createElement('div');
     document.body.appendChild(container);
 
-    // Create the dashboard-page element  
+    // Create the dashboard-page element
     element = document.createElement('dashboard-page');
     container.appendChild(element);
-    
+
     // Wait for component to be fully rendered
     await element.updateComplete;
   });

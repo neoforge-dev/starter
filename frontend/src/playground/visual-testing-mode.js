@@ -1,6 +1,6 @@
 /**
  * Visual Testing Mode for Playground
- * 
+ *
  * Adds visual testing capabilities directly to the playground interface
  * allowing developers to capture and compare component visuals interactively.
  */
@@ -37,7 +37,7 @@ export class VisualTestingMode {
       <span class="label">Visual Testing</span>
     `;
     visualTestingButton.title = 'Enable visual testing mode';
-    
+
     toolbar.appendChild(visualTestingButton);
 
     // Add visual testing panel
@@ -52,13 +52,13 @@ export class VisualTestingMode {
     panel.id = 'visual-testing-panel';
     panel.className = 'panel';
     panel.style.display = 'none';
-    
+
     panel.innerHTML = `
       <div class="panel-header">
         <h3>Visual Testing</h3>
         <button class="close-button" onclick="visualTestingMode.togglePanel()">×</button>
       </div>
-      
+
       <div class="panel-content">
         <div class="visual-testing-section">
           <h4>Capture Baseline</h4>
@@ -124,7 +124,7 @@ export class VisualTestingMode {
     this.isEnabled = !this.isEnabled;
     const button = document.getElementById('toggle-visual-testing');
     const panel = document.getElementById('visual-testing-panel');
-    
+
     if (this.isEnabled) {
       button.classList.add('active');
       panel.style.display = 'block';
@@ -143,7 +143,7 @@ export class VisualTestingMode {
     const interactivePreview = document.getElementById('interactive-preview');
     if (interactivePreview) {
       interactivePreview.style.position = 'relative';
-      
+
       const overlay = document.createElement('div');
       overlay.id = 'visual-testing-overlay';
       overlay.style.cssText = `
@@ -157,7 +157,7 @@ export class VisualTestingMode {
         pointer-events: none;
         z-index: 1000;
       `;
-      
+
       overlay.innerHTML = `
         <div style="
           position: absolute;
@@ -170,7 +170,7 @@ export class VisualTestingMode {
           border-radius: 3px;
         ">Visual Testing Active</div>
       `;
-      
+
       interactivePreview.appendChild(overlay);
     }
   }
@@ -196,20 +196,20 @@ export class VisualTestingMode {
 
     const component = this.playgroundApp.currentComponent;
     const componentKey = `${component.category}/${component.name}`;
-    
+
     try {
       this.showMessage('Capturing baseline...', 'info');
-      
+
       const screenshot = await this.captureComponentScreenshot();
       this.capturedBaselines.set(componentKey, {
         screenshot,
         timestamp: new Date().toISOString(),
         props: { ...this.playgroundApp.currentProps }
       });
-      
+
       // Enable compare button
       document.getElementById('compare-visual').disabled = false;
-      
+
       this.showMessage(`Baseline captured for ${component.title}`, 'success');
     } catch (error) {
       this.showMessage(`Failed to capture baseline: ${error.message}`, 'error');
@@ -228,7 +228,7 @@ export class VisualTestingMode {
     const component = this.playgroundApp.currentComponent;
     const componentKey = `${component.category}/${component.name}`;
     const baseline = this.capturedBaselines.get(componentKey);
-    
+
     if (!baseline) {
       this.showMessage('No baseline found. Capture a baseline first.', 'error');
       return;
@@ -236,10 +236,10 @@ export class VisualTestingMode {
 
     try {
       this.showMessage('Comparing with baseline...', 'info');
-      
+
       const currentScreenshot = await this.captureComponentScreenshot();
       const comparison = await this.compareScreenshots(baseline.screenshot, currentScreenshot);
-      
+
       this.displayComparisonResult(comparison);
     } catch (error) {
       this.showMessage(`Comparison failed: ${error.message}`, 'error');
@@ -257,9 +257,9 @@ export class VisualTestingMode {
 
     const component = this.playgroundApp.currentComponent;
     this.showMessage('Testing all component states...', 'info');
-    
+
     const results = [];
-    
+
     try {
       // Test default state
       const defaultScreenshot = await this.captureComponentScreenshot();
@@ -272,11 +272,11 @@ export class VisualTestingMode {
       // Test different property combinations
       const argTypes = component.argTypes || {};
       const testCombinations = this.generateTestCombinations(argTypes);
-      
+
       for (const combination of testCombinations) {
         // Apply properties
         await this.applyPropsToLiveComponent(combination);
-        
+
         // Capture screenshot
         const screenshot = await this.captureComponentScreenshot();
         results.push({
@@ -284,14 +284,14 @@ export class VisualTestingMode {
           screenshot,
           props: combination
         });
-        
+
         // Wait between captures
         await new Promise(resolve => setTimeout(resolve, 500));
       }
-      
+
       this.displayAllStatesResults(results);
       this.showMessage(`Captured ${results.length} component states`, 'success');
-      
+
     } catch (error) {
       this.showMessage(`State testing failed: ${error.message}`, 'error');
     }
@@ -312,17 +312,17 @@ export class VisualTestingMode {
       // For now, we'll simulate the capture
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      
+
       const rect = interactivePreview.getBoundingClientRect();
       canvas.width = rect.width;
       canvas.height = rect.height;
-      
+
       // Simple color fill as placeholder
       ctx.fillStyle = '#f0f0f0';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#333';
       ctx.fillText('Component Screenshot', 10, 30);
-      
+
       resolve(canvas.toDataURL());
     });
   }
@@ -345,7 +345,7 @@ export class VisualTestingMode {
   generateTestCombinations(argTypes) {
     const combinations = [];
     const props = Object.keys(argTypes);
-    
+
     // Generate a few key combinations
     props.forEach(prop => {
       const config = argTypes[prop];
@@ -355,7 +355,7 @@ export class VisualTestingMode {
         });
       }
     });
-    
+
     return combinations.slice(0, 8); // Limit to 8 combinations
   }
 
@@ -365,7 +365,7 @@ export class VisualTestingMode {
   async applyPropsToLiveComponent(props) {
     const liveComponent = this.playgroundApp.liveInteractiveComponent;
     if (!liveComponent) return;
-    
+
     Object.entries(props).forEach(([key, value]) => {
       if (key === 'label' || key === 'text') {
         liveComponent.textContent = value;
@@ -373,12 +373,12 @@ export class VisualTestingMode {
         liveComponent[key] = value;
       }
     });
-    
+
     // Wait for component to update
     if (liveComponent.updateComplete) {
       await liveComponent.updateComplete;
     }
-    
+
     await new Promise(resolve => setTimeout(resolve, 200));
   }
 
@@ -396,7 +396,7 @@ export class VisualTestingMode {
    */
   displayComparisonResult(comparison) {
     const resultsContainer = document.getElementById('visual-test-results');
-    
+
     const resultHtml = `
       <div class="comparison-result ${comparison.match ? 'match' : 'diff'}">
         <h5>Baseline Comparison</h5>
@@ -405,7 +405,7 @@ export class VisualTestingMode {
         <small>Compared at ${new Date().toLocaleTimeString()}</small>
       </div>
     `;
-    
+
     resultsContainer.innerHTML = resultHtml;
   }
 
@@ -414,7 +414,7 @@ export class VisualTestingMode {
    */
   displayAllStatesResults(results) {
     const resultsContainer = document.getElementById('visual-test-results');
-    
+
     const resultHtml = `
       <div class="all-states-results">
         <h5>All States Test</h5>
@@ -430,7 +430,7 @@ export class VisualTestingMode {
         <small>Generated at ${new Date().toLocaleTimeString()}</small>
       </div>
     `;
-    
+
     resultsContainer.innerHTML = resultHtml;
   }
 
@@ -456,19 +456,19 @@ export class VisualTestingMode {
       `;
       document.body.appendChild(messageEl);
     }
-    
+
     messageEl.textContent = message;
     messageEl.className = `message-${type}`;
-    
+
     const colors = {
       info: '#0066cc',
       success: '#28a745',
       error: '#dc3545'
     };
-    
+
     messageEl.style.backgroundColor = colors[type] || colors.info;
     messageEl.style.opacity = '1';
-    
+
     // Auto-hide after 3 seconds
     setTimeout(() => {
       messageEl.style.opacity = '0';
@@ -483,10 +483,10 @@ export class VisualTestingMode {
     const panel = document.getElementById('visual-testing-panel');
     const isVisible = panel.style.display !== 'none';
     panel.style.display = isVisible ? 'none' : 'block';
-    
+
     const button = document.getElementById('toggle-visual-testing');
     button.classList.toggle('active', !isVisible);
-    
+
     if (!isVisible) {
       this.showVisualTestingOverlay();
     } else {

@@ -22,4 +22,4 @@ fi
 
 # Run migrations
 echo "Running migrations..."
-docker compose run --rm api alembic upgrade head 
+docker compose run --rm api alembic upgrade head

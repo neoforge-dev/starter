@@ -17,24 +17,24 @@ data:
     server.port: 5601
     server.basePath: ""
     server.publicBaseUrl: "https://kibana.neoforge.local"
-    
+
     # Elasticsearch configuration
     elasticsearch.hosts: ["http://elasticsearch:9200"]
     elasticsearch.requestTimeout: 30000
     elasticsearch.shardTimeout: 30000
-    
+
     # Monitoring
     monitoring.ui.container.elasticsearch.enabled: true
     monitoring.ui.container.logstash.enabled: false
-    
+
     # Security
     xpack.security.enabled: false
     xpack.encryptedSavedObjects.encryptionKey: "something_at_least_32_characters_long"
-    
+
     # Performance
     server.maxPayloadBytes: 1048576
     elasticsearch.requestHeadersWhitelist: ["authorization"]
-    
+
     # Logging
     logging.level: info
     logging.appenders:
@@ -45,14 +45,14 @@ data:
     logging.root:
       appenders: [console]
       level: info
-    
+
     # Index patterns and dashboards
     kibana.defaultAppId: "discover"
     kibana.index: ".kibana"
-    
+
     # Maps
     map.includeElasticMapsService: false
-    
+
     # Advanced settings
     discover.sampleSize: 500
     histogram:bucketSize: 30

@@ -1,22 +1,23 @@
 """Test email tracking functionality."""
+from datetime import UTC, datetime, timedelta
+from typing import AsyncGenerator
+from unittest.mock import MagicMock, patch
+
 import pytest
 import pytest_asyncio
-from datetime import datetime, timedelta, UTC
-from typing import AsyncGenerator
-from unittest.mock import patch, MagicMock
-
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app import crud
 from app.crud.email_tracking import email_tracking
 from app.models.email_tracking import EmailStatus, EmailTracking
 from app.schemas.email_tracking import (
-    EmailTrackingCreate,
     EmailEventCreate,
+    EmailTrackingCreate,
     EmailTrackingStats,
 )
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app import crud
 
 pytestmark = pytest.mark.asyncio
+
 
 @pytest_asyncio.fixture
 async def tracking_record(db) -> AsyncGenerator[EmailTracking, None]:
@@ -26,7 +27,7 @@ async def tracking_record(db) -> AsyncGenerator[EmailTracking, None]:
         recipient="test@example.com",
         subject="Test Email",
         template_name="test_template",
-        status=EmailStatus.QUEUED
+        status=EmailStatus.QUEUED,
     )
     tracking = await email_tracking.create_with_event(
         db=db,
@@ -86,7 +87,7 @@ async def test_get_by_email_id(db: AsyncSession):
         recipient="test@example.com",
         subject="Test Email",
         template_name="test_template",
-        status="queued"
+        status="queued",
     )
     tracking = await crud.email_tracking.create(db, obj_in=tracking_in)
 
@@ -112,7 +113,7 @@ async def test_get_stats(db: AsyncSession):
         EmailStatus.BOUNCED,
         EmailStatus.SPAM,
     ]
-    
+
     for i, status in enumerate(statuses):
         obj_in = EmailTrackingCreate(
             email_id=f"test-{i}",
@@ -159,7 +160,7 @@ async def test_get_stats_with_date_range(db):
             recipient=f"test{i}@example.com",
             subject=f"Test Email {i}",
             template_name="test_template",
-            status="sent"
+            status="sent",
         )
         await email_tracking.create_with_event(
             db=db,
@@ -204,4 +205,4 @@ async def test_failed_email_tracking(db: AsyncSession):
     assert obj.failed_at is not None
     assert len(obj.events) == 1
     assert obj.events[0].event_type == EmailStatus.FAILED
-    assert obj.events[0].event_metadata == {"error": "Test error"} 
+    assert obj.events[0].event_metadata == {"error": "Test error"}

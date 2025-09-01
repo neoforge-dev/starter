@@ -1,0 +1,25 @@
+version: 1
+plan_id: epic4-structured-api
+goal: "Adopt BrokerSendResult for explicit reliability semantics while preserving compatibility"
+
+batches:
+  - name: broker-contracts
+    tasks:
+      - type: edit
+        file: tests/contracts/test_component_contracts.py
+        apply: Add BrokerSendResult contract tests for base and enhanced brokers
+    verify:
+      - run: "uv run pytest -q tests/contracts/test_component_contracts.py --no-cov"
+    commit:
+      message: "test(contracts): add BrokerSendResult API contracts"
+
+  - name: orchestrator-adoption
+    depends_on: ["broker-contracts"]
+    tasks:
+      - type: edit
+        file: src/core/orchestrator.py
+        apply: Migrate heartbeat/broadcast to use send_message_with_result with structured logging
+    verify:
+      - run: "uv run pytest -q tests/unit/test_orchestrator.py --no-cov"
+    commit:
+      message: "feat(orchestrator): adopt structured broker send results"

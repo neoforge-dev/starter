@@ -1,0 +1,284 @@
+# NeoForge Canary Deployment Configuration
+# Enables zero-downtime deployments with traffic splitting
+
+---
+# Canary Deployment for API
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-canary
+  namespace: neoforge
+  labels:
+    app: api
+    component: backend
+    deployment: canary
+    app.kubernetes.io/name: neoforge-api-canary
+    app.kubernetes.io/instance: neoforge-api-canary
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: neoforge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+      deployment: canary
+  template:
+    metadata:
+      labels:
+        app: api
+        component: backend
+        deployment: canary
+        version: canary
+    spec:
+      serviceAccountName: neoforge-service-account
+      containers:
+      - name: api
+        image: neoforge/backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: DEPLOYMENT_TYPE
+          value: "canary"
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secret
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: cache-volume
+          mountPath: /app/cache
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: cache-volume
+        emptyDir: {}
+      nodeSelector:
+        workload: api
+      tolerations:
+      - key: "workload"
+        operator: "Equal"
+        value: "api"
+        effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: workload
+                operator: In
+                values:
+                - api
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        seccompProfile:
+          type: RuntimeDefault
+        readOnlyRootFilesystem: true
+      restartPolicy: Always
+
+---
+# Canary Service for API
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-canary
+  namespace: neoforge
+  labels:
+    app: api
+    component: backend
+    deployment: canary
+    app.kubernetes.io/name: neoforge-api-canary
+    app.kubernetes.io/instance: neoforge-api-canary
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: neoforge
+spec:
+  selector:
+    app: api
+    deployment: canary
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http
+    protocol: TCP
+  type: ClusterIP
+
+---
+# VirtualService for Traffic Splitting (Istio)
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: api-traffic-split
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: api-traffic-split
+    app.kubernetes.io/instance: neoforge-api-traffic-split
+    app.kubernetes.io/component: traffic-management
+    app.kubernetes.io/part-of: neoforge
+spec:
+  hosts:
+  - api.neoforge.dev
+  http:
+  - name: primary-traffic
+    match:
+    - headers:
+        user-agent:
+          notMatch: ".*canary.*"
+    route:
+    - destination:
+        host: api
+        subset: stable
+      weight: 95
+    - destination:
+        host: api-canary
+        subset: canary
+      weight: 5
+  - name: canary-traffic
+    match:
+    - headers:
+        user-agent:
+          match: ".*canary.*"
+    route:
+    - destination:
+        host: api-canary
+        subset: canary
+      weight: 100
+
+---
+# DestinationRule for Subsets (Istio)
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: api-subsets
+  namespace: neoforge
+  labels:
+    app.kubernetes.io/name: api-subsets
+    app.kubernetes.io/instance: neoforge-api-subsets
+    app.kubernetes.io/component: traffic-management
+    app.kubernetes.io/part-of: neoforge
+spec:
+  host: api
+  subsets:
+  - name: stable
+    labels:
+      deployment: stable
+  - name: canary
+    labels:
+      deployment: canary
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    loadBalancer:
+      simple: ROUND_ROBIN
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 10
+    outlierDetection:
+      consecutive5xxErrors: 3
+      interval: 5s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+
+---
+# PrometheusRule for Canary Monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: canary-deployment-rules
+  namespace: neoforge-monitoring
+  labels:
+    app.kubernetes.io/name: canary-deployment-rules
+    app.kubernetes.io/instance: neoforge-canary-rules
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: neoforge
+spec:
+  groups:
+  - name: canary_deployment
+    rules:
+    - alert: CanaryDeploymentHighErrorRate
+      expr: |
+        rate(http_requests_total{deployment="canary", status=~"5.."}[5m])
+        /
+        rate(http_requests_total{deployment="canary"}[5m]) > 0.05
+      for: 5m
+      labels:
+        severity: warning
+        service: api
+        deployment: canary
+      annotations:
+        summary: "Canary deployment has high error rate"
+        description: "Canary deployment error rate is {{ $value | humanizePercentage }}"
+
+    - alert: CanaryDeploymentLatencyIncrease
+      expr: |
+        histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{deployment="canary"}[5m]))
+        >
+        histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{deployment="stable"}[5m])) * 1.2
+      for: 10m
+      labels:
+        severity: warning
+        service: api
+        deployment: canary
+      annotations:
+        summary: "Canary deployment has increased latency"
+        description: "Canary deployment 95th percentile latency is significantly higher than stable"
+
+    - alert: CanaryDeploymentSuccess
+      expr: |
+        rate(http_requests_total{deployment="canary", status!~"5.."}[10m])
+        /
+        rate(http_requests_total{deployment="canary"}[10m]) > 0.99
+      for: 30m
+      labels:
+        severity: info
+        service: api
+        deployment: canary
+      annotations:
+        summary: "Canary deployment is performing well"
+        description: "Canary deployment success rate is {{ $value | humanizePercentage }}"

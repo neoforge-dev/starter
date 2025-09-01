@@ -14,7 +14,7 @@ describe('NeoButton Component', () => {
     // Create the button element
     button = document.createElement('neo-button');
     container.appendChild(button);
-    
+
     // Wait for component to be fully rendered
     await button.updateComplete;
   });
@@ -43,7 +43,7 @@ describe('NeoButton Component', () => {
   it('should handle variant changes', async () => {
     button.variant = 'secondary';
     await button.updateComplete;
-    
+
     expect(button.variant).toBe('secondary');
     const buttonElement = button.shadowRoot?.querySelector('button');
     expect(buttonElement.className).toContain('variant-secondary');
@@ -52,7 +52,7 @@ describe('NeoButton Component', () => {
   it('should handle size changes', async () => {
     button.size = 'lg';
     await button.updateComplete;
-    
+
     expect(button.size).toBe('lg');
     const buttonElement = button.shadowRoot?.querySelector('button');
     expect(buttonElement.className).toContain('size-lg');
@@ -61,11 +61,11 @@ describe('NeoButton Component', () => {
   it('should handle disabled state', async () => {
     button.disabled = true;
     await button.updateComplete;
-    
+
     expect(button.disabled).toBe(true);
     expect(button.hasAttribute('disabled')).toBe(true);
     expect(button.getAttribute('aria-disabled')).toBe('true');
-    
+
     const buttonElement = button.shadowRoot?.querySelector('button');
     expect(buttonElement.disabled).toBe(true);
   });
@@ -73,11 +73,11 @@ describe('NeoButton Component', () => {
   it('should handle loading state', async () => {
     button.loading = true;
     await button.updateComplete;
-    
+
     expect(button.loading).toBe(true);
     const spinner = button.shadowRoot?.querySelector('.spinner');
     expect(spinner).toBeTruthy();
-    
+
     const buttonElement = button.shadowRoot?.querySelector('button');
     expect(buttonElement.disabled).toBe(true);
   });
@@ -85,7 +85,7 @@ describe('NeoButton Component', () => {
   it('should handle full width', async () => {
     button.fullWidth = true;
     await button.updateComplete;
-    
+
     expect(button.fullWidth).toBe(true);
     expect(button.hasAttribute('fullWidth')).toBe(true);
   });
@@ -93,7 +93,7 @@ describe('NeoButton Component', () => {
   it('should display label text', async () => {
     button.label = 'Test Button';
     await button.updateComplete;
-    
+
     expect(button.label).toBe('Test Button');
     const buttonElement = button.shadowRoot?.querySelector('button');
     expect(buttonElement.textContent.trim()).toContain('Test Button');
@@ -104,10 +104,10 @@ describe('NeoButton Component', () => {
     button.label = 'Close Dialog';
     button.icon = '×';
     await button.updateComplete;
-    
+
     expect(button.iconOnly).toBe(true);
     expect(button.getAttribute('aria-label')).toBe('Close Dialog');
-    
+
     const iconSpan = button.shadowRoot?.querySelector('.icon');
     expect(iconSpan).toBeTruthy();
   });
@@ -115,10 +115,10 @@ describe('NeoButton Component', () => {
   it('should dispatch click events', async () => {
     const clickSpy = vi.fn();
     button.addEventListener('click', clickSpy);
-    
+
     const buttonElement = button.shadowRoot?.querySelector('button');
     buttonElement.click();
-    
+
     // The button dispatches both the native click and custom click events
     // We verify that at least one click event was dispatched
     expect(clickSpy).toHaveBeenCalled();
@@ -128,26 +128,26 @@ describe('NeoButton Component', () => {
   it('should prevent click when disabled', async () => {
     button.disabled = true;
     await button.updateComplete;
-    
+
     const clickSpy = vi.fn();
     button.addEventListener('click', clickSpy);
-    
+
     const buttonElement = button.shadowRoot?.querySelector('button');
     buttonElement.click();
-    
+
     expect(clickSpy).not.toHaveBeenCalled();
   });
 
   it('should prevent click when loading', async () => {
     button.loading = true;
     await button.updateComplete;
-    
+
     const clickSpy = vi.fn();
     button.addEventListener('click', clickSpy);
-    
+
     const buttonElement = button.shadowRoot?.querySelector('button');
     buttonElement.click();
-    
+
     expect(clickSpy).not.toHaveBeenCalled();
   });
 });

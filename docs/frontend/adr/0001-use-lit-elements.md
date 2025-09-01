@@ -57,4 +57,4 @@ We decided to use Lit Elements for our web components because:
 1. Created comprehensive documentation and examples
 2. Added browser support matrix
 3. Implemented automated testing
-4. Created shared component library 
+4. Created shared component library

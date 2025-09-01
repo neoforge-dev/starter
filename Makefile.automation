@@ -21,7 +21,7 @@ help:
 	@echo "  make component name=UserProfile type=molecule        # Create component"
 	@echo "  make component name=ProductCard type=atom state=yes  # With state management"
 	@echo ""
-	@echo "$(GREEN)API Generation:$(NC)" 
+	@echo "$(GREEN)API Generation:$(NC)"
 	@echo "  make endpoint name=products                          # Create CRUD API"
 	@echo "  make endpoint name=users model=User                  # With custom model"
 	@echo ""
@@ -48,7 +48,7 @@ component:
 		$(if $(events),--events,)
 	@echo "$(GREEN)✅ Component $(name) created successfully!$(NC)"
 
-# API endpoint generation  
+# API endpoint generation
 endpoint:
 	@if [ -z "$(name)" ]; then echo "$(RED)Error: name parameter required$(NC)"; exit 1; fi
 	@echo "$(BLUE)🔨 Creating endpoint: $(name)$(NC)"
@@ -121,7 +121,7 @@ examples:
 	@echo "$(YELLOW)Create a user profile component:$(NC)"
 	@echo "  make component name=UserProfile type=organism state=yes events=yes"
 	@echo ""
-	@echo "$(YELLOW)Create a products API:$(NC)" 
+	@echo "$(YELLOW)Create a products API:$(NC)"
 	@echo "  make endpoint name=products"
 	@echo ""
 	@echo "$(YELLOW)Add Stripe payments:$(NC)"

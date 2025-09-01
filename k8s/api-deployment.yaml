@@ -43,7 +43,7 @@ spec:
         runAsGroup: 1000
         runAsNonRoot: true
         fsGroup: 1000
-      
+
       initContainers:
       # Database migration init container
       - name: db-migrate
@@ -87,7 +87,7 @@ spec:
           readOnlyRootFilesystem: true
           runAsNonRoot: true
           runAsUser: 1000
-      
+
       # Wait for dependencies
       - name: wait-for-db
         image: postgres:15-alpine
@@ -107,7 +107,7 @@ spec:
           limits:
             memory: "64Mi"
             cpu: "100m"
-      
+
       - name: wait-for-redis
         image: redis:7.2-alpine
         command:
@@ -126,7 +126,7 @@ spec:
           limits:
             memory: "64Mi"
             cpu: "100m"
-      
+
       containers:
       - name: api
         image: neoforge/backend:latest
@@ -228,7 +228,7 @@ spec:
                 echo "Gracefully shutting down API server..."
                 kill -TERM 1
                 sleep 15
-      
+
       volumes:
       - name: tmp
         emptyDir: {}
@@ -236,7 +236,7 @@ spec:
         emptyDir: {}
       - name: app-logs
         emptyDir: {}
-      
+
       # Node affinity and pod anti-affinity for HA
       affinity:
         nodeAffinity:
@@ -264,7 +264,7 @@ spec:
                   operator: In
                   values: ["api"]
               topologyKey: topology.kubernetes.io/zone
-      
+
       # Tolerations for dedicated nodes (if needed)
       tolerations:
       - key: "node.kubernetes.io/not-ready"
@@ -275,7 +275,7 @@ spec:
         operator: "Exists"
         effect: "NoExecute"
         tolerationSeconds: 300
-      
+
       # Topology spread constraints for even distribution
       topologySpreadConstraints:
       - maxSkew: 1
@@ -290,7 +290,7 @@ spec:
         labelSelector:
           matchLabels:
             app: api
-      
+
       terminationGracePeriodSeconds: 30
       restartPolicy: Always
       dnsPolicy: ClusterFirst

@@ -55,4 +55,4 @@ fi
 echo "Running database tests..."
 ./scripts/run_tests.sh $ARGS
 
-echo "Database tests completed successfully!" 
+echo "Database tests completed successfully!"
