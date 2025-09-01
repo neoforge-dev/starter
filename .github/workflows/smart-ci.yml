@@ -27,7 +27,7 @@ jobs:
             frontend:
               - 'frontend/**'
               - 'package.json'
-              - 'package-lock.json'
+              - 'bun.lockb'
             backend:
               - 'backend/**'
               - 'requirements*.txt'
@@ -43,7 +43,7 @@ jobs:
         id: matrix
         run: |
           MATRIX=()
-          
+
           # Always run core tests for main branch or workflow changes
           if [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ steps.changes.outputs.workflows }}" == "true" ]]; then
             MATRIX+=("unit" "integration" "security" "performance")
@@ -56,7 +56,7 @@ jobs:
                 MATRIX+=("performance")
               fi
             fi
-            
+
             if [[ "${{ steps.changes.outputs.backend }}" == "true" ]]; then
               MATRIX+=("unit" "integration")
               # Add security tests for API changes
@@ -64,13 +64,13 @@ jobs:
                 MATRIX+=("security")
               fi
             fi
-            
+
             # Add integration tests if both frontend and backend changed
             if [[ "${{ steps.changes.outputs.frontend }}" == "true" ]] && [[ "${{ steps.changes.outputs.backend }}" == "true" ]]; then
               MATRIX+=("e2e")
             fi
           fi
-          
+
           # Remove duplicates and convert to JSON
           UNIQUE_MATRIX=($(printf "%s\n" "${MATRIX[@]}" | sort -u))
           if [ ${#UNIQUE_MATRIX[@]} -eq 0 ]; then
@@ -152,14 +152,14 @@ jobs:
         if: matrix.test-type == 'visual'
         working-directory: frontend
         run: |
-          npx playwright install --with-deps
+          bunx playwright install --with-deps
           bun run test:visual
 
       - name: Run Accessibility Tests
         if: matrix.test-type == 'a11y'
         working-directory: frontend
         run: |
-          npx playwright install --with-deps
+          bunx playwright install --with-deps
           bun run test:a11y
 
       - name: Run Performance Tests
@@ -167,7 +167,7 @@ jobs:
         working-directory: frontend
         run: |
           bun run test:perf
-          
+
       - name: Run Security Tests
         if: matrix.test-type == 'security'
         run: |
@@ -175,7 +175,7 @@ jobs:
           pip install bandit[toml] safety
           bandit -r backend/app/ -f json -o security-report.json || true
           safety check -r backend/requirements.txt --json --output safety-report.json || true
-          
+
           # Frontend security scanning
           cd frontend && bun audit || true
 
@@ -184,7 +184,7 @@ jobs:
         run: |
           docker compose up -d
           sleep 15
-          cd frontend && npx playwright install --with-deps
+          cd frontend && bunx playwright install --with-deps
           bun run test:e2e
 
       # Upload artifacts based on test type

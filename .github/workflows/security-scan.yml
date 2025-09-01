@@ -27,7 +27,7 @@ jobs:
       contents: read
       security-events: write
       actions: read
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -113,7 +113,7 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'python', 'javascript' ]
-        
+
     env:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN || 'not-set' }}
       GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE || '' }}
@@ -177,8 +177,8 @@ jobs:
         # Remove problematic local plugin temporarily for security scan
         bun pkg delete devDependencies.eslint-plugin-component-registry || true
         bun add eslint-plugin-security --dev
-        npx eslint src --ext .js,.ts --format json > ../eslint-security-report.json || echo '{}' > ../eslint-security-report.json
-        npx eslint src --ext .js,.ts || echo "ESLint found security issues"
+        bunx eslint src --ext .js,.ts --format json > ../eslint-security-report.json || echo '{}' > ../eslint-security-report.json
+        bunx eslint src --ext .js,.ts || echo "ESLint found security issues"
 
     - name: Upload SAST artifacts
       uses: actions/upload-artifact@v4
@@ -233,7 +233,7 @@ jobs:
         safety check --json --output ../safety-report.json || true
         safety check || echo "Safety found vulnerabilities"
 
-    - name: Run npm audit
+    - name: Run Bun audit
       run: |
         cd frontend
         bun audit --json > ../bun-audit-report.json || true
@@ -386,7 +386,7 @@ jobs:
     - name: Install license scanning tools
       run: |
         pip install pip-licenses
-        npm install -g license-checker
+        bun add license-checker --global
 
     - name: Scan Python licenses
       run: |
@@ -399,8 +399,8 @@ jobs:
       run: |
         cd frontend
         bun install --frozen-lockfile
-        npx license-checker --json --out ../node-licenses.json || echo '{}' > ../node-licenses.json
-        npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0' || echo "License violations found"
+        bunx license-checker --json --out ../node-licenses.json || echo '{}' > ../node-licenses.json
+        bunx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0' || echo "License violations found"
 
     - name: Upload license reports
       uses: actions/upload-artifact@v4
@@ -434,7 +434,7 @@ jobs:
         import json
         import os
         from datetime import datetime
-        
+
         # Initialize report
         report = {
             "scan_timestamp": datetime.now().isoformat(),
@@ -457,18 +457,18 @@ jobs:
                 "infrastructure": {"status": "unknown", "issues": []}
             }
         }
-        
+
         # Parse scan results (simplified example)
         try:
             # This would parse actual scan results from artifacts
             print("Generating security summary...")
-            
+
             # Save report
             with open("security-summary.json", "w") as f:
                 json.dump(report, f, indent=2)
-                
+
             print(f"Security scan completed at {report['scan_timestamp']}")
-            
+
         except Exception as e:
             print(f"Error generating report: {e}")
         EOF
@@ -480,28 +480,28 @@ jobs:
         script: |
           const fs = require('fs');
           const report = JSON.parse(fs.readFileSync('security-summary.json', 'utf8'));
-          
+
           const issueBody = `
           ## 🚨 Security Vulnerabilities Detected
-          
+
           **Scan Date:** ${report.scan_timestamp}
           **Branch:** ${report.branch}
           **Commit:** ${report.commit}
-          
+
           ### Summary
           - **Critical:** ${report.summary.critical}
           - **High:** ${report.summary.high}
           - **Medium:** ${report.summary.medium}
           - **Low:** ${report.summary.low}
-          
+
           ### Next Steps
           1. Review detailed scan results in the Actions artifacts
           2. Address critical and high severity issues immediately
           3. Plan remediation for medium and low severity issues
-          
+
           **This issue was automatically created by the security scanning pipeline.**
           `;
-          
+
           github.rest.issues.create({
             owner: context.repo.owner,
             repo: context.repo.repo,

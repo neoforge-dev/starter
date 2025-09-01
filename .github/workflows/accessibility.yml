@@ -16,7 +16,7 @@ jobs:
   accessibility-tests:
     name: Accessibility Testing with axe-core
     runs-on: ubuntu-latest
-    
+
     defaults:
       run:
         working-directory: frontend
@@ -37,7 +37,7 @@ jobs:
         run: bun run build
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       - name: Run accessibility tests
         run: bun run test:a11y
@@ -63,31 +63,31 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            
+
             // Try to read accessibility violations report
             let reportContent = 'Accessibility tests failed. Please check the artifacts for detailed results.';
-            
+
             try {
               const reportPath = path.join('frontend', 'artifacts', 'accessibilityReport.html');
               if (fs.existsSync(reportPath)) {
                 reportContent = `
                 ## ♿ Accessibility Test Results
-                
+
                 ❌ Accessibility violations found. Please review the detailed report in the artifacts.
-                
+
                 ### Quick fixes needed:
                 - Check touch target sizes (minimum 44px)
                 - Verify color contrast ratios (minimum 4.5:1 for text)
                 - Add proper ARIA labels where missing
                 - Ensure keyboard navigation works for all interactive elements
-                
+
                 **View the full report in the workflow artifacts.**
                 `;
               }
             } catch (error) {
               console.log('Could not read accessibility report:', error.message);
             }
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: accessibility-tests
     if: github.event_name == 'pull_request'
-    
+
     defaults:
       run:
         working-directory: frontend
@@ -121,7 +121,7 @@ jobs:
         run: bun run build
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       - name: Run full page audit
         run: bun run test:a11y:audit
@@ -130,7 +130,7 @@ jobs:
         run: |
           echo "## 🔍 Accessibility Audit Summary" > accessibility-summary.md
           echo "" >> accessibility-summary.md
-          
+
           # Count violations from reports if they exist
           if [ -f "artifacts/accessibilityReport.html" ]; then
             echo "✅ Accessibility audit completed" >> accessibility-summary.md
@@ -138,7 +138,7 @@ jobs:
           else
             echo "❌ Accessibility audit failed to generate report" >> accessibility-summary.md
           fi
-          
+
           echo "" >> accessibility-summary.md
           echo "### Key Areas Checked:" >> accessibility-summary.md
           echo "- Color contrast compliance (WCAG AA)" >> accessibility-summary.md
