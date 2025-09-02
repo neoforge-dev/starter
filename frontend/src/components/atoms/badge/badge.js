@@ -1,18 +1,16 @@
-import {
-  LitElement,
-  html,
-  css,
- } from "lit";
+import { html, css } from "lit";
 import { baseStyles } from "../../styles/base.js";
+import { BaseComponent } from "../../base-component.js";
 import "../../atoms/icon/icon.js";
-import { registerComponent } from "../../utils/component-registration.js";
 
 /**
  * Badge component for displaying status, labels, or counts
  * @element neo-badge
  *
  * @prop {string} variant - The variant style of the badge
- * @prop {string} size - The size of the badge
+ * @prop {string} size - The size of the badge (xs, sm, md, lg, xl)
+ *
+ * @fires neo-badge-remove - Fired when the badge is removed
  * @prop {string} icon - Optional icon name to display before the content
  * @prop {boolean} removable - Whether the badge can be removed
  * @prop {boolean} pill - Whether the badge has a pill shape
@@ -20,7 +18,7 @@ import { registerComponent } from "../../utils/component-registration.js";
  * @prop {boolean} rounded - Whether the badge has fully rounded corners
  * @prop {boolean} outlined - Whether the badge has an outlined style
  */
-export class NeoBadge extends LitElement {
+export class NeoBadge extends BaseComponent {
   static properties = {
     variant: { type: String, reflect: true },
     size: { type: String, reflect: true },
@@ -36,7 +34,7 @@ export class NeoBadge extends LitElement {
   constructor() {
     super();
     this.variant = "default";
-    this.size = "medium";
+    this.size = "md";
     this.rounded = false;
     this.outlined = false;
     this.icon = null;
@@ -47,7 +45,11 @@ export class NeoBadge extends LitElement {
   }
 
   _handleRemove() {
-    this.dispatchEvent(new CustomEvent("remove", { bubbles: true }));
+    this.dispatchEvent(new CustomEvent("neo-badge-remove", { 
+      bubbles: true,
+      composed: true,
+      detail: { badge: this }
+    }));
   }
 
   // Override to prevent automatic reflection of properties to attributes
@@ -106,9 +108,9 @@ export class NeoBadge extends LitElement {
           display: inline-flex;
           align-items: center;
           gap: var(--spacing-xs);
-          padding: var(--badge-padding, 0.25rem 0.75rem);
-          border-radius: var(--badge-radius, var(--radius-sm));
-          font-size: var(--badge-font-size, var(--font-size-sm));
+          padding: 0.25rem 0.75rem;
+          border-radius: var(--radius-sm);
+          font-size: var(--font-size-sm);
           font-weight: var(--font-weight-medium);
           line-height: 1.4;
           transition: all var(--transition-fast);
@@ -144,19 +146,30 @@ export class NeoBadge extends LitElement {
         }
 
         /* Sizes */
-        .size-small {
+        .size-xs {
+          padding: 0.0625rem 0.375rem;
+          font-size: var(--font-size-xs);
+          line-height: 1.2;
+        }
+
+        .size-sm {
           padding: 0.125rem 0.5rem;
           font-size: var(--font-size-xs);
         }
 
-        .size-medium {
+        .size-md {
           padding: 0.25rem 0.75rem;
           font-size: var(--font-size-sm);
         }
 
-        .size-large {
+        .size-lg {
           padding: 0.375rem 1rem;
           font-size: var(--font-size-base);
+        }
+
+        .size-xl {
+          padding: 0.5rem 1.25rem;
+          font-size: var(--font-size-lg);
         }
 
         /* Pill shape */
@@ -255,18 +268,12 @@ export class NeoBadge extends LitElement {
           margin-left: calc(var(--spacing-xs) * -1);
         }
 
-        /* Custom Colors */
-        :host([style*="--badge-bg-color"]) .badge:not(.outlined) {
-          background: var(--badge-bg-color);
-        }
-
-        :host([style*="--badge-text-color"]) .badge {
-          color: var(--badge-text-color);
-        }
       `,
     ];
   }
 }
 
 // Register the component
-registerComponent("neo-badge", NeoBadge);
+if (!customElements.get("neo-badge")) {
+  customElements.define("neo-badge", NeoBadge);
+}

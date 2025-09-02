@@ -1,8 +1,5 @@
-import {
-  LitElement,
-  html,
-  css,
- } from 'lit';
+import { html, css } from 'lit';
+import { BaseComponent } from "../../base-component.js";
 import { baseStyles } from "../../styles/base.js";
 
 /**
@@ -22,8 +19,12 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {number} maxLength - Maximum length of input
  * @prop {number} minLength - Minimum length of input
  * @prop {string} name - Input name for form submission
+ * @prop {string} size - Input size (xs, sm, md, lg, xl)
+ *
+ * @fires neo-input - Fired when input value changes
+ * @fires neo-change - Fired when input loses focus with changed value
  */
-export class NeoInput extends LitElement {
+export class NeoInput extends BaseComponent {
   static get properties() {
     return {
       type: { type: String, reflect: true },
@@ -39,6 +40,7 @@ export class NeoInput extends LitElement {
       maxLength: { type: Number },
       minLength: { type: Number },
       name: { type: String },
+      size: { type: String, reflect: true },
       _showPassword: { type: Boolean, state: true },
     };
   }
@@ -77,6 +79,37 @@ export class NeoInput extends LitElement {
           line-height: 1.5;
           transition: all var(--transition-fast);
           box-sizing: border-box;
+        }
+
+        /* Size variations */
+        :host([size="xs"]) input {
+          min-height: 36px;
+          padding: var(--spacing-xs) var(--spacing-sm);
+          font-size: var(--font-size-xs);
+        }
+
+        :host([size="sm"]) input {
+          min-height: 40px;
+          padding: var(--spacing-xs) var(--spacing-sm);
+          font-size: var(--font-size-sm);
+        }
+
+        :host([size="md"]) input {
+          min-height: 44px;
+          padding: var(--spacing-sm);
+          font-size: var(--font-size-base);
+        }
+
+        :host([size="lg"]) input {
+          min-height: 48px;
+          padding: var(--spacing-sm) var(--spacing-md);
+          font-size: var(--font-size-lg);
+        }
+
+        :host([size="xl"]) input {
+          min-height: 52px;
+          padding: var(--spacing-md);
+          font-size: var(--font-size-xl);
         }
 
         input:focus {
@@ -142,6 +175,7 @@ export class NeoInput extends LitElement {
     this.value = "";
     this.disabled = false;
     this.required = false;
+    this.size = "md";
     this._id = `neo-input-${Math.random().toString(36).substr(2, 9)}`;
     this._showPassword = false;
   }

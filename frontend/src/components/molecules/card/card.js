@@ -1,4 +1,5 @@
-import {   LitElement, html, css   } from 'lit';
+import { html, css } from 'lit';
+import { BaseComponent } from "../../base-component.js";
 import { baseStyles } from "../../styles/base.js";
 
 /**
@@ -10,8 +11,11 @@ import { baseStyles } from "../../styles/base.js";
  * @prop {boolean} hoverable - Whether to show hover effects
  * @prop {boolean} clickable - Whether the card is clickable
  * @prop {string} href - URL for clickable cards
+ * @prop {string} size - Card size affects padding and spacing (xs, sm, md, lg, xl)
+ *
+ * @fires neo-card-click - Fired when clickable card is clicked
  */
-export class NeoCard extends LitElement {
+export class NeoCard extends BaseComponent {
   static get properties() {
     return {
       variant: { type: String },
@@ -19,6 +23,7 @@ export class NeoCard extends LitElement {
       hoverable: { type: Boolean },
       clickable: { type: Boolean },
       href: { type: String },
+      size: { type: String, reflect: true },
     };
   }
 
@@ -53,7 +58,7 @@ export class NeoCard extends LitElement {
           box-shadow: var(--shadow-md);
         }
 
-        /* Padding */
+        /* Padding - Legacy support */
         .card.padding-none {
           padding: 0;
         }
@@ -68,6 +73,32 @@ export class NeoCard extends LitElement {
 
         .card.padding-lg {
           padding: 24px;
+        }
+
+        /* Size variations */
+        :host([size="xs"]) .card {
+          padding: 8px;
+          border-radius: var(--radius-sm);
+        }
+
+        :host([size="sm"]) .card {
+          padding: 12px;
+          border-radius: var(--radius-sm);
+        }
+
+        :host([size="md"]) .card {
+          padding: 16px;
+          border-radius: var(--radius-md);
+        }
+
+        :host([size="lg"]) .card {
+          padding: 24px;
+          border-radius: var(--radius-lg);
+        }
+
+        :host([size="xl"]) .card {
+          padding: 32px;
+          border-radius: var(--radius-xl);
         }
 
         /* Hover effects */
@@ -120,6 +151,17 @@ export class NeoCard extends LitElement {
     this.hoverable = false;
     this.clickable = false;
     this.href = "";
+    this.size = "md";
+  }
+
+  _handleClick(e) {
+    if (this.clickable) {
+      this.dispatchEvent(new CustomEvent('neo-card-click', {
+        bubbles: true,
+        composed: true,
+        detail: { originalEvent: e, card: this }
+      }));
+    }
   }
 
   render() {
@@ -145,6 +187,7 @@ export class NeoCard extends LitElement {
             href=${this.href}
             role="article"
             tabindex="0"
+            @click="${this._handleClick}"
           >
             ${content}
           </a>
@@ -154,6 +197,7 @@ export class NeoCard extends LitElement {
             class=${cardClasses.trim()}
             role="article"
             tabindex=${this.clickable ? "0" : "-1"}
+            @click="${this.clickable ? this._handleClick : null}"
           >
             ${content}
           </div>

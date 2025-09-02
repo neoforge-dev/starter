@@ -304,15 +304,20 @@ describe("NeoBadge", () => {
     expect(element._badgeElement.className).toContain("disabled");
   });
 
-  it("should dispatch remove event when close button is clicked", () => {
+  it("should dispatch neo-badge-remove event when close button is clicked", () => {
     element.removable = true;
 
     const removeSpy = vi.fn();
-    element.addEventListener("remove", removeSpy);
+    element.addEventListener("neo-badge-remove", removeSpy);
 
     element._handleRemove();
 
     expect(removeSpy).toHaveBeenCalled();
+    expect(removeSpy).toHaveBeenCalledWith(expect.objectContaining({
+      detail: expect.objectContaining({
+        badge: element
+      })
+    }));
   });
 
   it("should update multiple properties at once", () => {

@@ -82,10 +82,10 @@ describe("NeoInput", () => {
     expect(typeof proto.checkValidity).toBe("function");
   });
 
-  it("should extend from LitElement", () => {
-    // Check if the component extends LitElement by checking its source code
+  it("should extend from BaseComponent", () => {
+    // Check if the component extends BaseComponent by checking its source code
     const componentString = NeoInput.toString();
-    expect(componentString.includes("extends LitElement")).toBe(true);
+    expect(componentString.includes("extends BaseComponent")).toBe(true);
   });
 
   it("should have styles defined", () => {

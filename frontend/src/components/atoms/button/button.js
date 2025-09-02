@@ -7,7 +7,7 @@ import { BaseComponent } from "../../base-component.js";
  * @element neo-button
  *
  * @prop {string} variant - The variant style of the button (primary, secondary, tertiary, danger, ghost)
- * @prop {string} size - The size of the button (sm, md, lg)
+ * @prop {string} size - The size of the button (xs, sm, md, lg, xl)
  * @prop {string} type - The type of the button (button, submit, reset)
  * @prop {boolean} disabled - Whether the button is disabled
  * @prop {boolean} loading - Whether the button is in a loading state
@@ -65,9 +65,16 @@ export class NeoButton extends BaseComponent {
         }
 
         /* Sizes - All meet WCAG AA touch target minimum of 44px */
+        .size-xs {
+          min-height: 32px;
+          height: 32px;
+          padding: 0 var(--spacing-xs);
+          font-size: var(--font-size-xs);
+        }
+
         .size-sm {
-          min-height: 44px;
-          height: 44px;
+          min-height: 36px;
+          height: 36px;
           padding: 0 var(--spacing-sm);
           font-size: var(--font-size-sm);
         }
@@ -84,6 +91,13 @@ export class NeoButton extends BaseComponent {
           height: 48px;
           padding: 0 var(--spacing-lg);
           font-size: var(--font-size-lg);
+        }
+
+        .size-xl {
+          min-height: 52px;
+          height: 52px;
+          padding: 0 var(--spacing-xl);
+          font-size: var(--font-size-xl);
         }
 
         /* Variants */
