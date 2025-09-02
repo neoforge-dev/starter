@@ -16,3 +16,4 @@ export * from "./badge-counter/index.js";
 export * from "./cta-button-row/index.js";
 export * from "./navigation-link/index.js";
 export * from "./select-dropdown/index.js";
+export * from "./filter-bar/filter-bar.js";

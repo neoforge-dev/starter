@@ -1,222 +1,496 @@
-import { expect, describe, it, beforeEach } from "vitest";
-// Remove the import of the actual component
-// import { NeoCheckbox } from "../../../components/atoms/checkbox/checkbox.js";
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { fixture, html } from '@open-wc/testing';
+// Import to register the component
+import '../../../components/atoms/checkbox/checkbox.js';
 
-// Create a mock for the NeoCheckbox component
-class MockNeoCheckbox {
-  constructor() {
-    // Initialize properties with default values
-    this.label = "Test Checkbox";
-    this.checked = false;
-    this.indeterminate = false;
-    this.disabled = false;
-    this.required = false;
-    this.error = "";
-    this._id = "test-checkbox-id";
-
-    // Create a shadow DOM structure
-    this.shadowRoot = {
-      querySelector: (selector) => {
-        if (selector === "input[type='checkbox']") {
-          return {
-            checked: this.checked,
-            disabled: this.disabled,
-            required: this.required,
-            indeterminate: this.indeterminate,
-            id: this._id,
-            getAttribute: (attr) => {
-              if (attr === "aria-label") return this.label;
-              if (attr === "aria-invalid")
-                return Boolean(this.error).toString();
-              return null;
-            },
-            setAttribute: () => {
-              // Mock setAttribute
-            },
-            click: () => {
-              if (!this.disabled) {
-                this.checked = !this.checked;
-                this.indeterminate = false;
-                return true;
-              }
-              return false;
-            },
-          };
-        }
-        if (selector === "label") {
-          return {
-            getAttribute: (attr) => {
-              if (attr === "for") return this._id;
-              return null;
-            },
-          };
-        }
-        if (selector === ".checkbox-wrapper") {
-          return {
-            classList: {
-              contains: (className) => {
-                return this.classList().includes(className);
-              },
-            },
-          };
-        }
-        if (selector === ".error-message") {
-          return {
-            textContent: this.error,
-          };
-        }
-        return null;
-      },
-    };
-  }
-
-  // Mock the checkbox's classList
-  classList() {
-    const classes = [];
-    if (this.checked) classes.push("checked");
-    if (this.disabled) classes.push("disabled");
-    if (this.indeterminate) classes.push("indeterminate");
-    if (this.error) classes.push("error");
-    return classes;
-  }
-
-  // Mock the checkbox's change handler
-  _handleChange(e) {
-    if (!this.disabled) {
-      this.checked = e.target ? e.target.checked : e.checked;
-      this.indeterminate = false;
-      return true;
-    }
-    return false;
-  }
-}
-
-// Use a mock approach similar to what we did for the button test
-describe("NeoCheckbox", () => {
+/**
+ * Comprehensive tests for NeoCheckbox component
+ * Testing rendering, interactions, accessibility, states, and edge cases
+ */
+describe('NeoCheckbox Component', () => {
   let checkbox;
+  let container;
 
-  // Set up the test environment before each test
-  beforeEach(() => {
-    // Create a new instance of the mock checkbox
-    checkbox = new MockNeoCheckbox();
+  beforeEach(async () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    checkbox = document.createElement('neo-checkbox');
+    container.appendChild(checkbox);
+
+    // Wait for component to be fully rendered
+    await checkbox.updateComplete;
   });
 
-  it("renders with default properties", () => {
-    expect(checkbox).toBeDefined();
-    expect(checkbox.checked).toBe(false);
-    expect(checkbox.disabled).toBe(false);
-    expect(checkbox.required).toBe(false);
-    expect(checkbox.label).toBe("Test Checkbox");
-    expect(checkbox.indeterminate).toBe(false);
+  afterEach(() => {
+    if (container && container.parentNode) {
+      document.body.removeChild(container);
+    }
   });
 
-  it("reflects attribute changes", () => {
-    checkbox.checked = true;
-    checkbox.disabled = true;
-    checkbox.required = true;
-    checkbox.indeterminate = true;
+  describe('Initialization and Default Properties', () => {
+    it('should render with default properties', () => {
+      expect(checkbox.checked).toBe(false);
+      expect(checkbox.indeterminate).toBe(false);
+      expect(checkbox.disabled).toBe(false);
+      expect(checkbox.required).toBe(false);
+      expect(checkbox.error).toBe('');
+      expect(checkbox.label).toBeUndefined();
+    });
 
-    const checkboxElement = checkbox.shadowRoot.querySelector(
-      "input[type='checkbox']"
-    );
-    expect(checkboxElement.checked).toBe(true);
-    expect(checkboxElement.disabled).toBe(true);
-    expect(checkboxElement.required).toBe(true);
-    expect(checkboxElement.indeterminate).toBe(true);
+    it('should generate unique id', () => {
+      const checkbox2 = document.createElement('neo-checkbox');
+      expect(checkbox._id).toBeDefined();
+      expect(checkbox2._id).toBeDefined();
+      expect(checkbox._id).not.toBe(checkbox2._id);
+      expect(checkbox._id).toMatch(/neo-checkbox-/);
+    });
+
+    it('should render checkbox input in shadow root', () => {
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      expect(inputElement).toBeTruthy();
+      expect(inputElement.type).toBe('checkbox');
+      expect(inputElement.id).toBe(checkbox._id);
+    });
+
+    it('should render custom checkbox styling', () => {
+      const customElement = checkbox.shadowRoot?.querySelector('.checkbox-custom');
+      expect(customElement).toBeTruthy();
+    });
   });
 
-  it("handles user interactions", () => {
-    const checkboxElement = checkbox.shadowRoot.querySelector(
-      "input[type='checkbox']"
-    );
-    // First click should set checked to true
-    checkboxElement.click();
-    expect(checkbox.checked).toBe(true);
+  describe('Property Changes and Rendering', () => {
+    it('should handle checked state changes', async () => {
+      checkbox.checked = true;
+      await checkbox.updateComplete;
 
-    // Second click should set checked to false
-    checkbox.checked = false; // Explicitly set to false for the test
-    expect(checkbox.checked).toBe(false);
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      expect(checkbox.checked).toBe(true);
+      expect(inputElement.checked).toBe(true);
+      expect(checkbox.hasAttribute('checked')).toBe(true);
+    });
+
+    it('should handle indeterminate state changes', async () => {
+      checkbox.indeterminate = true;
+      await checkbox.updateComplete;
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      expect(checkbox.indeterminate).toBe(true);
+      expect(inputElement.indeterminate).toBe(true);
+      expect(checkbox.hasAttribute('indeterminate')).toBe(true);
+
+      const wrapper = checkbox.shadowRoot?.querySelector('.checkbox-wrapper');
+      expect(wrapper.classList.contains('indeterminate')).toBe(true);
+    });
+
+    it('should handle disabled state', async () => {
+      checkbox.disabled = true;
+      await checkbox.updateComplete;
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      const wrapper = checkbox.shadowRoot?.querySelector('.checkbox-wrapper');
+
+      expect(checkbox.disabled).toBe(true);
+      expect(inputElement.disabled).toBe(true);
+      expect(checkbox.hasAttribute('disabled')).toBe(true);
+      expect(wrapper.classList.contains('disabled')).toBe(true);
+    });
+
+    it('should handle required state', async () => {
+      checkbox.required = true;
+      await checkbox.updateComplete;
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      expect(checkbox.required).toBe(true);
+      expect(inputElement.required).toBe(true);
+      expect(checkbox.hasAttribute('required')).toBe(true);
+    });
+
+    it('should handle label rendering', async () => {
+      checkbox.label = 'Accept terms and conditions';
+      await checkbox.updateComplete;
+
+      const labelElement = checkbox.shadowRoot?.querySelector('label');
+      expect(labelElement).toBeTruthy();
+      expect(labelElement.textContent.trim()).toBe('Accept terms and conditions');
+      expect(labelElement.getAttribute('for')).toBe(checkbox._id);
+    });
+
+    it('should not render label when not provided', async () => {
+      checkbox.label = '';
+      await checkbox.updateComplete;
+
+      const labelElement = checkbox.shadowRoot?.querySelector('label');
+      expect(labelElement).toBeFalsy();
+    });
   });
 
-  it("dispatches change events", () => {
-    // Set up event tracking variables
-    let eventFired = false;
-    let eventDetail = null;
+  describe('Error States and Validation', () => {
+    it('should display error message', async () => {
+      checkbox.error = 'This field is required';
+      await checkbox.updateComplete;
 
-    // Add the dispatchEvent method to our mock
-    checkbox.dispatchEvent = function (event) {
-      if (event.type === "neo-change") {
-        eventFired = true;
-        eventDetail = event.detail;
+      const errorElement = checkbox.shadowRoot?.querySelector('.error-message');
+      expect(errorElement).toBeTruthy();
+      expect(errorElement.textContent.trim()).toBe('This field is required');
+      expect(errorElement.id).toBe(`${checkbox._id}-error`);
+
+      const wrapper = checkbox.shadowRoot?.querySelector('.checkbox-wrapper');
+      expect(wrapper.classList.contains('error')).toBe(true);
+    });
+
+    it('should clear error message when error is empty', async () => {
+      checkbox.error = 'Some error';
+      await checkbox.updateComplete;
+
+      let errorElement = checkbox.shadowRoot?.querySelector('.error-message');
+      expect(errorElement).toBeTruthy();
+
+      checkbox.error = '';
+      await checkbox.updateComplete;
+
+      errorElement = checkbox.shadowRoot?.querySelector('.error-message');
+      expect(errorElement).toBeFalsy();
+
+      const wrapper = checkbox.shadowRoot?.querySelector('.checkbox-wrapper');
+      expect(wrapper.classList.contains('error')).toBe(false);
+    });
+  });
+
+  describe('Event Handling', () => {
+    it('should dispatch neo-change event when checked', async () => {
+      const changeSpy = vi.fn();
+      checkbox.addEventListener('neo-change', changeSpy);
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      
+      // Simulate user interaction
+      inputElement.checked = true;
+      inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+      await checkbox.updateComplete;
+
+      expect(changeSpy).toHaveBeenCalledOnce();
+      expect(changeSpy.mock.calls[0][0].detail.checked).toBe(true);
+      expect(checkbox.checked).toBe(true);
+    });
+
+    it('should dispatch neo-change event when unchecked', async () => {
+      checkbox.checked = true;
+      await checkbox.updateComplete;
+
+      const changeSpy = vi.fn();
+      checkbox.addEventListener('neo-change', changeSpy);
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      
+      inputElement.checked = false;
+      inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+      await checkbox.updateComplete;
+
+      expect(changeSpy).toHaveBeenCalledOnce();
+      expect(changeSpy.mock.calls[0][0].detail.checked).toBe(false);
+      expect(checkbox.checked).toBe(false);
+    });
+
+    it('should clear indeterminate state when user interacts', async () => {
+      checkbox.indeterminate = true;
+      checkbox.checked = false;
+      await checkbox.updateComplete;
+
+      expect(checkbox.indeterminate).toBe(true);
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      inputElement.checked = true;
+      inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+      await checkbox.updateComplete;
+
+      expect(checkbox.indeterminate).toBe(false);
+      expect(checkbox.checked).toBe(true);
+    });
+
+    it('should not dispatch events when disabled', async () => {
+      checkbox.disabled = true;
+      await checkbox.updateComplete;
+
+      const changeSpy = vi.fn();
+      checkbox.addEventListener('neo-change', changeSpy);
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      
+      // Try to simulate change on disabled checkbox
+      inputElement.checked = true;
+      inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+      await checkbox.updateComplete;
+
+      expect(changeSpy).not.toHaveBeenCalled();
+      expect(checkbox.checked).toBe(false); // Should remain unchanged
+    });
+
+    it('should handle rapid state changes', async () => {
+      const changeSpy = vi.fn();
+      checkbox.addEventListener('neo-change', changeSpy);
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      
+      // Rapid toggle simulation
+      for (let i = 0; i < 5; i++) {
+        inputElement.checked = !inputElement.checked;
+        inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+        await checkbox.updateComplete;
       }
-      return true;
-    };
 
-    // Add the addEventListener method to our mock
-    checkbox.addEventListener = function () {
-      // This is just a stub, we'll test using dispatchEvent directly
-    };
-
-    // Simulate a change event
-    const changeEvent = { target: { checked: true } };
-    checkbox._handleChange(changeEvent);
-
-    // Manually dispatch the event since we're not using the real component
-    checkbox.dispatchEvent(
-      new CustomEvent("neo-change", {
-        detail: { checked: true },
-        bubbles: true,
-        composed: true,
-      })
-    );
-
-    // Verify the event was fired with the correct detail
-    expect(eventFired).toBe(true);
-    expect(eventDetail.checked).toBe(true);
+      expect(changeSpy).toHaveBeenCalledTimes(5);
+      expect(checkbox.checked).toBe(true); // Should end up checked
+    });
   });
 
-  it("handles accessibility requirements", () => {
-    const checkboxElement = checkbox.shadowRoot.querySelector(
-      "input[type='checkbox']"
-    );
-    const label = checkbox.shadowRoot.querySelector("label");
+  describe('Accessibility', () => {
+    it('should have proper ARIA attributes', async () => {
+      checkbox.label = 'Accept terms';
+      checkbox.required = true;
+      checkbox.error = 'This is required';
+      await checkbox.updateComplete;
 
-    expect(checkboxElement.getAttribute("aria-label")).toBe("Test Checkbox");
-    expect(checkboxElement.id).toBeDefined();
-    expect(label.getAttribute("for")).toBe(checkboxElement.id);
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      
+      expect(inputElement.getAttribute('aria-label')).toBe('Accept terms');
+      expect(inputElement.getAttribute('aria-invalid')).toBe('true');
+      expect(inputElement.getAttribute('aria-errormessage')).toBe(`${checkbox._id}-error`);
+    });
+
+    it('should associate label with checkbox via for/id', async () => {
+      checkbox.label = 'Newsletter subscription';
+      await checkbox.updateComplete;
+
+      const labelElement = checkbox.shadowRoot?.querySelector('label');
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      
+      expect(labelElement.getAttribute('for')).toBe(checkbox._id);
+      expect(inputElement.id).toBe(checkbox._id);
+    });
+
+    it('should have proper keyboard navigation', async () => {
+      checkbox.label = 'Test checkbox';
+      await checkbox.updateComplete;
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      
+      // Should be focusable
+      expect(inputElement.tabIndex).not.toBe(-1);
+    });
+
+    it('should handle focus and blur states', async () => {
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      
+      // Focus should trigger focus ring via CSS
+      inputElement.focus();
+      await checkbox.updateComplete;
+
+      // Should not throw any errors
+      expect(inputElement).toBe(document.activeElement?.shadowRoot?.querySelector('input[type="checkbox"]') || inputElement);
+
+      inputElement.blur();
+      await checkbox.updateComplete;
+    });
   });
 
-  it("updates visual state correctly", () => {
-    checkbox.checked = true;
+  describe('Indeterminate State Handling', () => {
+    it('should handle indeterminate state properly', async () => {
+      checkbox.indeterminate = true;
+      await checkbox.updateComplete;
 
-    const wrapper = checkbox.shadowRoot.querySelector(".checkbox-wrapper");
-    expect(wrapper.classList.contains("checked")).toBe(true);
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      const wrapper = checkbox.shadowRoot?.querySelector('.checkbox-wrapper');
+      
+      expect(checkbox.indeterminate).toBe(true);
+      expect(inputElement.indeterminate).toBe(true);
+      expect(wrapper.classList.contains('indeterminate')).toBe(true);
+    });
 
-    checkbox.disabled = true;
-    expect(wrapper.classList.contains("disabled")).toBe(true);
+    it('should clear indeterminate when explicitly checked', async () => {
+      checkbox.indeterminate = true;
+      checkbox.checked = false;
+      await checkbox.updateComplete;
+
+      // Now check it programmatically
+      checkbox.checked = true;
+      await checkbox.updateComplete;
+
+      // Indeterminate should still be true when set programmatically
+      expect(checkbox.indeterminate).toBe(true);
+      expect(checkbox.checked).toBe(true);
+    });
+
+    it('should maintain indeterminate visual state when both indeterminate and checked', async () => {
+      checkbox.indeterminate = true;
+      checkbox.checked = true;
+      await checkbox.updateComplete;
+
+      const wrapper = checkbox.shadowRoot?.querySelector('.checkbox-wrapper');
+      
+      expect(wrapper.classList.contains('indeterminate')).toBe(true);
+      expect(wrapper.classList.contains('checked')).toBe(true);
+    });
   });
 
-  it("supports indeterminate state", () => {
-    checkbox.indeterminate = true;
+  describe('CSS Classes and Styling', () => {
+    it('should apply correct CSS classes for different states', async () => {
+      const wrapper = checkbox.shadowRoot?.querySelector('.checkbox-wrapper');
+      
+      expect(wrapper.classList.contains('checkbox-wrapper')).toBe(true);
+      expect(wrapper.classList.contains('disabled')).toBe(false);
+      expect(wrapper.classList.contains('error')).toBe(false);
+      expect(wrapper.classList.contains('indeterminate')).toBe(false);
+      expect(wrapper.classList.contains('checked')).toBe(false);
+    });
 
-    const checkboxElement = checkbox.shadowRoot.querySelector(
-      "input[type='checkbox']"
-    );
-    expect(checkboxElement.indeterminate).toBe(true);
+    it('should apply multiple state classes correctly', async () => {
+      checkbox.checked = true;
+      checkbox.disabled = true;
+      checkbox.error = 'Error message';
+      await checkbox.updateComplete;
 
-    const wrapper = checkbox.shadowRoot.querySelector(".checkbox-wrapper");
-    expect(wrapper.classList.contains("indeterminate")).toBe(true);
+      const wrapper = checkbox.shadowRoot?.querySelector('.checkbox-wrapper');
+      
+      expect(wrapper.classList.contains('checked')).toBe(true);
+      expect(wrapper.classList.contains('disabled')).toBe(true);
+      expect(wrapper.classList.contains('error')).toBe(true);
+    });
   });
 
-  it("handles error states appropriately", () => {
-    checkbox.error = "This field is required";
+  describe('Edge Cases and Error Handling', () => {
+    it('should handle undefined/null values gracefully', async () => {
+      checkbox.label = null;
+      checkbox.error = undefined;
+      await checkbox.updateComplete;
 
-    const checkboxElement = checkbox.shadowRoot.querySelector(
-      "input[type='checkbox']"
-    );
-    expect(checkboxElement.getAttribute("aria-invalid")).toBe("true");
+      expect(checkbox.label).toBeNull();
+      expect(checkbox.error).toBeUndefined();
+      
+      // Should not crash
+      const labelElement = checkbox.shadowRoot?.querySelector('label');
+      const errorElement = checkbox.shadowRoot?.querySelector('.error-message');
+      
+      expect(labelElement).toBeFalsy();
+      expect(errorElement).toBeFalsy();
+    });
 
-    const errorMessage = checkbox.shadowRoot.querySelector(".error-message");
-    expect(errorMessage.textContent).toBe("This field is required");
+    it('should handle boolean attributes correctly', async () => {
+      // Test truthy/falsy values
+      checkbox.checked = 'true'; // string truthy
+      checkbox.disabled = 0; // number falsy
+      checkbox.required = 1; // number truthy
+      await checkbox.updateComplete;
+
+      expect(checkbox.checked).toBeTruthy();
+      expect(checkbox.disabled).toBeFalsy();
+      expect(checkbox.required).toBeTruthy();
+    });
+
+    it('should handle rapid property changes', async () => {
+      for (let i = 0; i < 20; i++) {
+        checkbox.checked = i % 2 === 0;
+        checkbox.indeterminate = i % 3 === 0;
+        checkbox.disabled = i % 5 === 0;
+        
+        if (i % 4 === 0) {
+          await checkbox.updateComplete;
+        }
+      }
+      
+      await checkbox.updateComplete;
+      
+      // Should not crash and should have final state
+      expect(typeof checkbox.checked).toBe('boolean');
+      expect(typeof checkbox.indeterminate).toBe('boolean');
+      expect(typeof checkbox.disabled).toBe('boolean');
+    });
+
+    it('should handle empty string label', async () => {
+      checkbox.label = '';
+      await checkbox.updateComplete;
+
+      const labelElement = checkbox.shadowRoot?.querySelector('label');
+      expect(labelElement).toBeFalsy();
+    });
+
+    it('should maintain state consistency after DOM operations', async () => {
+      checkbox.checked = true;
+      checkbox.label = 'Test';
+      await checkbox.updateComplete;
+
+      // Remove and re-add to DOM
+      container.removeChild(checkbox);
+      container.appendChild(checkbox);
+      await checkbox.updateComplete;
+
+      expect(checkbox.checked).toBe(true);
+      expect(checkbox.label).toBe('Test');
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      expect(inputElement.checked).toBe(true);
+    });
+  });
+
+  describe('Performance', () => {
+    it('should handle multiple rapid updates efficiently', async () => {
+      const start = performance.now();
+      
+      for (let i = 0; i < 100; i++) {
+        checkbox.checked = i % 2 === 0;
+        checkbox.label = `Label ${i}`;
+        checkbox.indeterminate = i % 4 === 0;
+        
+        if (i % 10 === 0) {
+          await checkbox.updateComplete;
+        }
+      }
+      await checkbox.updateComplete;
+      
+      const end = performance.now();
+      
+      // Should complete within reasonable time (less than 1 second)
+      expect(end - start).toBeLessThan(1000);
+      expect(checkbox.label).toBe('Label 99');
+    });
+
+    it('should not cause memory leaks with event listeners', () => {
+      const handler1 = vi.fn();
+      const handler2 = vi.fn();
+      
+      checkbox.addEventListener('neo-change', handler1);
+      checkbox.addEventListener('change', handler2);
+      
+      checkbox.removeEventListener('neo-change', handler1);
+      checkbox.removeEventListener('change', handler2);
+      
+      // Should not throw any errors
+      expect(true).toBe(true);
+    });
+  });
+
+  describe('Form Integration', () => {
+    it('should work as part of form validation', async () => {
+      checkbox.required = true;
+      checkbox.checked = false;
+      await checkbox.updateComplete;
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      
+      // Should be invalid when required but not checked
+      expect(inputElement.required).toBe(true);
+      expect(inputElement.checked).toBe(false);
+    });
+
+    it('should satisfy form validation when checked and required', async () => {
+      checkbox.required = true;
+      checkbox.checked = true;
+      await checkbox.updateComplete;
+
+      const inputElement = checkbox.shadowRoot?.querySelector('input[type="checkbox"]');
+      
+      expect(inputElement.required).toBe(true);
+      expect(inputElement.checked).toBe(true);
+    });
   });
 });

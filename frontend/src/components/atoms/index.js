@@ -14,3 +14,7 @@ export * from "./avatar/avatar.js";
 export * from "./switch/switch.js";
 export * from "./heading/heading.js";
 export * from "./divider/divider.js";
+export * from "./textarea/textarea.js";
+export * from "./slider/slider.js";
+export * from "./skeleton/skeleton.js";
+export * from "./progress/progress-bar.js";

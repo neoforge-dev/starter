@@ -1,0 +1,1 @@
+export { NeoSlider } from "./slider.js";
