@@ -1,0 +1,181 @@
+{
+  "timestamp": "2025-09-02T08:23:41.408Z",
+  "performance": "poor",
+  "totalSize": 86986,
+  "gzipSize": 28730,
+  "assets": [
+    {
+      "name": "vendor-lit.BHrtwKmk.js",
+      "path": "dist/assets/vendor-lit.BHrtwKmk.js",
+      "type": "js",
+      "size": 28268,
+      "gzipSize": 9693,
+      "category": "vendor"
+    },
+    {
+      "name": "app-base.l0sNRNKZ.js",
+      "path": "dist/assets/app-base.l0sNRNKZ.js",
+      "type": "js",
+      "size": 1,
+      "gzipSize": 21,
+      "category": "other"
+    },
+    {
+      "name": "services-pwa.DqhNjeiW.js",
+      "path": "dist/assets/services-pwa.DqhNjeiW.js",
+      "type": "js",
+      "size": 7708,
+      "gzipSize": 2349,
+      "category": "services"
+    },
+    {
+      "name": "services-api.l0sNRNKZ.js",
+      "path": "dist/assets/services-api.l0sNRNKZ.js",
+      "type": "js",
+      "size": 1,
+      "gzipSize": 21,
+      "category": "services"
+    },
+    {
+      "name": "global.DzqjHamx.css",
+      "path": "dist/assets/global.DzqjHamx.css",
+      "type": "css",
+      "size": 7546,
+      "gzipSize": 1994,
+      "category": "other"
+    },
+    {
+      "name": "components-other.DeMuyK5h.css",
+      "path": "dist/assets/components-other.DeMuyK5h.css",
+      "type": "css",
+      "size": 943,
+      "gzipSize": 474,
+      "category": "other"
+    },
+    {
+      "name": "components-other.B1UpVyyl.js",
+      "path": "dist/assets/components-other.B1UpVyyl.js",
+      "type": "js",
+      "size": 4203,
+      "gzipSize": 1418,
+      "category": "other"
+    },
+    {
+      "name": "services-other.BIfCljNx.js",
+      "path": "dist/assets/services-other.BIfCljNx.js",
+      "type": "js",
+      "size": 7535,
+      "gzipSize": 2342,
+      "category": "services"
+    },
+    {
+      "name": "main.DWbBIOql.js",
+      "path": "dist/assets/main.DWbBIOql.js",
+      "type": "js",
+      "size": 15578,
+      "gzipSize": 6030,
+      "category": "main"
+    },
+    {
+      "name": "app-core.BVtohPIF.js",
+      "path": "dist/assets/app-core.BVtohPIF.js",
+      "type": "js",
+      "size": 13975,
+      "gzipSize": 3830,
+      "category": "core"
+    },
+    {
+      "name": "utils.D1o3QQbi.js",
+      "path": "dist/assets/utils.D1o3QQbi.js",
+      "type": "js",
+      "size": 1227,
+      "gzipSize": 537,
+      "category": "utils"
+    },
+    {
+      "name": "services-auth.l0sNRNKZ.js",
+      "path": "dist/assets/services-auth.l0sNRNKZ.js",
+      "type": "js",
+      "size": 1,
+      "gzipSize": 21,
+      "category": "services"
+    }
+  ],
+  "violations": [
+    {
+      "type": "total_js_size",
+      "severity": "high",
+      "message": "Total JS size 76.66 KB exceeds target 50 KB by 53%",
+      "excess": 27297,
+      "target": 51200,
+      "actual": 78497
+    },
+    {
+      "type": "total_css_size",
+      "severity": "medium",
+      "message": "Total CSS size 8.29 KB exceeds target 5 KB by 66%",
+      "excess": 3369,
+      "target": 5120,
+      "actual": 8489
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "js_optimization",
+      "priority": "high",
+      "message": "Consider code splitting, tree shaking, or component lazy loading",
+      "potentialSavings": 8189
+    },
+    {
+      "type": "css_optimization",
+      "priority": "medium",
+      "message": "Consider CSS purging, critical CSS extraction, or component-specific styles",
+      "potentialSavings": 1348
+    }
+  ],
+  "comparison": null,
+  "totals": {
+    "js": {
+      "size": 78497,
+      "gzipSize": 26262,
+      "count": 10
+    },
+    "css": {
+      "size": 8489,
+      "gzipSize": 2468,
+      "count": 2
+    },
+    "categories": {
+      "vendor": {
+        "size": 28268,
+        "gzipSize": 9693,
+        "count": 1
+      },
+      "main": {
+        "size": 15578,
+        "gzipSize": 6030,
+        "count": 1
+      },
+      "core": {
+        "size": 13975,
+        "gzipSize": 3830,
+        "count": 1
+      },
+      "services": {
+        "size": 15245,
+        "gzipSize": 4733,
+        "count": 4
+      },
+      "other": {
+        "size": 12693,
+        "gzipSize": 3907,
+        "count": 4
+      },
+      "utils": {
+        "size": 1227,
+        "gzipSize": 537,
+        "count": 1
+      }
+    }
+  }
+}
