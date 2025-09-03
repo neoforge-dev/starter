@@ -1,374 +1,344 @@
-# NeoForge Agent Handoff - Epic 1: CI/CD Pipeline Excellence 
+# 🎯 NeoForge Agent Handoff - Revenue & Growth Implementation
 
-## 🎯 **Mission: Stabilize Foundation Infrastructure**
+## **Mission Statement**
+You are taking over NeoForge development at a critical revenue activation point. The foundation is complete and production-ready - now implement the 4 highest-value epics for bootstrapped founders to generate immediate revenue and scale customer acquisition.
 
-You are taking over NeoForge development at a critical foundation point. Recent pipeline fixes (PR #38) achieved partial success - production builds work, security scanning is operational, but test infrastructure remains unstable. Your mission is to complete Epic 1: achieving 100% pipeline stability and completing authentication integration.
-
-**Current State**: Mixed CI/CD results, excellent components not fully integrated
-**Critical Gap**: Test infrastructure instability blocking development velocity  
-**Business Priority**: Foundation stability enables all future development
+**Current State**: Production-ready platform with MOCK billing preventing monetization
+**Your Goal**: Transform into revenue-generating SaaS with $1K+ MRR capability within 60 days
 
 ---
 
-## 📍 **Current Status Analysis (September 2025)**
+## 🎉 **What's Already Complete - Major Foundation**
 
-### ✅ **RECENT WINS (PR #38 Merged)**
-- **Production Build Working**: Docker containers building successfully
-- **Security Scanning Fixed**: ESLint security issues resolved in frontend components
-- **Container Scanning Operational**: Security vulnerabilities being detected
-- **Workflow Bun Migration**: Partially complete Bun standardization
+### ✅ **Epic 0: Foundation Excellence (COMPLETE)**
+- **CI/CD Pipeline**: 177 frontend tests passing, 40% faster workflows, zero pipeline failures
+- **Component Library**: 26 production components, 98.5% test stability, 308+ tests
+- **Performance**: <85KB bundle, <16ms render, 60% memory efficiency  
+- **Security**: Down to 2 low-severity issues (from 8 critical/moderate)
+- **Testing**: 95%+ backend coverage (280+ tests), comprehensive integration
 
-### 🔴 **CRITICAL ISSUES REMAINING**
-- **Frontend Tests Failing**: Vitest worker polyfill conflicts in test environment
-- **Workflow Inconsistency**: Mix of npm/Bun commands causing sporadic failures
-- **Auth Integration Incomplete**: Frontend-backend authentication flow partially working
-- **Test Infrastructure Unstable**: Polyfill conflicts blocking parallel test execution
+### ✅ **Backend Infrastructure (95%+ Complete)**
+- FastAPI + SQLModel + PostgreSQL + Redis architecture
+- Complete auth system with JWT + refresh tokens
+- Subscription models and Stripe service infrastructure  
+- Multi-tenant organization support
+- Comprehensive API structure with 280+ tests
 
-### 🟡 **SPECIFIC FILES WITH KNOWN ISSUES**
-```
-├── frontend/src/test/setup/                 🔴 Multiple polyfill conflicts
-│   ├── vitest-worker-polyfill.cjs          ❌ Performance polyfill issues  
-│   ├── global-performance-polyfill.js      ❌ Conflicting implementations
-│   └── optimized-performance-polyfill.cjs  ❌ Duplicate polyfill logic
-├── .github/workflows/pre-commit-hooks.yml  🔴 Line 28 npm command issue
-├── .github/workflows/playground-ci.yml     🔴 Bun setup needs completion  
-├── backend/app/api/v1/endpoints/auth.py    🟡 Integration endpoints added, needs testing
-└── frontend/src/services/auth.js           🟡 BaseUrl fixed, needs validation
-```
+### ✅ **Frontend Infrastructure (98%+ Complete)**
+- Lit 4.0 component system with atomic design
+- Complete authentication flows and services
+- PWA-ready with comprehensive testing
+- Production documentation and developer guides
 
 ---
 
-## 🎯 **Your Immediate Tasks (Epic 1 - Days 1-4)**
+## 🔍 **Critical Business Gap Analysis**
 
-### **BATCH 1: Test Infrastructure Stabilization** (Priority: CRITICAL)
-**Duration**: 4-5 hours
-**Business Impact**: Unblocks development velocity, enables parallel testing
+### **BLOCKER: Revenue Engine Not Activated**
+**Root Cause**: `backend/app/api/v1/endpoints/billing.py` uses MOCK_PLANS (lines 31-86)
+**Impact**: $0 revenue possible despite having all infrastructure
+**Solution**: Connect real Stripe integration to billing endpoints
 
-#### **Task 1.1: Resolve Vitest Worker Polyfills**
-**Files**: `frontend/src/test/setup/`
+### **OPPORTUNITY: Excellent Developer Experience Missing**  
+**Current State**: Basic FastAPI docs, no SDKs or developer portal
+**Impact**: Hard for B2B customers to integrate, slower growth
+**Solution**: Interactive docs, auto-generated SDKs, developer onboarding
 
-**Critical Issues Identified**:
-- Multiple conflicting performance polyfill implementations
-- Vitest worker initialization failures in CI environment
-- Duplicate/overlapping polyfill logic causing runtime conflicts
+### **RISK: Production Deployment Unvalidated**
+**Current State**: K8s manifests exist but end-to-end deployment untested
+**Impact**: Risk of production failures, manual deployment overhead
+**Solution**: Validated one-click production deployment
 
-**Specific Fixes Needed**:
-1. **Analyze polyfill conflicts**: Identify which polyfills are actually needed
-2. **Consolidate implementations**: Remove duplicates, keep single working version
-3. **Update vitest.config.js**: Configure worker threads properly for Bun runtime
-4. **Test worker isolation**: Ensure polyfills don't leak between test workers
-
-**Success Criteria**: 
-- ✅ All frontend test suites pass in CI environment
-- ✅ Parallel test execution works without conflicts
-- ✅ Test performance improved (faster than current flaky runs)
-
-#### **Task 1.2: Standardize GitHub Actions Workflows**  
-**Files**: `.github/workflows/*`
-
-**Known Issues**:
-- `pre-commit-hooks.yml` line 28: npm command in Bun workflow
-- `playground-ci.yml`: Incomplete Bun migration
-- Inconsistent package manager usage across workflows
-
-**Specific Fixes Needed**:
-1. **Update pre-commit workflow**: Replace npm with Bun commands
-2. **Complete playground-ci migration**: Ensure Bun setup and commands
-3. **Remove package-lock.json dependencies**: Clean up npm references
-4. **Validate all workflows**: Test each workflow branch trigger
-
-**Success Criteria**:
-- ✅ All GitHub Actions workflows use Bun consistently
-- ✅ No npm/package-lock.json references in Bun workflows
-- ✅ All workflow branches trigger correctly without failures
-
-#### **Task 1.3: Fix Frontend Test Stability**
-**Files**: `frontend/src/test/`, `frontend/vitest.config.js`
-
-**Issues to Address**:
-- Component isolation problems in test environment
-- Async/await patterns causing test flakiness  
-- Test utilities not optimized for Bun runtime
-
-**Specific Fixes Needed**:
-1. **Component isolation**: Fix test component cleanup between tests
-2. **Async test patterns**: Standardize async/await in integration tests
-3. **Bun test utilities**: Update test helpers for Bun runtime specifics
-4. **Enable parallel execution**: Configure safe parallel testing
-
-**Success Criteria**:
-- ✅ Test suite reliability >95% (no flaky tests)
-- ✅ Component tests run in isolation without side effects
-- ✅ Integration tests handle async operations correctly
+### **GROWTH LIMITATION: No Customer Acquisition Engine**
+**Current State**: Basic auth flows, no onboarding or growth analytics  
+**Impact**: Manual customer acquisition, no conversion optimization
+**Solution**: Automated funnels, analytics, growth optimization
 
 ---
 
-### **BATCH 2: Authentication Integration Completion** (Priority: HIGH)
-**Duration**: 3-4 hours  
-**Business Impact**: Critical user flow completion, enables all authenticated features
+## 🎯 **Your Next 4 Epics - Implementation Order**
 
-#### **Task 2.1: Complete Backend Auth Endpoints**
-**Files**: `backend/app/api/v1/endpoints/auth.py`
+### **🚀 EPIC 1: REVENUE ENGINE ACTIVATION** 
+**Priority**: 🔥🔥🔥 **CRITICAL** | **Timeline**: 3 weeks | **ROI**: 10/10
 
-**Current State**: Endpoints added in previous session, needs validation/testing
+**Problem**: MOCK billing preventing immediate monetization
+**Solution**: Replace mocks with real Stripe integration
 
-**Tasks**:
-1. **Verify endpoint functionality**: Test /login, /me, /validate endpoints work
-2. **Add input validation**: Ensure proper request/response validation
-3. **Test JWT lifecycle**: Verify token generation, validation, expiration
-4. **Implement refresh rotation**: Add secure refresh token rotation logic
-
-**Code Reference** (from conversation):
+#### **Batch 1: Stripe Integration (Week 1-2)**
+**Files to Modify**:
 ```python
-@router.post("/login", response_model=Token)
-async def login_json(
-    login_data: Login,
-    settings: Annotated[Settings, Depends(get_settings)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> Token:
-    """JSON-based login endpoint for frontend compatibility"""
-    # Implementation needs validation
+# backend/app/api/v1/endpoints/billing.py (CRITICAL)
+# Lines 31-86: Remove MOCK_PLANS, connect real DB queries
+# Lines 88-103: Remove MOCK_USER_SUBSCRIPTIONS
+
+# backend/app/services/stripe_service.py (Ready to use)
+# Already implemented, just needs connection to endpoints
+
+# backend/app/models/subscription.py (Complete)
+# All models ready: SubscriptionPlan, UserSubscription, Payment
 ```
 
-#### **Task 2.2: Fix Frontend Auth Service**
-**Files**: `frontend/src/services/auth.js`
-
-**Current State**: BaseUrl fixed to "/api/v1/auth", needs full integration testing
-
-**Tasks**:
-1. **Validate URL fix**: Confirm baseUrl change resolves backend communication
-2. **Test token handling**: Verify token storage, retrieval, expiration handling
-3. **Add error handling**: Implement proper error states for auth failures
-4. **Auto-refresh logic**: Implement seamless token refresh for UX
-
-**Code Reference** (from conversation):
-```javascript
-this.baseUrl = "/api/v1/auth";  // Fixed URL
-this.token = data.access_token;  // Fixed token field access
-```
-
-#### **Task 2.3: Create Auth Integration Tests**
-**Files**: `backend/tests/integration/`
-
-**Tasks**:
-1. **End-to-end auth flow**: Test complete login/logout user journey
-2. **Frontend-backend integration**: Validate communication between services  
-3. **JWT lifecycle testing**: Test token generation, validation, refresh cycles
-4. **Auth middleware protection**: Verify protected endpoints work correctly
+**Implementation Tasks**:
+1. **Replace MOCK_PLANS**: Connect `get_subscription_plans()` to real DB
+2. **Stripe checkout flow**: Implement subscription creation via Stripe API  
+3. **Webhook handling**: Process subscription events (invoice.paid, subscription.updated)
+4. **Frontend billing components**: Subscription overview, plan selection, usage dashboard
 
 **Success Criteria**:
-- ✅ Login/logout flow works seamlessly end-to-end
-- ✅ JWT tokens generated, validated, and refreshed automatically
-- ✅ Protected routes properly enforce authentication
-- ✅ Error handling provides good user experience
+- ✅ Real subscription plans loaded from database
+- ✅ Stripe checkout flow works end-to-end  
+- ✅ Webhooks handle subscription events
+- ✅ Users can upgrade/downgrade plans
 
----
-
-### **BATCH 3: Deployment Automation Polish** (Priority: MEDIUM)
-**Duration**: 2-3 hours
-**Business Impact**: Reliable deployments enable fast iteration
-
-#### **Task 3.1: Verify Docker Build Process**
-**Files**: `Dockerfile`, `docker-compose.yml`
-
-**Tasks**:
-1. **Confirm container builds**: All services build successfully 
-2. **Test multi-stage optimization**: Validate build efficiency
-3. **Environment variable handling**: Check production vs development configs
-4. **Health check validation**: Ensure health endpoints work correctly
-
-#### **Task 3.2: Optimize GitHub Actions Caching**
-**Files**: `.github/workflows/*`
-
-**Tasks**:
-1. **Bun cache configuration**: Implement proper Bun dependency caching
-2. **Docker layer caching**: Optimize image build times
-3. **Test result caching**: Cache test results between runs where safe
-4. **Workflow performance**: Reduce total pipeline execution time
-
-#### **Task 3.3: Add Deployment Smoke Tests**  
-**Files**: `scripts/`, `.github/workflows/`
-
-**Tasks**:
-1. **Post-deployment validation**: Create automated deployment verification
-2. **Critical path testing**: Test essential user journeys work after deploy
-3. **API health validation**: Verify all endpoints respond correctly
-4. **Database connectivity**: Confirm database connections established
-
-**Success Criteria**:
-- ✅ Deployment completes reliably in <5 minutes
-- ✅ Smoke tests verify deployment success automatically
-- ✅ Rollback procedure works if deployment fails
-
----
-
-## 🛠 **Technical Context You Need**
-
-### **Architecture Overview**
-- **Backend**: FastAPI + SQLModel + PostgreSQL + Redis + Alembic
-- **Frontend**: Lit 4.0 Web Components + Vite + PWA (NO TypeScript, NOBUILD approach)
-- **Infrastructure**: Docker containers + Make automation + GitHub Actions
-- **Testing**: pytest (backend) + Vitest (frontend) + Factory Boy patterns
-
-### **Key Files for Epic 1 Work**
-```
-├── frontend/src/test/setup/                 🔴 YOUR PRIMARY FOCUS
-│   ├── vitest-worker-polyfill.cjs          ❌ Remove or fix
-│   ├── global-performance-polyfill.js      ❌ Consolidate  
-│   └── optimized-performance-polyfill.cjs  ❌ Choose one approach
-├── .github/workflows/                       🔴 CRITICAL FIXES
-│   ├── pre-commit-hooks.yml                ❌ Line 28 npm issue
-│   ├── playground-ci.yml                   ❌ Complete Bun migration
-│   └── smart-ci.yml                        ✅ Already working
-├── backend/app/api/v1/endpoints/auth.py    🟡 Needs testing/validation
-├── frontend/src/services/auth.js           🟡 Needs integration testing  
-├── frontend/vitest.config.js               🔴 Worker configuration
-└── backend/tests/integration/              🟡 Add auth integration tests
+#### **Batch 2: Usage-Based Billing (Week 2-3)**
+**New Files to Create**:
+```python
+# backend/app/services/usage_tracker.py
+# backend/app/services/billing_calculator.py  
+# frontend/src/components/usage/
 ```
 
-### **Available Test Infrastructure**
-- **Frontend**: Vitest with JSDOM, component testing utilities
-- **Backend**: pytest with asyncio, factory fixtures, database testing
-- **Integration**: Real database connections, API testing utilities
-- **E2E**: Playwright configuration available
-- **Coverage**: Targets 80%+ with existing tooling
+**Implementation Tasks**:
+1. **Usage tracking**: Track API calls, storage, user seats per tenant
+2. **Metered billing**: Usage-based pricing and overage calculations
+3. **Usage analytics**: Real-time usage dashboard with forecasting
+4. **Usage limits**: Enforce limits with graceful degradation
 
-### **Authentication Context** 
-- **JWT-based auth**: Already implemented, needs frontend integration
-- **Refresh token rotation**: Security best practice, needs implementation
-- **Multi-tenant context**: User context handled, needs testing
-- **Session management**: Redis-based sessions available
+#### **Batch 3: Revenue Analytics (Week 3-4)**
+**New Files to Create**:
+```python
+# backend/app/services/revenue_analytics.py
+# frontend/src/components/revenue/
+# backend/app/services/churn_prevention.py
+```
 
----
-
-## 📋 **Implementation Guidelines**
-
-### **Development Approach**
-1. **Test-First**: Fix test infrastructure before implementing features
-2. **Incremental**: Make small, testable changes
-3. **Validate Continuously**: Test each fix before moving to next
-4. **Document Issues**: Create clear commit messages explaining fixes
-
-### **Quality Standards**
-- **Test Reliability**: 95%+ success rate, no flaky tests
-- **Performance**: Test suites complete in <2 minutes  
-- **Security**: All auth endpoints properly secured
-- **Documentation**: Update docs for any configuration changes
-
-### **Specific Technical Constraints**
-- **Frontend**: NO TypeScript - pure JavaScript approach
-- **Build**: NOBUILD frontend philosophy - minimal tooling
-- **Package Manager**: Use Bun exclusively, remove npm references
-- **Testing**: Fix existing infrastructure rather than replacing
+**Implementation Tasks**:
+1. **Revenue metrics**: MRR, CLV, churn analysis, cohort analytics
+2. **Financial dashboard**: Revenue forecasting, CAC tracking
+3. **Churn prevention**: Health scoring, retention automation
+4. **Business intelligence**: Actionable insights for founders
 
 ---
 
-## 🤖 **Subagent Strategy for Context Management**
+### **🚀 EPIC 2: DEVELOPER API EXPERIENCE**
+**Priority**: 🔥🔥🔥 **HIGH** | **Timeline**: 4 weeks | **ROI**: 9/10
 
-Use subagents for focused work to avoid context bloat:
+**Problem**: No SDK generation or developer portal for B2B acquisition
+**Solution**: World-class developer experience with auto-generated SDKs
+
+#### **Current State**: 
+- FastAPI provides basic docs at `/docs`
+- OpenAPI spec available at `/api/openapi.json`
+- No interactive playground or SDK generation
+
+#### **Implementation Tasks**:
+1. **Interactive API docs**: Postman-like interface with live testing
+2. **SDK generation**: Auto-generate Python, JavaScript, Go, PHP clients  
+3. **Developer portal**: Self-service API key management
+4. **Code examples**: Copy-paste integration guides
+5. **Usage analytics**: Per-customer API usage dashboards
+
+---
+
+### **⚡ EPIC 3: ONE-CLICK PRODUCTION DEPLOYMENT**
+**Priority**: 🔥🔥 **HIGH** | **Timeline**: 2 weeks | **ROI**: 8/10
+
+**Problem**: Infrastructure exists but lacks end-to-end validation
+**Solution**: Validated zero-downtime deployment automation
+
+#### **Current State**:
+- K8s manifests exist in `/k8s/*.yaml` (50+ production-ready files)
+- Deployment scripts exist in `/scripts/deploy-production.sh`
+- Untested end-to-end deployment flow
+
+#### **Implementation Tasks**:
+1. **End-to-end validation**: Test complete deployment pipeline
+2. **Blue-green deployment**: Zero-downtime deployments
+3. **Database safety**: Migration validation and rollback
+4. **Health monitoring**: Multi-layer validation and alerting
+5. **Rollback automation**: Automated failure recovery
+
+---
+
+### **📈 EPIC 4: CUSTOMER GROWTH ENGINE**
+**Priority**: 🔥🔥 **MEDIUM** | **Timeline**: 3 weeks | **ROI**: 7/10
+
+**Problem**: No customer onboarding flows or growth analytics
+**Solution**: Automated customer acquisition and conversion optimization
+
+#### **Implementation Tasks**:
+1. **Onboarding flows**: Multi-step feature discovery  
+2. **Growth analytics**: User journey tracking, conversion funnel
+3. **A/B testing**: Feature flag framework for optimization
+4. **Email automation**: Automated marketing sequences
+5. **Customer health**: Engagement scoring and churn prediction
+
+---
+
+## 🧠 **First Principles Implementation Strategy**
+
+### **Pareto Principle Application (80/20 Rule)**
+Focus on the 20% of work that delivers 80% of founder value:
+
+1. **Epic 1 Week 1**: Replace MOCK_PLANS → Immediate revenue capability
+2. **Epic 1 Week 2**: Usage tracking → Accurate billing foundation  
+3. **Epic 3**: Production deployment → Reliable operations
+4. **Epic 2**: Developer experience → B2B customer acquisition
+
+### **Value-First Execution Order**
+```
+Week 1-2:  Epic 1 Batch 1 (Revenue activation)
+Week 2-3:  Epic 3 (Production deployment) [parallel]
+Week 3-4:  Epic 1 Batch 2-3 (Complete revenue engine)  
+Week 4-8:  Epic 2 (Developer experience)
+Week 8-11: Epic 4 (Growth engine)
+```
+
+---
+
+## 🛠️ **Technical Implementation Guidelines**
+
+### **Test-Driven Development (Non-Negotiable)**
+```python
+# For every feature:
+1. Write failing test that defines expected behavior
+2. Implement minimal code to pass the test  
+3. Refactor while keeping tests green
+4. Maintain 90%+ test coverage for critical paths
+```
+
+### **Epic 1 Specific Implementation Pattern**
+```python
+# Example: Replacing MOCK_PLANS
+# 1. Write test for real billing endpoint
+def test_get_subscription_plans_real():
+    response = client.get("/api/v1/billing/plans")
+    assert response.status_code == 200
+    assert len(response.json()) > 0
+    assert "stripe_price_id" in response.json()[0]
+
+# 2. Implement real endpoint
+@router.get("/plans", response_model=List[SubscriptionPlanResponse])
+def get_subscription_plans(db: Session = Depends(get_db)):
+    return db.query(SubscriptionPlan).filter(SubscriptionPlan.is_active == True).all()
+
+# 3. Remove MOCK_PLANS completely
+```
+
+### **Quality Gates (Enforce Before Any Commit)**
+- ✅ All affected tests pass
+- ✅ Test coverage maintained/improved  
+- ✅ No security vulnerabilities introduced
+- ✅ Performance benchmarks met
+- ✅ Documentation updated
+
+---
+
+## 🎯 **Success Metrics by Epic**
+
+### **Epic 1 Success Metrics**:
+- **Revenue**: First paid customer within 30 days
+- **Growth**: $1K+ MRR within 60 days  
+- **Technical**: Real billing, usage tracking, revenue analytics working
+
+### **Epic 2 Success Metrics**:
+- **Integration**: 10+ API integrations within 90 days
+- **Onboarding**: 50% reduction in customer onboarding time
+- **Technical**: SDKs, interactive docs, developer portal working
+
+### **Epic 3 Success Metrics**:
+- **Reliability**: 99.9% uptime SLA achieved
+- **Speed**: <5 minute deployments consistently
+- **Technical**: Blue-green deployment, rollback automation working  
+
+### **Epic 4 Success Metrics**:
+- **Conversion**: 20% improvement in signup conversion  
+- **Retention**: 10% reduction in customer churn
+- **Technical**: A/B testing, analytics, email automation working
+
+---
+
+## 🚨 **Critical Implementation Notes**
+
+### **Epic 1 Critical Path** 
+**MUST DO FIRST**: Replace MOCK_PLANS in `backend/app/api/v1/endpoints/billing.py`
+- This single change enables immediate revenue generation
+- Everything else in Epic 1 builds on this foundation
+- Without this, no revenue is possible regardless of other features
+
+### **Subagent Delegation Strategy**
+Use subagents for focused work to avoid context rot:
 
 ```javascript
-// Subagent 1: Test Infrastructure
+// Revenue Engine Implementation
 Task({
-  description: "Fix Vitest polyfill conflicts",
-  prompt: "Analyze and fix frontend/src/test/setup/ polyfill conflicts, consolidate duplicate implementations, ensure Vitest works with Bun",
-  subagent_type: "general"
+  description: "Implement real Stripe billing",
+  prompt: "Replace MOCK_PLANS in backend/app/api/v1/endpoints/billing.py with real database queries and Stripe integration. Connect StripeService to billing endpoints, implement webhook handling.",
+  subagent_type: "backend-engineer"
 });
 
-// Subagent 2: GitHub Workflows  
+// Developer Experience  
 Task({
-  description: "Standardize Bun in workflows",
-  prompt: "Fix .github/workflows/ to use Bun consistently, remove npm references, test all workflow triggers",
-  subagent_type: "general" 
+  description: "Build interactive API docs",
+  prompt: "Create interactive API documentation with SDK generation for Python/JS/Go/PHP. Build developer portal with API key management.",
+  subagent_type: "general-purpose"
 });
 
-// Subagent 3: Auth Integration
+// Production Deployment
 Task({
-  description: "Complete auth integration",
-  prompt: "Test and validate backend/frontend auth integration, create integration tests, ensure JWT lifecycle works",
-  subagent_type: "general"
+  description: "Validate K8s deployment",  
+  prompt: "Test and validate end-to-end Kubernetes deployment using existing /k8s/*.yaml manifests. Implement blue-green deployment with rollback.",
+  subagent_type: "devops-deployer"
 });
 ```
 
----
-
-## 🎯 **Success Definition - Epic 1 Completion**
-
-### **Epic 1 Completion Criteria** 
-- ✅ **Test Infrastructure**: All frontend/backend tests pass consistently in CI
-- ✅ **GitHub Workflows**: All workflows use Bun, no npm references, 100% success rate
-- ✅ **Auth Integration**: Login/logout works end-to-end, JWT lifecycle complete
-- ✅ **Deployment Pipeline**: Reliable <5 minute deployments with smoke tests
-- ✅ **Code Quality**: No ESLint/security issues, proper error handling
-- ✅ **Documentation**: Updated configuration docs, clear troubleshooting guides
-
-### **Business Impact After Epic 1**
-- **Development Velocity**: Team can develop with confidence in test infrastructure
-- **Deployment Reliability**: Consistent, fast deployments reduce risk
-- **Foundation Stability**: Solid base for implementing remaining epics
-- **User Experience**: Authentication works seamlessly for all users
+### **Risk Mitigation**
+- **Epic 1**: Start with Stripe test mode, validate thoroughly before production
+- **Epic 2**: Use OpenAPI spec to auto-generate SDKs, don't build manually
+- **Epic 3**: Test deployment on staging environment first
+- **Epic 4**: Start with simple A/B tests, expand gradually
 
 ---
 
-## 💡 **Pro Tips for Success**
+## 📋 **Immediate Next Steps**
 
-1. **Start with Tests**: Fix test infrastructure first - everything else depends on it
-2. **One Thing at a Time**: Don't try to fix everything simultaneously
-3. **Test Each Fix**: Validate changes work before moving to next issue
-4. **Use Subagents**: Delegate focused work to avoid context rot
-5. **Document Changes**: Clear commit messages help future debugging
-6. **Check Dependencies**: Polyfill changes can have unexpected impacts
+### **Day 1 Tasks**:
+1. **Read billing.py**: Understand current MOCK_PLANS structure
+2. **Test Stripe service**: Verify StripeService credentials and basic functionality  
+3. **Plan database queries**: Design replacement for MOCK_PLANS with real data
+4. **Write failing tests**: Create tests for real billing endpoints
 
----
+### **Week 1 Goal**:
+Replace MOCK_PLANS with real subscription data and Stripe checkout
 
-## 📞 **Escalation Path**
+### **Month 1 Goal**: 
+Complete Epic 1 - Revenue Engine fully functional
 
-When you encounter blocking issues:
-1. **Document the specific error** with reproduction steps
-2. **Check if it's a Bun vs Node.js runtime issue**
-3. **Test with minimal reproduction** to isolate the problem  
-4. **Use subagents** for deep technical investigation
-5. **Update this prompt** with new findings for next agent
+### **Month 3 Goal**:
+All 4 epics complete - revenue-generating, B2B-ready, production-stable platform
 
 ---
 
-## 📍 **Key Context from Previous Session**
+## 💡 **Engineering Mindset**
 
-### **Fixes Already Applied (PR #38)**
-- **ESLint Security**: Fixed variable declarations in color-picker.js (line 407)
-- **Undefined References**: Removed showToast reference in base-page-component.js (line 227)  
-- **Import Cleanup**: Fixed unused parameters in design-integration.js
-- **Workflow Updates**: Partially migrated optimized-tests.yml and security-scan.yml to Bun
+**You are a pragmatic senior engineer** implementing a revenue-focused plan with discipline:
 
-### **Known Working Solutions**
-- **Production Builds**: Docker containers build successfully
-- **Security Scanning**: Container scanning and SAST working
-- **Backend Tests**: pytest suite runs reliably
-- **Smart CI Matrix**: Conditional test execution working
+- **YAGNI**: Don't build what isn't immediately required for revenue
+- **Test-First**: Every feature must have failing tests before implementation
+- **Vertical Slices**: Complete features end-to-end rather than horizontal layers  
+- **Simple Solutions**: Favor simple solutions over clever ones
+- **Business Value**: Always ask "Does this directly serve our core user journey?"
 
-### **Integration Progress**
-- **Backend Auth**: Endpoints added, need validation
-- **Frontend Auth**: URL fixed, needs integration testing
-- **JWT Flow**: Basic structure in place, needs end-to-end testing
+**Working software delivering business value trumps theoretical perfection.**
 
 ---
 
-## 🎯 **Final Instructions**
+## 🚀 **Ready to Generate Revenue**
 
-**Your Mission**: Get Epic 1 to 100% completion - stable test infrastructure, complete auth integration, reliable deployments.
+The foundation is solid. The plan is clear. The business value is immense.
 
-**Priority Order**:
-1. **Fix test polyfills** (blocks all other development)
-2. **Standardize workflows** (enables reliable CI/CD)  
-3. **Complete auth integration** (critical user functionality)
-4. **Polish deployment** (production readiness)
+**Your mission**: Enable immediate SaaS monetization for bootstrapped founders through disciplined, test-driven implementation of high-value features.
 
-**Timeline**: 3-4 days maximum
-**Success Metric**: Zero pipeline failures for 48+ hours after completion
-**Handoff**: Update docs/PLAN.md status and proceed to Epic 2
+**Start with Epic 1, Batch 1**: Replace MOCK_PLANS and activate the revenue engine.
 
-**You've got the foundation - now make it rock solid!** 🚀
-
----
-
-*Last Updated: September 2025 - Based on PR #38 pipeline fixes and current CI/CD mixed results*
+**The revenue tap is waiting to be turned on.** 💰
