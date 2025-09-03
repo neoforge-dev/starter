@@ -27,81 +27,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Temporary mock data - will be replaced with real database queries
-MOCK_PLANS = [
-    {
-        "id": 1,
-        "name": "Starter",
-        "description": "Perfect for individual developers",
-        "stripe_price_id": "price_starter_monthly",
-        "price_monthly": 9.99,
-        "price_yearly": 99.99,
-        "currency": "USD",
-        "max_projects": 5,
-        "max_users_per_project": 1,
-        "max_storage_gb": 5,
-        "max_api_calls_per_month": 10000,
-        "features": ["Basic analytics", "Community support", "5GB storage"],
-        "is_active": True,
-        "is_popular": False,
-        "trial_days": 14,
-        "sort_order": 1
-    },
-    {
-        "id": 2,
-        "name": "Pro",
-        "description": "For growing teams and projects",
-        "stripe_price_id": "price_pro_monthly",
-        "price_monthly": 29.99,
-        "price_yearly": 299.99,
-        "currency": "USD",
-        "max_projects": 25,
-        "max_users_per_project": 10,
-        "max_storage_gb": 50,
-        "max_api_calls_per_month": 100000,
-        "features": ["Advanced analytics", "Priority support", "50GB storage", "Custom integrations"],
-        "is_active": True,
-        "is_popular": True,
-        "trial_days": 14,
-        "sort_order": 2
-    },
-    {
-        "id": 3,
-        "name": "Enterprise",
-        "description": "For large organizations",
-        "stripe_price_id": "price_enterprise_monthly",
-        "price_monthly": 99.99,
-        "price_yearly": 999.99,
-        "currency": "USD",
-        "max_projects": -1,  # Unlimited
-        "max_users_per_project": -1,  # Unlimited
-        "max_storage_gb": 500,
-        "max_api_calls_per_month": -1,  # Unlimited
-        "features": ["Enterprise analytics", "Dedicated support", "500GB storage", "Custom integrations", "SLA guarantee"],
-        "is_active": True,
-        "is_popular": False,
-        "trial_days": 30,
-        "sort_order": 3
-    }
-]
-
-MOCK_USER_SUBSCRIPTIONS = [
-    {
-        "id": 1,
-        "user_id": 1,
-        "plan_id": 2,
-        "stripe_subscription_id": "sub_mock123",
-        "stripe_customer_id": "cus_mock123",
-        "status": "active",
-        "current_period_start": datetime.utcnow(),
-        "current_period_end": datetime.utcnow().replace(month=datetime.utcnow().month + 1),
-        "billing_cycle": "monthly",
-        "auto_renew": True,
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
-    }
-]
-
 
 @router.get("/plans", response_model=List[dict])
 async def get_subscription_plans(
@@ -112,7 +37,6 @@ async def get_subscription_plans(
     try:
         logger.info(f"User {current_user.id} requested subscription plans")
 
-        # Use real database query instead of mock data
         subscription_service = SubscriptionService(db)
         plans = await subscription_service.get_subscription_plans()
 
@@ -141,25 +65,47 @@ async def get_subscription_plans(
         return plans_data
     except Exception as e:
         logger.error(f"Failed to get subscription plans: {e}")
-        # Fallback to mock data if database is not available
-        logger.warning("Falling back to mock data for subscription plans")
-        return MOCK_PLANS
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Subscription service temporarily unavailable"
+        )
 
 
 @router.get("/plans/{plan_id}", response_model=dict)
 async def get_subscription_plan(
     plan_id: int,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """Get a specific subscription plan by ID."""
     try:
-        plan = next((p for p in MOCK_PLANS if p["id"] == plan_id), None)
+        subscription_service = SubscriptionService(db)
+        plan = await subscription_service.get_subscription_plan(plan_id)
+        
         if not plan:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Subscription plan not found"
             )
-        return plan
+
+        return {
+            "id": plan.id,
+            "name": plan.name,
+            "description": plan.description,
+            "stripe_price_id": plan.stripe_price_id,
+            "price_monthly": float(plan.price_monthly),
+            "price_yearly": float(plan.price_yearly),
+            "currency": plan.currency,
+            "max_projects": plan.max_projects,
+            "max_users_per_project": plan.max_users_per_project,
+            "max_storage_gb": plan.max_storage_gb,
+            "max_api_calls_per_month": plan.max_api_calls_per_month,
+            "features": plan.features,
+            "is_active": plan.is_active,
+            "is_popular": plan.is_popular,
+            "trial_days": plan.trial_days,
+            "sort_order": plan.sort_order
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -172,15 +118,13 @@ async def get_subscription_plan(
 
 @router.get("/subscription", response_model=dict)
 async def get_user_subscription(
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """Get current user's subscription."""
     try:
-        # Find user's subscription
-        subscription = next(
-            (s for s in MOCK_USER_SUBSCRIPTIONS if s["user_id"] == current_user.id and s["status"] == "active"),
-            None
-        )
+        subscription_service = SubscriptionService(db)
+        subscription = await subscription_service.get_user_active_subscription(current_user.id)
 
         if not subscription:
             return {
@@ -188,11 +132,31 @@ async def get_user_subscription(
                 "message": "No active subscription found"
             }
 
-        plan = next((p for p in MOCK_PLANS if p["id"] == subscription["plan_id"]), None)
+        # Get the associated plan
+        plan = await subscription_service.get_subscription_plan(subscription.plan_id)
 
         return {
-            **subscription,
-            "plan": plan
+            "id": subscription.id,
+            "user_id": subscription.user_id,
+            "plan_id": subscription.plan_id,
+            "stripe_subscription_id": subscription.stripe_subscription_id,
+            "stripe_customer_id": subscription.stripe_customer_id,
+            "status": subscription.status,
+            "current_period_start": subscription.current_period_start.isoformat() if subscription.current_period_start else None,
+            "current_period_end": subscription.current_period_end.isoformat() if subscription.current_period_end else None,
+            "billing_cycle": subscription.billing_cycle,
+            "auto_renew": subscription.auto_renew,
+            "trial_start": subscription.trial_start.isoformat() if subscription.trial_start else None,
+            "trial_end": subscription.trial_end.isoformat() if subscription.trial_end else None,
+            "plan": {
+                "id": plan.id,
+                "name": plan.name,
+                "description": plan.description,
+                "price_monthly": float(plan.price_monthly),
+                "price_yearly": float(plan.price_yearly),
+                "currency": plan.currency,
+                "features": plan.features
+            } if plan else None
         }
     except Exception as e:
         logger.error(f"Failed to get user subscription: {e}")
@@ -211,11 +175,12 @@ async def create_subscription(
 ):
     """Create a new subscription for the user."""
     try:
-        # For now, use mock implementation with enhanced logging
-        # TODO: Replace with real Stripe integration once dependencies are resolved
         logger.info(f"Creating subscription for user {current_user.id}, plan {plan_id}, billing {billing_cycle}")
 
-        plan = next((p for p in MOCK_PLANS if p["id"] == plan_id), None)
+        subscription_service = SubscriptionService(db)
+        
+        # Check if plan exists
+        plan = await subscription_service.get_subscription_plan(plan_id)
         if not plan:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -223,52 +188,38 @@ async def create_subscription(
             )
 
         # Check if user already has an active subscription
-        existing_subscription = next(
-            (s for s in MOCK_USER_SUBSCRIPTIONS if s["user_id"] == current_user.id and s["status"] == "active"),
-            None
-        )
-
+        existing_subscription = await subscription_service.get_user_active_subscription(current_user.id)
         if existing_subscription:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User already has an active subscription"
             )
 
-        # Create new subscription with enhanced data
-        now = datetime.utcnow()
-        if billing_cycle == "yearly":
-            next_billing = now + timedelta(days=365)
-            amount = plan["price_yearly"]
-        else:
-            next_billing = now + timedelta(days=30)
-            amount = plan["price_monthly"]
+        # Create subscription through Stripe and database
+        subscription = await subscription_service.create_subscription(
+            user_id=current_user.id,
+            plan_id=plan_id,
+            billing_cycle=billing_cycle
+        )
 
-        new_subscription = {
-            "id": len(MOCK_USER_SUBSCRIPTIONS) + 1,
-            "user_id": current_user.id,
-            "plan_id": plan_id,
-            "status": "active",
-            "billing_cycle": billing_cycle,
-            "current_period_start": now.isoformat(),
-            "current_period_end": next_billing.isoformat(),
-            "auto_renew": True,
-            "created_at": now.isoformat(),
-            "updated_at": now.isoformat(),
-            "amount": amount,
-            "currency": plan["currency"],
-            "stripe_subscription_id": f"sub_mock_{len(MOCK_USER_SUBSCRIPTIONS) + 1}",
-            "stripe_customer_id": f"cus_mock_{current_user.id}"
-        }
-
-        MOCK_USER_SUBSCRIPTIONS.append(new_subscription)
-
-        logger.info(f"Successfully created subscription {new_subscription['id']} for user {current_user.id}")
+        logger.info(f"Successfully created subscription {subscription.id} for user {current_user.id}")
 
         return {
-            "message": f"Successfully subscribed to {plan['name']} - {billing_cycle}",
-            "subscription": new_subscription,
-            "plan": plan,
-            "next_steps": "Integration with Stripe will be completed in next phase"
+            "message": f"Successfully subscribed to {plan.name} - {billing_cycle}",
+            "subscription": {
+                "id": subscription.id,
+                "status": subscription.status,
+                "billing_cycle": subscription.billing_cycle,
+                "current_period_start": subscription.current_period_start.isoformat() if subscription.current_period_start else None,
+                "current_period_end": subscription.current_period_end.isoformat() if subscription.current_period_end else None,
+                "stripe_subscription_id": subscription.stripe_subscription_id
+            },
+            "plan": {
+                "id": plan.id,
+                "name": plan.name,
+                "price_monthly": float(plan.price_monthly),
+                "price_yearly": float(plan.price_yearly)
+            }
         }
     except HTTPException:
         raise
@@ -285,16 +236,15 @@ async def update_subscription(
     plan_id: Optional[int] = None,
     billing_cycle: Optional[str] = None,
     auto_renew: Optional[bool] = None,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """Update user's subscription."""
     try:
-        # Find user's subscription
-        subscription = next(
-            (s for s in MOCK_USER_SUBSCRIPTIONS if s["user_id"] == current_user.id and s["status"] == "active"),
-            None
-        )
-
+        subscription_service = SubscriptionService(db)
+        
+        # Get user's active subscription
+        subscription = await subscription_service.get_user_active_subscription(current_user.id)
         if not subscription:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -302,21 +252,30 @@ async def update_subscription(
             )
 
         # Update subscription
-        if plan_id is not None:
-            subscription["plan_id"] = plan_id
-        if billing_cycle is not None:
-            subscription["billing_cycle"] = billing_cycle
-        if auto_renew is not None:
-            subscription["auto_renew"] = auto_renew
+        updated_subscription = await subscription_service.update_subscription(
+            subscription_id=subscription.id,
+            plan_id=plan_id,
+            billing_cycle=billing_cycle,
+            auto_renew=auto_renew
+        )
 
-        subscription["updated_at"] = datetime.utcnow().isoformat()
-
-        plan = next((p for p in MOCK_PLANS if p["id"] == subscription["plan_id"]), None)
+        # Get updated plan details
+        plan = await subscription_service.get_subscription_plan(updated_subscription.plan_id)
 
         return {
             "message": "Subscription updated successfully",
-            "subscription": subscription,
-            "plan": plan
+            "subscription": {
+                "id": updated_subscription.id,
+                "status": updated_subscription.status,
+                "billing_cycle": updated_subscription.billing_cycle,
+                "auto_renew": updated_subscription.auto_renew
+            },
+            "plan": {
+                "id": plan.id,
+                "name": plan.name,
+                "price_monthly": float(plan.price_monthly),
+                "price_yearly": float(plan.price_yearly)
+            } if plan else None
         }
     except HTTPException:
         raise
@@ -331,33 +290,37 @@ async def update_subscription(
 @router.delete("/subscription", response_model=dict)
 async def cancel_subscription(
     immediate: bool = False,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """Cancel user's subscription."""
     try:
-        # Find user's subscription
-        subscription = next(
-            (s for s in MOCK_USER_SUBSCRIPTIONS if s["user_id"] == current_user.id and s["status"] == "active"),
-            None
-        )
-
+        subscription_service = SubscriptionService(db)
+        
+        # Get user's active subscription
+        subscription = await subscription_service.get_user_active_subscription(current_user.id)
         if not subscription:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No active subscription found"
             )
 
-        # Update subscription status
-        subscription["status"] = "canceled" if immediate else "canceling"
-        subscription["canceled_at"] = datetime.utcnow().isoformat()
-        subscription["auto_renew"] = False
-        subscription["updated_at"] = datetime.utcnow().isoformat()
+        # Cancel subscription
+        canceled_subscription = await subscription_service.cancel_subscription(
+            subscription_id=subscription.id,
+            immediate=immediate
+        )
 
         message = f"Subscription {'canceled' if immediate else 'will be canceled at the end of the billing period'}"
 
         return {
             "message": message,
-            "subscription": subscription
+            "subscription": {
+                "id": canceled_subscription.id,
+                "status": canceled_subscription.status,
+                "canceled_at": canceled_subscription.canceled_at.isoformat() if canceled_subscription.canceled_at else None,
+                "current_period_end": canceled_subscription.current_period_end.isoformat() if canceled_subscription.current_period_end else None
+            }
         }
     except HTTPException:
         raise
@@ -372,26 +335,29 @@ async def cancel_subscription(
 @router.get("/payments", response_model=List[dict])
 async def get_payment_history(
     limit: int = 10,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """Get payment history for the current user."""
     try:
-        # Mock payment history
-        payments = []
-        for i in range(min(limit, 5)):  # Max 5 mock payments
-            payments.append({
-                "id": i + 1,
-                "amount": 29.99,
-                "currency": "USD",
-                "status": "succeeded",
-                "payment_method": "card",
-                "billing_period_start": (datetime.utcnow() - timedelta(days=30 * (i + 1))).isoformat(),
-                "billing_period_end": (datetime.utcnow() - timedelta(days=30 * i)).isoformat(),
-                "processed_at": (datetime.utcnow() - timedelta(days=30 * i)).isoformat(),
-                "description": "Pro Plan - Monthly subscription"
+        subscription_service = SubscriptionService(db)
+        payments = await subscription_service.get_user_payments(current_user.id, limit=limit)
+
+        payments_data = []
+        for payment in payments:
+            payments_data.append({
+                "id": payment.id,
+                "amount": float(payment.amount),
+                "currency": payment.currency,
+                "status": payment.status,
+                "payment_method": payment.payment_method,
+                "description": payment.description,
+                "stripe_payment_intent_id": payment.stripe_payment_intent_id,
+                "stripe_invoice_id": payment.stripe_invoice_id,
+                "created_at": payment.created_at.isoformat() if payment.created_at else None
             })
 
-        return payments
+        return payments_data
     except Exception as e:
         logger.error(f"Failed to get payment history: {e}")
         raise HTTPException(
@@ -409,13 +375,11 @@ async def get_usage_summary(
     try:
         logger.info(f"Getting usage summary for user {current_user.id}")
 
-        # Get user's active subscription to determine limits
-        user_subscription = next(
-            (s for s in MOCK_USER_SUBSCRIPTIONS if s["user_id"] == current_user.id and s["status"] == "active"),
-            None
-        )
-
-        if not user_subscription:
+        subscription_service = SubscriptionService(db)
+        
+        # Get user's active subscription
+        subscription = await subscription_service.get_user_active_subscription(current_user.id)
+        if not subscription:
             return {
                 "message": "No active subscription found",
                 "api_calls": {"current": 0, "limit": 0, "percentage": 0},
@@ -426,57 +390,53 @@ async def get_usage_summary(
             }
 
         # Get plan details for limits
-        plan = next((p for p in MOCK_PLANS if p["id"] == user_subscription["plan_id"]), None)
+        plan = await subscription_service.get_subscription_plan(subscription.plan_id)
         if not plan:
-            plan = MOCK_PLANS[0]  # fallback to first plan
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Subscription plan not found"
+            )
 
-        # Calculate current usage (in real implementation, this would come from database)
-        # For now, generate realistic usage data based on subscription age
-        subscription_age_days = (datetime.utcnow() - datetime.fromisoformat(user_subscription["created_at"])).days
-        base_usage_multiplier = min(subscription_age_days / 30.0, 1.0)  # Scale up over first month
+        # Get actual usage records
+        usage_records = await subscription_service.get_user_usage_records(
+            user_id=current_user.id,
+            subscription_id=subscription.id,
+            start_date=subscription.current_period_start,
+            end_date=subscription.current_period_end
+        )
 
-        # Simulate realistic usage patterns
-        api_calls_current = int(plan["max_api_calls_per_month"] * 0.3 * base_usage_multiplier * (0.8 + 0.4 * (datetime.utcnow().hour / 24.0)))
-        storage_current = plan["max_storage_gb"] * 0.15 * base_usage_multiplier
-        projects_current = int(plan["max_projects"] * 0.4 * base_usage_multiplier)
-
-        # Add some randomization for realism
-        import random
-        random.seed(current_user.id + datetime.utcnow().day)
-        api_calls_current = int(api_calls_current * (0.9 + 0.2 * random.random()))
-        storage_current = round(storage_current * (0.9 + 0.2 * random.random()), 1)
-        projects_current = int(projects_current * (0.9 + 0.2 * random.random()))
-
-        # Ensure we don't exceed limits
-        api_calls_current = min(api_calls_current, plan["max_api_calls_per_month"])
-        storage_current = min(storage_current, plan["max_storage_gb"])
-        projects_current = min(projects_current, plan["max_projects"])
+        # Calculate current usage from records
+        api_calls_current = sum(record.quantity for record in usage_records if record.metric_name == "api_calls")
+        storage_current = sum(record.quantity for record in usage_records if record.metric_name == "storage_gb")
+        projects_current = len(set(record.metadata.get("project_id") for record in usage_records if record.metadata and record.metadata.get("project_id")))
 
         usage = {
             "api_calls": {
                 "current": api_calls_current,
-                "limit": plan["max_api_calls_per_month"],
-                "percentage": round((api_calls_current / plan["max_api_calls_per_month"]) * 100, 1) if plan["max_api_calls_per_month"] > 0 else 0
+                "limit": plan.max_api_calls_per_month if plan.max_api_calls_per_month > 0 else -1,
+                "percentage": round((api_calls_current / plan.max_api_calls_per_month) * 100, 1) if plan.max_api_calls_per_month > 0 else 0
             },
             "storage": {
                 "current": storage_current,
-                "limit": plan["max_storage_gb"],
-                "percentage": round((storage_current / plan["max_storage_gb"]) * 100, 1) if plan["max_storage_gb"] > 0 else 0
+                "limit": plan.max_storage_gb if plan.max_storage_gb > 0 else -1,
+                "percentage": round((storage_current / plan.max_storage_gb) * 100, 1) if plan.max_storage_gb > 0 else 0
             },
             "projects": {
                 "current": projects_current,
-                "limit": plan["max_projects"],
-                "percentage": round((projects_current / plan["max_projects"]) * 100, 1) if plan["max_projects"] > 0 else 0
+                "limit": plan.max_projects if plan.max_projects > 0 else -1,
+                "percentage": round((projects_current / plan.max_projects) * 100, 1) if plan.max_projects > 0 else 0
             },
-            "period_start": (datetime.utcnow().replace(day=1)).isoformat(),
-            "period_end": (datetime.utcnow().replace(day=1, month=datetime.utcnow().month + 1) - timedelta(days=1)).isoformat(),
-            "subscription_id": user_subscription["id"],
-            "plan_name": plan["name"]
+            "period_start": subscription.current_period_start.isoformat() if subscription.current_period_start else None,
+            "period_end": subscription.current_period_end.isoformat() if subscription.current_period_end else None,
+            "subscription_id": subscription.id,
+            "plan_name": plan.name
         }
 
-        logger.info(f"Usage summary for user {current_user.id}: API={api_calls_current}/{plan['max_api_calls_per_month']}, Storage={storage_current}/{plan['max_storage_gb']}GB, Projects={projects_current}/{plan['max_projects']}")
+        logger.info(f"Usage summary for user {current_user.id}: API={api_calls_current}/{plan.max_api_calls_per_month}, Storage={storage_current}/{plan.max_storage_gb}GB, Projects={projects_current}/{plan.max_projects}")
 
         return usage
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get usage summary: {e}")
         raise HTTPException(

@@ -6,12 +6,15 @@ authors = [
     {name = "NeoForge Team", email = "team@neoforge.dev"},
 ]
 dependencies = [
-    "fastapi>=0.115.0",
+    "fastapi[standard]>=0.115.0",
     "uvicorn[standard]>=0.27.0",
     "sqlmodel>=0.0.14",
     "alembic>=1.13.1",
     "asyncpg>=0.29.0",
     "redis>=5.0.1",
+    "celery>=5.3.0",
+    "numpy>=1.24.0",
+    "stripe>=8.0.0",
     "pydantic>=2.6.0",
     "pydantic-settings>=2.1.0",
     "python-jose[cryptography]>=3.3.0",
@@ -31,6 +34,7 @@ dependencies = [
     "opentelemetry-instrumentation-redis>=0.47b0",
     "opentelemetry-instrumentation-httpx>=0.47b0",
     "aiohttp>=3.9.3",
+    "aiocache>=0.12.3",
 ]
 requires-python = ">=3.11"
 
@@ -80,3 +84,8 @@ minversion = "7.0"
 addopts = "-ra -q --cov=app --cov-report=term-missing"
 testpaths = ["tests"]
 asyncio_mode = "auto"
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=0.23.4",
+]

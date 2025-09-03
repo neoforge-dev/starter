@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 # Initialize Stripe
-stripe.api_key = settings.STRIPE_SECRET_KEY
+stripe.api_key = settings.stripe_secret_key
 
 
 class SubscriptionService:
@@ -289,7 +289,7 @@ class SubscriptionService:
         try:
             # Verify webhook signature
             event = stripe.Webhook.construct_event(
-                payload, signature, settings.STRIPE_WEBHOOK_SECRET
+                payload, signature, settings.stripe_webhook_secret
             )
         except ValueError:
             raise ValueError("Invalid payload")
