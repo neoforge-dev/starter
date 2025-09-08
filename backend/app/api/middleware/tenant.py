@@ -166,7 +166,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
     def _should_skip_tenant_resolution(self, request: Request) -> bool:
         """Check if tenant resolution should be skipped for this request."""
-        skip_paths = {"/health", "/metrics", "/docs", "/openapi.json", "/favicon.ico"}
+        skip_paths = {"/health", "/ready", "/metrics", "/docs", "/openapi.json", "/favicon.ico", f"{get_settings().api_v1_str}/config"}
 
         # Skip for static files and health checks
         path = request.url.path

@@ -153,10 +153,12 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         self.public_endpoints = {
             "/health",
             "/health/detailed",
+            "/ready",
             "/metrics",
             "/docs",
             "/redoc",
             "/openapi.json",
+            f"{self.settings.api_v1_str}/config",
             f"{self.settings.api_v1_str}/auth/token",
             f"{self.settings.api_v1_str}/auth/register",
             f"{self.settings.api_v1_str}/auth/verify",
@@ -176,9 +178,11 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         try:
             # Security check: Block suspicious paths
             # Do not treat API admin endpoints as suspicious
-            if self.security_validator.is_suspicious_path(
-                endpoint
-            ) and not endpoint.startswith(f"{self.settings.api_v1_str}/admin"):
+            if (
+                self.security_validator.is_suspicious_path(endpoint)
+                and not endpoint.startswith(f"{self.settings.api_v1_str}/admin")
+                and endpoint not in self.public_endpoints
+            ):
                 logger.warning(
                     "suspicious_path_blocked",
                     path=endpoint,

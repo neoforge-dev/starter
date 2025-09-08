@@ -455,8 +455,17 @@ class ThreatDetectionMiddleware(BaseHTTPMiddleware):
         """Detect and block threats."""
         client_ip = self._get_client_ip(request)
 
-        # Skip threat detection for health endpoints
-        if request.url.path in ["/health", "/metrics"]:
+        # Skip threat detection for public endpoints
+        public_paths = [
+            "/health",
+            "/ready",
+            "/metrics",
+            "/openapi.json",
+            "/docs",
+            "/redoc",
+            f"{get_settings().api_v1_str}/config",
+        ]
+        if request.url.path in public_paths:
             return await call_next(request)
 
         # Check if IP is already blocked
@@ -757,7 +766,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 status_code=response.status_code,
                 processing_time_ms=round(process_time, 2),
                 request_id=getattr(request.state, "request_id", None),
-                trace_id=self._get_trace_id(),
+                trace_id=_get_trace_id(),
             )
 
             # Count any 5xx responses (including HTTPException cases not caught below)
@@ -780,7 +789,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 url=str(request.url),
                 errors=str(e.errors()),
                 request_id=getattr(request.state, "request_id", None),
-                trace_id=self._get_trace_id(),
+                trace_id=_get_trace_id(),
             )
             return JSONResponse(
                 status_code=422,
@@ -798,7 +807,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 url=str(request.url),
                 error=str(e),
                 request_id=getattr(request.state, "request_id", None),
-                trace_id=self._get_trace_id(),
+                trace_id=_get_trace_id(),
             )
             try:
                 metrics["http_5xx_responses"].labels(
@@ -822,7 +831,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 url=str(request.url),
                 error=str(e),
                 request_id=getattr(request.state, "request_id", None),
-                trace_id=self._get_trace_id(),
+                trace_id=_get_trace_id(),
             )
             try:
                 metrics["http_5xx_responses"].labels(
@@ -893,7 +902,7 @@ def setup_security_middleware(app: FastAPI) -> None:
     )
 
 
-def _get_trace_id(self) -> str | None:
+def _get_trace_id() -> str | None:
     try:
         from opentelemetry import trace as _otel_trace
 
