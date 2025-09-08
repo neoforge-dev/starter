@@ -8,7 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   cacheDir: "node_modules/.vitest", // Set cache directory at root level
   test: {
-    environment: "happy-dom",
+    // Use jsdom for maximum compatibility with Lit dev-mode parsing
+    environment: "jsdom",
     globals: true,
     reporters: ["default"],
 

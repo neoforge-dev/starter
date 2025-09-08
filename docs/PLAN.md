@@ -1,3 +1,87 @@
+# NeoForge Roadmap – Next 4 Epics (90-day plan)
+
+This plan prioritizes the highest ROI, consolidates what we have, and hardens the product through tests and documentation. It adheres to TDD, vertical slices, and clean architecture.
+
+## Epic 1: Playground Stability and Component Quality (Weeks 1–2)
+- Fix Vite playground resolution
+  - Use proper aliases; add `/playground-components` → `src/playground/components`
+  - Update imports in playground HTML/JS to use relative or `/playground-components`
+- Resolve Lit template errors
+  - Find and remove duplicate attributes in table header templates
+  - Add unit tests covering offending templates
+- Component health checks
+  - Run and stabilize `bun vitest` suites
+  - Add tests for critical playground components (`design-system-panel`, `component-generator-modal`)
+- Documentation
+  - Add “Playground Developer Guide” to `docs/frontend/`
+  - Record known pitfalls and fixes
+
+Deliverables:
+- Playground launches at `http://localhost:3001/advanced-playground.html`
+- Frontend tests pass (CI threshold maintained)
+- Docs updated
+
+## Epic 2: Backend Readiness and Health Hardening (Weeks 2–3)
+- Fix API startup
+  - Ensure Redis resolution in compose, align `REDIS_URL`
+  - Verify `/health` and `/ready` paths, and compose healthcheck matches
+- DB metadata completeness
+  - Ensure all models are imported in `app/db/base.py`
+  - Add migrations for new models if necessary
+- Smoke and integration tests
+  - Ensure `make smoke` passes reliably
+  - Add readiness/health tests
+
+Deliverables:
+- `make smoke` green
+- `/health` 200 and `/ready` 200 when deps healthy
+- CI job exercising smoke + minimal integration
+
+## Epic 3: E2E Contracts and PWA Validation (Weeks 3–6)
+- API contract tests
+  - Define OpenAPI conformance tests for critical endpoints
+  - Add negative/pathological cases
+- Frontend–API integration tests
+  - Contract-level tests (mock server + real server variants)
+- PWA testing
+  - Lighthouse config + CI budget
+  - Installability, offline, caching validation tests
+
+Deliverables:
+- Contract tests with thresholds
+- Lighthouse report with budgets in CI
+- PWA checklists in docs
+
+## Epic 4: Developer UX + Documentation Unification (Weeks 6–8)
+- CLI workflows
+  - Stabilize make targets; add `make dev:frontend`, `make dev:api`, `make e2e`
+- Docs consolidation
+  - Ensure `docs/` has a single authoritative path for setup, dev, deploy
+  - Keep `docs/PLAN.md` and `docs/PROMPT.md` current
+- Subagent orchestration
+  - Define subagent prompts for: frontend, backend, e2e
+  - Add `cursor-tools` recipes to `docs/`
+
+Deliverables:
+- Unified dev experience
+- Living docs
+- Reusable subagent prompts
+
+---
+
+## Execution Protocol
+1) TDD for all critical paths
+2) Vertical slices per epic
+3) After each change: run tests, refactor, commit
+4) Use subagents for parallel tracks; keep prompts in `docs/PROMPT.md`
+
+## Immediate Next Tasks (Day 1–3)
+- Fix Vite playground imports/aliases
+- Locate and fix Lit duplicate attribute template
+- Re-run frontend tests; stabilize failures
+- Align API compose command and healthchecks; ensure `/health` works
+- Update docs
+
 # NeoForge Implementation Plan - Business Activation Focus
 
 ## 🚀 **Current Status - BREAKTHROUGH DISCOVERY**

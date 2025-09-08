@@ -9,6 +9,8 @@ from sqlalchemy.sql import func
 if TYPE_CHECKING:
     from .ab_test import AbTest, AbTestAssignment
     from .admin import Admin
+    from .article import Article
+    from .comment import Comment
     from .event import Event
     from .item import Item
 
@@ -69,6 +71,48 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="select",
+    )
+
+    # RealWorld API relationships
+    articles = relationship(
+        "Article",
+        back_populates="author",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    comments = relationship(
+        "Comment",
+        back_populates="author",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    # Favorites relationship (many-to-many with articles)
+    favorites = relationship(
+        "Article",
+        secondary="favorites",
+        back_populates="favorited_by",
+        lazy="selectin",
+    )
+
+    # Following relationships (many-to-many with users)
+    following = relationship(
+        "User",
+        secondary="follows",
+        primaryjoin="User.id == follows.c.follower_id",
+        secondaryjoin="User.id == follows.c.following_id",
+        back_populates="followers",
+        lazy="selectin",
+    )
+
+    followers = relationship(
+        "User",
+        secondary="follows",
+        primaryjoin="User.id == follows.c.following_id",
+        secondaryjoin="User.id == follows.c.follower_id",
+        back_populates="following",
+        lazy="selectin",
     )
 
     def is_account_locked(self) -> bool:

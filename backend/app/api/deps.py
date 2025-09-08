@@ -3,7 +3,7 @@ import logging
 from typing import Annotated, AsyncGenerator, Optional
 
 from app.db.query_monitor import QueryMonitor
-from app.db.session import AsyncSessionLocal, get_db
+from app.db.session import AsyncSessionLocal
 from app.models.admin import Admin
 from app.models.user import User
 from fastapi import Depends, HTTPException, Request, status
@@ -28,19 +28,27 @@ from app.core.security import get_current_user, oauth2_scheme
 #     return get_current_user(settings=settings, db=db, token=token)
 
 
-async def get_db(request: Request) -> AsyncGenerator[AsyncSession, None]:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Get database session, prioritizing test session from app state."""
     logger = logging.getLogger(__name__)
-    if hasattr(request.app.state, "_test_session") and request.app.state._test_session:
-        logger.debug(
-            f"Using test session {id(request.app.state._test_session)} from app.state"
-        )
-        yield request.app.state._test_session
-        return
-
     logger.debug("Creating new session via AsyncSessionLocal")
     async with AsyncSessionLocal() as session:
         yield session
+
+
+async def get_current_user_optional(
+    settings: Settings = Depends(get_settings),
+    db: AsyncSession = Depends(get_db),
+    token: Optional[str] = Depends(oauth2_scheme),
+) -> Optional[User]:
+    """Get current user if authenticated, None otherwise."""
+    if not token:
+        return None
+    try:
+        current_user = await get_current_user(settings=settings, db=db, token=token)
+        return current_user
+    except HTTPException:
+        return None
 
 
 async def get_current_active_user(
@@ -48,7 +56,6 @@ async def get_current_active_user(
     settings: Settings = Depends(get_settings),
     db: AsyncSession = Depends(get_db),
     token: str = Depends(oauth2_scheme),
-    request: Request = None,
 ) -> User:
     """Get current active user."""
     current_user = await get_current_user(settings=settings, db=db, token=token)
@@ -81,7 +88,6 @@ async def get_current_admin(
     settings: Settings = Depends(get_settings),
     db: AsyncSession = Depends(get_db),
     token: str = Depends(oauth2_scheme),
-    request: Request = None,
 ) -> Admin:
     """Get current admin user."""
     # Get the user first
@@ -136,7 +142,7 @@ async def get_current_active_admin(
     return current_admin
 
 
-async def get_monitored_db(request: Request) -> AsyncGenerator[QueryMonitor, None]:
+async def get_monitored_db() -> AsyncGenerator[QueryMonitor, None]:
     """
     Get database session with query monitoring.
 
@@ -153,56 +159,12 @@ async def get_monitored_db(request: Request) -> AsyncGenerator[QueryMonitor, Non
             return result.fetchall()
     """
     logger = logging.getLogger(__name__)
-    if hasattr(request.app.state, "_test_session") and request.app.state._test_session:
-        logger.debug(
-            f"Using test session {id(request.app.state._test_session)} from app.state for monitored DB"
-        )
-        session = request.app.state._test_session
+    logger.debug("Creating new monitored session")
+    async with AsyncSessionLocal() as session:
         monitor = QueryMonitor(session)
         try:
             monitor.current_query = None
             yield monitor
-            # NOTE: We don't close the session here, as it's managed by the test fixture
-        except Exception as e:
-            # Log and potentially raise specific errors if needed
-            logger.error(f"Error using monitored test session: {e}", exc_info=True)
-            raise
-        return  # Exit after yielding the test session monitor
-
-    logger.debug("Creating new monitored session via get_db")
-    try:
-        # Create a generator to get the session using the *modified* get_db
-        session_gen = get_db(request)  # Pass request here
-        try:
-            # Get the session from the generator
-            session = await anext(session_gen)
-            monitor = QueryMonitor(session)
-            try:
-                # Set initial query to None
-                monitor.current_query = None
-                yield monitor
-            except Exception as e:
-                # Ensure session is closed on error
-                await session.close()
-                # For health check endpoints, convert database errors to 503
-                if (
-                    hasattr(monitor, "current_query")
-                    and monitor.current_query
-                    and "health" in str(monitor.current_query).lower()
-                ):
-                    raise HTTPException(
-                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                        detail=f"Database unhealthy: {str(e)}",
-                    ) from e
-                raise
-            finally:
-                await session.close()
-        except StopAsyncIteration:
-            # Handle the case where the generator is empty
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Database connection failed",
-            )
         except Exception as e:
             # For health check endpoints, convert database errors to 503
             if "health" in str(e).lower():
@@ -211,14 +173,6 @@ async def get_monitored_db(request: Request) -> AsyncGenerator[QueryMonitor, Non
                     detail=f"Database unhealthy: {str(e)}",
                 ) from e
             raise
-    except Exception as e:
-        # For health check endpoints, convert database errors to 503
-        if "health" in str(e).lower() or "health" in str(e.__context__).lower():
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Database unhealthy: {str(e)}",
-            ) from e
-        raise
 
 
 # Type alias for monitored database dependency

@@ -17,10 +17,10 @@ from app.api.v1.endpoints import (
     events,
     items,
     organizations,
-    personalization,
+    # personalization,  # Temporarily disabled due to NumPy production issues
     projects,
     rbac,
-    recommendations,
+    # recommendations,  # Temporarily disabled due to NumPy production issues
     security,
 )
 from app.api.v1.endpoints import billing
@@ -37,12 +37,12 @@ api_router.include_router(account.router, prefix="/account", tags=["account"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
 api_router.include_router(events.router, prefix="/events", tags=["events"])
-api_router.include_router(
-    recommendations.router, prefix="/recommendations", tags=["recommendations"]
-)
-api_router.include_router(
-    personalization.router, prefix="/personalization", tags=["personalization"]
-)
+# api_router.include_router(
+#     recommendations.router, prefix="/recommendations", tags=["recommendations"]
+# )  # Temporarily disabled due to NumPy production issues
+# api_router.include_router(
+#     personalization.router, prefix="/personalization", tags=["personalization"]
+# )  # Temporarily disabled due to NumPy production issues
 api_router.include_router(
     content_suggestions.router,
     prefix="/content-suggestions",

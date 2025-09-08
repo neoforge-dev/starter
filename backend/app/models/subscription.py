@@ -15,6 +15,8 @@ from app.db.base_class import Base
 class SubscriptionPlan(Base):
     """Subscription plan model defining available pricing tiers."""
 
+    __tablename__ = "subscription_plans"
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text)
@@ -43,6 +45,8 @@ class SubscriptionPlan(Base):
 
 class UserSubscription(Base):
     """User subscription linking users to their active subscription plans."""
+
+    __tablename__ = "user_subscriptions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
@@ -82,6 +86,8 @@ class UserSubscription(Base):
 class Payment(Base):
     """Payment transaction records for subscription billing."""
 
+    __tablename__ = "payments"
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     subscription_id: Mapped[int] = mapped_column(Integer, ForeignKey("user_subscriptions.id"), nullable=False)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
@@ -117,6 +123,8 @@ class Payment(Base):
 class UsageRecord(Base):
     """Usage tracking for metered billing and analytics."""
 
+    __tablename__ = "usage_records"
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     subscription_id: Mapped[int] = mapped_column(Integer, ForeignKey("user_subscriptions.id"), nullable=False)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
@@ -141,6 +149,8 @@ class UsageRecord(Base):
 
 class Invoice(Base):
     """Generated invoices for billing and record keeping."""
+
+    __tablename__ = "invoices"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     subscription_id: Mapped[int] = mapped_column(Integer, ForeignKey("user_subscriptions.id"), nullable=False)
@@ -179,6 +189,8 @@ class Invoice(Base):
 class PromoCode(Base):
     """Promotional codes and discount management."""
 
+    __tablename__ = "promo_codes"
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -210,6 +222,8 @@ class PromoCode(Base):
 
 class SubscriptionEvent(Base):
     """Audit log for subscription-related events."""
+
+    __tablename__ = "subscription_events"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     subscription_id: Mapped[int] = mapped_column(Integer, ForeignKey("user_subscriptions.id"), nullable=False)

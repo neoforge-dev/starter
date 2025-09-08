@@ -1,4 +1,5 @@
-import {   LitElement, html, css   } from 'lit';
+import { LitElement, html, css } from 'lit';
+// Note: avoid classMap to prevent duplicate class bindings in certain test runners
 import { baseStyles } from "../../styles/base.js";
 
 /**
@@ -367,8 +368,7 @@ export class NeoTable extends LitElement {
                     ${this.sortable && column.sortable
                       ? html`
                           <span
-                            class="material-icons sort-icon ${this
-                              ._sortColumn === column.key
+                            class="material-icons sort-icon ${this._sortColumn === column.key
                               ? "active"
                               : ""}"
                           >

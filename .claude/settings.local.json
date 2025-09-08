@@ -10,5 +10,6 @@
       "Bash(xcrun simctl list:*)"
     ],
     "deny": []
-  }
+  },
+  "outputStyle": "Learning"
 }

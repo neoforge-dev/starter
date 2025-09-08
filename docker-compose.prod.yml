@@ -9,7 +9,7 @@ services:
         - oven/bun:1.0-alpine
         - nginx:alpine
     ports:
-      - "80:80"
+      - "8082:80"
     environment:
       - NODE_ENV=production
       - VITE_API_URL=http://api:8000
@@ -47,10 +47,10 @@ services:
       cache_from:
         - python:3.11-slim-bookworm
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       - ENVIRONMENT=production
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/neoforge
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/neoforge?sslmode=disable
       - REDIS_URL=redis://cache:6379/0
       - WORKERS=1
       - MAX_WORKERS=2
@@ -76,7 +76,6 @@ services:
       restart_policy:
         condition: unless-stopped
         delay: 10s
-        max_attempts: 3
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -87,7 +86,7 @@ services:
   db:
     image: postgres:15-alpine
     ports:
-      - "5432:5432"
+      - "55434:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -128,7 +127,7 @@ services:
   cache:
     image: redis:alpine
     ports:
-      - "6379:6379"
+      - "56380:6379"
     environment:
       # Memory optimization for small deployments
       - REDIS_MAXMEMORY=200mb
@@ -136,8 +135,7 @@ services:
       - REDIS_SAVE="900 1 300 10 60 1000"
     volumes:
       - redis_data:/data
-      - ./deploy/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
-    command: redis-server /usr/local/etc/redis/redis.conf
+    command: redis-server --maxmemory 200mb --maxmemory-policy allkeys-lru --save 900 1 --save 300 10 --save 60 1000
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s

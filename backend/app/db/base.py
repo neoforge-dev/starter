@@ -21,6 +21,15 @@ from app.models.status_event import StatusEvent  # noqa: F401
 from app.models.support_ticket import SupportTicket  # noqa: F401
 from app.models.user import User  # noqa: F401
 from app.models.user_session import UserSession  # noqa: F401
+from app.models.subscription import (  # noqa: F401
+    SubscriptionPlan,
+    UserSubscription,
+    Payment,
+    UsageRecord,
+    Invoice,
+    PromoCode,
+    SubscriptionEvent,
+)
 
 # SQLAlchemy needs to know about all models for metadata
 metadata = Base.metadata
