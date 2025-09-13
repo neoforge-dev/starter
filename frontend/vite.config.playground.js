@@ -15,7 +15,7 @@ export default defineConfig({
     outDir: "../../dist/playground",
     emptyOutDir: true,
     rollupOptions: {
-      input: "./src/playground/advanced-playground.html",
+      input: "advanced-playground.html",
     },
   },
   server: {

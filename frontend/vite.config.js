@@ -97,6 +97,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
+        playground: resolve(__dirname, "public/advanced-playground.html"),
       },
       output: {
         format: "esm",
@@ -239,6 +240,7 @@ export default defineConfig({
       "@utils": resolve(__dirname, "src/utils"),
       "@components": resolve(__dirname, "src/components"),
       "@": resolve(__dirname, "./src"),
+      "/playground-components": resolve(__dirname, "src/playground/components"),
     },
   },
   optimizeDeps: {
