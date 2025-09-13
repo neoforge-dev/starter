@@ -181,7 +181,7 @@ export class PerformanceValidator {
       switch (componentName) {
         case 'neo-table':
           // Create element and set properties programmatically to avoid invalid attribute JSON
-          return `<neo-table id="perf-neo-table" page-size="50"></neo-table>`;
+          return `<neo-table id="perf-neo-table" sortable="true" filterable="true" page-size="50"></neo-table>`;
 
         case 'neo-form-builder':
           return `<neo-form-builder
