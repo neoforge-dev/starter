@@ -6,6 +6,7 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Callable, Optional
 
+import jwt
 import structlog
 from app.db.session import get_db
 from fastapi import FastAPI, Request, Response
@@ -590,12 +591,10 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
 
         token = auth_header.split(" ")[1]
         try:
-            import jwt
-
             payload = jwt.decode(
                 token,
                 self.settings.secret_key.get_secret_value(),
-                algorithms=[self.settings.jwt_algorithm],
+                algorithms=["HS256"],
             )
             return str(payload.get("sub"))
         except jwt.InvalidTokenError:
@@ -749,6 +748,19 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
 class ErrorHandlerMiddleware(BaseHTTPMiddleware):
     """Middleware for handling errors and logging requests."""
 
+    def _get_trace_id(self) -> str | None:
+        """Get trace ID from OpenTelemetry context."""
+        try:
+            from opentelemetry import trace as _otel_trace
+
+            span = _otel_trace.get_current_span()
+            ctx = span.get_span_context() if span else None
+            if ctx and getattr(ctx, "trace_id", 0):
+                return f"{ctx.trace_id:032x}"
+        except Exception:
+            return None
+        return None
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Process the request and handle any errors."""
         start_time = time.time()
@@ -766,7 +778,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 status_code=response.status_code,
                 processing_time_ms=round(process_time, 2),
                 request_id=getattr(request.state, "request_id", None),
-                trace_id=_get_trace_id(),
+                trace_id=self._get_trace_id(),
             )
 
             # Count any 5xx responses (including HTTPException cases not caught below)
@@ -789,7 +801,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 url=str(request.url),
                 errors=str(e.errors()),
                 request_id=getattr(request.state, "request_id", None),
-                trace_id=_get_trace_id(),
+                trace_id=self._get_trace_id(),
             )
             return JSONResponse(
                 status_code=422,
@@ -807,7 +819,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 url=str(request.url),
                 error=str(e),
                 request_id=getattr(request.state, "request_id", None),
-                trace_id=_get_trace_id(),
+                trace_id=self._get_trace_id(),
             )
             try:
                 metrics["http_5xx_responses"].labels(
@@ -831,7 +843,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 url=str(request.url),
                 error=str(e),
                 request_id=getattr(request.state, "request_id", None),
-                trace_id=_get_trace_id(),
+                trace_id=self._get_trace_id(),
             )
             try:
                 metrics["http_5xx_responses"].labels(
@@ -900,16 +912,3 @@ def setup_security_middleware(app: FastAPI) -> None:
         rate_limit_window=current_settings.rate_limit_window,
         production_mode=current_settings.environment == Environment.PRODUCTION,
     )
-
-
-def _get_trace_id() -> str | None:
-    try:
-        from opentelemetry import trace as _otel_trace
-
-        span = _otel_trace.get_current_span()
-        ctx = span.get_span_context() if span else None
-        if ctx and getattr(ctx, "trace_id", 0):
-            return f"{ctx.trace_id:032x}"
-    except Exception:
-        return None
-    return None

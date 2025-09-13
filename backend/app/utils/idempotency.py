@@ -162,7 +162,7 @@ async def cleanup_idempotency_keys(
             """
             DELETE FROM idempotency_keys
             WHERE (expires_at IS NOT NULL AND expires_at < NOW())
-               OR (expires_at IS NULL AND created_at < (NOW() - (:age || ' seconds')::interval))
+               OR (expires_at IS NULL AND created_at < (NOW() - INTERVAL :age SECOND))
             """
         ),
         {"age": max_age_seconds},

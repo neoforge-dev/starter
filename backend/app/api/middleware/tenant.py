@@ -55,7 +55,6 @@ class TenantContext:
         """Get cache key prefix for this tenant."""
         return f"tenant:{self.tenant_id}" if self.tenant_id else "tenant:default"
 
-    @property
     def permission_cache_key(self, user_id: int) -> str:
         """Get permission cache key for a user in this tenant."""
         return f"{self.cache_prefix}:permissions:user:{user_id}"
@@ -288,12 +287,13 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
         # Check Redis cache
         try:
-            redis_client = await get_redis()
-            cached_data = await redis_client.get(cache_key)
-            if cached_data:
-                # Would need to serialize/deserialize tenant data
-                # For now, fall through to database lookup
-                pass
+            async for redis_client in get_redis():
+                cached_data = await redis_client.get(cache_key)
+                if cached_data:
+                    # Would need to serialize/deserialize tenant data
+                    # For now, fall through to database lookup
+                    pass
+                break  # Only need one iteration
         except Exception as e:
             logger.warning(f"Redis cache lookup failed for {cache_key}: {e}")
 
@@ -329,23 +329,24 @@ class TenantMiddleware(BaseHTTPMiddleware):
     async def _update_redis_cache(self, cache_key: str, tenant: Tenant):
         """Update Redis cache asynchronously."""
         try:
-            redis_client = await get_redis()
-            # Serialize tenant data for caching
-            tenant_data = {
-                "id": tenant.id,
-                "slug": tenant.slug,
-                "uuid": str(tenant.uuid),
-                "name": tenant.name,
-                "domain": tenant.domain,
-                "status": tenant.status.value,
-                "schema_name": tenant.schema_name,
-                "settings": tenant.settings or {},
-            }
-            await redis_client.setex(
-                cache_key,
-                self.cache_ttl,
-                str(tenant_data),  # Would use JSON serialization in production
-            )
+            async for redis_client in get_redis():
+                # Serialize tenant data for caching
+                tenant_data = {
+                    "id": tenant.id,
+                    "slug": tenant.slug,
+                    "uuid": str(tenant.uuid),
+                    "name": tenant.name,
+                    "domain": tenant.domain,
+                    "status": tenant.status.value,
+                    "schema_name": tenant.schema_name,
+                    "settings": tenant.settings or {},
+                }
+                await redis_client.setex(
+                    cache_key,
+                    self.cache_ttl,
+                    str(tenant_data),  # Would use JSON serialization in production
+                )
+                break  # Only need one iteration
         except Exception as e:
             logger.warning(f"Failed to update Redis cache for {cache_key}: {e}")
 

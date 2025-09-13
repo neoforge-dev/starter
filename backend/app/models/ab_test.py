@@ -138,7 +138,7 @@ class AbTest(Base):
         back_populates="test",
         cascade="all, delete-orphan",
         lazy="selectin",
-        foreign_keys="AbTestVariant.test_id",
+        primaryjoin="AbTest.id == AbTestVariant.test_id",
     )
 
     assignments: Mapped[List["AbTestAssignment"]] = relationship(
@@ -154,7 +154,7 @@ class AbTest(Base):
 
     winner_variant: Mapped[Optional["AbTestVariant"]] = relationship(
         "AbTestVariant",
-        foreign_keys=[winner_variant_id],
+        primaryjoin="AbTest.winner_variant_id == AbTestVariant.id",
         lazy="selectin",
         post_update=True,
     )
