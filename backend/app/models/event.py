@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from uuid import UUID, uuid4
 
 from app.db.base_class import Base
-from sqlalchemy import JSON, Index, String, text
+from sqlalchemy import JSON, Index, String, text, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -48,6 +48,7 @@ class Event(Base):
 
     # User association (optional for privacy)
     user_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id"),
         nullable=True,
         index=True,
         comment="Optional user association - can be null for anonymous events",

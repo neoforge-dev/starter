@@ -259,7 +259,10 @@ class Role(Base):
         "Permission", secondary=role_permissions, back_populates="roles"
     )
     users: Mapped[List["User"]] = relationship(
-        "User", secondary=user_role_assignments, back_populates="roles"
+        "User", 
+        secondary=user_role_assignments,
+        primaryjoin="Role.id == user_role_assignments.c.role_id",
+        secondaryjoin="user_role_assignments.c.user_id == User.id",
     )
 
     # Add constraints and indexes

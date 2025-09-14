@@ -16,7 +16,7 @@ from sqlalchemy import (
     Text,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, foreign
 
 if TYPE_CHECKING:
     from .event import Event
@@ -138,7 +138,7 @@ class AbTest(Base):
         back_populates="test",
         cascade="all, delete-orphan",
         lazy="selectin",
-        primaryjoin="AbTest.id == AbTestVariant.test_id",
+        primaryjoin="AbTest.id == foreign(AbTestVariant.test_id)",
     )
 
     assignments: Mapped[List["AbTestAssignment"]] = relationship(
@@ -279,7 +279,10 @@ class AbTestVariant(Base):
 
     # Relationships
     test: Mapped["AbTest"] = relationship(
-        "AbTest", back_populates="variants", lazy="selectin"
+        "AbTest", 
+        back_populates="variants", 
+        lazy="selectin",
+        primaryjoin="foreign(AbTestVariant.test_id) == AbTest.id",
     )
 
     assignments: Mapped[List["AbTestAssignment"]] = relationship(

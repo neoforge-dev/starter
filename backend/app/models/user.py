@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .comment import Comment
     from .event import Event
     from .item import Item
+    from .rbac import Role
 
 
 class User(Base):
