@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoForge Debug Page</title>
+    <!-- Using vanilla JavaScript, no Lit needed -->
+</head>
+<body>
+    <h1>NeoForge Debug Page</h1>
+    <div id="status">Loading...</div>
+    <button onclick="runDebugTests()">Run Debug Tests</button>
+    <div id="results"></div>
+
+    <script type="module">
+        // Import our components
+        import './main.js';
+
+        // Debug tests
+        window.runDebugTests = function() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+
+            function log(message, success = null) {
+                const div = document.createElement('div');
+                div.style.margin = '5px 0';
+                div.style.padding = '5px';
+                div.style.borderRadius = '3px';
+
+                if (success === true) {
+                    div.style.background = '#d4edda';
+                    div.style.color = '#155724';
+                    div.textContent = '✅ ' + message;
+                } else if (success === false) {
+                    div.style.background = '#f8d7da';
+                    div.style.color = '#721c24';
+                    div.textContent = '❌ ' + message;
+                } else {
+                    div.style.background = '#d1ecf1';
+                    div.style.color = '#0c5460';
+                    div.textContent = '🔍 ' + message;
+                }
+
+                results.appendChild(div);
+                console.log(message);
+            }
+
+            // Test 1: Check if neo-app element exists
+            setTimeout(() => {
+                const neoApp = document.querySelector('neo-app');
+                log('NeoApp element exists: ' + !!neoApp, !!neoApp);
+
+                if (neoApp) {
+                    // Test 2: Check component structure
+                    const routerOutlet = neoApp.querySelector('#router-outlet');
+                    log('Router outlet exists: ' + !!routerOutlet, !!routerOutlet);
+
+                    if (routerOutlet) {
+                        // Test 3: Check initial content
+                        const content = routerOutlet.textContent;
+                        const hasWelcome = content.includes('Welcome to NeoForge');
+                        log('Initial content loaded: ' + hasWelcome, hasWelcome);
+                        log('Content preview: ' + content.substring(0, 50) + '...');
+
+                        // Test 4: Check register link
+                        const registerLink = neoApp.querySelector('a[href="/register"]');
+                        log('Register link exists: ' + !!registerLink, !!registerLink);
+
+                        if (registerLink) {
+                            // Test 5: Simulate navigation
+                            log('Clicking register link...');
+                            registerLink.click();
+
+                            setTimeout(() => {
+                                const currentPath = window.location.pathname;
+                                const navigationWorked = currentPath === '/register';
+                                log('Navigation to /register: ' + navigationWorked, navigationWorked);
+
+                                if (navigationWorked) {
+                                    // Test 6: Check form elements
+                                    setTimeout(() => {
+                                        const nameInput = document.querySelector('[data-testid="name-input"]');
+                                        const emailInput = document.querySelector('[data-testid="email-input"]');
+                                        const passwordInput = document.querySelector('[data-testid="password-input"]');
+                                        const confirmInput = document.querySelector('[data-testid="confirm-password-input"]');
+                                        const registerBtn = document.querySelector('[data-testid="register-button"]');
+
+                                        log('Name input exists: ' + !!nameInput, !!nameInput);
+                                        log('Email input exists: ' + !!emailInput, !!emailInput);
+                                        log('Password input exists: ' + !!passwordInput, !!passwordInput);
+                                        log('Confirm password input exists: ' + !!confirmInput, !!confirmInput);
+                                        log('Register button exists: ' + !!registerBtn, !!registerBtn);
+
+                                        const allElements = nameInput && emailInput && passwordInput && confirmInput && registerBtn;
+                                        log('All form elements present: ' + allElements, allElements);
+
+                                        if (allElements) {
+                                            log('🎉 SUCCESS: All tests passed! NeoForge minimal setup is working.');
+                                        }
+                                    }, 100);
+                                }
+                            }, 100);
+                        }
+                    }
+                }
+
+                // Update status
+                document.getElementById('status').textContent = 'Debug tests completed - check results below';
+            }, 1000);
+        };
+
+        // Auto-run basic checks
+        setTimeout(() => {
+            document.getElementById('status').textContent = 'Components loaded - click "Run Debug Tests" to verify functionality';
+        }, 500);
+    </script>
+</body>
+</html>

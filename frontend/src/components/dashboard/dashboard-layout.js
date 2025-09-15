@@ -560,7 +560,7 @@ export class DashboardLayout extends BaseComponent {
     return html`
       <div class="dashboard-container">
         <!-- Header -->
-        <header class="dashboard-header">
+        <header class="dashboard-header" data-testid="dashboard-header">
           <div class="header-left">
             ${this.isMobile ? html`
               <button class="menu-toggle" @click=${this._toggleMobileMenu}>
@@ -576,21 +576,21 @@ export class DashboardLayout extends BaseComponent {
               System ${this.systemStatus.status}
             </div>
 
-            <div class="notification-badge">
-              <button class="user-info" @click=${() => this._handleNavigation('settings')}>
-                <div class="user-avatar">
-                  ${this.isLoading ? '...' : this._getUserInitials()}
-                </div>
-                <div class="user-details">
-                  <span class="user-name">
-                    ${this.isLoading ? 'Loading...' : (this.user?.name || 'User')}
-                  </span>
-                  <span class="user-role">
-                    ${this.user?.role || 'Developer'}
-                  </span>
-                </div>
-              </button>
-            </div>
+             <div class="notification-badge">
+               <button class="user-info" data-testid="user-menu" @click=${() => this._handleNavigation('settings')}>
+                 <div class="user-avatar">
+                   ${this.isLoading ? '...' : this._getUserInitials()}
+                 </div>
+                 <div class="user-details">
+                   <span class="user-name" data-testid="user-name">
+                     ${this.isLoading ? 'Loading...' : (this.user?.name || 'User')}
+                   </span>
+                   <span class="user-role">
+                     ${this.user?.role || 'Developer'}
+                   </span>
+                 </div>
+               </button>
+             </div>
           </div>
         </header>
 
@@ -601,7 +601,7 @@ export class DashboardLayout extends BaseComponent {
             <p class="sidebar-subtitle">Welcome back${this.user?.name ? `, ${this.user.name.split(' ')[0]}` : ''}!</p>
           </div>
 
-          <nav class="sidebar-nav">
+           <nav class="sidebar-nav" data-testid="navigation">
             <div class="nav-section">
               <div class="nav-section-title">Main</div>
               ${navItems.slice(0, 4).map(item => html`
@@ -636,7 +636,7 @@ export class DashboardLayout extends BaseComponent {
 
         <!-- Main Content -->
         <main class="dashboard-main ${this.sidebarCollapsed ? 'expanded' : ''}">
-          <div class="main-content">
+          <div class="main-content" data-testid="main-content">
             <slot></slot>
           </div>
         </main>

@@ -11,6 +11,8 @@
 
     <!-- Critical CSS -->
     <link rel="stylesheet" href="./src/components/styles/critical.css" />
+    <link rel="stylesheet" href="./src/styles/global.css" />
+    <link rel="stylesheet" href="./src/styles/loading.css" />
 
     <!-- PWA setup -->
     <link rel="manifest" href="./manifest.json" />
@@ -44,29 +46,10 @@
       onload="this.media='all'"
     />
 
-    <!-- Non-critical styles - Load asynchronously -->
-    <link
-      rel="stylesheet"
-      href="./src/styles/global.css"
-      media="print"
-      onload="this.media='all'"
-    />
-    <link
-      rel="stylesheet"
-      href="./src/styles/loading.css"
-      media="print"
-      onload="this.media='all'"
-    />
-
-    <!-- Import lit from vendor -->
-    <script type="module" src="./vendor/lit-core.min.js"></script>
+    <!-- Additional styles loaded in critical section -->
 
     <!-- Import our main app -->
     <script type="module" src="./src/main.js"></script>
-
-    <!-- Import components -->
-    <script type="module" src="./src/components/header.js"></script>
-    <script type="module" src="./src/components/footer.js"></script>
   </head>
   <body>
     <!-- Loading state -->
@@ -78,9 +61,7 @@
     </div>
 
     <!-- App root -->
-    <app-header></app-header>
-    <landing-page></landing-page>
-    <app-footer></app-footer>
+    <neo-app></neo-app>
 
     <!-- Offline notification -->
     <div class="offline-notification">

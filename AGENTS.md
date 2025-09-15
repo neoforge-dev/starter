@@ -22,14 +22,20 @@ docker compose run --rm api_test ruff check app/ --fix
 docker compose run --rm api_test mypy app/
 ```
 
-### Frontend (JavaScript/Lit)
+### Frontend (JavaScript/Vanilla + TypeScript)
 ```bash
 # Run all tests
 cd frontend && bun run test
-# Run single test file
-cd frontend && bun vitest run src/test/path/to/test_file.test.js
+# Run unit tests only
+cd frontend && bun run test:unit
+# Run E2E tests
+cd frontend && bun run test:e2e
+# Run component tests
+cd frontend && bun run test:component
+# Run service tests
+cd frontend && bun run test:service
 # Run tests in watch mode
-cd frontend && bun run test:watch
+cd frontend && bun run test:ui
 # Run with coverage
 cd frontend && bun run test:coverage
 # Lint code
@@ -38,6 +44,12 @@ cd frontend && bun run lint
 cd frontend && bun run lint:fix
 # Format code
 cd frontend && bun run format
+# Type checking
+cd frontend && bun run type-check
+# Start development server
+cd frontend && bun run dev
+# Build for production
+cd frontend && bun run build
 ```
 
 ### General
@@ -46,10 +58,20 @@ cd frontend && bun run format
 make setup
 # Start development servers
 make dev
+# Start frontend only
+make frontend
+# Start backend only
+make backend
 # Run smoke test
 make smoke
 # Clean up
 make clean
+# Run all tests
+make test
+# Run frontend tests
+make test-frontend
+# Run backend tests
+make test-backend
 ```
 
 ## Code Style Guidelines
@@ -65,16 +87,17 @@ make clean
 - **Naming**: snake_case for variables/functions, PascalCase for classes
 - **Documentation**: Google-style docstrings
 
-### Frontend (JavaScript)
-- **Framework**: Vanilla JavaScript only (NO TypeScript)
-- **Components**: Lit web components (lit-html/lit-element)
-- **Styling**: CSS-in-JS with Lit's css`` template literals
+### Frontend (JavaScript/TypeScript)
+- **Framework**: Vanilla JavaScript + TypeScript support
+- **Components**: Custom Elements (Web Components) - NO Lit
+- **Styling**: CSS-in-JS with template literals + external CSS files
 - **Browser APIs**: Use native browser features when possible
-- **PWA**: Progressive Web App ready
+- **PWA**: Progressive Web App ready with service worker
 - **Imports**: ES6 modules with relative paths
 - **Naming**: camelCase for variables/functions, PascalCase for classes/components
 - **Error Handling**: Try-catch blocks, custom error events
-- **Testing**: Vitest with jsdom environment
+- **Testing**: Vitest (unit) + Playwright (E2E)
+- **Build Tool**: Vite with Bun runtime
 
 ### General
 - **Docker**: All services must run in Docker containers
@@ -93,7 +116,7 @@ make clean
 
 ### Frontend Rules
 - Vanilla JS only (no TypeScript)
-- Lit web components
+- Custom Elements (Web Components) - NO Lit
 - Browser-native features
 - PWA-ready code
 
@@ -111,9 +134,12 @@ make clean
 
 ## Testing Strategy
 - **Backend**: pytest with Factory Boy patterns, async support
-- **Frontend**: Vitest with jsdom, component testing
-- **Coverage**: Backend 80% global, Frontend thresholds configured
+- **Frontend Unit**: Vitest with jsdom, component testing
+- **Frontend E2E**: Playwright with multiple browsers
+- **Coverage**: Backend 80% global, Frontend 70%+ target
 - **CI/CD**: GitHub Actions with automated testing
+- **Performance**: Lighthouse CI integration
+- **Accessibility**: axe-core integration in E2E tests
 
 ## Code Philosophy
 1. Start with minimal viable features
@@ -129,9 +155,9 @@ backend/           # FastAPI application
   tests/          # Backend tests
   requirements/   # Python dependencies
 
-frontend/         # Lit web components
+frontend/         # Vanilla JS web components
   src/           # Source code
-    components/  # Web components
+    components/  # Custom Elements (Web Components)
     pages/       # Page components
     services/    # Business logic
   tests/         # Frontend tests
@@ -141,6 +167,12 @@ k8s/             # Kubernetes manifests
 deploy/          # Deployment configs
 ```
 
+## PWA Configuration
+- **Service Worker**: `frontend/src/service-worker.js` handles caching and offline functionality
+- **Icons**: All PWA icons located in `frontend/public/assets/icons/`
+- **Manifest**: `frontend/public/manifest.json` defines PWA metadata
+- **Icon Generation**: Use `frontend/scripts/generate-icons.sh` to regenerate icons
+
 ## Important Notes
 - Always run lint and type check commands after changes
 - Use Docker for all backend development
@@ -148,3 +180,6 @@ deploy/          # Deployment configs
 - No TypeScript allowed in frontend
 - Follow existing patterns in similar files
 - Update documentation for significant changes
+- always commit and then proceed with the next task from the plan. when there is nothing else planed let's re-evaluate all the docs and make sure to identify technical and documentation debt. update docs where needed
+- always commit without additional confirmation when we are on a feature branch
+- should only use astral uv for all python dependencies

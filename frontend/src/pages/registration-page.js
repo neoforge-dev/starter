@@ -293,6 +293,7 @@ export class RegistrationPage extends BaseComponent {
               type="text"
               id="name"
               name="name"
+              data-testid="name-input"
               required
               @input=${this.handleEvent}
               ?disabled=${this.loading}
@@ -305,6 +306,7 @@ export class RegistrationPage extends BaseComponent {
               type="email"
               id="email"
               name="email"
+              data-testid="email-input"
               required
               @input=${this.handleEvent}
               ?disabled=${this.loading}
@@ -321,6 +323,7 @@ export class RegistrationPage extends BaseComponent {
               type="password"
               id="password"
               name="password"
+              data-testid="password-input"
               required
               minlength="8"
               @input=${this.handleEvent}
@@ -334,6 +337,7 @@ export class RegistrationPage extends BaseComponent {
               type="password"
               id="confirmPassword"
               name="confirmPassword"
+              data-testid="confirm-password-input"
               required
               @input=${this.handleEvent}
               ?disabled=${this.loading}
@@ -370,7 +374,7 @@ export class RegistrationPage extends BaseComponent {
             ? html`<div class="error-message">${this.error}</div>`
             : ""}
 
-          <button type="submit" ?disabled=${this.loading}>
+          <button type="submit" data-testid="register-button" ?disabled=${this.loading}>
             ${this.loading
               ? html`<span class="loading-indicator"></span> Creating Account...`
               : "Create Account"}

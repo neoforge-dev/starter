@@ -438,6 +438,7 @@ export class LoginPage extends BaseComponent {
             <input
               type="email"
               id="email"
+              data-testid="login-email"
               required
               aria-label="Email address"
             />
@@ -450,6 +451,7 @@ export class LoginPage extends BaseComponent {
             <input
               type="${this.showPassword ? "text" : "password"}"
               id="password"
+              data-testid="login-password"
               required
               aria-label="Password"
               @focus=${this._handlePasswordFocus}
@@ -491,7 +493,7 @@ export class LoginPage extends BaseComponent {
               Remember me
             </label>
           </div>
-          <button type="submit">Login</button>
+          <button type="submit" data-testid="login-button">Login</button>
           <a
             class="forgot-password"
             @click=${() => (this.showForgotPassword = true)}

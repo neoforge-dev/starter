@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoForge Verification Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .pass { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fail { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .summary { font-weight: bold; font-size: 1.2em; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>NeoForge Minimal Setup Verification</h1>
+    <div id="results"></div>
+
+    <button onclick="runAllTests()">Run All Tests</button>
+    <button onclick="testNavigation()">Test Navigation</button>
+    <button onclick="clearResults()">Clear Results</button>
+
+    <div class="summary" id="summary">Click "Run All Tests" to begin verification</div>
+
+    <script>
+        let results = [];
+        let testCount = 0;
+        let passCount = 0;
+
+        function logResult(testName, passed, message = '') {
+            testCount++;
+            if (passed) passCount++;
+
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            resultDiv.innerHTML = `${passed ? '✅' : '❌'} ${testName}${message ? ': ' + message : ''}`;
+            document.getElementById('results').appendChild(resultDiv);
+
+            results.push({ testName, passed, message });
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('summary');
+            const percentage = testCount > 0 ? Math.round((passCount / testCount) * 100) : 0;
+            summary.innerHTML = `Tests: ${passCount}/${testCount} passed (${percentage}%)`;
+
+            if (percentage === 100) {
+                summary.className = 'summary pass';
+            } else if (percentage >= 80) {
+                summary.className = 'summary info';
+            } else {
+                summary.className = 'summary fail';
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            results = [];
+            testCount = 0;
+            passCount = 0;
+            updateSummary();
+        }
+
+        // Test functions
+        function testPageLoad() {
+            const title = document.title;
+            const titleCorrect = title === 'NeoForge Minimal Test';
+            logResult('Page Load', titleCorrect, `Title: "${title}"`);
+        }
+
+        function testNeoAppComponent() {
+            const neoAppDefined = customElements.get('neo-app') !== undefined;
+            logResult('NeoApp Component Defined', neoAppDefined);
+            return neoAppDefined;
+        }
+
+        function testNeoAppElement() {
+            const neoAppElement = document.querySelector('neo-app') !== null;
+            logResult('NeoApp Element Exists', neoAppElement);
+            return neoAppElement;
+        }
+
+        function testRouterOutlet() {
+            const routerOutlet = document.querySelector('#router-outlet') !== null;
+            logResult('Router Outlet Exists', routerOutlet);
+            return routerOutlet;
+        }
+
+        function testInitialContent() {
+            const outlet = document.querySelector('#router-outlet');
+            if (!outlet) {
+                logResult('Initial Content', false, 'Router outlet not found');
+                return false;
+            }
+
+            const content = outlet.textContent;
+            const hasWelcome = content.includes('Welcome to NeoForge');
+            logResult('Initial Content', hasWelcome, `Content: "${content.substring(0, 50)}..."`);
+            return hasWelcome;
+        }
+
+        function testRegisterLink() {
+            const registerLink = document.querySelector('a[href="/register"]');
+            const linkExists = registerLink !== null;
+            logResult('Register Link Exists', linkExists);
+            return linkExists;
+        }
+
+        async function testNavigation() {
+            const registerLink = document.querySelector('a[href="/register"]');
+            if (!registerLink) {
+                logResult('Navigation Test', false, 'Register link not found');
+                return;
+            }
+
+            // Click the link
+            registerLink.click();
+
+            // Wait for navigation
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const currentPath = window.location.pathname;
+            const navigationWorked = currentPath === '/register';
+            logResult('Navigation to /register', navigationWorked, `Current path: ${currentPath}`);
+
+            if (navigationWorked) {
+                // Test form elements
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                const nameInput = document.querySelector('[data-testid="name-input"]');
+                const emailInput = document.querySelector('[data-testid="email-input"]');
+                const passwordInput = document.querySelector('[data-testid="password-input"]');
+                const confirmPasswordInput = document.querySelector('[data-testid="confirm-password-input"]');
+                const registerButton = document.querySelector('[data-testid="register-button"]');
+
+                const nameExists = nameInput !== null;
+                const emailExists = emailInput !== null;
+                const passwordExists = passwordInput !== null;
+                const confirmExists = confirmPasswordInput !== null;
+                const buttonExists = registerButton !== null;
+
+                logResult('Name Input (data-testid)', nameExists);
+                logResult('Email Input (data-testid)', emailExists);
+                logResult('Password Input (data-testid)', passwordExists);
+                logResult('Confirm Password Input (data-testid)', confirmExists);
+                logResult('Register Button (data-testid)', buttonExists);
+
+                const allFormElements = nameExists && emailExists && passwordExists && confirmExists && buttonExists;
+                logResult('All Form Elements Present', allFormElements);
+
+                // Check form title
+                const titleElement = document.querySelector('h2');
+                const titleCorrect = titleElement && titleElement.textContent.includes('Registration Page');
+                logResult('Registration Page Title', titleCorrect);
+            }
+        }
+
+        function testConsoleMessages() {
+            // This would require intercepting console messages
+            // For now, just check if we can detect the component registration
+            const neoAppElement = document.querySelector('neo-app');
+            const hasShadowRoot = neoAppElement && neoAppElement.shadowRoot;
+            logResult('Component Shadow Root', hasShadowRoot !== null);
+        }
+
+        async function runAllTests() {
+            clearResults();
+
+            console.log('🔍 Starting NeoForge verification tests...');
+
+            // Run tests with small delays to ensure DOM is ready
+            testPageLoad();
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const componentDefined = testNeoAppComponent();
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const elementExists = testNeoAppElement();
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const outletExists = testRouterOutlet();
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const contentLoaded = testInitialContent();
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            const linkExists = testRegisterLink();
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            testConsoleMessages();
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            if (linkExists) {
+                await testNavigation();
+            }
+
+            console.log('✅ Verification tests completed!');
+            console.log(`Results: ${passCount}/${testCount} tests passed`);
+        }
+
+        // Auto-run basic tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('🔍 Auto-running basic verification tests...');
+                runAllTests();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

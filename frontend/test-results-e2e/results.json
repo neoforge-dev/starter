@@ -1,0 +1,351 @@
+{
+  "config": {
+    "configFile": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/playwright.e2e.config.js",
+    "rootDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "platform": "darwin",
+      "nodeVersion": "v24.7.0",
+      "testType": "e2e",
+      "tenantId": "test-tenant",
+      "environment": "development",
+      "apiBaseUrl": "http://localhost:8000",
+      "frontendBaseUrl": "http://localhost:3000"
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "outputFolder": "test-results-e2e-html"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results-e2e/results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "test-results-e2e/junit.xml"
+        }
+      ],
+      [
+        "line",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 15000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/test-results-e2e",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "platform": "darwin",
+          "nodeVersion": "v24.7.0",
+          "testType": "e2e",
+          "tenantId": "test-tenant",
+          "environment": "development",
+          "apiBaseUrl": "http://localhost:8000",
+          "frontendBaseUrl": "http://localhost:3000"
+        },
+        "id": "critical-journeys",
+        "name": "critical-journeys",
+        "testDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+        "testIgnore": [
+          "**/mobile*",
+          "**/tablet*",
+          "**/perf*",
+          "**/a11y*",
+          "**/visual*"
+        ],
+        "testMatch": [
+          "**/critical*.test.js",
+          "**/journey*.test.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/test-results-e2e",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "platform": "darwin",
+          "nodeVersion": "v24.7.0",
+          "testType": "e2e",
+          "tenantId": "test-tenant",
+          "environment": "development",
+          "apiBaseUrl": "http://localhost:8000",
+          "frontendBaseUrl": "http://localhost:3000"
+        },
+        "id": "chromium-e2e",
+        "name": "chromium-e2e",
+        "testDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+        "testIgnore": [
+          "**/mobile*",
+          "**/tablet*",
+          "**/perf*",
+          "**/a11y*",
+          "**/visual*"
+        ],
+        "testMatch": [
+          "**/*.e2e.test.js",
+          "**/*.spec.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/test-results-e2e",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "platform": "darwin",
+          "nodeVersion": "v24.7.0",
+          "testType": "e2e",
+          "tenantId": "test-tenant",
+          "environment": "development",
+          "apiBaseUrl": "http://localhost:8000",
+          "frontendBaseUrl": "http://localhost:3000"
+        },
+        "id": "firefox-e2e",
+        "name": "firefox-e2e",
+        "testDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+        "testIgnore": [
+          "**/mobile*",
+          "**/tablet*",
+          "**/perf*",
+          "**/a11y*",
+          "**/visual*"
+        ],
+        "testMatch": [
+          "**/*.e2e.test.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/test-results-e2e",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "platform": "darwin",
+          "nodeVersion": "v24.7.0",
+          "testType": "e2e",
+          "tenantId": "test-tenant",
+          "environment": "development",
+          "apiBaseUrl": "http://localhost:8000",
+          "frontendBaseUrl": "http://localhost:3000"
+        },
+        "id": "webkit-e2e",
+        "name": "webkit-e2e",
+        "testDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+        "testIgnore": [
+          "**/mobile*",
+          "**/tablet*",
+          "**/perf*",
+          "**/a11y*",
+          "**/visual*"
+        ],
+        "testMatch": [
+          "**/*.e2e.test.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/test-results-e2e",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "platform": "darwin",
+          "nodeVersion": "v24.7.0",
+          "testType": "e2e",
+          "tenantId": "test-tenant",
+          "environment": "development",
+          "apiBaseUrl": "http://localhost:8000",
+          "frontendBaseUrl": "http://localhost:3000"
+        },
+        "id": "mobile-chrome-e2e",
+        "name": "mobile-chrome-e2e",
+        "testDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/mobile*.test.js",
+          "**/responsive*.test.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/test-results-e2e",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "platform": "darwin",
+          "nodeVersion": "v24.7.0",
+          "testType": "e2e",
+          "tenantId": "test-tenant",
+          "environment": "development",
+          "apiBaseUrl": "http://localhost:8000",
+          "frontendBaseUrl": "http://localhost:3000"
+        },
+        "id": "mobile-safari-e2e",
+        "name": "mobile-safari-e2e",
+        "testDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/mobile*.test.js",
+          "**/responsive*.test.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/test-results-e2e",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "platform": "darwin",
+          "nodeVersion": "v24.7.0",
+          "testType": "e2e",
+          "tenantId": "test-tenant",
+          "environment": "development",
+          "apiBaseUrl": "http://localhost:8000",
+          "frontendBaseUrl": "http://localhost:3000"
+        },
+        "id": "tablet-e2e",
+        "name": "tablet-e2e",
+        "testDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/tablet*.test.js",
+          "**/responsive*.test.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/test-results-e2e",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "platform": "darwin",
+          "nodeVersion": "v24.7.0",
+          "testType": "e2e",
+          "tenantId": "test-tenant",
+          "environment": "development",
+          "apiBaseUrl": "http://localhost:8000",
+          "frontendBaseUrl": "http://localhost:3000"
+        },
+        "id": "api-integration-e2e",
+        "name": "api-integration-e2e",
+        "testDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/api*.test.js",
+          "**/integration*.test.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/test-results-e2e",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "platform": "darwin",
+          "nodeVersion": "v24.7.0",
+          "testType": "e2e",
+          "tenantId": "test-tenant",
+          "environment": "development",
+          "apiBaseUrl": "http://localhost:8000",
+          "frontendBaseUrl": "http://localhost:3000"
+        },
+        "id": "performance-e2e",
+        "name": "performance-e2e",
+        "testDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/perf*.test.js",
+          "**/performance*.test.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/test-results-e2e",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "platform": "darwin",
+          "nodeVersion": "v24.7.0",
+          "testType": "e2e",
+          "tenantId": "test-tenant",
+          "environment": "development",
+          "apiBaseUrl": "http://localhost:8000",
+          "frontendBaseUrl": "http://localhost:3000"
+        },
+        "id": "accessibility-e2e",
+        "name": "accessibility-e2e",
+        "testDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/a11y*.test.js",
+          "**/accessibility*.test.js"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/test-results-e2e",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "platform": "darwin",
+          "nodeVersion": "v24.7.0",
+          "testType": "e2e",
+          "tenantId": "test-tenant",
+          "environment": "development",
+          "apiBaseUrl": "http://localhost:8000",
+          "frontendBaseUrl": "http://localhost:3000"
+        },
+        "id": "visual-e2e",
+        "name": "visual-e2e",
+        "testDir": "/Users/bogdan/work/neoforge-dev/neoforge-starter/frontend/src/test/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/visual*.test.js",
+          "**/regression*.test.js"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.50.1",
+    "workers": 2,
+    "webServer": null
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments.",
+      "stack": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments."
+    }
+  ],
+  "stats": {
+    "startTime": "2025-09-15T19:51:57.545Z",
+    "duration": 2430.6369999999997,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -35,6 +35,7 @@ dependencies = [
     "opentelemetry-instrumentation-httpx>=0.47b0",
     "aiohttp>=3.9.3",
     "aiocache>=0.12.3",
+    "greenlet>=3.2.4",
 ]
 requires-python = ">=3.11"
 

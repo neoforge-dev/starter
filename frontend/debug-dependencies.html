@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Dependencies</title>
+    <script type="module" src="./vendor/lit-core.min.js"></script>
+</head>
+<body>
+    <h1>Debug Dependencies</h1>
+    <div id="output"></div>
+
+    <script type="module">
+        const output = document.getElementById('output');
+
+        function log(message) {
+            console.log(message);
+            output.innerHTML += `<div>${message}</div>`;
+        }
+
+        try {
+            // Test 1: Check if Lit is loaded
+            log('Testing Lit availability...');
+            if (typeof window.LitElement !== 'undefined') {
+                log('✅ LitElement is available');
+            } else {
+                log('❌ LitElement is not available');
+            }
+
+            // Test 2: Check if css function is available
+            if (typeof window.css !== 'undefined') {
+                log('✅ css function is available');
+            } else {
+                log('❌ css function is not available');
+            }
+
+            // Test 3: Try importing base-component
+            log('Testing base-component import...');
+            import('./src/components/base-component.js').then(module => {
+                log('✅ base-component imported successfully');
+                log('BaseComponent class:', typeof module.BaseComponent);
+
+                // Test 4: Try importing base styles
+                log('Testing base styles import...');
+                import('./src/styles/base.js').then(stylesModule => {
+                    log('✅ base styles imported successfully');
+                    log('baseStyles type:', typeof stylesModule.baseStyles);
+
+                    // Test 5: Try creating a simple component
+                    log('Testing component creation...');
+                    const { LitElement, html, css } = window;
+                    const { BaseComponent } = module;
+                    const { baseStyles } = stylesModule;
+
+                    class TestComponent extends BaseComponent {
+                        static styles = [baseStyles, css`
+                            :host {
+                                display: block;
+                                padding: 1rem;
+                                border: 1px solid #ccc;
+                                background: #f9f9f9;
+                            }
+                        `];
+
+                        render() {
+                            return html`<div>Test Component Loaded Successfully!</div>`;
+                        }
+                    }
+
+                    customElements.define('test-component', TestComponent);
+                    log('✅ Test component defined successfully');
+
+                    // Add component to page
+                    const testEl = document.createElement('test-component');
+                    document.body.appendChild(testEl);
+
+                }).catch(error => {
+                    log('❌ Failed to import base styles: ' + error.message);
+                });
+
+            }).catch(error => {
+                log('❌ Failed to import base-component: ' + error.message);
+            });
+
+        } catch (error) {
+            log('❌ General error: ' + error.message);
+        }
+    </script>
+</body>
+</html>

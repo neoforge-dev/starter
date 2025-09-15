@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Registration Page</title>
+    <script type="module" src="./vendor/lit-core.min.js"></script>
+    <script type="module" src="./src/components/base-component.js"></script>
+    <script type="module" src="./src/styles/base.js"></script>
+    <script type="module" src="./src/pages/registration-page.js"></script>
+</head>
+<body>
+    <h1>Test Registration Page</h1>
+    <registration-page></registration-page>
+
+    <script>
+        // Wait for component to be defined and then check if elements exist
+        customElements.whenDefined('registration-page').then(() => {
+            console.log('Registration page component loaded');
+
+            // Check if data-testid elements exist
+            setTimeout(() => {
+                const nameInput = document.querySelector('[data-testid="name-input"]');
+                const emailInput = document.querySelector('[data-testid="email-input"]');
+                const passwordInput = document.querySelector('[data-testid="password-input"]');
+                const confirmPasswordInput = document.querySelector('[data-testid="confirm-password-input"]');
+                const registerButton = document.querySelector('[data-testid="register-button"]');
+
+                console.log('Name input found:', !!nameInput);
+                console.log('Email input found:', !!emailInput);
+                console.log('Password input found:', !!passwordInput);
+                console.log('Confirm password input found:', !!confirmPasswordInput);
+                console.log('Register button found:', !!registerButton);
+            }, 1000);
+        }).catch(error => {
+            console.error('Failed to load registration page:', error);
+        });
+    </script>
+</body>
+</html>

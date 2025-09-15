@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Neo App</title>
+    <script type="module" src="./vendor/lit-core.min.js"></script>
+</head>
+<body>
+    <h1>Test Neo App Component</h1>
+    <neo-app></neo-app>
+
+    <script type="module">
+        // Manually define neo-app component
+        import { LitElement, html } from 'https://cdn.jsdelivr.net/npm/lit@3.1.0/+esm';
+
+        class NeoApp extends LitElement {
+            render() {
+                return html`
+                    <div class="app">
+                        <h2>NeoApp Component Loaded!</h2>
+                        <main id="router-outlet">
+                            <p>Router outlet is ready</p>
+                        </main>
+                    </div>
+                `;
+            }
+        }
+
+        customElements.define('neo-app', NeoApp);
+        console.log('neo-app component defined manually');
+    </script>
+</body>
+</html>

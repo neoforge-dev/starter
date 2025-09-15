@@ -5,14 +5,14 @@ import { defineConfig, devices } from "@playwright/test";
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: "./test/e2e",
+  testDir: "./src/test/e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:3001",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     headless: true,
@@ -91,8 +91,8 @@ export default defineConfig({
   preserveOutput: process.env.CI ? "failures-only" : "always",
 
   /* Configure global setup */
-  globalSetup: require.resolve("./tests/global-setup"),
-  globalTeardown: require.resolve("./tests/global-teardown"),
+  // globalSetup: "./tests/global-setup.js",
+  // globalTeardown: "./tests/global-teardown.js",
 
   /* Configure test metadata */
   metadata: {
