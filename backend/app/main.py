@@ -34,7 +34,7 @@ from app.api.middleware import (
 )
 from app.core.caching import CacheMiddleware, cache_middleware
 from app.core.celery import celery_app
-from app.core.config import get_settings
+from app.config.settings import get_settings
 from app.core.logging import setup_logging
 from app.core.metrics import get_metrics
 from app.core.redis import get_redis, redis_client
