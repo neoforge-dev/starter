@@ -165,7 +165,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
     def _should_skip_tenant_resolution(self, request: Request) -> bool:
         """Check if tenant resolution should be skipped for this request."""
-        skip_paths = {"/health", "/ready", "/metrics", "/docs", "/openapi.json", "/favicon.ico", f"{get_settings().api_v1_str}/config"}
+        skip_paths = {"/health", "/ready", "/metrics", "/docs", "/openapi.json", "/favicon.ico", f"{get_settings().api_v1_str}/config", f"{get_settings().api_v1_str}/health", f"{get_settings().api_v1_str}/health/detailed", f"{get_settings().api_v1_str}/health/db", f"{get_settings().api_v1_str}/health/cache", f"{get_settings().api_v1_str}/auth/register", f"{get_settings().api_v1_str}/auth/token", f"{get_settings().api_v1_str}/auth/login"}
 
         # Skip for static files and health checks
         path = request.url.path
@@ -205,7 +205,18 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # Fallback to default tenant
         logger.debug("Using default tenant fallback")
         default_tenant = await self._get_tenant_by_slug(self.default_tenant_slug)
-        return TenantContext(tenant=default_tenant, resolved_from="default")
+        if default_tenant:
+            return TenantContext(tenant=default_tenant, resolved_from="default")
+        else:
+            # Create a minimal tenant context for default tenant
+            return TenantContext(
+                tenant=None,
+                resolved_from="default_fallback",
+                schema_name="public",
+                tenant_id=1,
+                tenant_uuid="default-tenant-uuid",
+                is_active=True
+            )
 
     async def _resolve_from_headers(self, request: Request) -> TenantContext:
         """Resolve tenant from request headers."""
@@ -402,6 +413,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/api/v1/auth/login",
             "/api/v1/tenants/signup",
             "/health",
+            "/api/v1/health",
+            "/api/v1/health/detailed",
+            "/api/v1/health/db",
+            "/api/v1/health/cache",
             "/metrics",
         }
         return request.url.path in public_paths

@@ -8,21 +8,18 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from app.db.base_class import Base
-from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text
+from app.db.base_class import Base, UUIDBase
+from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 
-class WorkflowSession(Base):
+class WorkflowSession(UUIDBase):
     """Workflow session for tracking AI workflow execution."""
 
     __tablename__ = "workflow_sessions"
 
-    id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
     session_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -55,14 +52,11 @@ class WorkflowSession(Base):
     )
 
 
-class WorkflowCheckpoint(Base):
+class WorkflowCheckpoint(UUIDBase):
     """Workflow checkpoint for state recovery."""
 
     __tablename__ = "workflow_checkpoints"
 
-    id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
     checkpoint_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     session_id: Mapped[str] = mapped_column(String(255), index=True)
     agent_id: Mapped[str] = mapped_column(String(255), index=True)
@@ -86,7 +80,7 @@ class WorkflowCheckpoint(Base):
 
     # Foreign key relationship
     workflow_session_id: Mapped[Optional[UUID]] = mapped_column(
-        UUID(as_uuid=True), nullable=True, index=True
+        ForeignKey("workflow_sessions.id"), nullable=True, index=True
     )
 
     # Relationships
@@ -95,14 +89,11 @@ class WorkflowCheckpoint(Base):
     )
 
 
-class AgentMessage(Base):
+class AgentMessage(UUIDBase):
     """Agent communication message."""
 
     __tablename__ = "agent_messages"
 
-    id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
     message_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     from_agent: Mapped[str] = mapped_column(String(255), index=True)
     to_agent: Mapped[Optional[str]] = mapped_column(
@@ -142,7 +133,7 @@ class AgentMessage(Base):
         String(255), nullable=True, index=True
     )
     workflow_session_id: Mapped[Optional[UUID]] = mapped_column(
-        UUID(as_uuid=True), nullable=True, index=True
+        ForeignKey("workflow_sessions.id"), nullable=True, index=True
     )
 
     # Relationships
@@ -151,14 +142,11 @@ class AgentMessage(Base):
     )
 
 
-class TaskBatch(Base):
+class TaskBatch(UUIDBase):
     """Batch of tasks for execution."""
 
     __tablename__ = "task_batches"
 
-    id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
     batch_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -189,7 +177,7 @@ class TaskBatch(Base):
         String(255), nullable=True, index=True
     )
     workflow_session_id: Mapped[Optional[UUID]] = mapped_column(
-        UUID(as_uuid=True), nullable=True, index=True
+        ForeignKey("workflow_sessions.id"), nullable=True, index=True
     )
 
     # Metadata
@@ -206,14 +194,11 @@ class TaskBatch(Base):
     )
 
 
-class Task(Base):
+class Task(UUIDBase):
     """Individual task within a batch."""
 
     __tablename__ = "tasks"
 
-    id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
     task_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -262,7 +247,7 @@ class Task(Base):
         String(255), nullable=True, index=True
     )
     task_batch_id: Mapped[Optional[UUID]] = mapped_column(
-        UUID(as_uuid=True), nullable=True, index=True
+        ForeignKey("task_batches.id"), nullable=True, index=True
     )
 
     # Metadata
@@ -287,16 +272,13 @@ class Task(Base):
     )
 
 
-class TaskDependency(Base):
+class TaskDependency(UUIDBase):
     """Task dependency relationship."""
 
     __tablename__ = "task_dependencies"
 
-    id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
-    task_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), index=True)
-    depends_on_task_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), index=True)
+    task_id: Mapped[UUID] = mapped_column(ForeignKey("tasks.id"), index=True)
+    depends_on_task_id: Mapped[UUID] = mapped_column(ForeignKey("tasks.id"), index=True)
     dependency_type: Mapped[str] = mapped_column(
         String(50), default="completion"
     )  # completion, partial, custom
@@ -314,14 +296,11 @@ class TaskDependency(Base):
     )
 
 
-class QualityGateExecution(Base):
+class QualityGateExecution(UUIDBase):
     """Quality gate execution record."""
 
     __tablename__ = "quality_gate_executions"
 
-    id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
     execution_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     gate_type: Mapped[str] = mapped_column(String(100), index=True)
     gate_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -367,14 +346,11 @@ class QualityGateExecution(Base):
     )
 
 
-class AgentRegistry(Base):
+class AgentRegistry(UUIDBase):
     """Registry of active agents in the system."""
 
     __tablename__ = "agent_registry"
 
-    id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
     agent_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     agent_type: Mapped[str] = mapped_column(
         String(100), index=True
@@ -412,14 +388,11 @@ class AgentRegistry(Base):
     )
 
 
-class WorkflowMetrics(Base):
+class WorkflowMetrics(UUIDBase):
     """Workflow execution metrics and statistics."""
 
     __tablename__ = "workflow_metrics"
 
-    id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
     metric_name: Mapped[str] = mapped_column(String(255), index=True)
     metric_type: Mapped[str] = mapped_column(
         String(50)

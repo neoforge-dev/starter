@@ -53,6 +53,89 @@ router = APIRouter()
 logger = logging.getLogger(__name__)  # Get logger instance
 
 
+@router.post("/login")
+async def login_access_token_json(
+    settings: Annotated[Settings, Depends(get_settings)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    login_data: Login,
+):
+    """
+    JSON-based login endpoint for easier testing and integration.
+    """
+    # Use raw SQL to authenticate to avoid model relationship issues
+    from sqlalchemy import text
+    from app.core.auth import verify_password
+
+    try:
+        # Get user with raw SQL
+        result = await db.execute(
+            text("SELECT id, email, hashed_password, is_active, is_verified FROM users WHERE email = :email"),
+            {"email": login_data.email}
+        )
+        user_row = result.fetchone()
+
+        if not user_row:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+            )
+
+        user_id, email, hashed_password, is_active, is_verified = user_row
+
+        # Verify password
+        if not verify_password(login_data.password, hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+            )
+
+        # Check if user is active and verified
+        if not is_active or not is_verified:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account is not active or verified",
+            )
+
+        logger.info(f"User authenticated successfully: {email} (ID: {user_id})")
+
+        access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+        access = create_access_token(
+            subject=str(user_id), settings=settings, expires_delta=access_token_expires
+        )
+
+        # Generate secure refresh token
+        refresh_token = generate_refresh_token()
+        token_hash = hash_refresh_token(refresh_token)
+        session_id = secrets.token_urlsafe(16)
+
+        # TODO: Store refresh token in Redis (temporarily disabled)
+        # async for redis in get_redis():
+        #     await store_refresh_token(
+        #         redis=redis,
+        #         user_id=user_id,
+        #         token_hash=token_hash,
+        #         session_id=session_id,
+        #         settings=settings,
+        #         expires_in_days=settings.refresh_token_expire_days,
+        #     )
+
+        return {
+            "access_token": access,
+            "token_type": "bearer",
+            "refresh_token": refresh_token,
+            "user_id": user_id,
+            "message": "Login successful"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authentication service temporarily unavailable",
+        )
+
 @router.post("/token", response_model=Token)
 async def login_access_token(
     settings: Annotated[Settings, Depends(get_settings)],

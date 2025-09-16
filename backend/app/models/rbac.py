@@ -299,7 +299,7 @@ class ResourcePermission(Base):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    user: Mapped["User"] = relationship("User")
+    user: Mapped["User"] = relationship("User", foreign_keys=[user_id])
 
     permission_id: Mapped[int] = mapped_column(
         ForeignKey("permissions.id", ondelete="CASCADE"), nullable=False, index=True
@@ -478,7 +478,7 @@ class RoleAuditLog(Base):
         index=True,
         doc="User who performed the action",
     )
-    actor: Mapped[Optional["User"]] = relationship("User")
+    actor: Mapped[Optional["User"]] = relationship("User", foreign_keys=[actor_id])
 
     # Action details
     action: Mapped[str] = mapped_column(

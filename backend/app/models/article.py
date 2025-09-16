@@ -5,6 +5,7 @@ from typing import List
 
 from app.db.base_class import Base
 from app.models.associations import article_tags, favorites
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -20,7 +21,7 @@ class Article(Base):
     body: Mapped[str] = mapped_column(nullable=False)
 
     # Foreign key to user
-    author_id: Mapped[int] = mapped_column(index=True)
+    author_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())

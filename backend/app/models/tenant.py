@@ -273,7 +273,7 @@ class OrganizationMembership(Base):
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    user: Mapped["User"] = relationship("User")
+    user: Mapped["User"] = relationship("User", foreign_keys=[user_id])
 
     organization_id: Mapped[int] = mapped_column(
         ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True

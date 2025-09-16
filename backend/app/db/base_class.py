@@ -1,10 +1,12 @@
 """SQLAlchemy base model class."""
+import uuid as uuid_module
 from datetime import datetime, timezone
 from typing import Any
 
 from app.db.types import TZDateTime
 from app.utils.datetime import utc_now
 from sqlalchemy import Column, DateTime, MetaData
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -23,12 +25,38 @@ class Base(DeclarativeBase):
 
     metadata = MetaData(naming_convention=convention)
 
-    @declared_attr.directive
-    def __tablename__(cls) -> str:
-        """Generate __tablename__ automatically."""
-        return cls.__name__.lower()
+    # Allow subclasses to override __tablename__
+    __tablename__: str
 
     id: Mapped[int] = mapped_column(primary_key=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        TZDateTime, default=utc_now, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        TZDateTime, default=utc_now, onupdate=utc_now, nullable=False
+    )
+
+    def __repr__(self) -> str:
+        """String representation."""
+        attrs = []
+        for key in self.__mapper__.columns.keys():
+            if key not in {"created_at", "updated_at"}:
+                attrs.append(f"{key}={getattr(self, key)}")
+        return f"{self.__class__.__name__}({', '.join(attrs)})"
+
+
+class UUIDBase(DeclarativeBase):
+    """Base class for models with UUID primary keys."""
+
+    metadata = MetaData(naming_convention=convention)
+
+    # Allow subclasses to override __tablename__
+    __tablename__: str
+
+    id: Mapped[uuid_module.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid_module.uuid4
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         TZDateTime, default=utc_now, nullable=False
