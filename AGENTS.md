@@ -1,185 +1,19 @@
-# NeoForge Agent Guidelines
+# Repository Guidelines
 
-This file provides essential information for agentic coding agents working in this repository.
+## Project Structure & Module Organization
+Source lives in `backend/app` (FastAPI services, SQLModel models) and `frontend/src` (web components, pages, services). Tests reside in `backend/tests` for pytest suites and `frontend/tests` for Vitest, Playwright, and component specs. Shared documentation is organized under `docs/`, while deployment manifests sit in `deploy/` and `k8s/`. Top-level scripts such as `scripts/` and operational tooling in `ops/` support local automation and CI.
 
-## Build/Lint/Test Commands
+## Build, Test, and Development Commands
+Run `make setup` once to provision the Dockerized dev environment. Use `make dev`, `make backend`, or `make frontend` to start services selectively. Execute `make test-backend` or `docker compose run --rm api_test pytest` for backend suites, and `cd frontend && bun run test` (or `test:unit`, `test:e2e`, `test:component`) for frontend coverage. Lint with `docker compose run --rm api_test ruff check app/` and `cd frontend && bun run lint`; fix issues using the `--fix` variants. Always rely on astral `uv` for Python dependency management.
 
-### Backend (Python/FastAPI)
-```bash
-# Run all tests
-make test
-# Run single test file
-docker compose run --rm api_test pytest tests/path/to/test_file.py
-# Run specific test function
-docker compose run --rm api_test pytest tests/path/to/test_file.py::TestClass::test_function
-# Run with coverage
-docker compose run --rm api_test pytest --cov=app --cov-report=html
-# Lint code
-docker compose run --rm api_test ruff check app/
-# Fix linting issues
-docker compose run --rm api_test ruff check app/ --fix
-# Type checking
-docker compose run --rm api_test mypy app/
-```
+## Coding Style & Naming Conventions
+Python code targets 3.11+, uses 4-space indentation, async FastAPI patterns, snake_case for functions and variables, PascalCase for models, and Google-style docstrings. JavaScript remains vanilla (no TypeScript), two-space indented, with camelCase for logic, PascalCase for custom elements, and template-literal CSS. Keep imports absolute in Python, relative ES modules in the frontend, and ensure Ruff, MyPy, and Bun lint tasks pass before opening a PR.
 
-### Frontend (JavaScript/Vanilla + TypeScript)
-```bash
-# Run all tests
-cd frontend && bun run test
-# Run unit tests only
-cd frontend && bun run test:unit
-# Run E2E tests
-cd frontend && bun run test:e2e
-# Run component tests
-cd frontend && bun run test:component
-# Run service tests
-cd frontend && bun run test:service
-# Run tests in watch mode
-cd frontend && bun run test:ui
-# Run with coverage
-cd frontend && bun run test:coverage
-# Lint code
-cd frontend && bun run lint
-# Fix linting issues
-cd frontend && bun run lint:fix
-# Format code
-cd frontend && bun run format
-# Type checking
-cd frontend && bun run type-check
-# Start development server
-cd frontend && bun run dev
-# Build for production
-cd frontend && bun run build
-```
+## Testing Guidelines
+Backend tests rely on pytest with async fixtures; maintain ≥80% coverage via `docker compose run --rm api_test pytest --cov=app`. Frontend unit tests use Vitest with jsdom, while Playwright drives E2E checks (target ≥70% coverage). Name tests after the feature or behavior under test (e.g., `test_auth_flow.py`, `auth.spec.js`) and include regression repro steps in failing scenarios.
 
-### General
-```bash
-# Setup development environment
-make setup
-# Start development servers
-make dev
-# Start frontend only
-make frontend
-# Start backend only
-make backend
-# Run smoke test
-make smoke
-# Clean up
-make clean
-# Run all tests
-make test
-# Run frontend tests
-make test-frontend
-# Run backend tests
-make test-backend
-```
+## Commit & Pull Request Guidelines
+Adopt Conventional Commits (`feat:`, `fix:`, `chore:`) and bundle related changes together. PRs should describe intent, list validation steps (tests, lint, type-check), link to tracking issues, and attach screenshots or logs for UI or API-facing updates. Request review only once CI is green and documentation in `docs/` or `README.md` reflects new behavior.
 
-## Code Style Guidelines
-
-### Backend (Python)
-- **Framework**: FastAPI with async patterns
-- **Database**: SQLModel with PostgreSQL
-- **Linting**: Ruff (line-length: 88, Python 3.11+)
-- **Type Checking**: MyPy with strict mode
-- **Logging**: Structured logging with structlog
-- **Imports**: Use absolute imports, isort-style ordering
-- **Error Handling**: Use HTTPException for API errors
-- **Naming**: snake_case for variables/functions, PascalCase for classes
-- **Documentation**: Google-style docstrings
-
-### Frontend (JavaScript/TypeScript)
-- **Framework**: Vanilla JavaScript + TypeScript support
-- **Components**: Custom Elements (Web Components) - NO Lit
-- **Styling**: CSS-in-JS with template literals + external CSS files
-- **Browser APIs**: Use native browser features when possible
-- **PWA**: Progressive Web App ready with service worker
-- **Imports**: ES6 modules with relative paths
-- **Naming**: camelCase for variables/functions, PascalCase for classes/components
-- **Error Handling**: Try-catch blocks, custom error events
-- **Testing**: Vitest (unit) + Playwright (E2E)
-- **Build Tool**: Vite with Bun runtime
-
-### General
-- **Docker**: All services must run in Docker containers
-- **Cost Efficiency**: Optimize for production costs (single $10 DO droplet)
-- **Documentation**: Update docs when making changes
-- **Testing**: Write tests for new features, maintain coverage thresholds
-- **Commits**: Follow conventional commit format
-
-## Cursor Rules Integration
-
-### Development Standards
-- Use Docker for all services
-- Follow FastAPI async patterns
-- Keep web components simple
-- Optimize for production costs
-
-### Frontend Rules
-- Vanilla JS only (no TypeScript)
-- Custom Elements (Web Components) - NO Lit
-- Browser-native features
-- PWA-ready code
-
-### Backend Rules
-- Async FastAPI endpoints
-- SQLModel for database
-- UV package management
-- Ruff for linting
-
-### Infrastructure
-- Single DO droplet ($10)
-- Nomad for containers
-- GitHub Actions CI/CD
-- Cloudflare CDN (free tier)
-
-## Testing Strategy
-- **Backend**: pytest with Factory Boy patterns, async support
-- **Frontend Unit**: Vitest with jsdom, component testing
-- **Frontend E2E**: Playwright with multiple browsers
-- **Coverage**: Backend 80% global, Frontend 70%+ target
-- **CI/CD**: GitHub Actions with automated testing
-- **Performance**: Lighthouse CI integration
-- **Accessibility**: axe-core integration in E2E tests
-
-## Code Philosophy
-1. Start with minimal viable features
-2. Focus on developer experience
-3. Maintain bootstrap-founder perspective
-4. Document as we build
-5. Test continuously
-
-## File Structure
-```
-backend/           # FastAPI application
-  app/            # Main application code
-  tests/          # Backend tests
-  requirements/   # Python dependencies
-
-frontend/         # Vanilla JS web components
-  src/           # Source code
-    components/  # Custom Elements (Web Components)
-    pages/       # Page components
-    services/    # Business logic
-  tests/         # Frontend tests
-
-docs/            # Documentation
-k8s/             # Kubernetes manifests
-deploy/          # Deployment configs
-```
-
-## PWA Configuration
-- **Service Worker**: `frontend/src/service-worker.js` handles caching and offline functionality
-- **Icons**: All PWA icons located in `frontend/public/assets/icons/`
-- **Manifest**: `frontend/public/manifest.json` defines PWA metadata
-- **Icon Generation**: Use `frontend/scripts/generate-icons.sh` to regenerate icons
-
-## Important Notes
-- Always run lint and type check commands after changes
-- Use Docker for all backend development
-- Frontend uses Bun as package manager
-- No TypeScript allowed in frontend
-- Follow existing patterns in similar files
-- Update documentation for significant changes
-- always commit and then proceed with the next task from the plan. when there is nothing else planed let's re-evaluate all the docs and make sure to identify technical and documentation debt. update docs where needed
-- always commit without additional confirmation when we are on a feature branch
-- should only use astral uv for all python dependencies
+## Agent Workflow Notes
+Work from feature branches, commit incrementally after each discrete change, and avoid rewriting user-authored modifications. Favor Dockerized commands over host tools, and keep run logs concise to streamline review.
