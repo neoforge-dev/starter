@@ -21,6 +21,7 @@ from app.api.v1.endpoints import (
     projects,
     rbac,
     # recommendations,  # Temporarily disabled due to NumPy production issues
+    saml,
     security,
 )
 from app.api.v1.endpoints import billing
@@ -52,6 +53,7 @@ api_router.include_router(
     organizations.router, prefix="/organizations", tags=["organizations"]
 )
 api_router.include_router(rbac.router, prefix="/rbac", tags=["rbac"])
+api_router.include_router(saml.router, prefix="/auth/saml", tags=["saml", "enterprise"])
 api_router.include_router(security.router, prefix="/security", tags=["security"])
 api_router.include_router(health.router, prefix="/health", tags=["system"])
 api_router.include_router(config.router, tags=["system"])
