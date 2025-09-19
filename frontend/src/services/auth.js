@@ -37,12 +37,12 @@ export class AuthService {
     try {
       const response = await this.makeAuthenticatedRequest(`${this.baseUrl}/validate`);
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Invalid token");
       }
 
       const data = await response.json();
-      if (data.valid) {
+      if (data && data.valid) {
         await this.fetchUserProfile();
       } else {
         throw new Error("Invalid token");
@@ -57,11 +57,16 @@ export class AuthService {
     try {
       const response = await this.makeAuthenticatedRequest(`${this.baseUrl}/me`);
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to fetch user profile");
       }
 
-      this.user = await response.json();
+      const userData = await response.json();
+      if (userData && (userData.user || userData.email)) {
+        this.user = userData.user || userData;
+      } else {
+        throw new Error("Invalid user data received");
+      }
       this.notifyListeners();
     } catch (error) {
       Logger.error("Failed to fetch user profile:", error);
@@ -299,12 +304,20 @@ export class AuthService {
         body: JSON.stringify({ refresh_token: this.refreshToken }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        Logger.warn("Token refresh failed:", error);
+      if (!response || !response.ok) {
+        let errorMessage = "Token refresh failed";
+        try {
+          if (response) {
+            const error = await response.json();
+            errorMessage = error.detail || errorMessage;
+            Logger.warn("Token refresh failed:", error);
+          }
+        } catch (jsonError) {
+          Logger.warn("Failed to parse error response:", jsonError);
+        }
         // If refresh fails, logout the user
         this.logout();
-        throw new Error(error.detail || "Token refresh failed");
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -341,25 +354,38 @@ export class AuthService {
       },
     };
 
-    // Make the initial request
-    let response = await fetch(url, requestOptions);
+    try {
+      // Make the initial request
+      let response = await fetch(url, requestOptions);
 
-    // If we get a 401 and have a refresh token, try to refresh and retry
-    if (response.status === 401 && this.refreshToken && !this.isRefreshing) {
-      try {
-        await this.refreshAccessToken();
-        
-        // Retry the request with the new token
-        requestOptions.headers.Authorization = `Bearer ${this.token}`;
-        response = await fetch(url, requestOptions);
-      } catch (refreshError) {
-        Logger.error("Auto-refresh failed:", refreshError);
-        // The logout was already handled in refreshAccessToken
-        throw refreshError;
+      if (!response) {
+        throw new Error("Network request failed");
       }
-    }
 
-    return response;
+      // If we get a 401 and have a refresh token, try to refresh and retry
+      if (response.status === 401 && this.refreshToken && !this.isRefreshing) {
+        try {
+          await this.refreshAccessToken();
+          
+          // Retry the request with the new token
+          requestOptions.headers.Authorization = `Bearer ${this.token}`;
+          response = await fetch(url, requestOptions);
+          
+          if (!response) {
+            throw new Error("Network request failed on retry");
+          }
+        } catch (refreshError) {
+          Logger.error("Auto-refresh failed:", refreshError);
+          // The logout was already handled in refreshAccessToken
+          throw refreshError;
+        }
+      }
+
+      return response;
+    } catch (networkError) {
+      Logger.error("Network request failed:", networkError);
+      throw networkError;
+    }
   }
 
   // Add new methods for email verification
