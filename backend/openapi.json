@@ -1,0 +1,315 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "NeoForge API",
+    "description": "Enterprise SaaS platform for bootstrapped founders",
+    "version": "1.0.0",
+    "contact": {
+      "name": "NeoForge Support",
+      "url": "https://neoforge.dev/support",
+      "email": "support@neoforge.dev"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.neoforge.dev",
+      "description": "Production server"
+    },
+    {
+      "url": "https://staging-api.neoforge.dev",
+      "description": "Staging server"
+    },
+    {
+      "url": "http://localhost:8000",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login user"
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register user"
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refresh token"
+      }
+    },
+    "/api/v1/billing/plans": {
+      "get": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Get subscription plans"
+      }
+    },
+    "/api/v1/billing/subscription": {
+      "get": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Get user subscription"
+      },
+      "post": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Create subscription"
+      },
+      "put": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Update subscription"
+      },
+      "delete": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Cancel subscription"
+      }
+    },
+    "/api/v1/billing/usage": {
+      "get": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Get usage metrics"
+      }
+    },
+    "/api/v1/billing/payments": {
+      "get": {
+        "tags": [
+          "billing"
+        ],
+        "summary": "Get payment history"
+      }
+    },
+    "/api/v1/organizations": {
+      "get": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "List organizations"
+      },
+      "post": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Create organization"
+      }
+    },
+    "/api/v1/organizations/{id}": {
+      "get": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Get organization"
+      },
+      "put": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Update organization"
+      },
+      "delete": {
+        "tags": [
+          "organizations"
+        ],
+        "summary": "Delete organization"
+      }
+    },
+    "/api/v1/projects": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "List projects"
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Create project"
+      }
+    },
+    "/api/v1/projects/{id}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Get project"
+      },
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Update project"
+      },
+      "delete": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Delete project"
+      }
+    },
+    "/api/v1/analytics/metrics": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get metrics"
+      }
+    },
+    "/api/v1/analytics/user-activity": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "summary": "Get user activity"
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "List users"
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Get current user"
+      },
+      "put": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Update current user"
+      }
+    },
+    "/api/v1/admin": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin endpoints"
+      }
+    },
+    "/api/v1/rbac": {
+      "get": {
+        "tags": [
+          "rbac"
+        ],
+        "summary": "Role-based access control"
+      }
+    },
+    "/api/v1/security": {
+      "get": {
+        "tags": [
+          "security"
+        ],
+        "summary": "Security features"
+      }
+    },
+    "/api/v1/webhooks": {
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "summary": "Webhook handling"
+      }
+    },
+    "/api/v1/items": {
+      "get": {
+        "tags": [
+          "items"
+        ],
+        "summary": "Item management"
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Event tracking"
+      }
+    },
+    "/api/v1/support": {
+      "post": {
+        "tags": [
+          "support"
+        ],
+        "summary": "Support tickets"
+      }
+    },
+    "/api/v1/recommendations": {
+      "get": {
+        "tags": [
+          "recommendations"
+        ],
+        "summary": "AI recommendations"
+      }
+    },
+    "/api/v1/personalization": {
+      "get": {
+        "tags": [
+          "personalization"
+        ],
+        "summary": "User personalization"
+      }
+    },
+    "/api/v1/content_suggestions": {
+      "get": {
+        "tags": [
+          "content"
+        ],
+        "summary": "Content suggestions"
+      }
+    },
+    "/api/v1/community": {
+      "get": {
+        "tags": [
+          "community"
+        ],
+        "summary": "Community features"
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+}
