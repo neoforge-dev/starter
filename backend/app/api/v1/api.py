@@ -12,6 +12,7 @@ from app.api.v1.endpoints import (
     admin,
     analytics,
     auth,
+    branding,
     community,
     content_suggestions,
     events,
@@ -54,6 +55,7 @@ api_router.include_router(
 )
 api_router.include_router(rbac.router, prefix="/rbac", tags=["rbac"])
 api_router.include_router(saml.router, prefix="/auth/saml", tags=["saml", "enterprise"])
+api_router.include_router(branding.router, prefix="/branding", tags=["branding", "enterprise"])
 api_router.include_router(security.router, prefix="/security", tags=["security"])
 api_router.include_router(health.router, prefix="/health", tags=["system"])
 api_router.include_router(config.router, tags=["system"])
