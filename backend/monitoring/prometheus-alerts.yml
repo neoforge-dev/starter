@@ -1,0 +1,209 @@
+groups:
+  - name: neoforge.api
+    rules:
+      - alert: HighHTTPErrorRate
+        expr: rate(http_5xx_responses_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+          team: platform
+        annotations:
+          summary: "High HTTP 5xx error rate detected"
+          description: "HTTP 5xx error rate is {{ $value }} errors/sec over the last 5 minutes"
+          runbook_url: "https://docs.neoforge.dev/runbooks/high-error-rate"
+          dashboard_url: "https://grafana.neoforge.dev/d/neoforge-overview"
+
+      - alert: HighAPIResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+          team: platform
+        annotations:
+          summary: "API response time degraded"
+          description: "95th percentile response time is {{ $value }}s"
+          runbook_url: "https://docs.neoforge.dev/runbooks/slow-api"
+
+      - alert: APIServiceDown
+        expr: up{job="neoforge-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+          team: platform
+        annotations:
+          summary: "NeoForge API service is down"
+          description: "The NeoForge API service has been down for more than 1 minute"
+
+  - name: neoforge.database
+    rules:
+      - alert: DatabaseConnectionPoolExhausted
+        expr: db_connections_active / db_pool_size > 0.8
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+          team: platform
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "Database connection pool is {{ $value | humanizePercentage }} full"
+          runbook_url: "https://docs.neoforge.dev/runbooks/db-connections"
+
+      - alert: HighDatabaseSlowQueries
+        expr: rate(db_slow_queries_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          team: platform
+        annotations:
+          summary: "High rate of slow database queries"
+          description: "Slow query rate is {{ $value }} queries/sec"
+          runbook_url: "https://docs.neoforge.dev/runbooks/slow-queries"
+
+      - alert: DatabaseDown
+        expr: up{job="neoforge-db"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+          team: platform
+        annotations:
+          summary: "Database service is down"
+          description: "PostgreSQL database has been unreachable for more than 1 minute"
+
+  - name: neoforge.redis
+    rules:
+      - alert: RedisConnectionErrors
+        expr: rate(redis_errors_total[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: critical
+          component: redis
+          team: platform
+        annotations:
+          summary: "Redis connection errors detected"
+          description: "Redis error rate is {{ $value }} errors/sec"
+          runbook_url: "https://docs.neoforge.dev/runbooks/redis-errors"
+
+      - alert: RedisDown
+        expr: up{job="neoforge-redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: redis
+          team: platform
+        annotations:
+          summary: "Redis service is down"
+          description: "Redis cache service has been unreachable for more than 1 minute"
+
+  - name: neoforge.celery
+    rules:
+      - alert: CeleryQueueBacklog
+        expr: celery_queue_depth > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: celery
+          team: platform
+        annotations:
+          summary: "Celery queue has high backlog"
+          description: "Queue {{ $labels.queue }} has {{ $value }} pending tasks"
+          runbook_url: "https://docs.neoforge.dev/runbooks/celery-backlog"
+
+      - alert: CeleryWorkersDown
+        expr: up{job="neoforge-workers"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          component: celery
+          team: platform
+        annotations:
+          summary: "Celery workers are down"
+          description: "No Celery workers detected for more than 2 minutes"
+
+  - name: neoforge.business
+    rules:
+      - alert: HighEmailFailureRate
+        expr: rate(email_failed_total[10m]) / rate(email_sent_total[10m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: email
+          team: platform
+        annotations:
+          summary: "High email delivery failure rate"
+          description: "Email failure rate is {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.neoforge.dev/runbooks/email-delivery"
+
+      - alert: NoEmailActivity
+        expr: rate(email_sent_total[1h]) == 0
+        for: 1h
+        labels:
+          severity: info
+          component: email
+          team: platform
+        annotations:
+          summary: "No email activity detected"
+          description: "No emails sent in the last hour - verify email service health"
+
+  - name: neoforge.infrastructure
+    rules:
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+          team: platform
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+          team: platform
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}%"
+
+      - alert: DiskSpaceRunningOut
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          component: infrastructure
+          team: platform
+        annotations:
+          summary: "Disk space running out on {{ $labels.instance }}"
+          description: "Only {{ $value | humanizePercentage }} disk space remaining on {{ $labels.mountpoint }}"
+
+  - name: neoforge.sla
+    rules:
+      - alert: APIAvailabilitySLABreach
+        expr: avg_over_time(up{job="neoforge-api"}[24h]) < 0.999
+        for: 1h
+        labels:
+          severity: critical
+          component: sla
+          team: platform
+        annotations:
+          summary: "API availability SLA breach"
+          description: "24-hour API availability is {{ $value | humanizePercentage }} (SLA: 99.9%)"
+
+      - alert: APIResponseTimeSLABreach
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[1h])) > 1
+        for: 30m
+        labels:
+          severity: warning
+          component: sla
+          team: platform
+        annotations:
+          summary: "API response time SLA breach"
+          description: "1-hour P95 response time is {{ $value }}s (SLA: <1s)"

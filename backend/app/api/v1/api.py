@@ -17,6 +17,7 @@ from app.api.v1.endpoints import (
     # content_suggestions,  # Temporarily disabled for testing
     # events,  # Temporarily disabled for testing
     # items,  # Temporarily disabled for testing
+    monitoring,
     # organizations,  # Temporarily disabled for testing
     # personalization,  # Temporarily disabled due to NumPy production issues
     # projects,  # Temporarily disabled for testing
@@ -41,6 +42,7 @@ api_router.include_router(
     pagination_metrics.router, prefix="/metrics", tags=["monitoring"]
 )
 api_router.include_router(ab_tests.router, prefix="/ab-tests", tags=["ab-testing"])
+api_router.include_router(monitoring.router, prefix="/monitoring", tags=["monitoring"])
 
 # Temporarily disabled for test infrastructure repair:
 # api_router.include_router(users.router, prefix="/users", tags=["users"])
