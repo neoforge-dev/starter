@@ -14,7 +14,7 @@ from typing import Any, Dict, Optional
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from fastapi.responses import HTMLResponse, RedirectResponse, XMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from pydantic import BaseModel, validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -285,8 +285,9 @@ async def get_saml_metadata(
         
         logger.info(f"Generated SAML metadata for tenant {tenant_id}")
         
-        return XMLResponse(
+        return Response(
             content=metadata_xml,
+            media_type="application/xml",
             headers={"Content-Disposition": f"attachment; filename=saml-metadata-tenant-{tenant_id}.xml"}
         )
         

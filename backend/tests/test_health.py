@@ -22,7 +22,7 @@ async def test_basic_health_check(
     client: AsyncClient,
 ) -> None:
     """Test basic health check returns healthy status."""
-    response = await client.get("/health")
+    response = await client.get("/api/v1/health")
     data = response.json()
     assert response.status_code == 200
     assert data["status"] == "healthy"
@@ -33,7 +33,7 @@ async def test_detailed_health_check_success(
     db: AsyncSession,
 ) -> None:
     """Test detailed health check returns healthy status."""
-    response = await client.get("/health/detailed")
+    response = await client.get("/api/v1/health/detailed")
     data = response.json()
     assert response.status_code == 200
     assert data["status"] == "healthy"
@@ -58,7 +58,7 @@ async def test_detailed_health_check_db_failure(
         new_callable=AsyncMock,
         side_effect=SQLAlchemyError("Database connection failed"),
     ):
-        response = await client.get("/health/detailed")
+        response = await client.get("/api/v1/health/detailed")
         data = response.json()
         assert (
             response.status_code == 503
@@ -82,7 +82,7 @@ async def test_detailed_health_check_redis_failure(
         new_callable=AsyncMock,
         side_effect=redis.exceptions.ConnectionError("Redis connection failed"),
     ):
-        response = await client.get("/health/detailed")
+        response = await client.get("/api/v1/health/detailed")
         data = response.json()
         assert (
             response.status_code == 503

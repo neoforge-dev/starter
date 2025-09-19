@@ -616,3 +616,32 @@ class GlobalCRUD(CRUDBase[ModelType, CreateSchemaType, UpdateSchemaType]):
             pass
 
         return await super().update(db, db_obj=db_obj, obj_in=obj_in)
+
+
+class CRUDTenant(TenantCRUDBase[Tenant, Any, Any]):
+    """CRUD operations for Tenant model."""
+
+    def __init__(self):
+        """Initialize with Tenant model."""
+        super().__init__(Tenant)
+
+    def get_required_permissions(self, operation: str) -> List[str]:
+        """Get required permissions for tenant operations."""
+        return [f"tenant.{operation}"]
+
+
+class CRUDOrganization(TenantCRUDBase[Organization, Any, Any]):
+    """CRUD operations for Organization model."""
+
+    def __init__(self):
+        """Initialize with Organization model."""
+        super().__init__(Organization)
+
+    def get_required_permissions(self, operation: str) -> List[str]:
+        """Get required permissions for organization operations."""
+        return [f"organization.{operation}"]
+
+
+# Export instances for use in other modules
+tenant = CRUDTenant()
+organization = CRUDOrganization()

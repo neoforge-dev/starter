@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 import base64
 import json
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from PIL import Image
 import io
@@ -381,7 +381,7 @@ class BrandingConfiguration:
 class BrandingService:
     """Enterprise branding management service."""
     
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
         self._configurations: Dict[int, BrandingConfiguration] = {}
     
@@ -867,6 +867,6 @@ class BrandingService:
         }
 
 
-def get_branding_service(db: Session) -> BrandingService:
+def get_branding_service(db: AsyncSession) -> BrandingService:
     """Dependency to get branding service instance."""
     return BrandingService(db)

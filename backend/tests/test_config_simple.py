@@ -20,7 +20,7 @@ def test_default_settings():
     assert settings.api_v1_str == "/api/v1"
     assert (
         settings.database_url_for_env
-        == "postgresql+asyncpg://postgres:postgres@db:5432/app"
+        == "postgresql+asyncpg://postgres:postgres@db:5432/neoforge"
     )
     assert settings.debug is True
     assert settings.testing is False
