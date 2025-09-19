@@ -1,6 +1,12 @@
 // Minimal NeoApp component for main application - VANILLA JAVASCRIPT VERSION
 import { router } from './router.js';
 
+// Import atomic design components
+import './components/atoms/button.js';
+import './components/atoms/input.js';
+import './components/atoms/card.js';
+import './components/molecules/form-field.js';
+
 class NeoApp extends HTMLElement {
   constructor() {
     super();

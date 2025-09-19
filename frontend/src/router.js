@@ -1,13 +1,21 @@
 // Main application router - VANILLA JAVASCRIPT VERSION
+import './components/pages/auth/login-page.js';
+import './components/pages/auth/register-page.js';
+import './components/pages/dashboard-page.js';
+import './pages/developer-page.js';
+
 class Router {
   constructor() {
     this._routes = new Map([
       ["/", { component: "home-page", title: "Home" }],
-      ["/register", { component: "registration-page", title: "Register" }],
-      ["/auth/register", { component: "registration-page", title: "Register" }],
+      ["/register", { component: "register-page", title: "Register" }],
+      ["/auth/register", { component: "register-page", title: "Register" }],
       ["/login", { component: "login-page", title: "Login" }],
       ["/dashboard", { component: "dashboard-page", title: "Dashboard" }],
       ["/docs", { component: "docs-page", title: "Documentation" }],
+      ["/developers", { component: "developer-page", title: "Developer Experience" }],
+      ["/api", { component: "developer-page", title: "API Documentation" }],
+      ["/playground", { component: "developer-page", title: "API Playground" }],
     ]);
     this._initialized = false;
     this._mainContent = null;
@@ -61,73 +69,7 @@ class Router {
       // Create component element
       const element = document.createElement(route.component);
 
-      // Render content based on route
-      if (route.component === 'registration-page') {
-        element.innerHTML = `
-          <div style="max-width: 400px; margin: 2rem auto; padding: 2rem; border: 1px solid #ddd; border-radius: 8px;">
-            <h2>Registration Page</h2>
-            <form>
-              <div style="margin-bottom: 1rem;">
-                <label for="name" style="display: block; margin-bottom: 0.5rem;">Name:</label>
-                <input type="text" id="name" data-testid="name-input" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-              </div>
-              <div style="margin-bottom: 1rem;">
-                <label for="email" style="display: block; margin-bottom: 0.5rem;">Email:</label>
-                <input type="email" id="email" data-testid="email-input" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-              </div>
-              <div style="margin-bottom: 1rem;">
-                <label for="password" style="display: block; margin-bottom: 0.5rem;">Password:</label>
-                <input type="password" id="password" data-testid="password-input" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-              </div>
-              <div style="margin-bottom: 1rem;">
-                <label for="confirm-password" style="display: block; margin-bottom: 0.5rem;">Confirm Password:</label>
-                <input type="password" id="confirm-password" data-testid="confirm-password-input" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-              </div>
-              <button type="submit" data-testid="register-button" style="width: 100%; padding: 0.75rem; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Register</button>
-            </form>
-          </div>
-        `;
-      } else if (route.component === 'login-page') {
-        element.innerHTML = `
-          <div style="max-width: 400px; margin: 2rem auto; padding: 2rem; border: 1px solid #ddd; border-radius: 8px;">
-            <h2>Login Page</h2>
-            <form>
-              <div style="margin-bottom: 1rem;">
-                <label for="email" style="display: block; margin-bottom: 0.5rem;">Email:</label>
-                <input type="email" id="email" data-testid="email-input" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-              </div>
-              <div style="margin-bottom: 1rem;">
-                <label for="password" style="display: block; margin-bottom: 0.5rem;">Password:</label>
-                <input type="password" id="password" data-testid="password-input" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-              </div>
-              <button type="submit" data-testid="login-button" style="width: 100%; padding: 0.75rem; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Login</button>
-            </form>
-          </div>
-        `;
-      } else if (route.component === 'dashboard-page') {
-        element.innerHTML = `
-          <div style="max-width: 800px; margin: 2rem auto; padding: 2rem;">
-            <h2>Dashboard</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 2rem;">
-              <div style="padding: 1rem; border: 1px solid #ddd; border-radius: 8px;">
-                <h3>Analytics</h3>
-                <p>View your application analytics</p>
-              </div>
-              <div style="padding: 1rem; border: 1px solid #ddd; border-radius: 8px;">
-                <h3>Settings</h3>
-                <p>Configure your preferences</p>
-              </div>
-              <div style="padding: 1rem; border: 1px solid #ddd; border-radius: 8px;">
-                <h3>Projects</h3>
-                <p>Manage your projects</p>
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        element.innerHTML = `<div style="text-align: center; padding: 2rem;"><h2>${route.title}</h2><p>This is the ${route.title} page.</p></div>`;
-      }
-
+      // Append the component to the DOM
       this._mainContent.appendChild(element);
 
       // Update title
@@ -137,17 +79,32 @@ class Router {
 
     } catch (error) {
       console.error("Error loading route:", error);
+      this._render404();
     }
   }
 
   _render404() {
-    this._mainContent.innerHTML = `
-      <div style="text-align: center; padding: 2rem;">
-        <h2>Page Not Found</h2>
-        <p>The requested page could not be found.</p>
-        <a href="/" style="color: #2563eb; text-decoration: none;">Go Home</a>
-      </div>
+    // Create a simple 404 component using our atomic design
+    const notFoundCard = document.createElement('neo-card');
+    notFoundCard.setAttribute('shadow', 'medium');
+    notFoundCard.setAttribute('padding', 'large');
+    notFoundCard.style.cssText = `
+      max-width: 400px;
+      margin: 2rem auto;
+      text-align: center;
     `;
+
+    notFoundCard.innerHTML = `
+      <h2 style="color: #1f2937; margin-bottom: 1rem;">Page Not Found</h2>
+      <p style="color: #6b7280; margin-bottom: 2rem;">The requested page could not be found.</p>
+      <neo-button variant="primary" onclick="window.location.href='/'">
+        Go Home
+      </neo-button>
+    `;
+
+    this._mainContent.innerHTML = "";
+    this._mainContent.appendChild(notFoundCard);
+    document.title = "Page Not Found - NeoForge";
   }
 
   navigate(path) {
