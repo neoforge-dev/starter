@@ -328,6 +328,118 @@ class ApiService {
       clearTimeout(timeoutId);
     }
   }
+
+  // Cursor pagination utility methods (migrated from api.ts)
+
+  /**
+   * Create cursor pagination parameters for first page
+   * @param {number} limit - Number of items per page
+   * @param {string} sortBy - Field to sort by
+   * @param {'asc'|'desc'} sortDirection - Sort direction
+   * @param {boolean} includeTotal - Whether to include total count
+   * @param {Object} filters - Additional filters
+   * @returns {Object} Cursor pagination parameters
+   */
+  createCursorParams(
+    limit = 20,
+    sortBy = 'created_at',
+    sortDirection = 'desc',
+    includeTotal = false,
+    filters = {}
+  ) {
+    return {
+      limit,
+      sort_by: sortBy,
+      sort_direction: sortDirection,
+      include_total: includeTotal,
+      ...filters
+    };
+  }
+
+  /**
+   * Create pagination parameters for next page using cursor
+   * @param {Object} currentResponse - Current paginated response
+   * @param {Object} additionalFilters - Additional filters to apply
+   * @returns {Object|null} Next page parameters or null if no next page
+   */
+  createNextPageParams(currentResponse, additionalFilters = {}) {
+    if (!currentResponse.pagination?.has_next || !currentResponse.pagination?.next_cursor) {
+      return null;
+    }
+
+    return {
+      cursor: currentResponse.pagination.next_cursor,
+      limit: 20, // Default limit
+      sort_by: currentResponse.pagination.current_sort || 'created_at',
+      sort_direction: currentResponse.pagination.current_direction || 'desc',
+      include_total: false, // Usually don't need total on subsequent pages
+      ...additionalFilters
+    };
+  }
+
+  /**
+   * Create pagination parameters for previous page using cursor
+   * @param {Object} currentResponse - Current paginated response
+   * @param {Object} additionalFilters - Additional filters to apply
+   * @returns {Object|null} Previous page parameters or null if no previous page
+   */
+  createPreviousPageParams(currentResponse, additionalFilters = {}) {
+    if (!currentResponse.pagination?.has_previous || !currentResponse.pagination?.previous_cursor) {
+      return null;
+    }
+
+    return {
+      cursor: currentResponse.pagination.previous_cursor,
+      limit: 20, // Default limit
+      sort_by: currentResponse.pagination.current_sort || 'created_at',
+      sort_direction: currentResponse.pagination.current_direction || 'desc',
+      include_total: false,
+      ...additionalFilters
+    };
+  }
+
+  /**
+   * Check if response uses cursor pagination
+   * @param {Object} response - Paginated response
+   * @returns {boolean} True if cursor paginated
+   */
+  isCursorPaginated(response) {
+    return response.pagination &&
+           'next_cursor' in response.pagination &&
+           'has_next' in response.pagination;
+  }
+
+  /**
+   * Extract data array from either pagination response type
+   * @param {Object} response - Paginated response
+   * @returns {Array} Data array
+   */
+  extractPaginatedData(response) {
+    return response.data || [];
+  }
+
+  /**
+   * Get pagination info in a normalized format
+   * @param {Object} response - Paginated response
+   * @returns {Object} Normalized pagination info
+   */
+  getPaginationInfo(response) {
+    if (this.isCursorPaginated(response)) {
+      return {
+        hasNext: response.pagination.has_next,
+        hasPrevious: response.pagination.has_previous,
+        ...(response.pagination.total_count !== undefined && { total: response.pagination.total_count })
+      };
+    } else {
+      return {
+        hasNext: response.pagination?.has_next || false,
+        hasPrevious: response.pagination?.has_prev || false,
+        total: response.pagination?.total,
+        currentPage: response.pagination?.page,
+        totalPages: response.pagination?.total_pages
+      };
+    }
+  }
 }
 
 // Export a singleton instance

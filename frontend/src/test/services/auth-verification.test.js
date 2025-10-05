@@ -25,7 +25,7 @@ Object.defineProperty(global, 'localStorage', {
 });
 
 // Import after mocking
-import { AuthService } from '../../services/auth.ts';
+import { AuthService } from '../../services/auth.js';
 import { Logger } from '../../utils/logger.js';
 
 describe('AuthService Email Verification Tests', () => {

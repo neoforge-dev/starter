@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 // Mock the auth service before importing components
-vi.mock('../../services/auth.ts', () => ({
+vi.mock('../../services/auth.js', () => ({
   authService: {
     login: vi.fn(),
     signup: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock('../../services/auth.ts', () => ({
 // Import components after mocking
 import '../../components/auth/login-form.js';
 import '../../components/auth/signup-form.js';
-import { authService } from '../../services/auth.ts';
+import { authService } from '../../services/auth.js';
 
 describe('Authentication Integration Tests', () => {
   let container;
