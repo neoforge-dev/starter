@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { BaseComponent } from "./base-component.js";
 import { baseStyles } from "./styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 /**
  * Base page component that provides common functionality for all page components
@@ -225,7 +226,7 @@ export class BasePageComponent extends BaseComponent {
     if (window.showToast) {
       window.showToast(message, type);
     } else {
-      console.log(`Toast: ${type.toUpperCase()} - ${message}`);
+      Logger.info(`Toast: ${type.toUpperCase()} - ${message}`);
     }
   }
 
@@ -263,7 +264,7 @@ export class BasePageComponent extends BaseComponent {
       const result = await operation();
       return result;
     } catch (error) {
-      console.error("Operation failed:", error);
+      Logger.error("Operation failed:", error);
       this.setError(error.message || "An unexpected error occurred");
       throw error;
     } finally {

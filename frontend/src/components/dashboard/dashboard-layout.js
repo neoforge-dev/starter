@@ -2,6 +2,7 @@ import { html, css } from 'lit';
 import { BaseComponent } from '../base-component.js';
 import { apiService } from '../../services/api.js';
 import { authService } from '../../services/auth.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Dashboard Layout Component
@@ -464,7 +465,7 @@ export class DashboardLayout extends BaseComponent {
     try {
       this.user = await apiService.request('/auth/me');
     } catch (error) {
-      console.error('Failed to load user data:', error);
+      Logger.error('Failed to load user data:', error);
       // Fallback to auth service
       this.user = authService.getCurrentUser();
     } finally {
@@ -476,7 +477,7 @@ export class DashboardLayout extends BaseComponent {
     try {
       this.systemStatus = await apiService.request('/status');
     } catch (error) {
-      console.error('Failed to load system status:', error);
+      Logger.error('Failed to load system status:', error);
     }
   }
 

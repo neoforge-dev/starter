@@ -1,3 +1,5 @@
+import { Logger } from './logger.js';
+
 /**
  * Polyfill loader utility for handling browser compatibility
  * @module utils/polyfill-loader
@@ -72,16 +74,16 @@ async function loadAllFeaturePolyfills() {
     try {
       polyfillPromises.push(import("container-query-polyfill"));
     } catch (error) {
-      console.warn("Container query polyfill not available:", error);
+      Logger.warn("Container query polyfill not available:", error);
     }
   }
 
   if (!features.subgrid) {
     try {
       // Subgrid polyfill is not available yet, skip for now
-      console.warn("Subgrid polyfill not available");
+      Logger.warn("Subgrid polyfill not available");
     } catch (error) {
-      console.warn("Subgrid polyfill not available:", error);
+      Logger.warn("Subgrid polyfill not available:", error);
     }
   }
 
@@ -89,7 +91,7 @@ async function loadAllFeaturePolyfills() {
     try {
       polyfillPromises.push(import("view-transition-polyfill"));
     } catch (error) {
-      console.warn("View transitions polyfill not available:", error);
+      Logger.warn("View transitions polyfill not available:", error);
     }
   }
 
@@ -101,16 +103,16 @@ async function loadAllFeaturePolyfills() {
  * @returns {Promise} Promise that resolves when all polyfills are loaded
  */
 export async function initPolyfills() {
-  console.log("Initializing polyfills...");
+  Logger.info("Initializing polyfills...");
   const startTime = performance.now();
 
   try {
     await Promise.all([loadBrowserFixes(), loadAllFeaturePolyfills()]);
 
     const loadTime = performance.now() - startTime;
-    console.log(`Polyfills initialized in ${loadTime.toFixed(2)}ms`);
+    Logger.info(`Polyfills initialized in ${loadTime.toFixed(2)}ms`);
   } catch (error) {
-    console.error("Error loading polyfills:", error);
+    Logger.error("Error loading polyfills:", error);
     // Report error to analytics service
     window.analyticsService?.reportError("polyfill-loader", error);
   }
@@ -200,7 +202,7 @@ export const loadPolyfills = async (features = Object.keys(POLYFILLS)) => {
   for (const feature of features) {
     const polyfill = POLYFILLS[feature];
     if (!polyfill) {
-      console.warn(`Unknown feature: ${feature}`);
+      Logger.warn(`Unknown feature: ${feature}`);
       continue;
     }
 
@@ -233,7 +235,7 @@ export const isFeatureSupported = (feature) => {
 export const initCriticalPolyfills = () => {
   const criticalFeatures = ["resizeObserver", "intersectionObserver"];
   loadPolyfills(criticalFeatures).catch((error) => {
-    console.error("Error loading critical polyfills:", error);
+    Logger.error("Error loading critical polyfills:", error);
   });
 };
 
@@ -256,16 +258,16 @@ export const loadFeaturePolyfills = async (feature) => {
       try {
         polyfillPromises.push(loadPolyfills(["containerQueries"]));
       } catch (error) {
-        console.warn("Container query polyfill not available:", error);
+        Logger.warn("Container query polyfill not available:", error);
       }
     }
 
     if (!features.subgrid) {
       try {
         // Subgrid polyfill is not available yet, skip for now
-        console.warn("Subgrid polyfill not available");
+        Logger.warn("Subgrid polyfill not available");
       } catch (error) {
-        console.warn("Subgrid polyfill not available:", error);
+        Logger.warn("Subgrid polyfill not available:", error);
       }
     }
 
@@ -273,7 +275,7 @@ export const loadFeaturePolyfills = async (feature) => {
       try {
         polyfillPromises.push(loadPolyfills(["viewTransitions"]));
       } catch (error) {
-        console.warn("View transitions polyfill not available:", error);
+        Logger.warn("View transitions polyfill not available:", error);
       }
     }
 

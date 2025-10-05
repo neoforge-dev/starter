@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { apiService as api } from '../../services/api.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * User Flow Diagram Component (Organism)
@@ -474,7 +475,7 @@ export class UserFlowDiagram extends LitElement {
       this.generateLayout();
 
     } catch (error) {
-      console.error('[UserFlowDiagram] Error loading flow data:', error);
+      Logger.error('[UserFlowDiagram] Error loading flow data:', error);
     } finally {
       this.loading = false;
     }

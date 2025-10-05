@@ -1,3 +1,5 @@
+import { Logger } from '../utils/logger.js';
+
 export class TranslationsLoader {
   constructor() {
     this._cache = new Map();
@@ -18,7 +20,7 @@ export class TranslationsLoader {
       this._cache.set(locale, translations);
       return translations;
     } catch (error) {
-      console.error(`Error loading translations for ${locale}:`, error);
+      Logger.error(`Error loading translations for ${locale}:`, error);
       throw error;
     }
   }

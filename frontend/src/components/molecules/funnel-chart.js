@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { apiService as api } from '../../services/api.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Funnel Chart Component (Molecule)
@@ -369,7 +370,7 @@ export class FunnelChart extends LitElement {
       this.processData(funnelData);
 
     } catch (error) {
-      console.error('[FunnelChart] Error loading funnel data:', error);
+      Logger.error('[FunnelChart] Error loading funnel data:', error);
     } finally {
       this.loading = false;
     }

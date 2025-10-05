@@ -1,6 +1,7 @@
 import {   html, css   } from 'lit';
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 /**
  * @element tutorials-page
@@ -201,7 +202,7 @@ export class TutorialsPage extends BaseComponent {
       const { tutorials } = await window.api.getTutorials();
       this.tutorials = tutorials;
     } catch (error) {
-      console.error("Failed to load tutorials:", error);
+      Logger.error("Failed to load tutorials:", error);
       this.error = "Failed to load tutorials";
     } finally {
       this.loading = false;

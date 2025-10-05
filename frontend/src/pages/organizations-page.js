@@ -1,6 +1,7 @@
 import { html, css } from 'lit';
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 /**
  * @element organizations-page
@@ -124,12 +125,12 @@ export class OrganizationsPage extends BaseComponent {
 
   createOrganization() {
     // Mock create organization functionality
-    console.log("Create organization clicked");
+    Logger.info("Create organization clicked");
   }
 
   viewOrganization(org) {
     // Mock view organization functionality
-    console.log("View organization:", org);
+    Logger.info("View organization:", org);
   }
 }
 

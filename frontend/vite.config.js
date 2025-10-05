@@ -88,6 +88,7 @@ export default defineConfig({
       minifySyntax: true,
       minifyWhitespace: true,
       treeShaking: true,
+      drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
     },
     sourcemap: false,
     cssCodeSplit: true,

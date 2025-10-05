@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { BaseComponent } from "../../base-component.js";
 import { baseStyles } from "../../styles/base.js";
+import { Logger } from '../../../utils/logger.js';
 import "../../atoms/button/button.js";
 
 /**
@@ -270,7 +271,7 @@ export class NeoCTAButtonRow extends BaseComponent {
         this._actionsData = [];
       }
     } catch (error) {
-      console.warn('Invalid actions data provided to neo-cta-button-row:', error);
+      Logger.warn('Invalid actions data provided to neo-cta-button-row:', error);
       this._actionsData = [];
     }
   }

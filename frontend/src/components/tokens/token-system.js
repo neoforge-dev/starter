@@ -1,3 +1,5 @@
+import { Logger } from '../../utils/logger.js';
+
 /**
  * Design Token System - Centralized token management with runtime theming
  * Provides token validation, type safety, and dynamic theme switching
@@ -234,7 +236,7 @@ export const designTokens = {
 export function validateToken(token, type) {
   const validator = TokenSchema[type];
   if (!validator) {
-    console.warn(`Unknown token type: ${type}`);
+    Logger.warn(`Unknown token type: ${type}`);
     return false;
   }
   return validator(token.value);
@@ -250,7 +252,7 @@ export function getTokenValue(tokenPath, fallback = null) {
   for (const part of pathParts) {
     current = current[part];
     if (!current) {
-      console.warn(`Token path not found: ${tokenPath}`);
+      Logger.warn(`Token path not found: ${tokenPath}`);
       return fallback;
     }
   }

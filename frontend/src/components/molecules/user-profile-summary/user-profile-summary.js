@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { BaseComponent } from "../../base-component.js";
 import { baseStyles } from "../../styles/base.js";
+import { Logger } from '../../../utils/logger.js';
 import "../../atoms/avatar/avatar.js";
 import "../../atoms/heading/heading.js";
 import "../../atoms/badge/badge.js";
@@ -276,7 +277,7 @@ export class NeoUserProfileSummary extends BaseComponent {
         this._userData = {};
       }
     } catch (error) {
-      console.warn('Invalid user data provided to neo-user-profile-summary:', error);
+      Logger.warn('Invalid user data provided to neo-user-profile-summary:', error);
       this._userData = {};
     }
   }

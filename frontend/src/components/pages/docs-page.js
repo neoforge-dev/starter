@@ -5,6 +5,7 @@ import {
  } from 'lit';
 import { baseStyles } from "../styles/base.js";
 import { LoadingMixin } from "../mixins/loading.js";
+import { Logger } from '../../utils/logger.js';
 
 export class DocsPage extends LoadingMixin(LitElement) {
   static properties = {
@@ -86,7 +87,7 @@ export class DocsPage extends LoadingMixin(LitElement) {
       const content = await response.json();
       this.content = content;
     } catch (error) {
-      console.error("Failed to load docs:", error);
+      Logger.error("Failed to load docs:", error);
     } finally {
       this.stopLoading();
     }

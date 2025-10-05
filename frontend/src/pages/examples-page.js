@@ -1,5 +1,6 @@
 import {   LitElement, html, css   } from 'lit';
 import { baseStyles } from "../components/styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 export class ExamplesPage extends LitElement {
   static properties = {
@@ -283,7 +284,7 @@ export class ExamplesPage extends LitElement {
       this.initialized = true;
     } catch (err) {
       this.error = err.message;
-      console.error("Error loading examples:", err);
+      Logger.error("Error loading examples:", err);
     } finally {
       this.loading = false;
     }
@@ -316,7 +317,7 @@ export class ExamplesPage extends LitElement {
         return example;
       });
     } catch (err) {
-      console.error("Error liking example:", err);
+      Logger.error("Error liking example:", err);
     }
   }
 

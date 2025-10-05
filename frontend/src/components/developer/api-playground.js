@@ -11,6 +11,7 @@
 
 import { LitElement, html, css } from 'lit';
 import { until } from 'lit/directives/until.js';
+import { Logger } from '../../utils/logger.js';
 
 export class ApiPlayground extends LitElement {
   static styles = css`
@@ -480,7 +481,7 @@ export class ApiPlayground extends LitElement {
       this.endpoints = this.parseEndpoints(schema);
       this.requestUpdate();
     } catch (error) {
-      console.error('Failed to load API schema:', error);
+      Logger.error('Failed to load API schema:', error);
     }
   }
 

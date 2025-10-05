@@ -6,6 +6,7 @@ import {
   BaseComponent,
 } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 /**
  * @element about-page
@@ -125,7 +126,7 @@ export class AboutPage extends BaseComponent {
       this.companyInfo = companyInfo;
       await this.requestUpdate();
     } catch (error) {
-      console.error("Failed to load about page data:", error);
+      Logger.error("Failed to load about page data:", error);
     }
   }
 
@@ -144,7 +145,7 @@ export class AboutPage extends BaseComponent {
         })
       );
     } catch (error) {
-      console.error("Newsletter subscription failed:", error);
+      Logger.error("Newsletter subscription failed:", error);
     }
   }
 

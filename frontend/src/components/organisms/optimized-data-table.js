@@ -1,5 +1,6 @@
 import { html, css } from 'lit';
 import { AtomComponent } from '../atom-component.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Optimized DataTable with virtual scrolling for enterprise performance
@@ -227,7 +228,7 @@ export class NeoOptimizedDataTable extends AtomComponent {
       this._renderCount++;
       const renderTime = performance.now() - (this._renderStart || 0);
       if (renderTime > 16) {
-        console.warn(`Slow DataTable render: ${renderTime.toFixed(2)}ms (render #${this._renderCount})`);
+        Logger.warn(`Slow DataTable render: ${renderTime.toFixed(2)}ms (render #${this._renderCount})`);
       }
     }
   }

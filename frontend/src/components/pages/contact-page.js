@@ -1,5 +1,6 @@
 import { html, css } from 'lit';
 import { BasePageComponent } from "../base-page-component.js";
+import { Logger } from '../../utils/logger.js';
 
 export class ContactPage extends BasePageComponent {
   static styles = [
@@ -132,7 +133,7 @@ export class ContactPage extends BasePageComponent {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         // In a real app, you would submit to your API here
-        console.log("Contact form submitted:", data);
+        Logger.info("Contact form submitted:", data);
 
         this.showToast("Thank you for contacting us! We'll get back to you soon.", "success");
 
@@ -141,7 +142,7 @@ export class ContactPage extends BasePageComponent {
       });
     } catch (error) {
       // Error is already handled by handleAsync
-      console.error("Failed to submit contact form:", error);
+      Logger.error("Failed to submit contact form:", error);
     }
   }
 }

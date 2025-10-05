@@ -1,6 +1,7 @@
 import {   LitElement, html, css   } from 'lit';
 import { baseStyles } from "../../styles/base.js";
 import { LoadingMixin } from "../../styles/base.js";
+import { Logger } from '../../utils/logger.js';
 
 export class CodeSnippet extends LoadingMixin(LitElement) {
   static properties = {
@@ -146,7 +147,7 @@ export class CodeSnippet extends LoadingMixin(LitElement) {
         button.style.background = "";
       }, 2000);
     } catch (err) {
-      console.error("Failed to copy code:", err);
+      Logger.error("Failed to copy code:", err);
     }
   }
 

@@ -7,6 +7,7 @@ import {
   defineComponent,
 } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 /**
  * @element search-page
@@ -139,7 +140,7 @@ export class SearchPage extends BaseComponent {
     try {
       this.filters = await window.search.getFilters();
     } catch (error) {
-      console.error("Failed to load filters:", error);
+      Logger.error("Failed to load filters:", error);
     }
   }
 
@@ -259,7 +260,7 @@ export class SearchPage extends BaseComponent {
       const results = await window.search.search(this.query);
       this.results = results;
     } catch (error) {
-      console.error("Search failed:", error);
+      Logger.error("Search failed:", error);
       this.results = [];
     } finally {
       this.loading = false;

@@ -1,4 +1,5 @@
 import { LitElement } from "lit";
+import { Logger } from '../utils/logger.js';
 
 /**
  * Lightweight base component class for simple atoms.
@@ -24,7 +25,7 @@ export class AtomComponent extends LitElement {
 
     // Only log in development mode
     if (process.env.NODE_ENV === 'development') {
-      console.debug(`Connected: ${this.tagName}`);
+      Logger.debug(`Connected: ${this.tagName}`);
     }
   }
 
@@ -40,7 +41,7 @@ export class AtomComponent extends LitElement {
       this.updateComplete.then(() => {
         const renderTime = performance.now() - start;
         if (renderTime > 16) { // Flag slow renders
-          console.warn(`Slow render: ${this.tagName} took ${renderTime.toFixed(2)}ms`);
+          Logger.warn(`Slow render: ${this.tagName} took ${renderTime.toFixed(2)}ms`);
         }
       });
     }
@@ -77,13 +78,13 @@ export class AtomComponent extends LitElement {
     if (process.env.NODE_ENV === 'development') {
       // Only validate in development to avoid production overhead
       if (validators.required && (value === undefined || value === null)) {
-        console.warn(`Required property '${propName}' is missing on ${this.tagName}`);
+        Logger.warn(`Required property '${propName}' is missing on ${this.tagName}`);
       }
       if (validators.type && typeof value !== validators.type) {
-        console.warn(`Property '${propName}' should be ${validators.type}, got ${typeof value}`);
+        Logger.warn(`Property '${propName}' should be ${validators.type}, got ${typeof value}`);
       }
       if (validators.enum && !validators.enum.includes(value)) {
-        console.warn(`Property '${propName}' should be one of [${validators.enum.join(', ')}], got '${value}'`);
+        Logger.warn(`Property '${propName}' should be one of [${validators.enum.join(', ')}], got '${value}'`);
       }
     }
   }
@@ -157,7 +158,7 @@ export class AtomComponent extends LitElement {
     this._hasConnected = false;
 
     if (process.env.NODE_ENV === 'development') {
-      console.debug(`Disconnected: ${this.tagName}`);
+      Logger.debug(`Disconnected: ${this.tagName}`);
     }
   }
 }

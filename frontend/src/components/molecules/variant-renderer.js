@@ -7,6 +7,7 @@
 import { LitElement, html, css } from 'lit';
 import { property, state, customElement } from 'lit/decorators.js';
 import abTestingService from '../../services/ab-testing.js';
+import { Logger } from '../../utils/logger.js';
 
 @customElement('variant-renderer')
 export class VariantRenderer extends LitElement {
@@ -256,7 +257,7 @@ export class VariantRenderer extends LitElement {
   }
 
   _handleError(error) {
-    console.error(`Variant renderer error for test ${this.testKey}:`, error);
+    Logger.error(`Variant renderer error for test ${this.testKey}:`, error);
     this.error = error.message || 'Failed to load test variant';
     this.currentVariant = this.defaultVariant;
 
@@ -361,7 +362,7 @@ export class VariantRenderer extends LitElement {
    */
   async trackConversion(metricName, value = null, properties = {}) {
     if (!this.testKey) {
-      console.warn('Cannot track conversion: no test key specified');
+      Logger.warn('Cannot track conversion: no test key specified');
       return false;
     }
 
@@ -388,7 +389,7 @@ export class VariantRenderer extends LitElement {
 
       return success;
     } catch (error) {
-      console.error('Failed to track conversion:', error);
+      Logger.error('Failed to track conversion:', error);
       return false;
     }
   }

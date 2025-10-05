@@ -1,3 +1,5 @@
+import { Logger } from './logger.js';
+
 /**
  * Utility to detect memory leaks in web components
  */
@@ -365,7 +367,7 @@ class MemoryLeakDetector {
     );
 
     // Log to console
-    console.warn("Memory leak detected:", leak);
+    Logger.warn("Memory leak detected:", leak);
 
     // Send to monitoring service if available
     if (window.monitoring) {

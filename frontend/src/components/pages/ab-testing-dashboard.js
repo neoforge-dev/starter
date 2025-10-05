@@ -6,6 +6,7 @@
 import { LitElement, html, css } from 'lit';
 import { property, state, customElement } from 'lit/decorators.js';
 import abTestingService from '../../services/ab-testing.js';
+import { Logger } from '../../utils/logger.js';
 import '../organisms/ab-test-manager.js';
 import '../molecules/test-analytics.js';
 import '../molecules/variant-renderer.js';
@@ -360,7 +361,7 @@ export class AbTestingDashboard extends LitElement {
 
     // Initialize A/B testing service
     abTestingService.initialize().then(() => {
-      console.log('A/B testing service initialized');
+      Logger.info('A/B testing service initialized');
     });
   }
 
@@ -383,7 +384,7 @@ export class AbTestingDashboard extends LitElement {
       };
 
     } catch (error) {
-      console.error('Failed to load performance metrics:', error);
+      Logger.error('Failed to load performance metrics:', error);
     } finally {
       this.isLoading = false;
     }
@@ -664,7 +665,7 @@ if (variant?.variantKey === 'variant_a') {
         <pre><code>// Listen for A/B testing events
 abTestingService.subscribe((eventType, data) => {
   if (eventType === 'assignment') {
-    console.log('User assigned to variant:', data.assignment.variant_key);
+    Logger.info('User assigned to variant:', data.assignment.variant_key);
   }
 });</code></pre>
       </div>

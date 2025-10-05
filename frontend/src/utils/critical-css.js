@@ -1,3 +1,5 @@
+import { Logger } from './logger.js';
+
 /**
  * Utility to analyze and extract critical CSS for above-the-fold content
  */
@@ -99,7 +101,7 @@ class CriticalCSSExtractor {
           }
         });
       } catch (error) {
-        console.warn("Error accessing stylesheet:", error);
+        Logger.warn("Error accessing stylesheet:", error);
       }
     });
   }
@@ -116,7 +118,7 @@ class CriticalCSSExtractor {
         this.aboveFoldElements.has(element)
       );
     } catch (error) {
-      console.warn("Invalid selector:", selector);
+      Logger.warn("Invalid selector:", selector);
       return false;
     }
   }

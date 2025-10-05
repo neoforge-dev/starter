@@ -10,6 +10,7 @@
  */
 
 import { LitElement, html, css } from 'lit';
+import { Logger } from '../../utils/logger.js';
 
 export class SDKDocumentation extends LitElement {
   static styles = css`
@@ -502,7 +503,7 @@ export class SDKDocumentation extends LitElement {
 
   downloadSDK(language) {
     // Would trigger actual SDK download
-    console.log(`Downloading ${language} SDK`);
+    Logger.info(`Downloading ${language} SDK`);
     // For demo purposes, we'll just show an alert
     alert(`${language} SDK download would start here`);
   }

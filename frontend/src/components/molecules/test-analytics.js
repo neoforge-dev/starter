@@ -7,6 +7,7 @@
 import { LitElement, html, css } from 'lit';
 import { property, state, customElement } from 'lit/decorators.js';
 import abTestingService from '../../services/ab-testing.js';
+import { Logger } from '../../utils/logger.js';
 
 @customElement('test-analytics')
 export class TestAnalytics extends LitElement {
@@ -402,7 +403,7 @@ export class TestAnalytics extends LitElement {
     try {
       this.analytics = await abTestingService.getTestAnalytics(this.testId);
     } catch (error) {
-      console.error('Failed to load analytics:', error);
+      Logger.error('Failed to load analytics:', error);
       this.error = 'Failed to load test analytics. Please try again.';
     } finally {
       this.isLoading = false;

@@ -1,3 +1,5 @@
+import { Logger } from './utils/logger.js';
+
 const CACHE_NAME = "neoforge-cache-v1";
 const OFFLINE_URL = "/offline.html";
 
@@ -146,7 +148,7 @@ async function handleStaleWhileRevalidate(request) {
       return response;
     })
     .catch((error) => {
-      console.error("Network request failed:", error);
+      Logger.error("Network request failed:", error);
       return null;
     });
 
@@ -162,7 +164,7 @@ self.addEventListener("message", (event) => {
 
 // Sync offline form submissions
 async function syncForms() {
-  console.log("Syncing offline forms...");
+  Logger.info("Syncing offline forms...");
   // Open IndexedDB and read queued actions
   try {
     const db = await new Promise((resolve, reject) => {
@@ -201,14 +203,14 @@ async function syncForms() {
           await deleteAction(action.id);
         } else {
           // Leave it in the queue for retry on next sync
-          console.warn('Sync failed for action', action.id, res && res.status);
+          Logger.warn('Sync failed for action', action.id, res && res.status);
         }
       } catch (err) {
-        console.warn('Network error syncing action', action.id, err);
+        Logger.warn('Network error syncing action', action.id, err);
       }
     }
   } catch (e) {
-    console.error('Failed to sync offline forms/actions', e);
+    Logger.error('Failed to sync offline forms/actions', e);
   }
 }
 

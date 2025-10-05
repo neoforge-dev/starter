@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { apiService as api } from '../../services/api.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Journey Tracker Component (Atom)
@@ -101,7 +102,7 @@ export class JourneyTracker extends LitElement {
     this.trackJourneyStart();
 
     if (this.debug) {
-      console.log(`[JourneyTracker] Started tracking with session: ${this.sessionId}`);
+      Logger.info(`[JourneyTracker] Started tracking with session: ${this.sessionId}`);
     }
   }
 
@@ -303,7 +304,7 @@ export class JourneyTracker extends LitElement {
     this.eventQueue.push(event);
 
     if (this.debug) {
-      console.log(`[JourneyTracker] Event: ${eventType}`, event);
+      Logger.info(`[JourneyTracker] Event: ${eventType}`, event);
     }
 
     // Dispatch custom event for real-time listening
@@ -335,10 +336,10 @@ export class JourneyTracker extends LitElement {
       }
 
       if (this.debug) {
-        console.log(`[JourneyTracker] Flushed ${eventsToFlush.length} events`);
+        Logger.info(`[JourneyTracker] Flushed ${eventsToFlush.length} events`);
       }
     } catch (error) {
-      console.error('[JourneyTracker] Failed to flush events:', error);
+      Logger.error('[JourneyTracker] Failed to flush events:', error);
       // Re-queue events for retry (with limit to prevent memory issues)
       if (this.eventQueue.length < 100) {
         this.eventQueue.unshift(...eventsToFlush);

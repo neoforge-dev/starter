@@ -1,6 +1,7 @@
 import { html, css } from 'lit';
 import { BaseComponent } from '../base-component.js';
 import { apiService } from '../../services/api.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Dashboard Welcome Component
@@ -329,7 +330,7 @@ export class DashboardWelcome extends BaseComponent {
     try {
       this.user = await apiService.request('/auth/me');
     } catch (error) {
-      console.error('Failed to load user data:', error);
+      Logger.error('Failed to load user data:', error);
       // Use fallback user data
       this.user = {
         name: 'Developer',
@@ -391,7 +392,7 @@ export class DashboardWelcome extends BaseComponent {
       this.recentActivity = activities.slice(0, 4); // Limit to 4 items
 
     } catch (error) {
-      console.error('Failed to load recent activity:', error);
+      Logger.error('Failed to load recent activity:', error);
       // Use fallback data
       this._loadFallbackActivity();
     }

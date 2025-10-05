@@ -1,6 +1,7 @@
 import {   LitElement, html, css   } from 'lit';
 import { baseStyles } from "../styles/base.js";
 import { authService } from "../services/auth.ts";
+import { Logger } from '../../utils/logger.js';
 import "../components/ui/card.js";
 import "../components/ui/button.js";
 import "../components/ui/input.js";
@@ -163,7 +164,7 @@ export class ProfilePage extends LitElement {
       // For now, we'll use the user from auth service
       this.user = authService.user;
     } catch (error) {
-      console.error("Error loading profile:", error);
+      Logger.error("Error loading profile:", error);
       this.error = error.message;
     } finally {
       this.loading = false;
@@ -186,12 +187,12 @@ export class ProfilePage extends LitElement {
       this.error = "";
 
       // In a real app, you would update the profile via API
-      console.log("Updating profile:", data);
+      Logger.info("Updating profile:", data);
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       this.user = { ...this.user, ...data };
     } catch (error) {
-      console.error("Error updating profile:", error);
+      Logger.error("Error updating profile:", error);
       this.error = error.message;
     } finally {
       this.saving = false;
@@ -217,10 +218,10 @@ export class ProfilePage extends LitElement {
       this.error = "";
 
       // In a real app, you would update the password via API
-      console.log("Updating password:", data);
+      Logger.info("Updating password:", data);
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
-      console.error("Error updating password:", error);
+      Logger.error("Error updating password:", error);
       this.error = error.message;
     } finally {
       this.saving = false;

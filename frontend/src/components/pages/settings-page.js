@@ -1,5 +1,6 @@
 import {   LitElement, html, css   } from 'lit';
 import { baseStyles } from "../styles/base.js";
+import { Logger } from '../../utils/logger.js';
 import "../components/ui/card.js";
 import "../components/ui/button.js";
 import "../components/ui/input.js";
@@ -210,7 +211,7 @@ export class SettingsPage extends LitElement {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       this.loading = false;
     } catch (error) {
-      console.error("Error loading settings:", error);
+      Logger.error("Error loading settings:", error);
       this.error = error.message;
       this.loading = false;
     }
@@ -227,9 +228,9 @@ export class SettingsPage extends LitElement {
       };
 
       // In a real app, you would save the settings to the API
-      console.log("Saving setting:", { section, key, value });
+      Logger.info("Saving setting:", { section, key, value });
     } catch (error) {
-      console.error("Error saving setting:", error);
+      Logger.error("Error saving setting:", error);
       this.error = error.message;
     }
   }
@@ -241,10 +242,10 @@ export class SettingsPage extends LitElement {
       this.error = "";
 
       // In a real app, you would save all settings to the API
-      console.log("Saving all settings:", this.settings);
+      Logger.info("Saving all settings:", this.settings);
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
-      console.error("Error saving settings:", error);
+      Logger.error("Error saving settings:", error);
       this.error = error.message;
     } finally {
       this.saving = false;

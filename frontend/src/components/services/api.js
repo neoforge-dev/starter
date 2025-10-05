@@ -1,3 +1,5 @@
+import { Logger } from '../../utils/logger.js';
+
 /**
  * API Service for making requests to the backend
  */
@@ -14,7 +16,7 @@ export const apiService = {
       }
       return await response.json();
     } catch (error) {
-      console.error("Error fetching projects:", error);
+      Logger.error("Error fetching projects:", error);
       throw error;
     }
   },
@@ -32,7 +34,7 @@ export const apiService = {
       }
       return await response.json();
     } catch (error) {
-      console.error(`Error fetching project ${id}:`, error);
+      Logger.error(`Error fetching project ${id}:`, error);
       throw error;
     }
   },
@@ -56,7 +58,7 @@ export const apiService = {
       }
       return await response.json();
     } catch (error) {
-      console.error("Error creating project:", error);
+      Logger.error("Error creating project:", error);
       throw error;
     }
   },
@@ -81,7 +83,7 @@ export const apiService = {
       }
       return await response.json();
     } catch (error) {
-      console.error(`Error updating project ${id}:`, error);
+      Logger.error(`Error updating project ${id}:`, error);
       throw error;
     }
   },
@@ -101,7 +103,7 @@ export const apiService = {
       }
       return await response.json();
     } catch (error) {
-      console.error(`Error deleting project ${id}:`, error);
+      Logger.error(`Error deleting project ${id}:`, error);
       throw error;
     }
   },

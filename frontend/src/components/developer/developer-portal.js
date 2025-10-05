@@ -10,6 +10,7 @@
  */
 
 import { LitElement, html, css } from 'lit';
+import { Logger } from '../../utils/logger.js';
 
 export class DeveloperPortal extends LitElement {
   static styles = css`
@@ -534,7 +535,7 @@ export class DeveloperPortal extends LitElement {
         this.requestUpdate();
       }
     } catch (error) {
-      console.error('Failed to load user data:', error);
+      Logger.error('Failed to load user data:', error);
     }
   }
 
@@ -567,7 +568,7 @@ export class DeveloperPortal extends LitElement {
       
       this.requestUpdate();
     } catch (error) {
-      console.error('Failed to load API keys:', error);
+      Logger.error('Failed to load API keys:', error);
     }
   }
 
@@ -587,7 +588,7 @@ export class DeveloperPortal extends LitElement {
       
       this.requestUpdate();
     } catch (error) {
-      console.error('Failed to load usage stats:', error);
+      Logger.error('Failed to load usage stats:', error);
     }
   }
 
@@ -614,7 +615,7 @@ export class DeveloperPortal extends LitElement {
       alert(`Your new API key (save this, you won't see it again):\n\n${newKey.key}`);
       
     } catch (error) {
-      console.error('Failed to create API key:', error);
+      Logger.error('Failed to create API key:', error);
       alert('Failed to create API key');
     }
   }
@@ -626,7 +627,7 @@ export class DeveloperPortal extends LitElement {
       this.apiKeys = this.apiKeys.filter(key => key.id !== keyId);
       this.requestUpdate();
     } catch (error) {
-      console.error('Failed to revoke API key:', error);
+      Logger.error('Failed to revoke API key:', error);
     }
   }
 
@@ -642,7 +643,7 @@ export class DeveloperPortal extends LitElement {
 
   downloadSDK(language) {
     // Would trigger SDK download
-    console.log(`Downloading ${language} SDK`);
+    Logger.info(`Downloading ${language} SDK`);
   }
 
   render() {

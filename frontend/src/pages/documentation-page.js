@@ -4,6 +4,7 @@ import {
  } from 'lit';
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 /**
  * @element documentation-page
@@ -214,7 +215,7 @@ export class DocumentationPage extends BaseComponent {
       }
     } catch (error) {
       this.error = "Failed to load documentation";
-      console.error("Error loading docs:", error);
+      Logger.error("Error loading docs:", error);
     } finally {
       this.loading = false;
     }
@@ -240,7 +241,7 @@ export class DocumentationPage extends BaseComponent {
         })
       );
     } catch (error) {
-      console.error("Search error:", error);
+      Logger.error("Search error:", error);
     }
   }
 
@@ -279,7 +280,7 @@ export class DocumentationPage extends BaseComponent {
         })
       );
     } catch (error) {
-      console.error("Failed to copy code:", error);
+      Logger.error("Failed to copy code:", error);
     }
   }
 

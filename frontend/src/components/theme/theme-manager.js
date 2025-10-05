@@ -4,6 +4,7 @@
  */
 
 import { designTokens, batchUpdateTokens } from '../tokens/token-system.js';
+import { Logger } from '../../utils/logger.js';
 
 // Theme definitions with complete token overrides
 export const themes = {
@@ -289,7 +290,7 @@ export class ThemeManager {
   applyTheme(themeId) {
     const theme = themes[themeId];
     if (!theme) {
-      console.warn(`Theme not found: ${themeId}`);
+      Logger.warn(`Theme not found: ${themeId}`);
       return false;
     }
 
@@ -320,7 +321,7 @@ export class ThemeManager {
       tokens: theme.tokens
     });
 
-    console.log(`Applied theme: ${theme.name}`);
+    Logger.info(`Applied theme: ${theme.name}`);
     return true;
   }
 
@@ -335,7 +336,7 @@ export class ThemeManager {
 
     const targetTheme = themes[targetThemeId];
     if (!targetTheme) {
-      console.warn(`System theme target not found: ${targetThemeId}`);
+      Logger.warn(`System theme target not found: ${targetThemeId}`);
       return false;
     }
 
@@ -522,7 +523,7 @@ export class ThemeManager {
       try {
         callback(event, data);
       } catch (error) {
-        console.error('Theme listener error:', error);
+        Logger.error('Theme listener error:', error);
       }
     });
   }

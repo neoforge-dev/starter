@@ -1,5 +1,6 @@
 import { html, css } from 'lit';
 import { BaseComponent } from '../base-component.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Dashboard Quick Actions Component
@@ -240,7 +241,7 @@ export class DashboardQuickActions extends BaseComponent {
       // Load actions based on user context and available features
       this.actions = await this._getAvailableActions();
     } catch (error) {
-      console.error('Failed to load quick actions:', error);
+      Logger.error('Failed to load quick actions:', error);
       // Use default actions
       this.actions = this._getDefaultActions();
     } finally {

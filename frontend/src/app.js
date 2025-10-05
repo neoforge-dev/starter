@@ -1,6 +1,7 @@
 import { notificationService } from "./services/notifications.js";
 import { analytics } from "./services/analytics.js";
 import { i18n } from "./services/i18n.js";
+import { Logger } from "./utils/logger.js";
 
 // Initialize services
 async function initializeApp() {
@@ -21,7 +22,7 @@ async function initializeApp() {
       await notificationService.requestPermission();
     }
   } catch (error) {
-    console.error("Error initializing app:", error);
+    Logger.error("Error initializing app:", error);
     analytics.trackError(error);
   }
 }

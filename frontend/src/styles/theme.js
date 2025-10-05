@@ -9,6 +9,7 @@
 
 // CSS utilities not needed in this theme configuration file
 import { dedupeMixin } from "../utils/dedupeMixin.js";
+import { Logger } from '../utils/logger.js';
 
 // Theme configuration object
 export const themeConfig = {
@@ -87,7 +88,7 @@ export const ThemeToggleMixin = (superClass) =>
           this.darkMode = savedTheme === "dark";
         }
       } catch (e) {
-        console.warn("Error initializing theme:", e);
+        Logger.warn("Error initializing theme:", e);
       }
 
       this._handleSystemThemeChange = this._handleSystemThemeChange.bind(this);
@@ -108,7 +109,7 @@ export const ThemeToggleMixin = (superClass) =>
         // Initialize theme on first connect
         this._updateTheme();
       } catch (e) {
-        console.warn("Error setting up theme listeners:", e);
+        Logger.warn("Error setting up theme listeners:", e);
       }
     }
 
@@ -127,7 +128,7 @@ export const ThemeToggleMixin = (superClass) =>
           mediaQuery.removeListener(this._handleSystemThemeChange);
         }
       } catch (e) {
-        console.warn("Error removing theme listeners:", e);
+        Logger.warn("Error removing theme listeners:", e);
       }
     }
 
@@ -157,7 +158,7 @@ export const ThemeToggleMixin = (superClass) =>
         document.documentElement.setAttribute("data-theme", this.theme);
         localStorage.setItem("theme", this.theme);
       } catch (e) {
-        console.warn("Error updating theme:", e);
+        Logger.warn("Error updating theme:", e);
       }
     }
   };
@@ -168,7 +169,7 @@ export const ThemeToggle = dedupeMixin(ThemeToggleMixin);
 export function applyTheme(theme) {
   const root = document.documentElement;
   if (!root || !root.style) {
-    console.warn("Document root not available for theme application");
+    Logger.warn("Document root not available for theme application");
     return;
   }
 
@@ -179,7 +180,7 @@ export function applyTheme(theme) {
     try {
       root.style.setProperty(key, value);
     } catch (e) {
-      console.warn(`Failed to set CSS property ${key}:`, e);
+      Logger.warn(`Failed to set CSS property ${key}:`, e);
     }
   };
 
@@ -207,7 +208,7 @@ export function applyTheme(theme) {
   try {
     root.dataset.theme = theme;
   } catch (e) {
-    console.warn("Failed to update theme attribute:", e);
+    Logger.warn("Failed to update theme attribute:", e);
   }
 }
 

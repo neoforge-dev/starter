@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'lit';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Chart Visualizations Component
@@ -130,7 +131,7 @@ export class ChartVisualizations extends LitElement {
 
       this.requestUpdate();
     } catch (error) {
-      console.error('Error loading Chart.js:', error);
+      Logger.error('Error loading Chart.js:', error);
       this.hasError = true;
       this.isLoading = false;
       this.requestUpdate();
@@ -161,7 +162,7 @@ export class ChartVisualizations extends LitElement {
       this.chart = new window.Chart(ctx, config);
       this.hasError = false;
     } catch (error) {
-      console.error('Error creating chart:', error);
+      Logger.error('Error creating chart:', error);
       this.hasError = true;
       this.requestUpdate();
     }

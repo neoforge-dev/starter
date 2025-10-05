@@ -1,6 +1,7 @@
 import { html, css } from 'lit';
 import { BaseComponent } from '../base-component.js';
 import { apiService } from '../../services/api.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Dashboard Metrics Component
@@ -313,7 +314,7 @@ export class DashboardMetrics extends BaseComponent {
       this._generateChartData();
 
     } catch (error) {
-      console.error('Failed to load metrics:', error);
+      Logger.error('Failed to load metrics:', error);
       // Use fallback data
       this._loadFallbackMetrics();
     } finally {

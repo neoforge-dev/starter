@@ -7,6 +7,7 @@
 import { LitElement, html, css } from 'lit';
 import { property, state, customElement } from 'lit/decorators.js';
 import abTestingService, { AbTestStatus } from '../../services/ab-testing.js';
+import { Logger } from '../../utils/logger.js';
 
 @customElement('ab-test-manager')
 export class AbTestManager extends LitElement {
@@ -390,7 +391,7 @@ export class AbTestManager extends LitElement {
       const response = await abTestingService.listTests();
       this.tests = response.tests || [];
     } catch (error) {
-      console.error('Failed to load tests:', error);
+      Logger.error('Failed to load tests:', error);
       this.error = 'Failed to load A/B tests. Please try again.';
     } finally {
       this.isLoading = false;
@@ -480,7 +481,7 @@ export class AbTestManager extends LitElement {
       await this._loadTests();
 
     } catch (error) {
-      console.error('Failed to save test:', error);
+      Logger.error('Failed to save test:', error);
       this.error = `Failed to ${this.mode} test: ${error.message}`;
     } finally {
       this.isLoading = false;
@@ -492,7 +493,7 @@ export class AbTestManager extends LitElement {
       await abTestingService.startTest(test.id);
       await this._loadTests();
     } catch (error) {
-      console.error('Failed to start test:', error);
+      Logger.error('Failed to start test:', error);
       this.error = `Failed to start test: ${error.message}`;
     }
   }
@@ -502,7 +503,7 @@ export class AbTestManager extends LitElement {
       await abTestingService.stopTest(test.id, winnerVariantId);
       await this._loadTests();
     } catch (error) {
-      console.error('Failed to stop test:', error);
+      Logger.error('Failed to stop test:', error);
       this.error = `Failed to stop test: ${error.message}`;
     }
   }

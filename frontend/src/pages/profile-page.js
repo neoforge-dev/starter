@@ -6,6 +6,7 @@ import {
   BaseComponent,
 } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 export class ProfilePage extends BaseComponent {
   static properties = {
@@ -298,7 +299,7 @@ export class ProfilePage extends BaseComponent {
       const user = await window.auth.getCurrentUser();
       this.user = user;
     } catch (error) {
-      console.error("Failed to load profile:", error);
+      Logger.error("Failed to load profile:", error);
       this.error = "Failed to load profile";
     } finally {
       this.loading = false;
@@ -361,7 +362,7 @@ export class ProfilePage extends BaseComponent {
         );
       }
     } catch (error) {
-      console.error("Failed to update profile:", error);
+      Logger.error("Failed to update profile:", error);
       this.error = "Failed to update profile";
     } finally {
       this.loading = false;
@@ -394,7 +395,7 @@ export class ProfilePage extends BaseComponent {
         );
       }
     } catch (error) {
-      console.error("Failed to update password:", error);
+      Logger.error("Failed to update password:", error);
       this.error = "Failed to update password";
     } finally {
       this.loading = false;
@@ -413,7 +414,7 @@ export class ProfilePage extends BaseComponent {
       await window.auth.updateProfile(formData);
       await this.loadUserProfile();
     } catch (error) {
-      console.error("Failed to update avatar:", error);
+      Logger.error("Failed to update avatar:", error);
       this.error = "Failed to update avatar";
     } finally {
       this.loading = false;
@@ -436,7 +437,7 @@ export class ProfilePage extends BaseComponent {
         },
       };
     } catch (error) {
-      console.error("Failed to update preferences:", error);
+      Logger.error("Failed to update preferences:", error);
       this.error = "Failed to update preferences";
     } finally {
       this.loading = false;

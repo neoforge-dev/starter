@@ -1,6 +1,7 @@
 import { html, css } from "lit";
 import { BaseComponent } from "../../base-component.js";
 import { baseStyles } from "../../styles/base.js";
+import { Logger } from '../../../utils/logger.js';
 import "../../atoms/input/input.js";
 import "../../atoms/icon/icon.js";
 import "../../atoms/badge/badge.js";
@@ -536,7 +537,7 @@ export class NeoSelectDropdown extends BaseComponent {
         this._optionsData = [];
       }
     } catch (error) {
-      console.warn('Invalid options data provided to neo-select-dropdown:', error);
+      Logger.warn('Invalid options data provided to neo-select-dropdown:', error);
       this._optionsData = [];
     }
   }

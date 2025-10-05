@@ -2,6 +2,7 @@ import {   LitElement, html, css   } from 'lit';
 import { themeVariables } from "../styles/theme.js";
 import { baseStyles } from "../styles/base.js";
 import { router } from "../router.js";
+import { Logger } from '../../utils/logger.js';
 
 // Register service worker
 if ("serviceWorker" in navigator) {
@@ -9,10 +10,10 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("/service-worker.js")
       .then(() => {
-        console.log("ServiceWorker registration successful");
+        Logger.info("ServiceWorker registration successful");
       })
       .catch((err) => {
-        console.log("ServiceWorker registration failed: ", err);
+        Logger.info("ServiceWorker registration failed: ", err);
       });
   });
 }

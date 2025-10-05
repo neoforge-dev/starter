@@ -1,6 +1,7 @@
 import { html, css } from 'lit';
 import { BaseComponent } from '../base-component.js';
 import { apiService } from '../../services/api.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Project Onboarding Component
@@ -417,7 +418,7 @@ export class ProjectOnboarding extends BaseComponent {
         }
       ];
     } catch (error) {
-      console.error('Failed to load templates:', error);
+      Logger.error('Failed to load templates:', error);
     }
   }
 
@@ -489,7 +490,7 @@ export class ProjectOnboarding extends BaseComponent {
       this.currentStep = 5; // Success step
 
     } catch (error) {
-      console.error('Failed to create project:', error);
+      Logger.error('Failed to create project:', error);
       // Handle error - could show error message
     } finally {
       this.isCreating = false;

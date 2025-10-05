@@ -1,5 +1,6 @@
 // Minimal NeoApp component for main application - VANILLA JAVASCRIPT VERSION
 import { router } from './router.js';
+import { Logger } from './utils/logger.js';
 
 // Import atomic design components
 import './components/atoms/button.js';
@@ -66,17 +67,17 @@ class NeoApp extends HTMLElement {
 }
 
 customElements.define("neo-app", NeoApp);
-console.log("NeoApp component registered successfully");
+Logger.info("NeoApp component registered successfully");
 
 // Add a global function to check component status
 window.checkNeoAppStatus = function() {
-  console.log("Checking NeoApp status...");
+  Logger.debug("Checking NeoApp status...");
   const neoApp = document.querySelector('neo-app');
-  console.log("NeoApp element:", neoApp);
-  console.log("Custom element defined:", customElements.get('neo-app') !== undefined);
+  Logger.debug("NeoApp element:", neoApp);
+  Logger.debug("Custom element defined:", customElements.get('neo-app') !== undefined);
   if (neoApp) {
     const routerOutlet = neoApp.querySelector('#router-outlet');
-    console.log("Router outlet:", routerOutlet);
-    console.log("Router outlet content:", routerOutlet ? routerOutlet.innerHTML : 'N/A');
+    Logger.debug("Router outlet:", routerOutlet);
+    Logger.debug("Router outlet content:", routerOutlet ? routerOutlet.innerHTML : 'N/A');
   }
 };

@@ -20,7 +20,7 @@ export class I18nService {
         const translations = await response.json();
         this._translations.set(locale, translations);
       } catch (error) {
-        console.error(`Failed to load translations for ${locale}:`, error);
+        Logger.error(`Failed to load translations for ${locale}:`, error);
         if (locale !== this._fallbackLocale) {
           return this.setLocale(this._fallbackLocale);
         }
@@ -67,6 +67,7 @@ export const i18n = new I18nService();
 
 // Create a lit directive for translations
 import { directive } from "lit/directive.js";
+import { Logger } from '../utils/logger.js';
 
 export const t = directive((key, params = {}) => (part) => {
   part.setValue(i18n.t(key, params));

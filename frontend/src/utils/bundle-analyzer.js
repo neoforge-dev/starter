@@ -1,3 +1,5 @@
+import { Logger } from './logger.js';
+
 /**
  * Bundle Size Analyzer and Optimizer
  * Monitors bundle performance and provides optimization recommendations
@@ -229,7 +231,7 @@ export function monitorResourceSizes() {
 
         // Warn about large resources
         if (size > BUNDLE_THRESHOLDS.WARNING) {
-          console.warn(`Large resource detected: ${entry.name} (${formatBytes(size)})`);
+          Logger.warn(`Large resource detected: ${entry.name} (${formatBytes(size)})`);
         }
       }
     }
@@ -329,8 +331,8 @@ if (import.meta.env.DEV) {
     const analysis = analyzeBundlePerformance();
     if (analysis.score < 80) {
       console.group('Bundle Performance Analysis');
-      console.log('Score:', analysis.score);
-      console.log('Recommendations:', analysis.recommendations);
+      Logger.info('Score:', analysis.score);
+      Logger.info('Recommendations:', analysis.recommendations);
       console.groupEnd();
     }
   }, 30000);

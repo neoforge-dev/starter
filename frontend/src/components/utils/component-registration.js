@@ -1,3 +1,5 @@
+import { Logger } from '../../utils/logger.js';
+
 /**
  * Component registration utilities for managing custom elements
  */
@@ -12,21 +14,21 @@ export function registerComponent(name, component) {
   try {
     // Check if already registered
     if (customElements.get(name)) {
-      console.log(`Component ${name} already registered`);
+      Logger.info(`Component ${name} already registered`);
       return;
     }
 
     // Validate component class
     if (!component || typeof component !== "function") {
-      console.error(`Invalid component class for ${name}`);
+      Logger.error(`Invalid component class for ${name}`);
       return;
     }
 
     // Define the custom element
     customElements.define(name, component);
-    console.log(`Successfully registered component: ${name}`);
+    Logger.info(`Successfully registered component: ${name}`);
   } catch (error) {
-    console.error(`Failed to register ${name}:`, error);
+    Logger.error(`Failed to register ${name}:`, error);
     throw error;
   }
 }

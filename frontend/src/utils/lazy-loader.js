@@ -1,3 +1,5 @@
+import { Logger } from './logger.js';
+
 /**
  * Dynamic Component Loader for Bundle Optimization
  * Implements lazy loading of components to reduce initial bundle size
@@ -38,7 +40,7 @@ export async function lazyLoadComponent(componentPath, tagName) {
       return true;
     })
     .catch((error) => {
-      console.error(`Failed to load component ${componentPath}:`, error);
+      Logger.error(`Failed to load component ${componentPath}:`, error);
       loadingPromises.delete(componentPath);
       throw error;
     });
@@ -83,7 +85,7 @@ export function lazyLoadOnIntersection(element, componentPath, tagName, options 
             await lazyLoadComponent(componentPath, tagName);
             observer.unobserve(entry.target);
           } catch (error) {
-            console.error('Failed to lazy load component:', error);
+            Logger.error('Failed to lazy load component:', error);
           }
         }
       }
@@ -111,7 +113,7 @@ export function lazyLoadOnInteraction(element, componentPath, tagName, events = 
         element.removeEventListener(event, loadComponent);
       });
     } catch (error) {
-      console.error('Failed to lazy load component on interaction:', error);
+      Logger.error('Failed to lazy load component on interaction:', error);
     }
   };
 
@@ -217,7 +219,7 @@ export async function loadComponentByTag(tagName) {
         componentCache.set(tagName, true);
         return true;
       } catch (error) {
-        console.error(`Failed to load component ${tagName}:`, error);
+        Logger.error(`Failed to load component ${tagName}:`, error);
         throw error;
       }
     }

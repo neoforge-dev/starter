@@ -1,6 +1,7 @@
 import { html, css } from 'lit';
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 /**
  * @element items-page
@@ -125,17 +126,17 @@ export class ItemsPage extends BaseComponent {
 
   createItem() {
     // Mock create item functionality
-    console.log("Create item clicked");
+    Logger.info("Create item clicked");
   }
 
   editItem(item) {
     // Mock edit item functionality
-    console.log("Edit item:", item);
+    Logger.info("Edit item:", item);
   }
 
   deleteItem(item) {
     // Mock delete item functionality
-    console.log("Delete item:", item);
+    Logger.info("Delete item:", item);
   }
 }
 

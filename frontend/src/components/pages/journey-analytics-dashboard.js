@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { apiService as api } from '../../services/api.js';
+import { Logger } from '../../utils/logger.js';
 import '../atoms/journey-tracker.js';
 import '../molecules/funnel-chart.js';
 import '../organisms/user-flow-diagram.js';
@@ -693,7 +694,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
       this.lastUpdate = Date.now();
 
     } catch (error) {
-      console.error('[JourneyAnalyticsDashboard] Error loading analytics data:', error);
+      Logger.error('[JourneyAnalyticsDashboard] Error loading analytics data:', error);
     } finally {
       this.loading = false;
     }
@@ -714,7 +715,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
 
       return this.processMetrics(response.data);
     } catch (error) {
-      console.error('Error fetching metrics:', error);
+      Logger.error('Error fetching metrics:', error);
       return {};
     }
   }
@@ -908,7 +909,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
 
   handleStepSelected(event) {
     const { step, data } = event.detail;
-    console.log('Funnel step selected:', step, data);
+    Logger.info('Funnel step selected:', step, data);
 
     // Could show detailed analysis for the selected step
     this.selectedSegment = step.name;
@@ -916,7 +917,7 @@ export class JourneyAnalyticsDashboard extends LitElement {
 
   handleNodeSelected(event) {
     const { node, paths } = event.detail;
-    console.log('Flow node selected:', node, paths);
+    Logger.info('Flow node selected:', node, paths);
 
     // Could show detailed path analysis
     this.selectedSegment = node.title;

@@ -2,6 +2,7 @@ import {   html, css   } from 'lit';
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
 import { apiService } from "../services/api.ts";
+import { Logger } from '../utils/logger.js';
 
 /**
  * @element status-page
@@ -29,12 +30,12 @@ export class StatusPage extends BaseComponent {
     this.subscribing = false;
     this.subscribed = false;
     this.email = "";
-    console.log("Initializing shadow root for STATUS-PAGE");
+    Logger.info("Initializing shadow root for STATUS-PAGE");
   }
 
   connectedCallback() {
     super.connectedCallback();
-    console.log("Connected callback for STATUS-PAGE");
+    Logger.info("Connected callback for STATUS-PAGE");
     this._fetchStatus();
   }
 
@@ -50,7 +51,7 @@ export class StatusPage extends BaseComponent {
   }
 
   _handleFilterChange(e) {
-    console.log("Binding event handler _handleFilterChange for STATUS-PAGE");
+    Logger.info("Binding event handler _handleFilterChange for STATUS-PAGE");
     this.selectedFilter = e.target.value;
   }
 
@@ -174,7 +175,7 @@ export class StatusPage extends BaseComponent {
   ];
 
   render() {
-    console.log("Creating render root for STATUS-PAGE");
+    Logger.info("Creating render root for STATUS-PAGE");
     return html`
       <div class="page-container ${this.darkMode ? "dark" : ""}">
         ${this.loading

@@ -1,3 +1,5 @@
+import { Logger } from '../utils/logger.js';
+
 import "../components/molecules/modal/modal.js"; // Import the actual neo-modal component
 import "../components/atoms/button/button.js"; // Import neo-button used in confirm
 import {   html, render   } from 'lit'; // Needed for template literals and rendering
@@ -168,7 +170,7 @@ export class ModalService {
       // Render Lit template results into the parent
       render(content, parent);
     } else if (content) {
-      console.warn("Unsupported content type for modal slot:", content);
+      Logger.warn("Unsupported content type for modal slot:", content);
     }
   }
 

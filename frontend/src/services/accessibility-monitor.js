@@ -1,4 +1,5 @@
 import { axe } from "axe-core";
+import { Logger } from '../utils/logger.js';
 
 /**
  * Service to monitor and report accessibility issues
@@ -55,7 +56,7 @@ class AccessibilityMonitor {
       const results = await axe.run(document, this.config);
       this._processResults(results);
     } catch (error) {
-      console.error("Error running accessibility check:", error);
+      Logger.error("Error running accessibility check:", error);
     }
   }
 
@@ -68,7 +69,7 @@ class AccessibilityMonitor {
       const results = await axe.run(element, this.config);
       this._processResults(results);
     } catch (error) {
-      console.error("Error checking element:", error);
+      Logger.error("Error checking element:", error);
     }
   }
 

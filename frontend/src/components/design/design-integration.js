@@ -5,6 +5,7 @@
 
 import { designTokens, TokenExporter } from '../tokens/token-system.js';
 import { themes } from '../theme/theme-manager.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Figma Token Synchronization
@@ -60,7 +61,7 @@ export class FigmaTokenSync {
       // Convert Figma styles to design tokens
       return this.convertFigmaStylesToTokens(stylesData, fileData);
     } catch (error) {
-      console.error('Failed to extract tokens from Figma:', error);
+      Logger.error('Failed to extract tokens from Figma:', error);
       throw error;
     }
   }
@@ -249,7 +250,7 @@ export class AssetManager {
 
       return optimizedAsset;
     } catch (error) {
-      console.error('Asset optimization failed:', error);
+      Logger.error('Asset optimization failed:', error);
       return { original: file, optimized: file, error };
     }
   }
@@ -289,7 +290,7 @@ export class AssetManager {
               }
               optimizedVersions[format][`${width}w`] = dataUrl;
             } catch (e) {
-              console.warn(`Format ${format} not supported`);
+              Logger.warn(`Format ${format} not supported`);
             }
           });
         });

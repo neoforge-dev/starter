@@ -5,6 +5,7 @@
 
 import { apiService } from './api.js';
 import analytics from './analytics.js';
+import { Logger } from '../utils/logger.js';
 
 /**
  * A/B Testing status enumeration
@@ -63,7 +64,7 @@ class AbTestingService {
       this._notifyObservers('initialized', { userId, sessionId: this.sessionId });
       return true;
     } catch (error) {
-      console.error('Failed to initialize A/B testing service:', error);
+      Logger.error('Failed to initialize A/B testing service:', error);
       this._notifyObservers('error', { type: 'initialization', error });
       return false;
     }
@@ -112,7 +113,7 @@ class AbTestingService {
       return assignment;
 
     } catch (error) {
-      console.error(`Failed to get assignment for test ${testKey}:`, error);
+      Logger.error(`Failed to get assignment for test ${testKey}:`, error);
       this._notifyObservers('error', { type: 'assignment', testKey, error });
       this._trackPerformance('assignment', performance.now() - startTime, false);
       return null;
@@ -174,7 +175,7 @@ class AbTestingService {
           try {
             callback({ testKey, metricName, value, properties });
           } catch (error) {
-            console.error('Conversion callback error:', error);
+            Logger.error('Conversion callback error:', error);
           }
         });
       }
@@ -185,7 +186,7 @@ class AbTestingService {
       return true;
 
     } catch (error) {
-      console.error(`Failed to track conversion for test ${testKey}:`, error);
+      Logger.error(`Failed to track conversion for test ${testKey}:`, error);
       this._notifyObservers('error', { type: 'conversion', testKey, metricName, error });
       this._trackPerformance('conversion', performance.now() - startTime, false);
       return false;
@@ -243,7 +244,7 @@ class AbTestingService {
       return userTests;
 
     } catch (error) {
-      console.error('Failed to get user tests:', error);
+      Logger.error('Failed to get user tests:', error);
       this._notifyObservers('error', { type: 'user_tests', error });
       return [];
     }
@@ -262,7 +263,7 @@ class AbTestingService {
       return analytics;
 
     } catch (error) {
-      console.error(`Failed to get analytics for test ${testId}:`, error);
+      Logger.error(`Failed to get analytics for test ${testId}:`, error);
       this._notifyObservers('error', { type: 'analytics', testId, error });
       return null;
     }
@@ -320,7 +321,7 @@ class AbTestingService {
       this._notifyObservers('test_created', { test });
       return test;
     } catch (error) {
-      console.error('Failed to create test:', error);
+      Logger.error('Failed to create test:', error);
       this._notifyObservers('error', { type: 'create_test', error });
       throw error;
     }
@@ -335,7 +336,7 @@ class AbTestingService {
       this._notifyObservers('test_updated', { test });
       return test;
     } catch (error) {
-      console.error(`Failed to update test ${testId}:`, error);
+      Logger.error(`Failed to update test ${testId}:`, error);
       this._notifyObservers('error', { type: 'update_test', testId, error });
       throw error;
     }
@@ -350,7 +351,7 @@ class AbTestingService {
       this._notifyObservers('test_started', { test });
       return test;
     } catch (error) {
-      console.error(`Failed to start test ${testId}:`, error);
+      Logger.error(`Failed to start test ${testId}:`, error);
       this._notifyObservers('error', { type: 'start_test', testId, error });
       throw error;
     }
@@ -366,7 +367,7 @@ class AbTestingService {
       this._notifyObservers('test_stopped', { test });
       return test;
     } catch (error) {
-      console.error(`Failed to stop test ${testId}:`, error);
+      Logger.error(`Failed to stop test ${testId}:`, error);
       this._notifyObservers('error', { type: 'stop_test', testId, error });
       throw error;
     }
@@ -381,7 +382,7 @@ class AbTestingService {
       const response = await apiService.get(`/ab-tests/?${params}`);
       return response;
     } catch (error) {
-      console.error('Failed to list tests:', error);
+      Logger.error('Failed to list tests:', error);
       this._notifyObservers('error', { type: 'list_tests', error });
       throw error;
     }
@@ -410,7 +411,7 @@ class AbTestingService {
         this.activeTests.set(test.test_key, test);
       });
     } catch (error) {
-      console.error('Failed to load active tests:', error);
+      Logger.error('Failed to load active tests:', error);
     }
   }
 
@@ -421,7 +422,7 @@ class AbTestingService {
       const userTests = await this.getUserTests();
       // Assignments are cached in getUserTests method
     } catch (error) {
-      console.error('Failed to load user assignments:', error);
+      Logger.error('Failed to load user assignments:', error);
     }
   }
 
@@ -479,7 +480,7 @@ class AbTestingService {
       try {
         observer(eventType, data);
       } catch (error) {
-        console.error('Observer error:', error);
+        Logger.error('Observer error:', error);
       }
     }
   }

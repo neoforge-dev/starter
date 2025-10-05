@@ -3,6 +3,8 @@
  * Handles collection and management of performance metrics, errors, and user behavior data
  */
 
+import { Logger } from '../utils/logger.js';
+
 class AnalyticsService {
   constructor() {
     this.performanceData = new Map();
@@ -57,7 +59,7 @@ class AnalyticsService {
         ],
       });
     } catch (error) {
-      console.warn("PerformanceObserver not fully supported:", error);
+      Logger.warn("PerformanceObserver not fully supported:", error);
     }
   }
 

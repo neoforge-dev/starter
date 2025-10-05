@@ -1,3 +1,5 @@
+import { Logger } from '../utils/logger.js';
+
 export class NotificationService {
   constructor() {
     this.permission = null;
@@ -6,7 +8,7 @@ export class NotificationService {
 
   async _initialize() {
     if (!("Notification" in window)) {
-      console.warn("This browser does not support notifications");
+      Logger.warn("This browser does not support notifications");
       return;
     }
 
@@ -23,14 +25,14 @@ export class NotificationService {
       this.permission = permission;
       return permission === "granted";
     } catch (error) {
-      console.error("Error requesting notification permission:", error);
+      Logger.error("Error requesting notification permission:", error);
       return false;
     }
   }
 
   async subscribeToPush() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      console.warn("Push notifications not supported");
+      Logger.warn("Push notifications not supported");
       return;
     }
 
@@ -54,7 +56,7 @@ export class NotificationService {
 
       return true;
     } catch (error) {
-      console.error("Error subscribing to push:", error);
+      Logger.error("Error subscribing to push:", error);
       return false;
     }
   }

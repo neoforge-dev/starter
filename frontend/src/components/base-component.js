@@ -1,5 +1,6 @@
 import { LitElement } from "lit";
 import { tenantService } from "../services/tenant.js";
+import { Logger } from '../utils/logger.js';
 
 /**
  * Base component class that provides common lifecycle management,
@@ -27,7 +28,7 @@ export class BaseComponent extends LitElement {
   async connectedCallback() {
     super.connectedCallback();
     if (process.env.NODE_ENV === 'development') {
-      console.log(`Connected: ${this.tagName}`);
+      Logger.info(`Connected: ${this.tagName}`);
     }
 
     // Initialize tenant awareness
@@ -42,7 +43,7 @@ export class BaseComponent extends LitElement {
   async firstUpdated(changedProperties) {
     await super.firstUpdated(changedProperties);
     if (process.env.NODE_ENV === 'development') {
-      console.log(`First updated: ${this.tagName}`);
+      Logger.info(`First updated: ${this.tagName}`);
     }
     await this._ensureReady();
   }
@@ -73,7 +74,7 @@ export class BaseComponent extends LitElement {
   onTenantChanged(tenant) {
     // Override in subclasses to handle tenant changes
     if (process.env.NODE_ENV === 'development') {
-      console.log(`${this.tagName} tenant changed:`, tenant?.slug);
+      Logger.info(`${this.tagName} tenant changed:`, tenant?.slug);
     }
   }
 
@@ -139,7 +140,7 @@ export class BaseComponent extends LitElement {
       return await response.json();
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.error(`Error fetching ${url}:`, error);
+        Logger.error(`Error fetching ${url}:`, error);
       }
       throw error;
     }

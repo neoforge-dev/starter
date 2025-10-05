@@ -1,5 +1,6 @@
 // Simplified router for debugging - minimal dependencies
 import { LitElement, html } from "lit";
+import { Logger } from './utils/logger.js';
 
 class Router {
   constructor() {
@@ -26,11 +27,11 @@ class Router {
     this._mainContent = document.querySelector("#router-outlet");
 
     if (!this._mainContent) {
-      console.error("Router outlet not found!");
+      Logger.error("Router outlet not found!");
       return;
     }
 
-    console.log("Router initialized, outlet found:", this._mainContent);
+    Logger.info("Router initialized, outlet found:", this._mainContent);
 
     // Listen for navigation
     window.addEventListener("popstate", () => this.handleRoute());
@@ -50,10 +51,10 @@ class Router {
     const path = window.location.pathname;
     const route = this._routes.get(path);
 
-    console.log("Handling route:", path, route);
+    Logger.info("Handling route:", path, route);
 
     if (!route) {
-      console.log("Route not found, showing 404");
+      Logger.info("Route not found, showing 404");
       this._render404();
       return;
     }
@@ -100,10 +101,10 @@ class Router {
       // Update title
       document.title = `${route.title} - NeoForge`;
 
-      console.log("Route rendered successfully");
+      Logger.info("Route rendered successfully");
 
     } catch (error) {
-      console.error("Error loading route:", error);
+      Logger.error("Error loading route:", error);
     }
   }
 

@@ -10,6 +10,7 @@
  */
 
 import { LitElement, html, css } from 'lit';
+import { Logger } from '../utils/logger.js';
 import '../components/developer/api-playground.js';
 import '../components/developer/developer-portal.js';
 import '../components/developer/integration-guides.js';
@@ -371,7 +372,7 @@ export class DeveloperPage extends LitElement {
         this.requestUpdate();
       }
     } catch (error) {
-      console.error('Failed to load user data:', error);
+      Logger.error('Failed to load user data:', error);
     }
   }
 

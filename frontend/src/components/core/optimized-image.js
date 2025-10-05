@@ -1,6 +1,7 @@
 import {   LitElement, html, css   } from 'lit';
 import { baseStyles } from "../styles/base.js";
 import { imageOptimizer } from "../../services/image-optimizer.js";
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Optimized image component with lazy loading and responsive images
@@ -243,7 +244,7 @@ export class OptimizedImage extends LitElement {
         reader.readAsDataURL(blob);
       });
     } catch (error) {
-      console.error("Error generating placeholder:", error);
+      Logger.error("Error generating placeholder:", error);
       return null;
     }
   }

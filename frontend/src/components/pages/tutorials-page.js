@@ -1,6 +1,7 @@
 import {   LitElement, html, css   } from 'lit';
 import { baseStyles } from "../styles/base.js";
 import { LoadingMixin } from "../mixins/loading.js";
+import { Logger } from '../../utils/logger.js';
 import "../components/ui/card.js";
 import "../components/ui/button.js";
 
@@ -150,7 +151,7 @@ export class TutorialsPage extends LoadingMixin(LitElement) {
         },
       ];
     } catch (error) {
-      console.error("Error loading tutorials:", error);
+      Logger.error("Error loading tutorials:", error);
     } finally {
       this.stopLoading();
     }

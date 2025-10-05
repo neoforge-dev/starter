@@ -1,6 +1,7 @@
 import { html, css } from 'lit';
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 /**
  * @element billing-page
@@ -156,7 +157,7 @@ export class BillingPage extends BaseComponent {
 
   addPaymentMethod() {
     // Mock add payment method functionality
-    console.log("Add payment method clicked");
+    Logger.info("Add payment method clicked");
   }
 }
 

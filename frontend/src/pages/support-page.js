@@ -4,6 +4,7 @@ import {
  } from 'lit';
 import { BaseComponent } from "../components/base-component.js";
 import { apiService } from "../services/api.ts";
+import { Logger } from '../utils/logger.js';
 
 export class SupportPage extends BaseComponent {
   static properties = {
@@ -127,7 +128,7 @@ export class SupportPage extends BaseComponent {
       this.tickets = await apiService.getSupportTickets();
     } catch (error) {
       this.error = "Failed to load support tickets";
-      console.error("Error loading tickets:", error);
+      Logger.error("Error loading tickets:", error);
     } finally {
       this.loading = false;
     }

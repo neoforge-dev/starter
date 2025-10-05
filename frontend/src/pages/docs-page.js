@@ -3,6 +3,7 @@ import {
   BaseComponent,
 } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 export class DocsPage extends BaseComponent {
   static properties = {
@@ -240,7 +241,7 @@ export class DocsPage extends BaseComponent {
     try {
       this.searchResults = await window.docs.searchDocs(query);
     } catch (error) {
-      console.error("Search failed:", error);
+      Logger.error("Search failed:", error);
       this.searchResults = [];
     }
   }
@@ -280,7 +281,7 @@ export class DocsPage extends BaseComponent {
         })
       );
     } catch (error) {
-      console.error("Failed to copy code:", error);
+      Logger.error("Failed to copy code:", error);
     }
   }
 

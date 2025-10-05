@@ -1,3 +1,5 @@
+import { Logger } from '../utils/logger.js';
+
 /**
  * Dynamic configuration service that fetches config from backend
  * Eliminates hardcoded duplication between frontend and backend
@@ -114,7 +116,7 @@ class DynamicConfigService {
       this.error = null;
       this.retryCount = 0;
 
-      console.log('Dynamic configuration loaded:', {
+      Logger.info('Dynamic configuration loaded:', {
         environment: config.environment,
         corsOrigins: config.cors_origins?.length || 0,
         apiBaseUrl: config.api_base_url
@@ -123,13 +125,13 @@ class DynamicConfigService {
       return this.config;
 
     } catch (error) {
-      console.error('Failed to fetch dynamic configuration:', error);
+      Logger.error('Failed to fetch dynamic configuration:', error);
       this.error = error;
 
       // Retry logic
       if (this.retryCount < this.maxRetries) {
         this.retryCount++;
-        console.log(`Retrying configuration fetch (${this.retryCount}/${this.maxRetries})...`);
+        Logger.info(`Retrying configuration fetch (${this.retryCount}/${this.maxRetries})...`);
 
         // Exponential backoff
         const delay = Math.pow(2, this.retryCount) * 1000;
@@ -139,7 +141,7 @@ class DynamicConfigService {
       }
 
       // Fallback to basic config if all retries fail
-      console.warn('All configuration retries failed, using fallback config');
+      Logger.warn('All configuration retries failed, using fallback config');
       this.config = this.getFallbackConfig();
       return this.config;
 
@@ -204,5 +206,5 @@ export { DynamicConfigService };
 
 // Initialize configuration on module load
 dynamicConfig.getConfig().catch(error => {
-  console.warn('Failed to initialize dynamic configuration:', error);
+  Logger.warn('Failed to initialize dynamic configuration:', error);
 });

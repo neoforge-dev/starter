@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { BaseComponent } from '../base-component.js';
 import { rbacService, PERMISSIONS, ROLES } from '../../services/rbac.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Permission Guard Component
@@ -84,7 +85,7 @@ export class PermissionGuard extends BaseComponent {
 
       this.hasAccess = this.evaluatePermissions();
     } catch (error) {
-      console.error('Permission check failed:', error);
+      Logger.error('Permission check failed:', error);
       this.hasAccess = false;
     } finally {
       this.loading = false;

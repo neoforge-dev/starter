@@ -1,4 +1,5 @@
 import { showToast } from "../components/ui/toast/index.js";
+import { Logger } from '../utils/logger.js';
 
 export class OfflineManager {
   constructor() {
@@ -29,7 +30,7 @@ export class OfflineManager {
       try {
         await task();
       } catch (error) {
-        console.error("Sync failed:", error);
+        Logger.error("Sync failed:", error);
         this._syncQueue.unshift(task); // Put failed task back
         break;
       }

@@ -1,5 +1,6 @@
 // Simplified main.js for debugging
 import { LitElement, html, css } from "lit";
+import { Logger } from './utils/logger.js';
 import "./router-simple.js";
 
 // Simple neo-app component
@@ -62,4 +63,4 @@ class NeoApp extends LitElement {
 }
 
 customElements.define("neo-app", NeoApp);
-console.log("NeoApp component defined successfully");
+Logger.info("NeoApp component defined successfully");

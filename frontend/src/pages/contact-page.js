@@ -4,6 +4,7 @@ import {
  } from 'lit';
 import { BaseComponent } from "../components/base-component.js";
 import { baseStyles } from "../styles/base.js";
+import { Logger } from '../utils/logger.js';
 
 /**
  * @element contact-page
@@ -176,7 +177,7 @@ export class ContactPage extends BaseComponent {
       this.offices = offices;
       this.departments = departments;
     } catch (error) {
-      console.error("Failed to load contact data:", error);
+      Logger.error("Failed to load contact data:", error);
       this.error = "Failed to load contact information";
     } finally {
       this.loading = false;
@@ -224,7 +225,7 @@ export class ContactPage extends BaseComponent {
         };
       }
     } catch (error) {
-      console.error("Failed to submit form:", error);
+      Logger.error("Failed to submit form:", error);
       this.error = "Failed to send message. Please try again.";
     } finally {
       this.loading = false;

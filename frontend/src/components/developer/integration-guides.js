@@ -10,6 +10,7 @@
  */
 
 import { LitElement, html, css } from 'lit';
+import { Logger } from '../../utils/logger.js';
 
 export class IntegrationGuides extends LitElement {
   static styles = css`
@@ -1130,7 +1131,7 @@ DELETE /api/v1/projects/{id}
 });
 
 const user = await response.json();
-console.log(user);`,
+Logger.info(user);`,
         python: `import requests
 
 headers = {

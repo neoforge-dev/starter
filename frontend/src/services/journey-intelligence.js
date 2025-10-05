@@ -1,4 +1,5 @@
 import { api } from './api.js';
+import { Logger } from '../utils/logger.js';
 
 /**
  * Journey Intelligence Service
@@ -85,7 +86,7 @@ export class JourneyIntelligenceService {
 
       return this.processJourneyMetrics(response.data);
     } catch (error) {
-      console.error('Error calculating journey metrics:', error);
+      Logger.error('Error calculating journey metrics:', error);
       return this.getDefaultMetrics();
     }
   }

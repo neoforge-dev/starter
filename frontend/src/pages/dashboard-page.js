@@ -1,5 +1,6 @@
 import {   html, css   } from 'lit';
 import { BaseComponent } from "../components/base-component.js";
+import { Logger } from '../utils/logger.js';
 import './components/dashboard/dashboard-layout.js';
 import './components/dashboard/dashboard-welcome.js';
 import './components/dashboard/dashboard-metrics.js';
@@ -85,7 +86,7 @@ export class DashboardPage extends BaseComponent {
       const userData = await this.fetchData('/auth/me');
       this.user = userData;
     } catch (error) {
-      console.error('Failed to load user data:', error);
+      Logger.error('Failed to load user data:', error);
       // Use fallback user data
       this.user = {
         name: 'Developer',
@@ -104,7 +105,7 @@ export class DashboardPage extends BaseComponent {
 
   _handleQuickAction(event) {
     const action = event.detail.action;
-    console.log('Quick action triggered:', action);
+    Logger.info('Quick action triggered:', action);
 
     // Handle different quick actions
     switch (action) {
@@ -129,7 +130,7 @@ export class DashboardPage extends BaseComponent {
   }
 
   _handleProjectCreated(event) {
-    console.log('Project created:', event.detail.project);
+    Logger.info('Project created:', event.detail.project);
     // Refresh projects and go back to overview
     this.currentView = 'overview';
     this.requestUpdate();
@@ -141,7 +142,7 @@ export class DashboardPage extends BaseComponent {
   }
 
   _handleProjectSelected(event) {
-    console.log('Project selected:', event.detail.project);
+    Logger.info('Project selected:', event.detail.project);
     // Navigate to project detail view (could be implemented later)
   }
 

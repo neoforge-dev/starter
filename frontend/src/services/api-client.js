@@ -1,6 +1,8 @@
 // API Client for NeoForge Frontend
 // Handles all communication with the backend API
 
+import { Logger } from '../utils/logger.js';
+
 class ApiClient {
   constructor() {
     this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -39,7 +41,7 @@ class ApiClient {
 
       return data;
     } catch (error) {
-      console.error(`API request failed: ${endpoint}`, error);
+      Logger.error(`API request failed: ${endpoint}`, error);
       throw error;
     }
   }

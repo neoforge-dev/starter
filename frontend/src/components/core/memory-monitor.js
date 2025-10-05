@@ -1,5 +1,6 @@
 import {   LitElement, html, css   } from 'lit';
 import { baseStyles } from "../../styles/base.js";
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Component to display memory leak reports and alerts
@@ -212,13 +213,13 @@ export class MemoryMonitor extends LitElement {
 
   _handleLeakDetected(event) {
     if (!event.detail) {
-      console.warn("Memory leak event missing detail");
+      Logger.warn("Memory leak event missing detail");
       return;
     }
 
     const { type, size, time } = event.detail;
     if (!type || !size || !time) {
-      console.warn("Memory leak event missing required fields", event.detail);
+      Logger.warn("Memory leak event missing required fields", event.detail);
       return;
     }
 

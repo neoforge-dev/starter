@@ -1,6 +1,7 @@
 import { html, css } from 'lit';
 import { BaseComponent } from '../base-component.js';
 import { apiService } from '../../services/api.js';
+import { Logger } from '../../utils/logger.js';
 
 /**
  * Projects List Component
@@ -345,7 +346,7 @@ export class ProjectsList extends BaseComponent {
       const response = await apiService.request('/projects');
       this.projects = response.data || [];
     } catch (error) {
-      console.error('Failed to load projects:', error);
+      Logger.error('Failed to load projects:', error);
       // Use fallback data
       this._loadFallbackProjects();
     } finally {

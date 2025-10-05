@@ -5,6 +5,7 @@ import {
  } from "lit";
 import { baseStyles } from "../../styles/base.js";
 import { icons } from "./icons.js";
+import { Logger } from '../../../utils/logger.js';
 
 /**
  * Icon component for displaying SVG icons
@@ -110,7 +111,7 @@ export class NeoIcon extends LitElement {
   _getIcon() {
     const icon = icons[this.name];
     if (!icon) {
-      console.warn(`Icon "${this.name}" not found`);
+      Logger.warn(`Icon "${this.name}" not found`);
       return html`<!-- Icon not found -->`;
     }
     return icon;

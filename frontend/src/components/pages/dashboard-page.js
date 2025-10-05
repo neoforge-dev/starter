@@ -1,3 +1,5 @@
+import { Logger } from '../../utils/logger.js';
+
 /**
  * DashboardPage Component - VANILLA JAVASCRIPT VERSION
  * Uses atomic design components (Button, Input, Card, FormField)
@@ -534,19 +536,19 @@ export class DashboardPage extends HTMLElement {
   handleQuickAction(action) {
     switch (action) {
       case 'new-project':
-        console.log('Navigate to new project page');
+        Logger.info('Navigate to new project page');
         // window.location.href = '/projects/new';
         break;
       case 'invite-member':
-        console.log('Open invite member modal');
+        Logger.info('Open invite member modal');
         // this.showInviteModal();
         break;
       case 'view-reports':
-        console.log('Navigate to reports page');
+        Logger.info('Navigate to reports page');
         // window.location.href = '/reports';
         break;
       case 'settings':
-        console.log('Navigate to settings page');
+        Logger.info('Navigate to settings page');
         // window.location.href = '/settings';
         break;
     }

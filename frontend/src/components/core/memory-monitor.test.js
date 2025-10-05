@@ -1,5 +1,5 @@
 import { expect, describe, it, beforeEach, vi } from "vitest";
-import { fixture, html } from "@open-wc/testing-helpers";
+import { fixture, html } from "@open-wc/testing";
 import "./memory-monitor.js";
 
 describe("MemoryMonitor", () => {

@@ -1,3 +1,5 @@
+import { Logger } from './logger.js';
+
 /**
  * Enhanced lazy loading utility for components with retry logic and better error handling
  * @param {string} path - Path to the component module
@@ -67,12 +69,12 @@ export async function lazyLoad(path, tagName, options = {}) {
         })
       );
     } catch (error) {
-      console.error(`Error loading component ${tagName}:`, error);
+      Logger.error(`Error loading component ${tagName}:`, error);
 
       // Retry logic
       if (attempts < retries) {
         attempts++;
-        console.log(`Retrying ${tagName} load (${attempts}/${retries})...`);
+        Logger.info(`Retrying ${tagName} load (${attempts}/${retries})...`);
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
         return loadComponent();
       }
