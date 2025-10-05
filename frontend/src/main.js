@@ -2,6 +2,9 @@
 import { router } from './router.js';
 import { Logger } from './utils/logger.js';
 
+// Import error boundary for global error handling
+import './components/core/error-boundary.js';
+
 // Import atomic design components
 import './components/atoms/button.js';
 import './components/atoms/input.js';
@@ -12,49 +15,65 @@ class NeoApp extends HTMLElement {
   constructor() {
     super();
     this.render();
+    this._setupErrorHandlers();
+  }
+
+  _setupErrorHandlers() {
+    // Listen for error boundary events
+    this.addEventListener('error-caught', (e) => {
+      const { error, info } = e.detail;
+      Logger.error('App-level error caught:', { error, info });
+      // Could send to monitoring service here
+    });
+
+    this.addEventListener('error-reset', () => {
+      Logger.info('Error boundary reset');
+    });
   }
 
   render() {
     this.innerHTML = `
-      <div class="app" style="
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      ">
-        <header style="
-          background: #f8f9fa;
-          padding: 1rem;
-          border-bottom: 1px solid #e9ecef;
+      <error-boundary>
+        <div class="app" style="
+          display: flex;
+          flex-direction: column;
+          min-height: 100vh;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         ">
-          <a href="/" class="logo" style="
-            margin: 0;
-            color: #2563eb;
-            text-decoration: none;
-            font-size: 1.5rem;
-            font-weight: bold;
-          ">NeoForge</a>
-        </header>
-        <main id="router-outlet" style="
-          flex: 1;
-          padding: 1rem;
-        ">
-          <div style="text-align: center; padding: 2rem;">
-            <h2>Welcome to NeoForge</h2>
-            <p>The router outlet is ready!</p>
-            <p><a href="/register">Go to Registration</a></p>
-          </div>
-        </main>
-        <footer style="
-          background: #f8f9fa;
-          padding: 1rem;
-          border-top: 1px solid #e9ecef;
-          text-align: center;
-          color: #6c757d;
-        ">
-          <p>&copy; 2024 NeoForge</p>
-        </footer>
-      </div>
+          <header style="
+            background: #f8f9fa;
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+          ">
+            <a href="/" class="logo" style="
+              margin: 0;
+              color: #2563eb;
+              text-decoration: none;
+              font-size: 1.5rem;
+              font-weight: bold;
+            ">NeoForge</a>
+          </header>
+          <main id="router-outlet" style="
+            flex: 1;
+            padding: 1rem;
+          ">
+            <div style="text-align: center; padding: 2rem;">
+              <h2>Welcome to NeoForge</h2>
+              <p>The router outlet is ready!</p>
+              <p><a href="/register">Go to Registration</a></p>
+            </div>
+          </main>
+          <footer style="
+            background: #f8f9fa;
+            padding: 1rem;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+            color: #6c757d;
+          ">
+            <p>&copy; 2024 NeoForge</p>
+          </footer>
+        </div>
+      </error-boundary>
     `;
 
     // Initialize router after component is rendered

@@ -2,6 +2,7 @@ import { Logger } from "../utils/logger.js";
 import { authService } from "./auth.js";
 import { pwaService } from "./pwa.js";
 import { dynamicConfig } from "../config/dynamic-config.js";
+import { withAsyncErrorHandling, retryAsync, withTimeout } from "../utils/async-handler.js";
 
 class ApiService {
   constructor() {
@@ -439,6 +440,95 @@ class ApiService {
         totalPages: response.pagination?.total_pages
       };
     }
+  }
+
+  /**
+   * Safe GET request with automatic error handling and retry logic
+   * @param {string} endpoint - API endpoint
+   * @param {Object} options - Request options
+   * @returns {Promise<*>} Response data or fallback
+   */
+  async safeGet(endpoint, options = {}) {
+    return withAsyncErrorHandling(
+      async () => {
+        return await this.request(endpoint, { ...options, method: 'GET' });
+      },
+      {
+        errorHandler: (error) => {
+          Logger.error(`Safe GET ${endpoint} failed:`, error);
+        },
+        fallbackValue: null,
+        retries: 2,
+        retryDelay: 1000
+      }
+    )();
+  }
+
+  /**
+   * Safe POST request with automatic error handling
+   * @param {string} endpoint - API endpoint
+   * @param {Object} data - Request body
+   * @param {Object} options - Request options
+   * @returns {Promise<*>} Response data or null
+   */
+  async safePost(endpoint, data, options = {}) {
+    return withAsyncErrorHandling(
+      async () => {
+        return await this.request(endpoint, {
+          ...options,
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
+      },
+      {
+        errorHandler: (error) => {
+          Logger.error(`Safe POST ${endpoint} failed:`, error);
+          // Dispatch error event for UI to handle
+          window.dispatchEvent(new CustomEvent('api-error', {
+            detail: { endpoint, method: 'POST', error: error.message }
+          }));
+        },
+        fallbackValue: null
+      }
+    )();
+  }
+
+  /**
+   * Retry critical requests with exponential backoff
+   * @param {string} endpoint - API endpoint
+   * @param {Object} options - Request options
+   * @returns {Promise<*>} Response data
+   */
+  async retryRequest(endpoint, options = {}) {
+    return retryAsync(
+      async () => await this.request(endpoint, options),
+      {
+        maxRetries: 3,
+        initialDelay: 1000,
+        shouldRetry: (error) => {
+          // Don't retry client errors (4xx except 429)
+          if (error.message.includes('400') || error.message.includes('401') || error.message.includes('403') || error.message.includes('404')) {
+            return false;
+          }
+          return true;
+        }
+      }
+    );
+  }
+
+  /**
+   * Request with automatic timeout handling
+   * @param {string} endpoint - API endpoint
+   * @param {Object} options - Request options
+   * @param {number} timeout - Timeout in ms (default: 30000)
+   * @returns {Promise<*>} Response data
+   */
+  async timedRequest(endpoint, options = {}, timeout = 30000) {
+    return withTimeout(
+      this.request(endpoint, options),
+      timeout,
+      `Request to ${endpoint} timed out after ${timeout}ms`
+    );
   }
 }
 

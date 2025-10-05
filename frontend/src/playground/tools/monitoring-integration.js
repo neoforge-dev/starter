@@ -251,7 +251,7 @@ class ApplicationMonitor {
         });
         observer.observe({ entryTypes: [type] });
       } catch (error) {
-        console.warn(\`Performance observer for \${type} not supported:, error\`);
+        Logger.warn('Performance observer for ' + type + ' not supported:', error);
       }
     }
   }
@@ -813,7 +813,7 @@ export class ErrorTracker {
 
     const error = {
       type: 'resource-error',
-      message: \`Failed to load resource: \${event.target.src || event.target.href}\`,
+      message: `Failed to load resource: ${event.target.src || event.target.href}`,
       source: event.target.src || event.target.href,
       element: event.target.tagName,
       timestamp: Date.now(),
@@ -887,7 +887,7 @@ export class ErrorTracker {
    * Generate error ID
    */
   generateErrorId() {
-    return \`error_\${Date.now()}_\${Math.random().toString(36).substr(2, 9)}\`;
+    return `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
@@ -896,7 +896,7 @@ export class ErrorTracker {
   getSessionId() {
     let sessionId = sessionStorage.getItem('errorTracker_sessionId');
     if (!sessionId) {
-      sessionId = \`session_\${Date.now()}_\${Math.random().toString(36).substr(2, 9)}\`;
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       sessionStorage.setItem('errorTracker_sessionId', sessionId);
     }
     return sessionId;
@@ -1011,8 +1011,8 @@ export const errorTracker = new ErrorTracker();`;
       },
       customHeaders: {},
       healthChecks: this.getHealthEndpoints(appConfig, deploymentResult.url).map(endpoint => ({
-        name: \`Health Check - \${endpoint}\`,
-        url: \`\${deploymentResult.url}\${endpoint}\`,
+        name: `Health Check - ${endpoint}`,
+        url: `${deploymentResult.url}${endpoint}`,
         expectedContent: 'healthy'
       }))
     };
@@ -1070,25 +1070,25 @@ export const errorTracker = new ErrorTracker();`;
         threshold: 99.0,
         window: '5m',
         severity: 'critical',
-        message: \`\${appConfig.name} is experiencing downtime\`
+        message: `${appConfig.name} is experiencing downtime`
       },
       responseTime: {
         threshold: 5000,
         window: '5m',
         severity: 'warning',
-        message: \`\${appConfig.name} response time is high\`
+        message: `${appConfig.name} response time is high`
       },
       errorRate: {
         threshold: 0.05,
         window: '5m',
         severity: 'warning',
-        message: \`\${appConfig.name} error rate is elevated\`
+        message: `${appConfig.name} error rate is elevated`
       },
       healthCheck: {
         threshold: 1,
         window: '1m',
         severity: 'critical',
-        message: \`\${appConfig.name} health check is failing\`
+        message: `${appConfig.name} health check is failing`
       }
     };
   }
@@ -1120,7 +1120,7 @@ export const errorTracker = new ErrorTracker();`;
         'ReportingObserver'
       ],
       tracesSampleRate: 1.0,
-      beforeSend: \`(event) => {
+      beforeSend: `(event) => {
         // Filter out non-critical errors
         if (event.exception) {
           const error = event.exception.values[0];
@@ -1129,7 +1129,7 @@ export const errorTracker = new ErrorTracker();`;
           }
         }
         return event;
-      }\`
+      }`
     };
   }
 
@@ -1186,7 +1186,7 @@ export const errorTracker = new ErrorTracker();`;
 
   generateOverviewDashboard(appConfig) {
     return {
-      title: \`\${appConfig.name} - Overview\`,
+      title: `${appConfig.name} - Overview`,
       widgets: [
         { type: 'availability', timeframe: '24h' },
         { type: 'response_time', timeframe: '24h' },
@@ -1198,7 +1198,7 @@ export const errorTracker = new ErrorTracker();`;
 
   generatePerformanceDashboard(appConfig) {
     return {
-      title: \`\${appConfig.name} - Performance\`,
+      title: `${appConfig.name} - Performance`,
       widgets: [
         { type: 'core_web_vitals', timeframe: '7d' },
         { type: 'page_load_time', timeframe: '7d' },
@@ -1210,7 +1210,7 @@ export const errorTracker = new ErrorTracker();`;
 
   generateErrorsDashboard(appConfig) {
     return {
-      title: \`\${appConfig.name} - Errors\`,
+      title: `${appConfig.name} - Errors`,
       widgets: [
         { type: 'error_count', timeframe: '24h' },
         { type: 'error_rate', timeframe: '24h' },
@@ -1222,7 +1222,7 @@ export const errorTracker = new ErrorTracker();`;
 
   generateInfrastructureDashboard(appConfig) {
     return {
-      title: \`\${appConfig.name} - Infrastructure\`,
+      title: `${appConfig.name} - Infrastructure`,
       widgets: [
         { type: 'server_response_time', timeframe: '24h' },
         { type: 'database_performance', timeframe: '24h' },
