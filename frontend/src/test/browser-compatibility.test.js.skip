@@ -3,6 +3,19 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 /**
  * Browser compatibility test suite
  * Tests critical features and polyfills across different browsers
+ *
+ * PERMANENTLY SKIPPED: This file requires real browser environment
+ * - File extension .skip prevents it from running in Vitest
+ * - Tests browser-specific features (CSS Grid, Container Queries, etc.)
+ * - Requires real browser rendering engines (Chrome, Firefox, Safari)
+ * - Should be run with BrowserStack, Sauce Labs, or Playwright E2E tests
+ * - Also excluded in vitest.config.js for additional safety
+ *
+ * To enable:
+ * 1. Rename to .test.js (remove .skip extension)
+ * 2. Remove from vitest.config.js exclude list
+ * 3. Set up cross-browser testing infrastructure (Playwright/BrowserStack)
+ * 4. Run with: npx playwright test browser-compatibility
  */
 
 // Skip these tests in unit test environment

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-// import { NotFoundPage } from "../../pages/404-page.js";
+import "../../pages/404-page.js"; // Import to register the component
 
 describe("404 Page", () => {
   let container;
@@ -51,16 +51,9 @@ describe("404 Page", () => {
 });
 
 // Original tests are commented out to prevent ESM URL scheme errors
+// These tests were for an old test runner framework that is no longer in use
 /*
 const runner = new TestRunner();
-
-// Skip these tests in unit test environment
-describe.skip("404 Page", () => {
-  it("should render 404 page", () => {
-    // This test requires a real browser environment
-    // Skip in unit tests
-  });
-});
 
 runner.describe("404 Page", () => {
   let element;

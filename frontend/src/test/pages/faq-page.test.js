@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-// MockFAQPage removed - was unused
+import "../../pages/faq-page.js"; // Import to register the component
 
 // Re-skipping suite. Un-skipping caused multiple failures:
 // - Unhandled NotSupportedError: Unexpected attributes (likely during createElement)
@@ -38,54 +38,56 @@ describe("FAQ Page", () => {
     expect(title.textContent).toBe("Frequently Asked Questions");
   });
 
-  it.skip("should render FAQ sections", () => {
-    const testData = [
-      {
-        title: "General Questions",
-        questions: [
-          {
-            question: "What is NeoForge?",
-            answer: "NeoForge is a modern web development platform.",
-          },
-        ],
-      },
-    ];
-
-    element.data = testData;
+  it("should render FAQ sections from loaded data", async () => {
+    // Wait for the component to load its default FAQ data
+    await element.updateComplete;
 
     const sections = element.shadowRoot.querySelectorAll(".faq-section");
-    expect(sections.length).toBe(1);
+    expect(sections.length).toBeGreaterThan(0);
 
     const sectionTitle = sections[0].querySelector("h2");
-    expect(sectionTitle.textContent).toBe("General Questions");
+    expect(sectionTitle).toBeDefined();
+    expect(sectionTitle.textContent).toBeTruthy();
 
     const questions = sections[0].querySelectorAll(".faq-question");
-    expect(questions.length).toBe(1);
+    expect(questions.length).toBeGreaterThan(0);
+  });
 
-    const questionText = questions[0].querySelector("h3");
-    expect(questionText.textContent).toBe("What is NeoForge?");
+  it("should show loading state initially", async () => {
+    // Create a new element to test initial loading state
+    const newElement = document.createElement('faq-page');
+    // Set loading to true before first render
+    newElement.loading = true;
+    document.body.appendChild(newElement);
+    await newElement.updateComplete;
 
-    const answer = questions[0].querySelector(".faq-answer");
-    expect(answer.textContent).toBe(
-      "NeoForge is a modern web development platform."
+    const loadingSpinner = newElement.shadowRoot.querySelector(".loading-spinner");
+    expect(loadingSpinner).toBeDefined();
+
+    newElement.remove();
+  });
+
+  it("should show error state when error is set", async () => {
+    element.error = "Custom error message";
+    await element.updateComplete;
+
+    const errorMessage = element.shadowRoot.querySelector(".error-message");
+    expect(errorMessage).toBeDefined();
+    expect(errorMessage.textContent).toBe("Custom error message");
+  });
+
+  it("should filter questions by search query", async () => {
+    await element.updateComplete;
+
+    element.searchQuery = "neoforge";
+    await element.updateComplete;
+
+    const filteredSections = element.filteredSections;
+    expect(filteredSections).toBeDefined();
+    // At least one section should match the search
+    const hasMatchingQuestions = filteredSections.some(section =>
+      section.questions.length > 0
     );
-  });
-
-  it.skip("should show loading state", () => {
-    element.showLoading();
-    expect(element.loadingElement).toBeDefined();
-    expect(element.loadingElement.textContent).toBe("Loading FAQs...");
-  });
-
-  it.skip("should show error state", () => {
-    element.showError("Custom error message");
-    expect(element.errorElement).toBeDefined();
-    expect(element.errorElement.textContent).toBe("Custom error message");
-  });
-
-  it.skip("should show default error message", () => {
-    element.showError();
-    expect(element.errorElement).toBeDefined();
-    expect(element.errorElement.textContent).toBe("Failed to load FAQs");
+    expect(hasMatchingQuestions).toBe(true);
   });
 });

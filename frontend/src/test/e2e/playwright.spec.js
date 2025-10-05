@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 
-// Skip all e2e tests when running in unit test environment
+// PERMANENTLY SKIPPED IN VITEST: These are Playwright E2E tests
+// - Requires Playwright test runner: `npm run test:e2e`
+// - Uses Playwright-specific APIs (page.goto, page.locator, etc.)
+// - Cannot run in Vitest/JSDOM environment
+// - To enable: Set up Playwright and run with `npx playwright test`
 describe.skip("NeoForge Frontend Pages", () => {
   const routes = [
     { path: "/", titlePattern: /Landing/i },
@@ -29,6 +33,7 @@ describe.skip("NeoForge Frontend Pages", () => {
   });
 });
 
+// PERMANENTLY SKIPPED IN VITEST: Playwright E2E test - see comment above
 describe.skip("Error Handling", () => {
   it("404 page should be displayed for unknown routes", async ({ page }) => {
     await page.goto("http://localhost:3000/this-page-does-not-exist");
@@ -37,6 +42,7 @@ describe.skip("Error Handling", () => {
   });
 });
 
+// PERMANENTLY SKIPPED IN VITEST: Playwright E2E test - see comment above
 describe.skip("PWA Support", () => {
   it("Service Worker should be registered", async ({ page }) => {
     await page.goto("http://localhost:3000");

@@ -68,8 +68,10 @@ describe("Component Performance", () => {
     expect(layout.duration).toBeLessThan(25); // Increased from 16ms for CI environment
   });
 
-  // Skip memory test as performance.memory is not reliably available or accurate in JSDOM.
-  // True memory analysis requires a real browser environment (e.g., via E2E tests or manual profiling).
+  // PERMANENTLY SKIPPED: Memory test requires real browser environment
+  // - performance.memory is not available in JSDOM/Vitest
+  // - Accurate memory analysis requires Chrome DevTools or E2E tests with Playwright
+  // - This test should be moved to E2E test suite or run manually during profiling sessions
   it.skip("maintains stable memory usage", async () => {
     const initialMetrics = await getMemoryMetrics();
 

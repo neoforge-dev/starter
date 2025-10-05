@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-// import { DocsPage } from "../../pages/docs-page.js";
+import "../../pages/docs-page.js"; // Import to register the component
 
 describe("Docs Page", () => {
   let container;
@@ -31,6 +31,7 @@ describe("Docs Page", () => {
 });
 
 // Original tests are commented out to prevent ESM URL scheme errors
+// These tests were for an old test runner framework that is no longer in use
 /*
 const runner = new TestRunner();
 
@@ -144,12 +145,4 @@ runner.describe("DocsPage", () => {
 
 // Run tests
 runner.run();
-
-// Skip these tests in unit test environment
-describe.skip("Docs Page", () => {
-  it("should render docs page", () => {
-    // This test requires a real browser environment
-    // Skip in unit tests
-  });
-});
 */

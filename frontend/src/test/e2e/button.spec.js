@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 
-// Skip e2e tests when running in unit test environment
+// PERMANENTLY SKIPPED IN VITEST: This is a Playwright E2E test
+// - Requires Playwright test runner: `npm run test:e2e`
+// - Uses Playwright-specific APIs (page.goto, page.locator, etc.)
+// - Cannot run in Vitest/JSDOM environment
+// - To enable: Set up Playwright and run with `npx playwright test`
 describe.skip("Button Component", () => {
   it("Button story loads and responds to clicks", async ({ page }) => {
     // Navigate to the button story in Storybook
