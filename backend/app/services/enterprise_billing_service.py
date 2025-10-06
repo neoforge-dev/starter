@@ -479,6 +479,8 @@ class EnterpriseBillingService(BillingService):
     async def record_enterprise_usage(
         self,
         tenant_id: int,
+        subscription_id: int,
+        user_id: int,
         metric_type: str,
         quantity: float,
         unit: str = "count",
@@ -487,15 +489,17 @@ class EnterpriseBillingService(BillingService):
     ) -> Dict[str, Any]:
         """
         Record usage for enterprise billing with advanced metering.
-        
+
         Args:
             tenant_id: Tenant ID
+            subscription_id: Subscription ID for this usage
+            user_id: User ID who generated this usage
             metric_type: Type of usage metric
             quantity: Usage quantity
             unit: Unit of measurement
             dimensions: Additional dimensions for tracking
             timestamp: When usage occurred
-            
+
         Returns:
             Usage record details
         """
@@ -515,10 +519,10 @@ class EnterpriseBillingService(BillingService):
                 timestamp=timestamp or datetime.now(timezone.utc)
             )
             
-            # Create database record
+            # Create database record with actual subscription and user IDs
             usage_record = UsageRecord(
-                subscription_id=1,  # TODO: Get actual subscription ID
-                user_id=1,  # TODO: Get actual user ID
+                subscription_id=subscription_id,
+                user_id=user_id,
                 metric_type=metric_type,
                 quantity=quantity,
                 unit=unit,

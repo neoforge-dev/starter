@@ -437,15 +437,34 @@ class SAMLService:
         config: SAMLConfiguration
     ) -> None:
         """Validate SAML assertion signature (simplified implementation)."""
-        # This is a simplified signature validation
-        # In production, use a proper SAML library like python3-saml
+        # Validate XML digital signature
         signature_elem = assertion_elem.find('.//{http://www.w3.org/2000/09/xmldsig#}Signature')
         if signature_elem is None and config.require_signed_assertions:
             raise SAMLValidationError("SAML assertion signature required but not found")
-        
-        # TODO: Implement full XML signature validation
-        # For now, we'll assume signature is valid if present
-        logger.debug("SAML signature validation completed")
+
+        if signature_elem is not None:
+            # SECURITY: Proper XML signature validation required
+            # Using signxml library for cryptographic signature verification
+            try:
+                from signxml import XMLVerifier
+
+                # Verify signature against IDP certificate
+                XMLVerifier().verify(
+                    assertion_elem,
+                    x509_cert=config.idp_certificate,
+                    require_x509=True
+                )
+                logger.info("SAML signature validation successful")
+            except ImportError:
+                logger.error("signxml library not installed - SAML signature validation DISABLED")
+                if config.require_signed_assertions:
+                    raise SAMLValidationError(
+                        "SAML signature validation required but signxml library not available. "
+                        "Install with: pip install signxml"
+                    )
+            except Exception as e:
+                logger.error("SAML signature validation failed", error=str(e))
+                raise SAMLValidationError(f"Invalid SAML assertion signature: {str(e)}")
     
     def _extract_user_attributes(
         self,
