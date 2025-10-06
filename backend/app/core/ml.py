@@ -1,14 +1,17 @@
 """ML module."""
 from importlib.metadata import version
 from typing import Optional
+import logging
 
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 # Import MLflow
 try:
     import mlflow
 except ImportError:
-    print("Warning: MLflow not available. Metrics logging will be disabled.")
+    logger.warning("MLflow not available. Metrics logging will be disabled.")
     mlflow = None
 
 
@@ -29,7 +32,7 @@ def log_training_run(metrics: ModelMetrics) -> None:
         metrics: Model metrics to log
     """
     if mlflow is None:
-        print("Warning: MLflow not available. Skipping metrics logging.")
+        logger.warning("MLflow not available. Skipping metrics logging.")
         return
 
     with mlflow.start_run():

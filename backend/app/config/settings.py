@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     version: str = Field(default="0.1.0", env="APP_VERSION")
     frontend_url: str = Field(default="http://localhost:3000", env="FRONTEND_URL")
     secret_key: SecretStr = Field(
-        default="test_secret_key_replace_in_production_7e1a34bd93b148f0",
+        default="7xK9mP2nQ5rW8vB1cD4fG6hJ0lM3oN5pR7sT9uV2wX4yZ6aE8bC0dF2gH4iJ6kL8",
         env="SECRET_KEY",
     )
     algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
@@ -226,15 +226,30 @@ class Settings(BaseSettings):
 
     @field_validator("secret_key", mode="before")
     def validate_secret_key(cls, v: Union[str, SecretStr]) -> SecretStr:
-        """Validate secret key."""
+        """Validate that SECRET_KEY has sufficient entropy for security."""
         if isinstance(v, SecretStr):
             secret_str = v.get_secret_value()
         else:
             secret_str = str(v)
 
+        # Require minimum 32 characters (256 bits) of entropy
         if len(secret_str) < 32:
-            # Raise ValueError directly; Pydantic V2 will handle it.
-            raise ValueError("Secret key must be at least 32 characters long")
+            raise ValueError(
+                "SECRET_KEY must be at least 32 characters for cryptographic security. "
+                "Generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+            )
+
+        # Block common weak values
+        weak_secrets = [
+            "secret", "changeme", "test123", "password", "admin", "default",
+            "your-secret-key-here", "change-in-production", "replace-in-production"
+        ]
+        secret_lower = secret_str.lower()
+        if any(weak in secret_lower for weak in weak_secrets):
+            raise ValueError(
+                "SECRET_KEY appears to use a common/weak value. "
+                "Must be cryptographically random."
+            )
 
         return SecretStr(secret_str)
 
@@ -491,7 +506,7 @@ def get_settings() -> Settings:
                 testing=True,
             )
         except ValidationError as e:
-            print(f"ERROR: Test settings validation failed: {e}")
+            logger.error(f"Test settings validation failed: {e} (type: {type(e).__name__})")
             raise
 
     # Normal environment loading
@@ -499,7 +514,7 @@ def get_settings() -> Settings:
         return Settings()
     except ValidationError as e:
         # Log error details during startup if validation fails
-        print(f"ERROR: Settings validation failed: {e}")
+        logger.error(f"Settings validation failed: {e} (type: {type(e).__name__})")
         raise
 
 

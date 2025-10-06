@@ -45,9 +45,10 @@ def create_access_token(
 
     to_encode = {"exp": expire, "sub": str(subject)}
     secret_value = settings.secret_key.get_secret_value()
+    # NEVER log secret_key or any part of it
     logger.debug(
-        f"[CREATE_TOKEN] Using Secret Key: {secret_value[:5]}...{secret_value[-5:]}"
-    )  # Log key safely
+        f"Creating access token for subject={subject}, algorithm={settings.algorithm}"
+    )
     encoded_jwt = jwt.encode(
         to_encode,
         secret_value,
@@ -71,11 +72,9 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        logger.debug("Decoding JWT token...")
+        # NEVER log secret_key or any part of it
+        logger.debug(f"Decoding JWT token with algorithm={settings.algorithm}")
         secret_value = settings.secret_key.get_secret_value()
-        logger.debug(
-            f"[VERIFY_TOKEN] Using Secret Key: {secret_value[:5]}...{secret_value[-5:]}"
-        )  # Log key safely
         payload = jwt.decode(token, secret_value, algorithms=[settings.algorithm])
         logger.debug(f"Token payload decoded: {payload}")
         user_id: str | None = payload.get("sub")

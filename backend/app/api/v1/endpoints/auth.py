@@ -108,16 +108,18 @@ async def login_access_token_json(
         token_hash = hash_refresh_token(refresh_token)
         session_id = secrets.token_urlsafe(16)
 
-        # TODO: Store refresh token in Redis (temporarily disabled)
-        # async for redis in get_redis():
-        #     await store_refresh_token(
-        #         redis=redis,
-        #         user_id=user_id,
-        #         token_hash=token_hash,
-        #         session_id=session_id,
-        #         settings=settings,
-        #         expires_in_days=settings.refresh_token_expire_days,
-        #     )
+        # Store refresh token in Redis for validation and revocation
+        async for redis in get_redis():
+            if redis:
+                await store_refresh_token(
+                    redis=redis,
+                    user_id=user_id,
+                    token_hash=token_hash,
+                    session_id=session_id,
+                    settings=settings,
+                    expires_in_days=settings.refresh_token_expire_days,
+                )
+                break
 
         return {
             "access_token": access,
