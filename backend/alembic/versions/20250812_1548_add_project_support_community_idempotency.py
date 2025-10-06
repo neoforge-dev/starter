@@ -12,7 +12,7 @@ from alembic import op
 # revision identifiers, used by Alembic.
 revision: str = "20250812_add_proj_support_comm_idemp"
 # depends on the last existing migration; update if needed
-down_revision: Union[str, None] = "20250809_2030_email_verification_fields"
+down_revision: Union[str, None] = "ef123456"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

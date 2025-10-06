@@ -15,7 +15,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "subscription_001"
-down_revision: Union[str, None] = "20250815_1600_multi_tenant"
+down_revision: Union[str, None] = "20250815_1600_mt_arch"
 
 def upgrade() -> None:
     """Add subscription tables and seed initial plans."""

@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "20250916_1200_ai_workflow"
-down_revision = "20250903_1230_add_subscription_tables"
+down_revision = "subscription_001"
 branch_labels = None
 depends_on = None
 
@@ -247,5 +247,4 @@ def downgrade() -> None:
     op.drop_table("task_batches")
     op.drop_table("agent_messages")
     op.drop_table("workflow_checkpoints")
-    op.drop_table("workflow_sessions")</content>
-</xai:function_call: write> <file name="backend/alembic/versions/20250916_1200_add_ai_workflow_models.py">Created file: backend/alembic/versions/20250916_1200_add_ai_workflow_models.py
+    op.drop_table("workflow_sessions")
