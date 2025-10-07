@@ -1,7 +1,9 @@
 # 🚀 NeoForge
 
-**Production-Ready Full-Stack Starter Kit for Bootstrapped Founders**
-*FastAPI + Lit + PostgreSQL + Redis - Zero to MVP in minutes*
+**Enterprise-Ready Full-Stack Platform for Scalable SaaS Applications**
+*FastAPI + Domain-Driven Design + Lit + PostgreSQL + Redis*
+
+> **Current Status:** Migrating to Domain-Driven Design architecture (see [Architecture Migration](#-architecture-migration) below)
 
 [![Built with FastAPI](https://img.shields.io/badge/Built%20with-FastAPI-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
 [![Built with Lit](https://img.shields.io/badge/Built%20with-Lit-324FFF?style=flat&logo=lit)](https://lit.dev)
@@ -10,24 +12,34 @@
 
 ---
 
-## 🎯 Why NeoForge?
+## 🎯 What is NeoForge?
 
-**The only complete full-stack solution** that gets you from idea to production-ready MVP with:
+NeoForge is an **enterprise-ready full-stack platform** that evolved from a simple starter kit into a sophisticated SaaS foundation with:
 
-- ⚡ **5-minute setup** to running application
-- 💰 **<$15/month** operating costs during validation
-- 🏗️ **Production-ready** security, testing, and deployment
-- 🚀 **Enterprise-grade** architecture that scales
-- 🔒 **Security-first** with comprehensive threat protection
+- 🏛️ **Domain-Driven Design** - Clean architecture with separated business logic
+- 🚀 **Enterprise Features** - Multi-tenancy, SAML SSO, AI workflows, personalization
+- 💰 **Cost-Efficient** - Still maintains <$15/month operating costs for MVPs
+- 🔒 **Security-First** - Zero critical vulnerabilities, comprehensive threat protection
+- 📚 **Production-Proven** - Complete deployment, monitoring, and operational guides
 
-## ✨ What's Included
+## ✨ Feature Set
 
+### Core Platform (MVP-Ready)
 - **Backend**: FastAPI + SQLModel + PostgreSQL + Redis + Celery background tasks
-- **Frontend**: Lit 4.0 web components + PWA + comprehensive testing
-- **Security**: JWT auth, rate limiting, security headers, threat detection
-- **Infrastructure**: Docker containers + health monitoring + deployment automation
+- **Frontend**: Lit 4.0 web components (NOBUILD architecture) + PWA support
+- **Authentication**: JWT auth with secure token management
+- **Infrastructure**: Docker containers + health monitoring + CI/CD automation
 - **Testing**: 95%+ backend coverage, 98%+ frontend stability
-- **Documentation**: Complete guides for development, deployment, and operations
+- **Documentation**: 2,700+ lines of operational guides
+
+### Enterprise Features (Production-Scale)
+- **Multi-Tenancy**: Complete tenant isolation with middleware support
+- **SAML SSO**: Enterprise single sign-on integration
+- **AI Workflows**: Automated workflow orchestration with metrics
+- **Personalization Engine**: ML-based user profiling and recommendations
+- **A/B Testing**: Statistical analysis and conversion tracking
+- **Advanced Security**: Rate limiting, threat detection, compliance monitoring
+- **Subscription Billing**: Stripe integration with usage tracking
 
 ## 🚀 Zero to Production in 30 Minutes
 
@@ -90,22 +102,36 @@ make dev
 |----------|----------|
 | **🆕 New Developer** | [Quick Start Guide](docs/getting-started/) |
 | **💻 Active Developer** | [Development Guide](docs/development/) |
-| **🏗️ Technical Lead** | [Architecture Guide](docs/architecture/) |
-| **🚀 DevOps Engineer** | [Operations Guide](docs/operations/) |
+| **🏗️ Technical Lead** | [Architecture Guide](docs/architecture/) + [DDD Migration](docs/architecture/migration-guide-crud-to-ddd.md) |
+| **🚀 DevOps Engineer** | [Operations Guide](docs/operations/) + [Deployment Docs](backend/docs/DEPLOYMENT.md) |
 | **📖 Looking for Reference** | [API & Component Docs](docs/reference/) |
+| **🔄 Migrating to DDD** | [ADR 0001](docs/architecture/decisions/0001-domain-driven-design-migration.md) + [Migration Guide](docs/architecture/migration-guide-crud-to-ddd.md) |
 
 ## 📊 Production Status
 
-✅ **Backend**: 95%+ test coverage, 280+ tests, production-ready with background tasks
-✅ **Frontend**: 98.5% test stability, 711+ passing tests, comprehensive integration
-✅ **Dashboard**: Complete user experience with metrics, projects, and workflows
-✅ **Mobile**: Fully responsive design with touch-friendly interactions
-✅ **Security**: 2 low-severity issues (down from 8 critical/moderate)
-✅ **Dependencies**: Optimized (1,222 packages, -123 cleanup)
+### Platform Maturity
+✅ **Security**: Zero critical vulnerabilities (down from 11 production-blocking issues)
+✅ **Backend**: 95%+ test coverage, 280+ tests, production-ready with DDD migration
+✅ **Frontend**: 98.5% test stability, 711+ passing tests, NOBUILD architecture
+✅ **Architecture**: Dual-pattern support (CRUD + DDD) during migration
+✅ **Dependencies**: Optimized (1,222 packages, -123 cleanup, -96% lint issues)
 ✅ **Performance**: 646ms builds, optimal bundle sizes
+✅ **Documentation**: 2,700+ lines of operational guides
 
-*See [Technical Debt Resolution Report](TECHNICAL_DEBT_RESOLUTION_REPORT.md) for complete improvement details.*
-*See [Dashboard User Guide](docs/DASHBOARD_USER_GUIDE.md) for detailed feature documentation.*
+### Recent Improvements (September-October 2025)
+- 🛡️ **Security Hardening**: Eliminated 11 critical vulnerabilities (CVSS 8.4 → 0.0)
+- 🏛️ **DDD Architecture**: Migration to Domain-Driven Design for scalability
+- 📝 **Documentation**: Added ADR 0001, migration guides, deployment docs
+- 🧹 **Code Quality**: -96% frontend lint issues, removed 807 console statements
+- 🔧 **Infrastructure**: Fixed 6 broken database migrations, validated deployment
+
+### Migration Progress
+- ✅ **Phase 1**: Coexistence architecture established
+- 🔄 **Phase 2**: In Progress - Migrating critical paths to DDD
+- ⏳ **Phase 3**: Planned Q2 2026 - Legacy CRUD removal
+
+*See [Technical Debt Resolution Report](TECHNICAL_DEBT_RESOLUTION_COMPLETE.md) for complete improvement details.*
+*See [Architecture Migration](#-architecture-migration) for DDD transition status.*
 
 ## 🛠️ Development Commands
 
@@ -119,30 +145,133 @@ make clean      # Clean up containers
 
 **All commands**: `make help`
 
-## 🏗️ Tech Stack
+## 🏗️ Architecture & Tech Stack
 
-### Backend
+### Backend Architecture (DDD Migration in Progress)
+
+**New Domain-Driven Design Structure:**
+```
+backend/app/
+├── domain/              # Pure business logic (no dependencies)
+│   ├── entities/        # Business entities with behavior
+│   ├── value_objects/   # Immutable domain concepts
+│   ├── repositories/    # Repository interfaces (ports)
+│   └── services/        # Domain services
+├── application/         # Use cases and orchestration
+│   ├── commands/        # Write operations (CQRS)
+│   └── queries/         # Read operations (CQRS)
+├── infrastructure/      # External concerns (adapters)
+│   ├── repositories/    # Concrete implementations
+│   └── database/        # SQLModel models, migrations
+└── interfaces/          # API layer (FastAPI endpoints)
+```
+
+**Legacy CRUD Structure (Being Phased Out):**
+- `/app/models/` - SQLModel database models
+- `/app/crud/` - Direct database operations
+- `/app/api/endpoints/` - API endpoints
+
+> **Migration Status:** Both patterns coexist during transition. New features use DDD patterns. See [Architecture Migration](#-architecture-migration) for details.
+
+### Technology Stack
+
+**Backend:**
 - **FastAPI** - Modern async Python web framework
-- **SQLModel** - Type-safe database operations
-- **PostgreSQL** - Production database
-- **Redis** - Caching and task queue
+- **SQLModel** - Type-safe ORM for database operations
+- **PostgreSQL** - Production-grade relational database
+- **Redis** - Caching, sessions, and task queue
 - **Celery** - Background task processing
+- **Alembic** - Database migration management
 
-### Frontend
-- **Lit 4.0** - Modern web components
-- **TypeScript** - Type safety
-- **Vite** - Fast development and building
-- **PWA** - Progressive web app support
+**Frontend:**
+- **Lit 4.0** - Modern web components framework
+- **JavaScript** - NOBUILD architecture (no TypeScript compilation)
+- **Vite** - Development server and build tooling
+- **PWA** - Progressive web app capabilities
+- **Bun** - Ultra-fast JavaScript runtime (76x faster than npm)
 
-### Infrastructure
+**Infrastructure:**
 - **Docker** - Containerized development and deployment
-- **Make** - Task automation
-- **GitHub Actions** - CI/CD pipeline
-- **Health Monitoring** - Comprehensive service health checks
+- **Make** - Build automation and task runner
+- **GitHub Actions** - CI/CD pipeline automation
+- **Prometheus** - Metrics collection and monitoring
+- **Kubernetes** (Optional) - Production orchestration
+
+## 🏛️ Architecture Migration
+
+NeoForge is currently migrating from traditional CRUD patterns to **Domain-Driven Design (DDD)** architecture to better support enterprise features and complex business logic.
+
+### Current State (Q4 2025)
+
+**Branch:** `feature/domain-driven-refactor`
+
+Both architectural patterns coexist during the migration:
+
+| Pattern | Status | Use For |
+|---------|--------|---------|
+| **Legacy CRUD** | Being Deprecated | Existing features, simple CRUD operations |
+| **New DDD** | Active Development | New features, complex business logic |
+
+### Why the Migration?
+
+As NeoForge evolved from a simple starter kit to an enterprise platform with:
+- Multi-tenancy and tenant isolation
+- SAML SSO and advanced authentication
+- AI workflow orchestration
+- Personalization engines with ML
+- Complex subscription billing
+
+...the traditional CRUD pattern showed limitations:
+- Business logic scattered across layers
+- Tight coupling to database models
+- Difficult to test without database
+- Circular dependencies between modules
+
+### Migration Timeline
+
+- **Phase 1 (Current):** Coexistence - Both patterns work side-by-side
+- **Phase 2 (Q1 2026):** Gradual migration of critical paths to DDD
+- **Phase 3 (Q2 2026):** Legacy CRUD removal, full DDD adoption
+
+### Resources for Developers
+
+- [ADR 0001: DDD Migration Decision](docs/architecture/decisions/0001-domain-driven-design-migration.md) - Architectural rationale
+- [CRUD to DDD Migration Guide](docs/architecture/migration-guide-crud-to-ddd.md) - Step-by-step migration process
+- [DDD Pattern Examples](docs/architecture/migration-guide-crud-to-ddd.md#step-2-create-domain-entities) - Code samples and best practices
+
+### When to Use Each Pattern
+
+**Use DDD for:**
+- Complex business rules and workflows
+- Event-driven interactions
+- Features requiring high testability
+- New development
+
+**Use Legacy CRUD for:**
+- Simple data retrieval
+- Admin panels
+- Rapid prototyping
+- Maintenance of existing features
+
+## 🚨 System Requirements & Warnings
+
+### Disk Space Requirements
+- **Development Environment:** 2-3 GB (dependencies + Docker images)
+- **Build Artifacts:** 500 MB - 1 GB
+- **Recommended Free Space:** 5 GB minimum
+
+⚠️ **Important:** This project generates significant build artifacts. Ensure adequate disk space before setup. The system currently tracking at **99% capacity** may cause build failures.
+
+### Runtime Requirements
+- **Docker Desktop:** 4 GB RAM minimum, 8 GB recommended
+- **Node/Bun:** Node 18+ or Bun 1.0+
+- **Python:** 3.11+ (backend development)
+- **PostgreSQL:** 14+ (if running natively)
 
 ## 🤝 Contributing
 
 **New to the project?** → [Contributing Guide](CONTRIBUTING.md)
+**Working with DDD patterns?** → See [Architecture Migration](#-architecture-migration) above
 **Questions?** → [GitHub Issues](https://github.com/yourusername/neoforge/issues)
 
 ## 📝 License
