@@ -1285,7 +1285,7 @@
         "main:0:():check_docker_service:"
       ]
     ],
-    "frontend/s/fix-tests.js": [
+    "frontend/scripts/fix-tests.js": [
       "j",
       [
         "findSkippedTests:90:():determineComponentType,extractComponentName:",
@@ -1302,7 +1302,7 @@
         "main:408:():createMockImplementation,findComponentFile,findSkippedTests,runTest,updateTestFile:"
       ]
     ],
-    "frontend/sr/components/molecules/modal/modal.stories.js": [
+    "frontend/src/components/molecules/modal/modal.stories.js": [
       "j",
       [
         "DirectUsageTemplate:59:({ title, hideCloseButton, content })::",
@@ -1321,7 +1321,7 @@
         "openFirst:291:()::"
       ]
     ],
-    "frontend/sr/components/organisms/data-table.stories.js": [
+    "frontend/src/components/organisms/data-table.stories.js": [
       "j",
       [
         "Basic:92:()::",
@@ -1340,7 +1340,7 @@
         "AllFeatures:307:()::"
       ]
     ],
-    "frontend/sr/components/organisms/file-upload.stories.js": [
+    "frontend/src/components/organisms/file-upload.stories.js": [
       "j",
       [
         "simulateUpload:22:()::",
@@ -1358,7 +1358,7 @@
         "handleFileSelected:155:async (e):simulateUpload:"
       ]
     ],
-    "frontend/sr/playground/templates/story.template.js": [
+    "frontend/src/playground/templates/story.template.js": [
       "j",
       [
         "generateStoryTemplate:7:(config):generateAllVariantsDemo,generateDocumentationExamples,generateStateStories,generateVariantStories,getControlType,getDefaultForType,getExampleValue:",
@@ -1376,7 +1376,7 @@
         "States:193:()::"
       ]
     ],
-    "frontend/sr/test/helpers/component-test-helper.js": [
+    "frontend/src/test/helpers/component-test-helper.js": [
       "j",
       [
         "createComponent:15:async (tagName, props = {})::",
@@ -1393,7 +1393,7 @@
         "handler:132:(event)::"
       ]
     ],
-    "frontend/sr/test/utils/polyfill-loader.mock.js": [
+    "frontend/src/test/utils/polyfill-loader.mock.js": [
       "j",
       [
         "detectBrowser:9:()::",
@@ -1426,7 +1426,7 @@
         ]
       }
     ],
-    "frontend/sr/utils/bundle-analyzer.js": [
+    "frontend/src/utils/bundle-analyzer.js": [
       "j",
       [
         "initBundleMonitoring:27:():recordChunkLoad:",
@@ -1442,7 +1442,7 @@
         "resetPerformanceTracking:317:()::"
       ]
     ],
-    "frontend/sr/utils/feature-detection.js": [
+    "frontend/src/utils/feature-detection.js": [
       "j",
       [
         "detectFeatures:9:():applyFallback:",
